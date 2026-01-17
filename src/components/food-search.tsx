@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Plus, Loader2, Check } from 'lucide-react';
 
 interface Food {
   food_name: string;
@@ -16,19 +16,23 @@ interface Food {
     thumb: string;
   };
   tag_id?: number;
+  nix_item_id?: string;
 }
 
 interface FoodSearchProps {
-  onFoodSelect?: (food: Food) => void;
-  onAddFood?: (food: Food, quantity: string) => void;
+  onFoodAdded?: () => void;
 }
 
-export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps) {
+export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ common?: Food[], branded?: Food[] }>({});
   const [loading, setLoading] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [quantity, setQuantity] = useState('1');
+  const [mealType, setMealType] = useState<string>('breakfast');
+  const [adding, setAdding] = useState(false);
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const searchFoods = useCallback(async (searchQuery: string) => {
     if (searchQuery.length < 2) {
@@ -37,6 +41,7 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
     }
 
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}`);
       const data = await response.json();
@@ -46,9 +51,10 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
       } else {
         setResults({});
       }
-    } catch (error) {
-      console.error('Search error:', error);
+    } catch (err) {
+      console.error('Search error:', err);
       setResults({});
+      setError('Failed to search foods');
     } finally {
       setLoading(false);
     }
@@ -62,47 +68,201 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
     return () => clearTimeout(timeoutId);
   }, [query, searchFoods]);
 
-  const handleAddFood = () => {
-    if (selectedFood && onAddFood) {
-      onAddFood(selectedFood, quantity);
+  const handleAddFood = async () => {
+    if (!selectedFood) return;
+
+    setAdding(true);
+    setError(null);
+    setAddSuccess(false);
+
+    try {
+      const response = await fetch('/api/food-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          foodName: selectedFood.food_name,
+          brandName: selectedFood.brand_name,
+          quantity: quantity,
+          servingUnit: selectedFood.serving_unit,
+          mealType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAddSuccess(true);
+        setSelectedFood(null);
+        setQuantity('1');
+        setQuery('');
+        setResults({});
+        
+        // Notify parent component
+        if (onFoodAdded) {
+          onFoodAdded();
+        }
+
+        // Reset success state after 2 seconds
+        setTimeout(() => setAddSuccess(false), 2000);
+      } else {
+        setError(data.error || 'Failed to add food');
+      }
+    } catch (err) {
+      console.error('Error adding food:', err);
+      setError('Failed to add food. Please try again.');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const selectFood = (food: Food) => {
+    if (selectedFood === food) {
       setSelectedFood(null);
-      setQuantity('1');
-      setQuery('');
-      setResults({});
+    } else {
+      setSelectedFood(food);
+      setQuantity(String(food.serving_qty || 1));
     }
   };
 
   return (
     <div className="space-y-4">
+      {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search for foods (e.g., '1 apple', 'chicken breast')"
+          placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="pl-10"
+          data-testid="food-search-input"
         />
       </div>
 
+      {/* Success Message */}
+      {addSuccess && (
+        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
+          <Check className="h-4 w-4" />
+          <span>Food added successfully!</span>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="text-red-600 bg-red-50 p-3 rounded-lg" data-testid="error-message">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
       {loading && (
-        <div className="text-center py-4 text-gray-500">
+        <div className="flex items-center justify-center py-4 text-gray-500">
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
           Searching...
         </div>
       )}
 
-      {(results.common?.length || results.branded?.length) ? (
-        <div className="space-y-4">
+      {/* Selected Food Form */}
+      {selectedFood && (
+        <Card className="border-2 border-blue-500 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start space-x-4">
+              {selectedFood.photo?.thumb && (
+                <img
+                  src={selectedFood.photo.thumb}
+                  alt={selectedFood.food_name}
+                  className="w-16 h-16 rounded object-cover"
+                />
+              )}
+              <div className="flex-1 space-y-3">
+                <div>
+                  <div className="font-medium text-lg">{selectedFood.food_name}</div>
+                  {selectedFood.brand_name && (
+                    <div className="text-sm text-gray-500">{selectedFood.brand_name}</div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantity
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      data-testid="quantity-input"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      {selectedFood.serving_unit}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Meal
+                    </label>
+                    <Select value={mealType} onValueChange={setMealType}>
+                      <SelectTrigger data-testid="meal-type-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="breakfast">Breakfast</SelectItem>
+                        <SelectItem value="lunch">Lunch</SelectItem>
+                        <SelectItem value="dinner">Dinner</SelectItem>
+                        <SelectItem value="snack">Snack</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={handleAddFood} 
+                    disabled={adding}
+                    className="flex-1"
+                    data-testid="add-food-button"
+                  >
+                    {adding ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add to Log
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedFood(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search Results */}
+      {(results.common?.length || results.branded?.length) && !selectedFood ? (
+        <div className="space-y-4" data-testid="search-results">
           {results.common && results.common.length > 0 && (
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Common Foods</h3>
               <div className="space-y-2">
-                {results.common.map((food, index) => (
+                {results.common.slice(0, 5).map((food, index) => (
                   <Card
                     key={`common-${index}`}
-                    className={`cursor-pointer transition-colors ${
-                      selectedFood === food ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                    onClick={() => setSelectedFood(food)}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => selectFood(food)}
+                    data-testid={`food-result-${index}`}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
@@ -119,21 +279,7 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
                             {food.serving_qty} {food.serving_unit}
                           </div>
                         </div>
-                        {selectedFood === food && (
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="text"
-                              value={quantity}
-                              onChange={(e) => setQuantity(e.target.value)}
-                              placeholder="Quantity"
-                              className="w-20"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <Button size="sm" onClick={handleAddFood}>
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
+                        <Plus className="h-5 w-5 text-gray-400" />
                       </div>
                     </CardContent>
                   </Card>
@@ -146,13 +292,11 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Branded Products</h3>
               <div className="space-y-2">
-                {results.branded.map((food, index) => (
+                {results.branded.slice(0, 5).map((food, index) => (
                   <Card
                     key={`branded-${index}`}
-                    className={`cursor-pointer transition-colors ${
-                      selectedFood === food ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                    onClick={() => setSelectedFood(food)}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => selectFood(food)}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
@@ -170,21 +314,7 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
                             {food.serving_qty} {food.serving_unit}
                           </div>
                         </div>
-                        {selectedFood === food && (
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="text"
-                              value={quantity}
-                              onChange={(e) => setQuantity(e.target.value)}
-                              placeholder="Quantity"
-                              className="w-20"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <Button size="sm" onClick={handleAddFood}>
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
+                        <Plus className="h-5 w-5 text-gray-400" />
                       </div>
                     </CardContent>
                   </Card>
@@ -193,7 +323,7 @@ export default function FoodSearch({ onFoodSelect, onAddFood }: FoodSearchProps)
             </div>
           )}
         </div>
-      ) : query.length >= 2 && !loading ? (
+      ) : query.length >= 2 && !loading && !selectedFood ? (
         <div className="text-center py-8 text-gray-500">
           No foods found. Try different search terms.
         </div>
