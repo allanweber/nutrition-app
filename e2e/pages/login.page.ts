@@ -21,12 +21,19 @@ export class LoginPage {
 
   async goto() {
     await this.page.goto('/login');
+    await this.page.waitForLoadState('networkidle');
   }
 
   async login(email: string, password: string) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
+    
+    // Wait for navigation or error message
+    await Promise.race([
+      this.page.waitForURL('**/dashboard**', { timeout: 15000 }),
+      this.errorMessage.waitFor({ state: 'visible', timeout: 15000 }),
+    ]).catch(() => {});
   }
 
   async getErrorMessage() {

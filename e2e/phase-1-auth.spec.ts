@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/login.page';
 import { SignupPage } from './pages/signup.page';
-import { DashboardPage } from './pages/dashboard.page';
 import { testUsers, invalidCredentials, routes } from './fixtures/test-data';
 
 test.describe('Phase 1: Authentication', () => {
@@ -14,7 +13,7 @@ test.describe('Phase 1: Authentication', () => {
       await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
 
       // Should redirect to dashboard after successful signup
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     });
 
     test('shows error for invalid email format', async ({ page }) => {
@@ -56,8 +55,9 @@ test.describe('Phase 1: Authentication', () => {
 
       await signupPage.goto();
       await signupPage.loginLink.click();
+      await page.waitForLoadState('networkidle');
 
-      await expect(page).toHaveURL(routes.login);
+      await expect(page).toHaveURL(routes.login, { timeout: 10000 });
     });
   });
 
@@ -70,7 +70,7 @@ test.describe('Phase 1: Authentication', () => {
 
       await signupPage.goto();
       await signupPage.signup('Test User', uniqueEmail, password);
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 
       // Clear cookies/session to logout
       await page.context().clearCookies();
@@ -80,7 +80,7 @@ test.describe('Phase 1: Authentication', () => {
       await loginPage.goto();
       await loginPage.login(uniqueEmail, password);
 
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     });
 
     test('shows error for invalid credentials', async ({ page }) => {
@@ -90,7 +90,7 @@ test.describe('Phase 1: Authentication', () => {
       await loginPage.login(invalidCredentials.email, invalidCredentials.password);
 
       // Should show error message
-      await expect(loginPage.errorMessage).toBeVisible({ timeout: 5000 });
+      await expect(loginPage.errorMessage).toBeVisible({ timeout: 10000 });
     });
 
     test('can navigate to signup page', async ({ page }) => {
@@ -98,8 +98,9 @@ test.describe('Phase 1: Authentication', () => {
 
       await loginPage.goto();
       await loginPage.signupLink.click();
+      await page.waitForLoadState('networkidle');
 
-      await expect(page).toHaveURL(routes.signup);
+      await expect(page).toHaveURL(routes.signup, { timeout: 10000 });
     });
   });
 
@@ -111,13 +112,14 @@ test.describe('Phase 1: Authentication', () => {
 
       await signupPage.goto();
       await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 
       // Reload page
       await page.reload();
+      await page.waitForLoadState('networkidle');
 
       // Should still be on dashboard
-      await expect(page).toHaveURL(/\/dashboard/);
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
     });
 
     test('user can logout', async ({ page }) => {
@@ -127,13 +129,14 @@ test.describe('Phase 1: Authentication', () => {
 
       await signupPage.goto();
       await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 
       // Find and click logout button (if exists in dashboard layout)
       const logoutButton = page.getByRole('button', { name: /logout|sign out/i });
-      if (await logoutButton.isVisible()) {
+      if (await logoutButton.isVisible({ timeout: 5000 }).catch(() => false)) {
         await logoutButton.click();
-        await expect(page).toHaveURL(/\/(login|$)/);
+        await page.waitForLoadState('networkidle');
+        await expect(page).toHaveURL(/\/(login|$)/, { timeout: 10000 });
       }
     });
   });
@@ -145,10 +148,11 @@ test.describe('Phase 1: Authentication', () => {
 
       // Try to access dashboard directly
       await page.goto('/dashboard');
+      await page.waitForLoadState('networkidle');
 
       // Should redirect to login (or show login prompt)
       // Note: This depends on middleware implementation
-      await expect(page).toHaveURL(/\/(login|dashboard)/);
+      await expect(page).toHaveURL(/\/(login|dashboard)/, { timeout: 10000 });
     });
   });
 

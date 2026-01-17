@@ -1,14 +1,13 @@
 import { getCurrentUser } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { LogoutButton } from '@/components/logout-button';
 import { 
   Home, 
   Search, 
   FileText, 
   Target, 
-  Settings, 
-  LogOut 
+  Settings,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -77,12 +76,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
               <span className="text-sm text-gray-700">
                 {user.name}
               </span>
-              <form action="/api/auth/sign-out" method="POST">
-                <Button type="submit" variant="outline" size="sm">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </div>

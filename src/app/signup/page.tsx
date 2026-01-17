@@ -26,20 +26,29 @@ export default function SignupPage() {
     setError('');
 
     try {
-      const result = await signUp.email({
-        email,
-        password,
-        name,
-      });
+      const result = await signUp.email(
+        {
+          email,
+          password,
+          name,
+        },
+        {
+          onSuccess: () => {
+            router.push('/dashboard');
+            router.refresh();
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || 'Signup failed');
+          },
+        }
+      );
 
       if (result.error) {
         setError(result.error.message || 'Signup failed');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

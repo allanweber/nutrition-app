@@ -23,19 +23,28 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await signIn.email({
-        email,
-        password,
-      });
+      const result = await signIn.email(
+        {
+          email,
+          password,
+        },
+        {
+          onSuccess: () => {
+            router.push('/dashboard');
+            router.refresh();
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message || 'Invalid email or password');
+          },
+        }
+      );
 
       if (result.error) {
-        setError(result.error.message || 'Login failed');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
+        setError(result.error.message || 'Invalid email or password');
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
