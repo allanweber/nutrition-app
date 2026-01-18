@@ -1,33 +1,18 @@
-import FoodSearch from '@/components/food-search';
+'use client';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import FoodSearch from '@/components/food-search';
 
-interface Food {
-  food_name: string;
-  brand_name?: string;
-  serving_unit: string;
-  serving_qty: number;
-  photo?: {
-    thumb: string;
-  };
-  tag_id?: number;
-}
-
-export default function FoodSearchPage() {
-  const handleAddFood = async (food: Food, quantity: string) => {
-    'use server';
-    
-    console.log('Adding food:', food.food_name, 'Quantity:', quantity);
-    // TODO: Implement food logging logic
-  };
-
+export default function FoodsSearchPage() {
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Food Search
+          Search Foods
         </h1>
         <p className="text-gray-600">
-          Search for foods to add to your nutrition log
+          Find nutrition information for any food
         </p>
       </div>
 
@@ -38,7 +23,7 @@ export default function FoodSearchPage() {
               <CardTitle>Search Foods</CardTitle>
             </CardHeader>
             <CardContent>
-              <FoodSearch onAddFood={handleAddFood} />
+              <FoodSearch />
             </CardContent>
           </Card>
         </div>

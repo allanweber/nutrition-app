@@ -23,6 +23,12 @@ class NutritionixAPI {
   }
 
   async searchFoods(query: string): Promise<InstantSearchResponse> {
+    // Use mock data when USE_MOCK_NUTRITIONIX is set (for E2E tests)
+    if (process.env.USE_MOCK_NUTRITIONIX === 'true') {
+      const { getMockSearchResults } = await import('@/lib/__tests__/mock-nutritionix');
+      return getMockSearchResults(query);
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}/search/instant?query=${encodeURIComponent(query)}`, {
         headers: this.getHeaders(),
@@ -40,6 +46,12 @@ class NutritionixAPI {
   }
 
   async getNaturalNutrients(query: string): Promise<NaturalLanguageResponse> {
+    // Use mock data when USE_MOCK_NUTRITIONIX is set (for E2E tests)
+    if (process.env.USE_MOCK_NUTRITIONIX === 'true') {
+      const { getMockNutrientData } = await import('@/lib/__tests__/mock-nutritionix');
+      return getMockNutrientData(query);
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}/natural/nutrients`, {
         method: 'POST',
@@ -101,6 +113,10 @@ class NutritionixAPI {
   }
 
   async isConfigured(): Promise<boolean> {
+    // Always return true when using mock data (for E2E tests)
+    if (process.env.USE_MOCK_NUTRITIONIX === 'true') {
+      return true;
+    }
     return !!(this.appId && this.appKey);
   }
 }

@@ -1,7 +1,4 @@
-import { getCurrentUser } from '@/lib/session';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { LogoutButton } from '@/components/logout-button';
 import { 
   Home, 
   Search, 
@@ -14,13 +11,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigation = [
     {
       name: 'Dashboard',
@@ -74,9 +65,8 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                {user.name}
+                Test User
               </span>
-              <LogoutButton />
             </div>
           </div>
         </div>

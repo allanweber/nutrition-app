@@ -27,6 +27,7 @@ export const users = pgTable('user', {
   image: varchar('image', { length: 500 }),
   role: userRoleEnum('role').notNull().default('individual'),
   emailVerified: boolean('email_verified').default(false),
+  nutritionGoals: jsonb('nutrition_goals'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
