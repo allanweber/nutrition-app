@@ -18,8 +18,10 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     // Check page title
     await expect(page.locator('h1')).toContainText('Dashboard');
     
-    // Check success message
-    await expect(page.locator('text=Dashboard loaded successfully')).toBeVisible();
+    // Check that key dashboard elements are visible
+    await expect(page.getByText('Calories')).toBeVisible();
+    await expect(page.getByText('Macronutrients')).toBeVisible();
+    await expect(page.getByText('Quick Actions')).toBeVisible();
   });
 
   test('dashboard is responsive on mobile', async ({ page }) => {

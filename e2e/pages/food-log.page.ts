@@ -32,8 +32,8 @@ export class FoodLogPage {
 
   async searchFood(query: string) {
     await this.searchInput.fill(query);
-    // Wait for search results or no results message
-    await this.page.waitForTimeout(1000);
+    // Wait for debounced search to trigger (300ms delay)
+    await this.page.waitForTimeout(400);
   }
 
   async selectFirstResult() {

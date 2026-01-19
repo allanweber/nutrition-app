@@ -23,15 +23,23 @@ test.describe('Phase 2: Food Logging', () => {
       // Search for a common food
       await foodLogPage.searchFood('apple');
       
-      // Wait for results
-      await page.waitForTimeout(2000);
+      // Wait for search to complete (either results appear or no results message)
+      await Promise.race([
+        foodLogPage.searchResults.isVisible(),
+        page.getByText('No foods found').isVisible(),
+        // Also check for loading spinner to disappear
+        page.getByText('Searching...').isHidden(),
+      ]);
       
-      // Check if search results are displayed or no results message
+      // Wait a bit for UI to settle
+      await page.waitForTimeout(300);
+      
+      // Check if search results are displayed
       const hasResults = await foodLogPage.searchResults.isVisible().catch(() => false);
-      const noResultsMessage = page.getByText(/no foods found/i);
+      const noResultsMessage = page.getByText('No foods found');
       const hasNoResults = await noResultsMessage.isVisible().catch(() => false);
       
-      // Either we have results or a "no results" message (API might not be configured)
+      // Either we have results or a "no results" message
       expect(hasResults || hasNoResults).toBeTruthy();
     });
 
@@ -172,80 +180,185 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
     });
   });
-});
 
-// Note: The following tests would require a real Nutritionix API key to work
-// They are marked as skipped but included for completeness
-test.describe.skip('Phase 2: Food Logging (API Required)', () => {
-  async function loginAsNewUser(page: import('@playwright/test').Page) {
-    const signupPage = new SignupPage(page);
-    const uniqueEmail = `test-food-${Date.now()}@example.com`;
-    
-    await signupPage.goto();
-    await signupPage.signup('Food Test User', uniqueEmail, 'TestPassword123!');
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
-  }
+  // These tests use mock Nutritionix data (USE_MOCK_NUTRITIONIX=true in playwright config)
+  test.describe('Food Logging with Mock API', () => {
+    test('user can add food to log', async ({ page }) => {
+      await loginAsNewUser(page);
+      
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+      
+      // Search for apple (exists in mock data)
+      await foodLogPage.searchInput.fill('apple');
+      await page.waitForTimeout(1500); // Wait for debounced search
+      
+      // Wait for search results
+      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+      
+      // Click on first result
+      const firstResult = page.getByTestId('food-result-0');
+      await expect(firstResult).toBeVisible({ timeout: 5000 });
+      await firstResult.click();
+      
+      // Verify selected food form appears
+      await expect(foodLogPage.quantityInput).toBeVisible();
+      await expect(foodLogPage.mealTypeSelect).toBeVisible();
+      
+      // Set quantity
+      await foodLogPage.quantityInput.fill('1');
+      
+      // Select meal type
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /breakfast/i }).click();
+      
+      // Click add button
+      await foodLogPage.addFoodButton.click();
+      
+      // Check for success message
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
+      
+      // Wait for the log to appear
+      await page.waitForTimeout(1000);
+      
+      // Food should appear in the log
+      const logCount = await foodLogPage.getFoodLogCount();
+      expect(logCount).toBeGreaterThan(0);
+    });
 
-  test('user can add food to log', async ({ page }) => {
-    await loginAsNewUser(page);
-    
-    const foodLogPage = new FoodLogPage(page);
-    await foodLogPage.goto();
-    
-    // Add food to log
-    await foodLogPage.addFoodToLog('apple', '1', 'breakfast');
-    
-    // Check for success message
-    await expect(page.getByText(/food added successfully/i)).toBeVisible();
-    
-    // Food should appear in the log
-    const logCount = await foodLogPage.getFoodLogCount();
-    expect(logCount).toBeGreaterThan(0);
-  });
+    test('user can delete food from log', async ({ page }) => {
+      await loginAsNewUser(page);
+      
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+      
+      // First add a food (banana exists in mock)
+      await foodLogPage.searchInput.fill('banana');
+      await page.waitForTimeout(400);
+      
+      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+      
+      const firstResult = page.getByTestId('food-result-0');
+      await expect(firstResult).toBeVisible({ timeout: 5000 });
+      await firstResult.click();
+      
+      await foodLogPage.quantityInput.fill('1');
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /snack/i }).click();
+      await foodLogPage.addFoodButton.click();
+      
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
+      
+      // Wait for the food log entry to appear
+      const foodLogEntry = page.locator('[data-testid^="food-log-"]').first();
+      await expect(foodLogEntry).toBeVisible({ timeout: 10000 });
+      
+      // Get initial count
+      const initialCount = await foodLogPage.getFoodLogCount();
+      expect(initialCount).toBeGreaterThan(0);
+      
+      // Set up dialog handler to accept confirmation BEFORE clicking
+      page.on('dialog', async dialog => {
+        await dialog.accept();
+      });
+      
+      // Find and click delete button on first log entry
+      const deleteButton = page.locator('[data-testid^="delete-log-"]').first();
+      await expect(deleteButton).toBeVisible({ timeout: 5000 });
+      await deleteButton.click();
+      
+      // Wait for the food log entry to be removed from DOM or empty state to show
+      await Promise.race([
+        foodLogEntry.waitFor({ state: 'hidden', timeout: 10000 }),
+        page.getByTestId('empty-state').waitFor({ state: 'visible', timeout: 10000 }),
+      ]);
+      
+      // Wait a bit for the data to refresh
+      await page.waitForTimeout(500);
+      
+      // Count should decrease or be zero (empty state shows instead)
+      const newCount = await foodLogPage.getFoodLogCount();
+      expect(newCount).toBeLessThan(initialCount);
+    });
 
-  test('user can delete food from log', async ({ page }) => {
-    await loginAsNewUser(page);
-    
-    const foodLogPage = new FoodLogPage(page);
-    await foodLogPage.goto();
-    
-    // First add a food
-    await foodLogPage.addFoodToLog('banana', '1', 'snack');
-    await page.waitForTimeout(1000);
-    
-    // Get initial count
-    const initialCount = await foodLogPage.getFoodLogCount();
-    expect(initialCount).toBeGreaterThan(0);
-    
-    // Delete the food (accept the confirmation dialog)
-    page.on('dialog', dialog => dialog.accept());
-    
-    // Find and click delete button on first log entry
-    const deleteButton = page.locator('[data-testid^="delete-log-"]').first();
-    await deleteButton.click();
-    
-    await page.waitForTimeout(1000);
-    
-    // Count should decrease
-    const newCount = await foodLogPage.getFoodLogCount();
-    expect(newCount).toBeLessThan(initialCount);
-  });
+    test('daily totals update correctly after adding food', async ({ page }) => {
+      await loginAsNewUser(page);
+      
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+      
+      // Get initial calories (should be 0 for new user)
+      const initialCalories = await foodLogPage.getCaloriesTotal();
+      expect(initialCalories).toBe(0);
+      
+      // Add food (chicken exists in mock with known calories)
+      await foodLogPage.searchInput.fill('chicken');
+      await page.waitForTimeout(1500);
+      
+      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+      
+      const firstResult = page.getByTestId('food-result-0');
+      await expect(firstResult).toBeVisible({ timeout: 5000 });
+      await firstResult.click();
+      
+      await foodLogPage.quantityInput.fill('1');
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /lunch/i }).click();
+      await foodLogPage.addFoodButton.click();
+      
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
+      
+      // Wait for the UI to update
+      await page.waitForTimeout(1500);
+      
+      // Calories should have increased
+      const newCalories = await foodLogPage.getCaloriesTotal();
+      expect(newCalories).toBeGreaterThan(initialCalories);
+    });
 
-  test('daily totals update correctly', async ({ page }) => {
-    await loginAsNewUser(page);
-    
-    const foodLogPage = new FoodLogPage(page);
-    await foodLogPage.goto();
-    
-    // Get initial calories
-    const initialCalories = await foodLogPage.getCaloriesTotal();
-    
-    // Add food
-    await foodLogPage.addFoodToLog('apple', '1', 'breakfast');
-    await page.waitForTimeout(1000);
-    
-    // Calories should increase
-    const newCalories = await foodLogPage.getCaloriesTotal();
-    expect(newCalories).toBeGreaterThan(initialCalories);
+    test('can add multiple foods to different meals', async ({ page }) => {
+      await loginAsNewUser(page);
+      
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+      
+      // Add apple to breakfast
+      await foodLogPage.searchInput.fill('apple');
+      await page.waitForTimeout(400);
+      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+      await page.getByTestId('food-result-0').click();
+      await foodLogPage.quantityInput.fill('1');
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /breakfast/i }).click();
+      await foodLogPage.addFoodButton.click();
+      
+      // Wait for success message to appear and disappear
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
+      await page.waitForSelector('text=/food added successfully/i', { state: 'hidden', timeout: 5000 });
+      
+      // Add rice to lunch
+      await foodLogPage.searchInput.fill('rice');
+      await page.waitForTimeout(400);
+      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+      await page.getByTestId('food-result-0').click();
+      await foodLogPage.quantityInput.fill('1');
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /lunch/i }).click();
+      await foodLogPage.addFoodButton.click();
+      
+      // Wait for success message to appear
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
+      
+      // Wait for the log to refresh and show both meals
+      await page.waitForTimeout(1000);
+      
+      // Verify both meals are shown (case insensitive match)
+      await expect(page.locator('text=Breakfast').or(page.locator('text=breakfast'))).toBeVisible();
+      await expect(page.locator('text=Lunch').or(page.locator('text=lunch'))).toBeVisible();
+      
+      // Verify food count is 2
+      const logCount = await foodLogPage.getFoodLogCount();
+      expect(logCount).toBe(2);
+    });
   });
 });
