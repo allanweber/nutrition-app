@@ -3,41 +3,46 @@ import { getCurrentUser } from '@/lib/session';
 import { nutritionixAPI } from '@/lib/nutritionix';
 import { db } from '@/server/db';
 import { foods, foodLogs } from '@/server/db/schema';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { eq, and, gte, lt, desc, sql } from 'drizzle-orm';
 
-import { NutritionixFood } from '@/types/nutritionix';
+import { NutritionixFood, BaseFood, nutritionixToBaseFood } from '@/types/food';
 
 // Helper to get or create food in cache
-async function getOrCreateFood(nutritionData: NutritionixFood) {
-  const nutritionixId = nutritionData.nix_item_id || `common_${nutritionData.tags?.tag_id || nutritionData.food_name}`;
+async function getOrCreateFood(nutritionixData: NutritionixFood) {
+  const sourceId = nutritionixData.nix_item_id || `common_${nutritionixData.tags?.tag_id || nutritionixData.food_name}`;
   
   // Check if food exists in cache
   const existingFood = await db.query.foods.findFirst({
-    where: eq(foods.nutritionixId, nutritionixId),
+    where: eq(foods.sourceId, sourceId),
   });
 
   if (existingFood) {
     return existingFood;
   }
 
+  // Convert nutritionix food to base food format
+  const baseFoodData = nutritionixToBaseFood(nutritionixData);
+
   // Create new food entry
   const [newFood] = await db.insert(foods).values({
-    nutritionixId,
-    name: nutritionData.food_name,
-    brandName: nutritionData.brand_name || null,
-    servingQty: String(nutritionData.serving_qty),
-    servingUnit: nutritionData.serving_unit,
-    servingWeightGrams: String(nutritionData.serving_weight_grams),
-    calories: String(nutritionData.nf_calories),
-    protein: String(nutritionData.nf_protein),
-    carbs: String(nutritionData.nf_total_carbohydrate),
-    fat: String(nutritionData.nf_total_fat),
-    fiber: String(nutritionData.nf_dietary_fiber || 0),
-    sugar: String(nutritionData.nf_sugars || 0),
-    sodium: String(nutritionData.nf_sodium || 0),
-    fullNutrients: nutritionData.full_nutrients,
-    photoUrl: nutritionData.photo?.thumb || null,
-    upc: nutritionData.upc || null,
+    sourceId: baseFoodData.sourceId,
+    sourceType: 'nutritionix',
+    name: baseFoodData.name,
+    brandName: baseFoodData.brandName || null,
+    servingQty: baseFoodData.servingQty ? String(baseFoodData.servingQty) : null,
+    servingUnit: baseFoodData.servingUnit || null,
+    servingWeightGrams: baseFoodData.servingWeightGrams ? String(baseFoodData.servingWeightGrams) : null,
+    calories: baseFoodData.calories ? String(baseFoodData.calories) : null,
+    protein: baseFoodData.protein ? String(baseFoodData.protein) : null,
+    carbs: baseFoodData.carbs ? String(baseFoodData.carbs) : null,
+    fat: baseFoodData.fat ? String(baseFoodData.fat) : null,
+    fiber: baseFoodData.fiber ? String(baseFoodData.fiber) : null,
+    sugar: baseFoodData.sugar ? String(baseFoodData.sugar) : null,
+    sodium: baseFoodData.sodium ? String(baseFoodData.sodium) : null,
+    fullNutrients: baseFoodData.fullNutrients || null,
+    photoUrl: baseFoodData.photoUrl || null,
+    upc: baseFoodData.upc || null,
+    metadata: baseFoodData.metadata || null,
   }).returning();
 
   return newFood;
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { foodName, quantity, servingUnit, mealType, consumedAt } = body;
-
+    
     if (!foodName || !quantity || !mealType) {
       return NextResponse.json(
         { error: 'Missing required fields: foodName, quantity, mealType' },
@@ -78,7 +83,7 @@ export async function POST(request: NextRequest) {
     const nutritionData = await nutritionixAPI.getNaturalNutrients(
       `${quantity} ${servingUnit || ''} ${foodName}`.trim()
     );
-
+    
     if (!nutritionData.foods || nutritionData.foods.length === 0) {
       return NextResponse.json(
         { error: 'Food not found in database' },
@@ -90,7 +95,7 @@ export async function POST(request: NextRequest) {
     
     // Get or create food in our cache
     const cachedFood = await getOrCreateFood(nutritionInfo);
-
+    
     // Create food log entry
     const logDate = consumedAt ? new Date(consumedAt) : new Date();
     
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
       mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
       consumedAt: logDate,
     }).returning();
-
+    
     return NextResponse.json({ 
       success: true, 
       log: {
@@ -123,22 +128,23 @@ export async function POST(request: NextRequest) {
           sugar: cachedFood.sugar,
           sodium: cachedFood.sodium,
           servingQty: cachedFood.servingQty,
+          servingWeightGrams: cachedFood.servingWeightGrams,
           servingUnit: cachedFood.servingUnit,
           photoUrl: cachedFood.photoUrl,
-        },
-      },
+          upc: cachedFood.upc,
+        }
+      }
     });
-
   } catch (error) {
-    console.error('Food logging error:', error);
+    console.error('Error creating food log:', error);
     return NextResponse.json(
-      { error: 'Failed to log food' },
+      { error: 'Failed to create food log' },
       { status: 500 }
     );
   }
 }
 
-// GET - Fetch food logs for a specific date
+// GET - Retrieve food logs for a user with optional date filtering
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -150,25 +156,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get date from query params (default to today)
     const { searchParams } = new URL(request.url);
-    const dateParam = searchParams.get('date');
-    
-    let targetDate: Date;
-    if (dateParam) {
-      targetDate = new Date(dateParam);
-    } else {
-      targetDate = new Date();
-    }
+    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    // Set to start and end of day
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Fetch logs with food data
+    // Query food logs with related food data
     const logs = await db
       .select({
         id: foodLogs.id,
@@ -176,7 +167,6 @@ export async function GET(request: NextRequest) {
         servingUnit: foodLogs.servingUnit,
         mealType: foodLogs.mealType,
         consumedAt: foodLogs.consumedAt,
-        createdAt: foodLogs.createdAt,
         food: {
           id: foods.id,
           name: foods.name,
@@ -191,68 +181,57 @@ export async function GET(request: NextRequest) {
           servingQty: foods.servingQty,
           servingUnit: foods.servingUnit,
           photoUrl: foods.photoUrl,
-        },
+          upc: foods.upc,
+        }
       })
       .from(foodLogs)
-      .innerJoin(foods, eq(foodLogs.foodId, foods.id))
-      .where(
-        and(
-          eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, startOfDay),
-          lt(foodLogs.consumedAt, endOfDay)
-        )
-      )
-      .orderBy(foodLogs.consumedAt);
+      .leftJoin(foods, eq(foodLogs.foodId, foods.id))
+      .where(and(
+        eq(foodLogs.userId, user.id),
+        gte(foodLogs.consumedAt, new Date(date)),
+        lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z'))
+      ))
+      .orderBy(desc(foodLogs.consumedAt))
+      .limit(50);
 
     // Calculate daily totals
-    const totals = logs.reduce(
-      (acc, log) => {
-        const qty = parseFloat(log.quantity) || 1;
-        const servingQty = parseFloat(log.food.servingQty || '1') || 1;
-        const multiplier = qty / servingQty;
+    const totals = await db
+      .select({
+        calories: sql<number>`SUM(CAST(${foods.calories} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        protein: sql<number>`SUM(CAST(${foods.protein} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        carbs: sql<number>`SUM(CAST(${foods.carbs} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        fat: sql<number>`SUM(CAST(${foods.fat} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        fiber: sql<number>`SUM(CAST(${foods.fiber} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        sugar: sql<number>`SUM(CAST(${foods.sugar} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        sodium: sql<number>`SUM(CAST(${foods.sodium} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        foodCount: sql<number>`COUNT(${foodLogs.id})`.mapWith(Number)
+      })
+      .from(foodLogs)
+      .leftJoin(foods, eq(foodLogs.foodId, foods.id))
+      .where(and(
+        eq(foodLogs.userId, user.id),
+        gte(foodLogs.consumedAt, new Date(date)),
+        lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z'))
+      ));
 
-        return {
-          calories: acc.calories + (parseFloat(log.food.calories || '0') * multiplier),
-          protein: acc.protein + (parseFloat(log.food.protein || '0') * multiplier),
-          carbs: acc.carbs + (parseFloat(log.food.carbs || '0') * multiplier),
-          fat: acc.fat + (parseFloat(log.food.fat || '0') * multiplier),
-          fiber: acc.fiber + (parseFloat(log.food.fiber || '0') * multiplier),
-          sugar: acc.sugar + (parseFloat(log.food.sugar || '0') * multiplier),
-          sodium: acc.sodium + (parseFloat(log.food.sodium || '0') * multiplier),
-        };
-      },
-      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0 }
-    );
-
-    // Round totals
-    const roundedTotals = {
-      calories: Math.round(totals.calories),
-      protein: Math.round(totals.protein * 10) / 10,
-      carbs: Math.round(totals.carbs * 10) / 10,
-      fat: Math.round(totals.fat * 10) / 10,
-      fiber: Math.round(totals.fiber * 10) / 10,
-      sugar: Math.round(totals.sugar * 10) / 10,
-      sodium: Math.round(totals.sodium),
-    };
-
-    // Group logs by meal type
-    const logsByMeal = {
-      breakfast: logs.filter(l => l.mealType === 'breakfast'),
-      lunch: logs.filter(l => l.mealType === 'lunch'),
-      dinner: logs.filter(l => l.mealType === 'dinner'),
-      snack: logs.filter(l => l.mealType === 'snack'),
-    };
+    const totalsData = await totals;
 
     return NextResponse.json({
+      success: true,
       logs,
-      logsByMeal,
-      totals: roundedTotals,
-      date: targetDate.toISOString().split('T')[0],
-      count: logs.length,
+      summary: totalsData[0] || {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0,
+        foodCount: 0
+      }
     });
-
   } catch (error) {
-    console.error('Food logs fetch error:', error);
+    console.error('Error fetching food logs:', error);
     return NextResponse.json(
       { error: 'Failed to fetch food logs' },
       { status: 500 }

@@ -18,30 +18,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, subDays, isToday } from 'date-fns';
 
-interface Food {
-  id: number;
-  name: string;
-  brandName?: string | null;
-  calories?: string | null;
-  protein?: string | null;
-  carbs?: string | null;
-  fat?: string | null;
-  fiber?: string | null;
-  sugar?: string | null;
-  sodium?: string | null;
-  servingQty?: string | null;
-  servingUnit?: string | null;
-  photoUrl?: string | null;
-}
-
-interface FoodLog {
-  id: number;
-  quantity: string;
-  servingUnit?: string | null;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  consumedAt: string;
-  food: Food;
-}
+import { FoodLogEntry } from '@/types/food';
 
 interface Totals {
   calories: number;
@@ -57,24 +34,21 @@ interface FoodLogClientProps {
   initialDate?: string;
 }
 
+const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+
 const mealTypeLabels: Record<string, string> = {
   breakfast: 'Breakfast',
-  lunch: 'Lunch', 
+  lunch: 'Lunch',
   dinner: 'Dinner',
-  snack: 'Snacks',
+  snack: 'Snack',
 };
 
-const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
-
 export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    if (initialDate) {
-      return new Date(initialDate);
-    }
-    return new Date();
-  });
-  const [logs, setLogs] = useState<FoodLog[]>([]);
-  const [logsByMeal, setLogsByMeal] = useState<Record<string, FoodLog[]>>({});
+  const [logs, setLogs] = useState<FoodLogEntry[]>([]);
+  const [logsByMeal, setLogsByMeal] = useState<Record<string, FoodLogEntry[]>>({});
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    initialDate ? new Date(initialDate) : new Date()
+  );
   const [totals, setTotals] = useState<Totals>({
     calories: 0,
     protein: 0,
@@ -156,16 +130,16 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
     }
   };
 
-  const calculateLogNutrients = (log: FoodLog) => {
+  const calculateLogNutrients = (log: FoodLogEntry) => {
     const qty = parseFloat(log.quantity) || 1;
-    const servingQty = parseFloat(log.food.servingQty || '1') || 1;
+    const servingQty = log.food?.servingQty || 1;
     const multiplier = qty / servingQty;
 
     return {
-      calories: Math.round((parseFloat(log.food.calories || '0') * multiplier)),
-      protein: Math.round((parseFloat(log.food.protein || '0') * multiplier) * 10) / 10,
-      carbs: Math.round((parseFloat(log.food.carbs || '0') * multiplier) * 10) / 10,
-      fat: Math.round((parseFloat(log.food.fat || '0') * multiplier) * 10) / 10,
+      calories: Math.round((log.food?.calories || 0) * multiplier),
+      protein: Math.round((log.food?.protein || 0) * multiplier * 10) / 10,
+      carbs: Math.round((log.food?.carbs || 0) * multiplier * 10) / 10,
+      fat: Math.round((log.food?.fat || 0) * multiplier * 10) / 10,
     };
   };
 
