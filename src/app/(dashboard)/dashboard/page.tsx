@@ -1,10 +1,14 @@
 'use client';
 
 import { useDailyNutrition } from '@/hooks/use-daily-nutrition';
+import { useWeeklyNutrition } from '@/hooks/use-weekly-nutrition';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { DailyCaloriesChart } from '@/components/charts/daily-calories-chart';
+import { MacroPieChart } from '@/components/charts/macro-pie-chart';
+import { WeeklyTrendChart } from '@/components/charts/weekly-trend-chart';
 import Link from 'next/link';
 
 function MacroCard({
@@ -116,9 +120,10 @@ function MealTypeLabel({ mealType }: { mealType: string }) {
 
 export default function DashboardPage() {
   const { data: nutrition, logs, isLoading: nutritionLoading } = useDailyNutrition();
+  const { data: weeklyData, isLoading: weeklyLoading } = useWeeklyNutrition(7);
   const { data: goals, isLoading: goalsLoading } = useNutritionGoals();
 
-  const isLoading = nutritionLoading || goalsLoading;
+  const isLoading = nutritionLoading || goalsLoading || weeklyLoading;
 
   // Default goals if none set
   const effectiveGoals = goals || {
@@ -333,6 +338,27 @@ export default function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Weekly Calories Chart */}
+        <DailyCaloriesChart data={weeklyData || []} goals={goals} />
+        
+        {/* Macro Pie Chart */}
+        <MacroPieChart 
+          protein={todayNutrition.protein}
+          carbs={todayNutrition.carbs}
+          fat={todayNutrition.fat}
+        />
+      </div>
+
+      {/* Weekly Trend Charts */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <WeeklyTrendChart data={weeklyData || []} metric="calories" />
+        <WeeklyTrendChart data={weeklyData || []} metric="protein" />
+        <WeeklyTrendChart data={weeklyData || []} metric="carbs" />
+        <WeeklyTrendChart data={weeklyData || []} metric="fat" />
       </div>
     </div>
   );

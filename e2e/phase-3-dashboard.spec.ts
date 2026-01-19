@@ -19,9 +19,35 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     await expect(page.locator('h1')).toContainText('Dashboard');
     
     // Check that key dashboard elements are visible
-    await expect(page.getByText('Calories')).toBeVisible();
-    await expect(page.getByText('Macronutrients')).toBeVisible();
-    await expect(page.getByText('Quick Actions')).toBeVisible();
+    await expect(page.locator('text=Calories').nth(0)).toBeVisible(); // First occurrence
+    await expect(page.locator('text=Macronutrients')).toBeVisible();
+    await expect(page.locator('text=Quick Actions')).toBeVisible();
+    
+    // Check that charts are visible
+    await expect(page.locator('text=Calories This Week')).toBeVisible();
+    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
+    await expect(page.locator('text=Calories Trend')).toBeVisible();
+    await expect(page.locator('text=Protein (g) Trend')).toBeVisible();
+    await expect(page.locator('text=Carbs (g) Trend')).toBeVisible();
+    await expect(page.locator('text=Fat (g) Trend')).toBeVisible();
+  });
+
+  test('charts display correctly with data', async ({ page }) => {
+    await page.goto('/dashboard');
+    
+    // Wait for charts to load
+    await page.waitForTimeout(2000);
+    
+    // Check charts exist in DOM (even if showing "No data")
+    await expect(page.locator('text=Calories This Week')).toBeVisible();
+    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
+    
+    // Check for chart SVG elements (skip icons by looking for responsive containers)
+    const chartContainers = page.locator('.recharts-wrapper');
+    const hasCharts = await chartContainers.count() > 0 || 
+                     await page.locator('svg').count() > 5; // Multiple charts have SVGs
+    
+    expect(hasCharts).toBeTruthy();
   });
 
   test('dashboard is responsive on mobile', async ({ page }) => {
@@ -31,6 +57,10 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     
     // Check mobile layout - dashboard should still display
     await expect(page.locator('h1')).toBeVisible();
+    
+    // Check charts are still present on mobile
+    await expect(page.locator('text=Calories This Week')).toBeVisible();
+    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
   });
 
   test('dashboard redirects to login when not authenticated', async ({ browser }) => {
