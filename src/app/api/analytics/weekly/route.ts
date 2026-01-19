@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { foodLogs, foods } from '@/server/db/schema';
-import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 
 // Get weekly nutrition data
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(foodLogs.consumedAt));
 
     // Group by day and calculate totals
-    const dailyMap = new Map<string, any>();
+    const dailyMap = new Map<string, { date: string; calories: number; protein: number; carbs: number; fat: number; fiber: number; sugar: number; sodium: number; foodCount: number }>();
 
     logs.forEach(log => {
       const dateKey = log.consumedAt.toISOString().split('T')[0];
@@ -74,6 +74,8 @@ export async function GET(request: NextRequest) {
       }
 
       const day = dailyMap.get(dateKey);
+      if (!day) return;
+      
       const baseValues = {
         calories: Number(log.food?.calories || 0),
         protein: Number(log.food?.protein || 0),

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/login.page';
 import { SignupPage } from './pages/signup.page';
-import { testUsers, invalidCredentials, routes } from './fixtures/test-data';
+import { invalidCredentials, routes } from './fixtures/test-data';
 
 test.describe('Phase 1: Authentication', () => {
   test.describe('User Registration', () => {

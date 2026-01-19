@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { DailyNutritionSummary } from '@/types/nutritionix';
+import { DailyNutritionSummary, FoodLogEntry } from '@/types/nutritionix';
 
 export function useDailyNutrition(date?: string) {
   const [data, setData] = useState<DailyNutritionSummary | null>(null);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<FoodLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

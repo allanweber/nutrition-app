@@ -59,7 +59,7 @@ export default function LoginPage() {
         provider: 'google',
         callbackURL: '/dashboard',
       });
-    } catch (err) {
+    } catch {
       setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);
     }

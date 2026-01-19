@@ -186,7 +186,7 @@ export async function PATCH(
     }
 
     // Build update object
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, string | Date> = {};
     if (quantity !== undefined) updateData.quantity = String(quantity);
     if (mealType !== undefined) {
       const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];

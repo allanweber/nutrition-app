@@ -3,10 +3,12 @@ import { getCurrentUser } from '@/lib/session';
 import { nutritionixAPI } from '@/lib/nutritionix';
 import { db } from '@/server/db';
 import { foods, foodLogs } from '@/server/db/schema';
-import { eq, and, gte, lt, sql } from 'drizzle-orm';
+import { eq, and, gte, lt } from 'drizzle-orm';
+
+import { NutritionixFood } from '@/types/nutritionix';
 
 // Helper to get or create food in cache
-async function getOrCreateFood(nutritionData: any) {
+async function getOrCreateFood(nutritionData: NutritionixFood) {
   const nutritionixId = nutritionData.nix_item_id || `common_${nutritionData.tags?.tag_id || nutritionData.food_name}`;
   
   // Check if food exists in cache

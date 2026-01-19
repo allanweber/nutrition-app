@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import FoodSearch from '@/components/food-search';
 
@@ -35,10 +34,10 @@ export default function FoodsSearchPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Try simple terms like "apple" or "chicken"</li>
-                <li>• Include quantities like "1 cup rice"</li>
-                <li>• Search for branded products</li>
-                <li>• Use UPC codes for packaged foods</li>
+                <li>Try simple terms like &quot;apple&quot; or &quot;chicken&quot;</li>
+                <li>Include quantities like &quot;1 cup rice&quot;</li>
+                <li>Search for branded products</li>
+                <li>Use UPC codes for packaged foods</li>
               </ul>
             </CardContent>
           </Card>

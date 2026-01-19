@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 
 // Get user's nutrition goals
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) {

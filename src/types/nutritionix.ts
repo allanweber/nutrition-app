@@ -44,7 +44,7 @@ export interface NutritionixFood {
     highres: string;
     is_user_uploaded: boolean;
   } | null;
-  sub_recipe?: any | null;
+  sub_recipe?: Record<string, unknown> | null;
   class_code?: string | null;
   brick_code?: string | null;
   tag_id?: number | null;
@@ -112,7 +112,7 @@ export interface CachedFood {
   fiber?: number;
   sugar?: number;
   sodium?: number;
-  fullNutrients?: any;
+  fullNutrients?: Nutrient[];
   photoUrl?: string;
   upc?: string;
   createdAt: Date;

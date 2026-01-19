@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,39 +10,46 @@ import { Target, TrendingUp, Activity, Loader2 } from 'lucide-react';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 
 export default function GoalsPage() {
-  const router = useRouter();
-  const { data: goals, isLoading, error, updateGoals } = useNutritionGoals();
+  const { data: goals, isLoading, updateGoals } = useNutritionGoals();
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Form state
-  const [goalType, setGoalType] = useState<'weight_loss' | 'maintenance' | 'weight_gain'>('maintenance');
-  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active'>('moderate');
-  const [calories, setCalories] = useState('2000');
-  const [protein, setProtein] = useState('150');
-  const [carbs, setCarbs] = useState('250');
-  const [fat, setFat] = useState('65');
-  const [fiber, setFiber] = useState('25');
-  const [sodium, setSodium] = useState('2300');
+  // Track local edits - null means use value from goals
+  const [localEdits, setLocalEdits] = useState<{
+    goalType?: 'weight_loss' | 'maintenance' | 'weight_gain';
+    activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active';
+    calories?: string;
+    protein?: string;
+    carbs?: string;
+    fat?: string;
+    fiber?: string;
+    sodium?: string;
+  }>({});
 
-  // Load current goals into form when data is fetched
-  useEffect(() => {
-    if (goals) {
-      setCalories(goals.calories?.toString() || '2000');
-      setProtein(goals.protein?.toString() || '150');
-      setCarbs(goals.carbs?.toString() || '250');
-      setFat(goals.fat?.toString() || '65');
-      setFiber(goals.fiber?.toString() || '25');
-      setSodium(goals.sodium?.toString() || '2300');
-      if (goals.goalType) {
-        setGoalType(goals.goalType);
-      }
-      if (goals.activityLevel) {
-        setActivityLevel(goals.activityLevel);
-      }
+  // Get current form values (local edit or fetched goal)
+  const getValue = <T,>(field: keyof typeof localEdits, defaultValue: T): T => {
+    if (localEdits[field] !== undefined) {
+      return localEdits[field] as T;
     }
-  }, [goals]);
+    if (goals && field in goals) {
+      const goalValue = goals[field as keyof typeof goals];
+      if (typeof defaultValue === 'string' && typeof goalValue === 'number') {
+        return goalValue.toString() as T;
+      }
+      return goalValue as T;
+    }
+    return defaultValue;
+  };
+
+  const goalType = getValue<'weight_loss' | 'maintenance' | 'weight_gain'>('goalType', 'maintenance');
+  const activityLevel = getValue<'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active'>('activityLevel', 'moderate');
+  const calories = getValue<string>('calories', '2000');
+  const protein = getValue<string>('protein', '150');
+  const carbs = getValue<string>('carbs', '250');
+  const fat = getValue<string>('fat', '65');
+  const fiber = getValue<string>('fiber', '25');
+  const sodium = getValue<string>('sodium', '2300');
 
   const handleSaveGoals = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +73,7 @@ export default function GoalsPage() {
     setIsSaving(false);
     if (success) {
       setSaveSuccess(true);
-      // Clear success message after 3 seconds
+      setLocalEdits({}); // Clear local edits after successful save
       setTimeout(() => setSaveSuccess(false), 3000);
     } else {
       setSaveError('Failed to save goals. Please try again.');
@@ -104,7 +110,10 @@ export default function GoalsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="goalType">Goal Type</Label>
-                    <Select value={goalType} onValueChange={(value) => setGoalType(value as 'weight_loss' | 'maintenance' | 'weight_gain')}>
+                    <Select 
+                      value={goalType} 
+                      onValueChange={(value) => setLocalEdits(prev => ({ ...prev, goalType: value as 'weight_loss' | 'maintenance' | 'weight_gain' }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select your goal" />
                       </SelectTrigger>
@@ -118,7 +127,10 @@ export default function GoalsPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="activityLevel">Activity Level</Label>
-                    <Select value={activityLevel} onValueChange={(value) => setActivityLevel(value as 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active')}>
+                    <Select 
+                      value={activityLevel} 
+                      onValueChange={(value) => setLocalEdits(prev => ({ ...prev, activityLevel: value as 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active' }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select activity level" />
                       </SelectTrigger>
@@ -141,7 +153,7 @@ export default function GoalsPage() {
                         id="calories"
                         type="number"
                         value={calories}
-                        onChange={(e) => setCalories(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, calories: e.target.value }))}
                         placeholder="2000"
                         min="0"
                       />
@@ -153,7 +165,7 @@ export default function GoalsPage() {
                         id="protein"
                         type="number"
                         value={protein}
-                        onChange={(e) => setProtein(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, protein: e.target.value }))}
                         placeholder="150"
                         min="0"
                       />
@@ -165,7 +177,7 @@ export default function GoalsPage() {
                         id="carbs"
                         type="number"
                         value={carbs}
-                        onChange={(e) => setCarbs(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, carbs: e.target.value }))}
                         placeholder="250"
                         min="0"
                       />
@@ -177,7 +189,7 @@ export default function GoalsPage() {
                         id="fat"
                         type="number"
                         value={fat}
-                        onChange={(e) => setFat(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, fat: e.target.value }))}
                         placeholder="65"
                         min="0"
                       />
@@ -189,7 +201,7 @@ export default function GoalsPage() {
                         id="fiber"
                         type="number"
                         value={fiber}
-                        onChange={(e) => setFiber(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, fiber: e.target.value }))}
                         placeholder="25"
                         min="0"
                       />
@@ -201,7 +213,7 @@ export default function GoalsPage() {
                         id="sodium"
                         type="number"
                         value={sodium}
-                        onChange={(e) => setSodium(e.target.value)}
+                        onChange={(e) => setLocalEdits(prev => ({ ...prev, sodium: e.target.value }))}
                         placeholder="2300"
                         min="0"
                       />

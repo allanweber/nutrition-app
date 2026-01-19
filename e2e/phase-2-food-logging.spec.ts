@@ -4,7 +4,7 @@ import { FoodLogPage } from './pages/food-log.page';
 
 test.describe('Phase 2: Food Logging', () => {
   // Helper to create a logged-in user session
-  async function loginAsNewUser(page: any) {
+  async function loginAsNewUser(page: import('@playwright/test').Page) {
     const signupPage = new SignupPage(page);
     const uniqueEmail = `test-food-${Date.now()}@example.com`;
     
@@ -44,8 +44,6 @@ test.describe('Phase 2: Food Logging', () => {
       // Start typing
       await foodLogPage.searchInput.fill('chi');
       
-      // Check for loading indicator
-      const loadingText = page.getByText(/searching/i);
       // Loading might be very quick, so just check the input works
       await expect(foodLogPage.searchInput).toHaveValue('chi');
     });
@@ -179,7 +177,7 @@ test.describe('Phase 2: Food Logging', () => {
 // Note: The following tests would require a real Nutritionix API key to work
 // They are marked as skipped but included for completeness
 test.describe.skip('Phase 2: Food Logging (API Required)', () => {
-  async function loginAsNewUser(page: any) {
+  async function loginAsNewUser(page: import('@playwright/test').Page) {
     const signupPage = new SignupPage(page);
     const uniqueEmail = `test-food-${Date.now()}@example.com`;
     
