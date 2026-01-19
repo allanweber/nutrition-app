@@ -1,44 +1,86 @@
-import { getCurrentUser } from '@/lib/session';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Target, TrendingUp, Activity } from 'lucide-react';
+import { Target, TrendingUp, Activity, Loader2 } from 'lucide-react';
+import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 
-export default async function GoalsPage() {
-  const user = await getCurrentUser();
+export default function GoalsPage() {
+  const router = useRouter();
+  const { data: goals, isLoading, error, updateGoals } = useNutritionGoals();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  if (!user) {
-    redirect('/login');
-  }
+  // Form state
+  const [goalType, setGoalType] = useState<'weight_loss' | 'maintenance' | 'weight_gain'>('maintenance');
+  const [activityLevel, setActivityLevel] = useState<'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active'>('moderate');
+  const [calories, setCalories] = useState('2000');
+  const [protein, setProtein] = useState('150');
+  const [carbs, setCarbs] = useState('250');
+  const [fat, setFat] = useState('65');
+  const [fiber, setFiber] = useState('25');
+  const [sodium, setSodium] = useState('2300');
 
-  const handleSaveGoals = async (formData: FormData) => {
-    'use server';
-    
-    const goals = {
-      goalType: formData.get('goalType'),
-      targetCalories: formData.get('targetCalories'),
-      targetProtein: formData.get('targetProtein'),
-      targetCarbs: formData.get('targetCarbs'),
-      targetFat: formData.get('targetFat'),
-      activityLevel: formData.get('activityLevel'),
+  // Load current goals into form when data is fetched
+  useEffect(() => {
+    if (goals) {
+      setCalories(goals.calories?.toString() || '2000');
+      setProtein(goals.protein?.toString() || '150');
+      setCarbs(goals.carbs?.toString() || '250');
+      setFat(goals.fat?.toString() || '65');
+      setFiber(goals.fiber?.toString() || '25');
+      setSodium(goals.sodium?.toString() || '2300');
+      if (goals.goalType) {
+        setGoalType(goals.goalType);
+      }
+      if (goals.activityLevel) {
+        setActivityLevel(goals.activityLevel);
+      }
+    }
+  }, [goals]);
+
+  const handleSaveGoals = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    const goalsData = {
+      goalType,
+      activityLevel,
+      calories: parseInt(calories) || 2000,
+      protein: parseInt(protein) || 150,
+      carbs: parseInt(carbs) || 250,
+      fat: parseInt(fat) || 65,
+      fiber: parseInt(fiber) || 25,
+      sodium: parseInt(sodium) || 2300,
     };
 
-    console.log('Saving goals:', goals);
-    // TODO: Implement goals saving logic
+    const success = await updateGoals(goalsData);
+    
+    setIsSaving(false);
+    if (success) {
+      setSaveSuccess(true);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } else {
+      setSaveError('Failed to save goals. Please try again.');
+    }
   };
 
-  // TODO: Fetch user's current goals
-  const currentGoals = {
-    goalType: 'maintenance',
-    targetCalories: '2000',
-    targetProtein: '150',
-    targetCarbs: '250',
-    targetFat: '65',
-    activityLevel: 'moderate',
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -58,11 +100,11 @@ export default async function GoalsPage() {
               <CardTitle>Daily Nutrition Targets</CardTitle>
             </CardHeader>
             <CardContent>
-              <form action={handleSaveGoals} className="space-y-6">
+              <form onSubmit={handleSaveGoals} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="goalType">Goal Type</Label>
-                    <Select name="goalType" defaultValue={currentGoals.goalType}>
+                    <Select value={goalType} onValueChange={(value) => setGoalType(value as 'weight_loss' | 'maintenance' | 'weight_gain')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your goal" />
                       </SelectTrigger>
@@ -76,7 +118,7 @@ export default async function GoalsPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="activityLevel">Activity Level</Label>
-                    <Select name="activityLevel" defaultValue={currentGoals.activityLevel}>
+                    <Select value={activityLevel} onValueChange={(value) => setActivityLevel(value as 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select activity level" />
                       </SelectTrigger>
@@ -94,53 +136,102 @@ export default async function GoalsPage() {
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="targetCalories">Target Calories</Label>
+                      <Label htmlFor="calories">Target Calories</Label>
                       <Input
-                        id="targetCalories"
-                        name="targetCalories"
+                        id="calories"
                         type="number"
-                        defaultValue={currentGoals.targetCalories}
+                        value={calories}
+                        onChange={(e) => setCalories(e.target.value)}
                         placeholder="2000"
+                        min="0"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="targetProtein">Target Protein (g)</Label>
+                      <Label htmlFor="protein">Target Protein (g)</Label>
                       <Input
-                        id="targetProtein"
-                        name="targetProtein"
+                        id="protein"
                         type="number"
-                        defaultValue={currentGoals.targetProtein}
+                        value={protein}
+                        onChange={(e) => setProtein(e.target.value)}
                         placeholder="150"
+                        min="0"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="targetCarbs">Target Carbs (g)</Label>
+                      <Label htmlFor="carbs">Target Carbs (g)</Label>
                       <Input
-                        id="targetCarbs"
-                        name="targetCarbs"
+                        id="carbs"
                         type="number"
-                        defaultValue={currentGoals.targetCarbs}
+                        value={carbs}
+                        onChange={(e) => setCarbs(e.target.value)}
                         placeholder="250"
+                        min="0"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="targetFat">Target Fat (g)</Label>
+                      <Label htmlFor="fat">Target Fat (g)</Label>
                       <Input
-                        id="targetFat"
-                        name="targetFat"
+                        id="fat"
                         type="number"
-                        defaultValue={currentGoals.targetFat}
+                        value={fat}
+                        onChange={(e) => setFat(e.target.value)}
                         placeholder="65"
+                        min="0"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fiber">Target Fiber (g)</Label>
+                      <Input
+                        id="fiber"
+                        type="number"
+                        value={fiber}
+                        onChange={(e) => setFiber(e.target.value)}
+                        placeholder="25"
+                        min="0"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sodium">Target Sodium (mg)</Label>
+                      <Input
+                        id="sodium"
+                        type="number"
+                        value={sodium}
+                        onChange={(e) => setSodium(e.target.value)}
+                        placeholder="2300"
+                        min="0"
                       />
                     </div>
                   </div>
                 </div>
 
+                {saveError && (
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                    {saveError}
+                  </div>
+                )}
+
+                {saveSuccess && (
+                  <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
+                    Goals saved successfully!
+                  </div>
+                )}
+
                 <div className="flex justify-end">
-                  <Button type="submit">Save Goals</Button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Goals'
+                    )}
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -201,10 +292,10 @@ export default async function GoalsPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Start with realistic goals</li>
-                <li>• Track consistently for best results</li>
-                <li>• Adjust goals based on your progress</li>
-                <li>• Consult a professional for personalized advice</li>
+                <li>Start with realistic goals</li>
+                <li>Track consistently for best results</li>
+                <li>Adjust goals based on your progress</li>
+                <li>Consult a professional for personalized advice</li>
               </ul>
             </CardContent>
           </Card>

@@ -151,4 +151,6 @@ export interface NutritionGoals {
   fat: number;
   fiber: number;
   sodium: number;
+  goalType?: 'weight_loss' | 'maintenance' | 'weight_gain';
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active';
 }

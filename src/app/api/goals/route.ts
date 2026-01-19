@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Default goals if not set
     const defaultGoals = {
       calories: 2000,
-      protein: 50,
+      protein: 150,
       carbs: 250,
       fat: 65,
       fiber: 25,
@@ -30,8 +30,10 @@ export async function GET(request: NextRequest) {
       .where(eq(users.id, user.id))
       .limit(1);
 
-    const goals = userData[0]?.nutritionGoals 
-      ? JSON.parse(userData[0].nutritionGoals as string)
+    // JSONB columns are automatically parsed by Drizzle, no need to JSON.parse
+    const storedGoals = userData[0]?.nutritionGoals;
+    const goals = storedGoals && typeof storedGoals === 'object' 
+      ? { ...defaultGoals, ...storedGoals }
       : defaultGoals;
 
     return NextResponse.json({ goals });
@@ -74,10 +76,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update user goals
+    // Update user goals - store as JSONB object directly (Drizzle handles serialization)
     await db
       .update(users)
-      .set({ nutritionGoals: JSON.stringify(goals) })
+      .set({ nutritionGoals: goals })
       .where(eq(users.id, user.id));
 
     return NextResponse.json({ success: true, goals });
