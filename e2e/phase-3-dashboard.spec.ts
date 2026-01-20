@@ -19,17 +19,20 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     await expect(page.locator('h1')).toContainText('Dashboard');
     
     // Check that key dashboard elements are visible
-    await expect(page.locator('text=Calories').nth(0)).toBeVisible(); // First occurrence
-    await expect(page.locator('text=Macronutrients')).toBeVisible();
-    await expect(page.locator('text=Quick Actions')).toBeVisible();
+    await expect(page.locator('text=Calories').first()).toBeVisible();
+    await expect(page.locator('text=Protein').first()).toBeVisible();
+    await expect(page.locator('text=Carbs').first()).toBeVisible();
     
-    // Check that charts are visible
-    await expect(page.locator('text=Calories This Week')).toBeVisible();
-    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
-    await expect(page.locator('text=Calories Trend')).toBeVisible();
-    await expect(page.locator('text=Protein (g) Trend')).toBeVisible();
-    await expect(page.locator('text=Carbs (g) Trend')).toBeVisible();
-    await expect(page.locator('text=Fat (g) Trend')).toBeVisible();
+    // Check that chart section is visible
+    await expect(page.locator('text=Calorie Intake')).toBeVisible();
+    
+    // Check weekly stats section
+    await expect(page.locator('text=Avg Calories')).toBeVisible();
+    await expect(page.locator('text=Protein Goal')).toBeVisible();
+    await expect(page.locator('text=Streak')).toBeVisible();
+    
+    // Check Recent Foods section
+    await expect(page.locator('text=Recent Foods')).toBeVisible();
   });
 
   test('charts display correctly with data', async ({ page }) => {
@@ -38,11 +41,11 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     // Wait for charts to load
     await page.waitForTimeout(2000);
     
-    // Check charts exist in DOM (even if showing "No data")
-    await expect(page.locator('text=Calories This Week')).toBeVisible();
-    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
+    // Check chart section exists in DOM
+    await expect(page.locator('text=Calorie Intake')).toBeVisible();
+    await expect(page.locator('text=Daily Calories')).toBeVisible();
     
-    // Check for chart SVG elements (skip icons by looking for responsive containers)
+    // Check for chart SVG elements (recharts renders SVGs)
     const chartContainers = page.locator('.recharts-wrapper');
     const hasCharts = await chartContainers.count() > 0 || 
                      await page.locator('svg').count() > 5; // Multiple charts have SVGs
@@ -58,9 +61,9 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     // Check mobile layout - dashboard should still display
     await expect(page.locator('h1')).toBeVisible();
     
-    // Check charts are still present on mobile
-    await expect(page.locator('text=Calories This Week')).toBeVisible();
-    await expect(page.locator('text=Macronutrient Breakdown')).toBeVisible();
+    // Check key elements are still present on mobile
+    await expect(page.locator('text=Calorie Intake')).toBeVisible();
+    await expect(page.locator('text=Recent Foods')).toBeVisible();
   });
 
   test('dashboard redirects to login when not authenticated', async ({ browser }) => {
