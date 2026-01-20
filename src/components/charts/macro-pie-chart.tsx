@@ -29,7 +29,7 @@ export function MacroPieChart({ protein, carbs, fat }: MacroPieChartProps) {
           <CardTitle>Macronutrient Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-muted-foreground py-8">
             No data to display
           </div>
         </CardContent>

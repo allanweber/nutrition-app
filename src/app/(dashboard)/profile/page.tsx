@@ -22,8 +22,8 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
-        <p className="text-gray-600">Manage your account information</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Profile</h1>
+        <p className="text-muted-foreground">Manage your account information</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -42,22 +42,22 @@ export default async function ProfilePage() {
               </Avatar>
               <div>
                 <h3 className="text-lg font-semibold">{user.name}</h3>
-                <p className="text-gray-500">{user.email}</p>
+                <p className="text-muted-foreground">{user.email}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Name</label>
-                <p className="text-gray-900">{user.name}</p>
+                <label className="text-sm font-medium text-muted-foreground">Name</label>
+                <p className="text-foreground">{user.name}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Email</label>
-                <p className="text-gray-900">{user.email}</p>
+                <label className="text-sm font-medium text-muted-foreground">Email</label>
+                <p className="text-foreground">{user.email}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Email Verified</label>
-                <p className="text-gray-900">{user.emailVerified ? 'Yes' : 'No'}</p>
+                <label className="text-sm font-medium text-muted-foreground">Email Verified</label>
+                <p className="text-foreground">{user.emailVerified ? 'Yes' : 'No'}</p>
               </div>
             </div>
           </CardContent>
@@ -69,7 +69,7 @@ export default async function ProfilePage() {
             <CardDescription>Manage your account preferences</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               Account settings and preferences will be available here soon.
             </p>
           </CardContent>

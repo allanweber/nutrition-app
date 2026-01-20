@@ -83,7 +83,7 @@ export default function GoalsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -91,10 +91,10 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Nutrition Goals
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Set your daily nutrition targets to track your progress
         </p>
       </div>
@@ -259,7 +259,7 @@ export default function GoalsPage() {
               <div className="space-y-4">
                 <div className="text-center">
                   <Target className="h-12 w-12 text-blue-500 mx-auto mb-2" />
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     Use our calculator to get personalized recommendations based on your age, gender, weight, and activity level.
                   </div>
                 </div>
@@ -291,8 +291,8 @@ export default function GoalsPage() {
                   <span className="font-semibold">0/7</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">0%</div>
-                  <div className="text-sm text-gray-500">Goals achieved this month</div>
+                  <div className="text-2xl font-bold text-foreground">0%</div>
+                  <div className="text-sm text-muted-foreground">Goals achieved this month</div>
                 </div>
               </div>
             </CardContent>
@@ -303,7 +303,7 @@ export default function GoalsPage() {
               <CardTitle>Tips</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>Start with realistic goals</li>
                 <li>Track consistently for best results</li>
                 <li>Adjust goals based on your progress</li>

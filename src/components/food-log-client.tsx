@@ -158,7 +158,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                 <div className="text-lg font-semibold">
                   {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEEE')}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {format(selectedDate, 'MMMM d, yyyy')}
                 </div>
               </div>
@@ -189,25 +189,25 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
               <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-600">{totals.calories}</div>
-              <div className="text-sm text-gray-500">Calories</div>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{totals.calories}</div>
+              <div className="text-sm text-muted-foreground">Calories</div>
             </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
+            <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
               <Beef className="h-6 w-6 text-red-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-red-600">{totals.protein}g</div>
-              <div className="text-sm text-gray-500">Protein</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{totals.protein}g</div>
+              <div className="text-sm text-muted-foreground">Protein</div>
             </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
               <Wheat className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-600">{totals.carbs}g</div>
-              <div className="text-sm text-gray-500">Carbs</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{totals.carbs}g</div>
+              <div className="text-sm text-muted-foreground">Carbs</div>
             </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
               <div className="h-6 w-6 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-bold">F</div>
-              <div className="text-2xl font-bold text-blue-600">{totals.fat}g</div>
-              <div className="text-sm text-gray-500">Fat</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totals.fat}g</div>
+              <div className="text-sm text-muted-foreground">Fat</div>
             </div>
           </div>
         </CardContent>
@@ -217,7 +217,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
       {loading ? (
         <Card>
           <CardContent className="py-8">
-            <div className="flex items-center justify-center text-gray-500">
+            <div className="flex items-center justify-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
               Loading food logs...
             </div>
@@ -227,7 +227,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
         <Card>
           <CardContent className="py-8">
             <div 
-              className="text-center text-gray-500"
+              className="text-center text-muted-foreground"
               data-testid="empty-state"
             >
               <p className="text-lg font-medium mb-2">No foods logged</p>
@@ -269,7 +269,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                       return (
                         <div 
                           key={log.id} 
-                          className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                           data-testid={`food-log-${log.id}`}
                         >
                           {log.food.photoUrl && (
@@ -282,15 +282,15 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                           <div className="flex-1 min-w-0">
                             <div className="font-medium truncate">{log.food.name}</div>
                             {log.food.brandName && (
-                              <div className="text-sm text-gray-500 truncate">{log.food.brandName}</div>
+                              <div className="text-sm text-muted-foreground truncate">{log.food.brandName}</div>
                             )}
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">
                               {log.quantity} {log.servingUnit || log.food.servingUnit}
                             </div>
                           </div>
                           <div className="text-right hidden sm:block">
                             <div className="font-medium">{nutrients.calories} cal</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               P: {nutrients.protein}g | C: {nutrients.carbs}g | F: {nutrients.fat}g
                             </div>
                           </div>

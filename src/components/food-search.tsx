@@ -131,7 +131,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
     <div className="space-y-4">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
           value={query}
@@ -143,7 +143,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
 
       {/* Success Message */}
       {addSuccess && (
-        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
+        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg">
           <Check className="h-4 w-4" />
           <span>Food added successfully!</span>
         </div>
@@ -151,14 +151,14 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
 
       {/* Error Message */}
       {error && (
-        <div className="text-red-600 bg-red-50 p-3 rounded-lg" data-testid="error-message">
+        <div className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
           {error}
         </div>
       )}
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-4 text-gray-500">
+        <div className="flex items-center justify-center py-4 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
           Searching...
         </div>
@@ -166,7 +166,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
 
       {/* Selected Food Form */}
       {selectedFood && (
-        <Card className="border-2 border-blue-500 bg-blue-50">
+        <Card className="border-2 border-primary bg-primary/10">
           <CardContent className="p-4">
             <div className="flex items-start space-x-4">
               {selectedFood.photo?.thumb && (
@@ -180,13 +180,13 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
                 <div>
                   <div className="font-medium text-lg">{selectedFood.food_name}</div>
                   {selectedFood.brand_name && (
-                    <div className="text-sm text-gray-500">{selectedFood.brand_name}</div>
+                    <div className="text-sm text-muted-foreground">{selectedFood.brand_name}</div>
                   )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Quantity
                     </label>
                     <Input
@@ -197,12 +197,12 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
                       onChange={(e) => setQuantity(e.target.value)}
                       data-testid="quantity-input"
                     />
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {selectedFood.serving_unit}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-foreground mb-1">
                       Meal
                     </label>
                     <Select value={mealType} onValueChange={setMealType}>
@@ -256,12 +256,12 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
         <div className="space-y-4" data-testid="search-results">
           {results.common && results.common.length > 0 && (
             <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Common Foods</h3>
+              <h3 className="font-semibold text-foreground mb-2">Common Foods</h3>
               <div className="space-y-2">
                 {results.common.slice(0, 5).map((food, index) => (
                   <Card
                     key={`common-${index}`}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => selectFood(food)}
                     data-testid={`food-result-${index}`}
                   >
@@ -276,11 +276,11 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
                         )}
                         <div className="flex-1">
                           <div className="font-medium">{food.food_name}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {food.serving_qty} {food.serving_unit}
                           </div>
                         </div>
-                        <Plus className="h-5 w-5 text-gray-400" />
+                        <Plus className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
@@ -291,12 +291,12 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
 
           {results.branded && results.branded.length > 0 && (
             <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Branded Products</h3>
+              <h3 className="font-semibold text-foreground mb-2">Branded Products</h3>
               <div className="space-y-2">
                 {results.branded.slice(0, 5).map((food, index) => (
                   <Card
                     key={`branded-${index}`}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => selectFood(food)}
                   >
                     <CardContent className="p-3">
@@ -310,12 +310,12 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
                         )}
                         <div className="flex-1">
                           <div className="font-medium">{food.food_name}</div>
-                          <div className="text-sm text-gray-500">{food.brand_name}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">{food.brand_name}</div>
+                          <div className="text-sm text-muted-foreground">
                             {food.serving_qty} {food.serving_unit}
                           </div>
                         </div>
-                        <Plus className="h-5 w-5 text-gray-400" />
+                        <Plus className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
@@ -325,7 +325,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
           )}
         </div>
       ) : query.length >= 2 && !loading && !selectedFood ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           No foods found. Try different search terms.
         </div>
       ) : null}

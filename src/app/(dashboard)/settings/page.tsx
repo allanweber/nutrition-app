@@ -12,8 +12,8 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Manage your application preferences</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+        <p className="text-muted-foreground">Manage your application preferences</p>
       </div>
 
       <div className="grid gap-6">
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
             <CardDescription>Configure how you receive notifications</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               Notification settings will be available here soon.
             </p>
           </CardContent>
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
             <CardDescription>Manage your privacy settings</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               Privacy settings will be available here soon.
             </p>
           </CardContent>
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
             <CardDescription>Export your nutrition data</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               Data export functionality will be available here soon.
             </p>
           </CardContent>

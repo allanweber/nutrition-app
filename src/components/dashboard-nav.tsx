@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserNav } from '@/components/user-nav';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import { 
   Menu, 
   X,
@@ -69,7 +70,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
             </span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <ThemeSwitcher />
             <UserNav user={user} />
             {/* Mobile menu button */}
             <button

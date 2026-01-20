@@ -18,7 +18,7 @@ export function DailyCaloriesChart({ data, goals }: DailyCaloriesChartProps) {
           <CardTitle>Calories This Week</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-muted-foreground py-8">
             No data to display
           </div>
         </CardContent>

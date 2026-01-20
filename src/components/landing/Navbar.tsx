@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
@@ -78,7 +79,8 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTA Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
+            <ThemeSwitcher />
             <Button variant="ghost" asChild>
               <Link href="/login">Log in</Link>
             </Button>
@@ -124,6 +126,10 @@ export default function Navbar() {
                 </a>
               ))}
               <div className="pt-4 space-y-3 border-t">
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <ThemeSwitcher />
+                </div>
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/login">Log in</Link>
                 </Button>

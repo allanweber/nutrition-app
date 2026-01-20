@@ -1,14 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { signUp, signIn } from '@/lib/auth-client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { signIn, signUp } from '@/lib/auth-client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -40,14 +52,17 @@ export default function SignupPage() {
           onError: (ctx) => {
             setError(ctx.error.message || 'Signup failed');
           },
-        }
+        },
       );
 
       if (result.error) {
         setError(result.error.message || 'Signup failed');
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'An error occurred. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -70,7 +85,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create Account</CardTitle>
@@ -119,25 +134,31 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Account Type</Label>
-              <Select 
-                value={role} 
-                onValueChange={(value: 'individual' | 'professional') => setRole(value)}
+              <Select
+                value={role}
+                onValueChange={(value: 'individual' | 'professional') =>
+                  setRole(value)
+                }
               >
-                <SelectTrigger data-testid="role-select">
+                <SelectTrigger data-testid="role-select" className="w-full">
                   <SelectValue placeholder="Select account type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">Individual User</SelectItem>
-                  <SelectItem value="professional">Professional Dietitian</SelectItem>
+                  <SelectItem value="professional">
+                    Professional Dietitian
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {error && (
-              <div className="text-sm text-red-600" data-testid="error-message">{error}</div>
+              <div className="text-sm text-red-600" data-testid="error-message">
+                {error}
+              </div>
             )}
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading}
               data-testid="submit-button"
             >
@@ -150,7 +171,9 @@ export default function SignupPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              <span className="bg-card px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -191,7 +214,7 @@ export default function SignupPage() {
 
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </div>
