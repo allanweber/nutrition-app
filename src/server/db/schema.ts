@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import {
   boolean,
   decimal,
@@ -11,7 +12,6 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 // Enums
@@ -25,11 +25,21 @@ export const mealTypeEnum = pgEnum('meal_type', [
   'lunch',
   'dinner',
   'snack',
+  'morning_snack',
+  'afternoon_snack',
+  'evening_snack',
+  'pre_workout',
+  'post_workout',
+  'other',
 ]);
 export const goalTypeEnum = pgEnum('goal_type', [
   'weight_loss',
   'maintenance',
   'weight_gain',
+  'muscle_gain',
+  'fat_loss',
+  'performance',
+  'general_health',
 ]);
 export const verificationStatusEnum = pgEnum('verification_status', [
   'pending',
@@ -51,9 +61,7 @@ export const users = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    emailIdx: index('users_email_idx').on(table.email),
-  }),
+  (table) => [index('users_email_idx').on(table.email)],
 );
 
 // Professional verification table
@@ -73,9 +81,7 @@ export const professionalVerification = pgTable(
     verifiedAt: timestamp('verified_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('professional_verification_user_id_idx').on(table.userId),
-  }),
+  (table) => [index('professional_verification_user_id_idx').on(table.userId)],
 );
 
 // Foods table (consolidated - includes custom foods)
@@ -110,13 +116,13 @@ export const foods = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    nameIdx: index('foods_name_idx').on(table.name),
-    sourceIdIdx: index('foods_source_id_idx').on(table.sourceId),
-    sourceIdx: index('foods_source_idx').on(table.source),
-    userIdIdx: index('foods_user_id_idx').on(table.userId),
-    isCustomIdx: index('foods_is_custom_idx').on(table.isCustom),
-  }),
+  (table) => [
+    index('foods_name_idx').on(table.name),
+    index('foods_source_id_idx').on(table.sourceId),
+    index('foods_source_idx').on(table.source),
+    index('foods_user_id_idx').on(table.userId),
+    index('foods_is_custom_idx').on(table.isCustom),
+  ],
 );
 
 // Food photos table (NEW - 1:1 relation with foods)
@@ -133,9 +139,7 @@ export const foodPhotos = pgTable(
     highres: varchar('highres', { length: 500 }), // High-resolution URL
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    foodIdIdx: index('food_photos_food_id_idx').on(table.foodId),
-  }),
+  (table) => [index('food_photos_food_id_idx').on(table.foodId)],
 );
 
 // Food alternative measures table (NEW - 1:many relation with foods)
@@ -149,15 +153,16 @@ export const foodAltMeasures = pgTable(
     foodId: integer('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' }),
-    servingWeight: decimal('serving_weight', { precision: 10, scale: 2 }).notNull(), // Weight in grams
+    servingWeight: decimal('serving_weight', {
+      precision: 10,
+      scale: 2,
+    }).notNull(), // Weight in grams
     measure: varchar('measure', { length: 100 }).notNull(), // e.g., "cup", "tbsp", "slice"
     seq: integer('seq').default(1), // Display order
     qty: decimal('qty', { precision: 10, scale: 2 }).notNull().default('1'), // Quantity (e.g., 1, 0.5)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    foodIdIdx: index('food_alt_measures_food_id_idx').on(table.foodId),
-  }),
+  (table) => [index('food_alt_measures_food_id_idx').on(table.foodId)],
 );
 
 // Food logs table
@@ -177,11 +182,11 @@ export const foodLogs = pgTable(
     consumedAt: timestamp('consumed_at').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('food_logs_user_id_idx').on(table.userId),
-    foodIdIdx: index('food_logs_food_id_idx').on(table.foodId),
-    consumedAtIdx: index('food_logs_consumed_at_idx').on(table.consumedAt),
-  }),
+  (table) => [
+    index('food_logs_user_id_idx').on(table.userId),
+    index('food_logs_food_id_idx').on(table.foodId),
+    index('food_logs_consumed_at_idx').on(table.consumedAt),
+  ],
 );
 
 // Nutrition goals table
@@ -205,9 +210,7 @@ export const nutritionGoals = pgTable(
     isActive: boolean('is_active').default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('nutrition_goals_user_id_idx').on(table.userId),
-  }),
+  (table) => [index('nutrition_goals_user_id_idx').on(table.userId)],
 );
 
 // Diet plans table
@@ -233,10 +236,10 @@ export const dietPlans = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('diet_plans_user_id_idx').on(table.userId),
-    clientIdIdx: index('diet_plans_client_id_idx').on(table.clientId),
-  }),
+  (table) => [
+    index('diet_plans_user_id_idx').on(table.userId),
+    index('diet_plans_client_id_idx').on(table.clientId),
+  ],
 );
 
 // Diet plan meals table
@@ -256,12 +259,10 @@ export const dietPlanMeals = pgTable(
     dayOfWeek: integer('day_of_week'), // 0-6 (Sunday to Saturday)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => ({
-    dietPlanIdIdx: index('diet_plan_meals_diet_plan_id_idx').on(
-      table.dietPlanId,
-    ),
-    foodIdIdx: index('diet_plan_meals_food_id_idx').on(table.foodId),
-  }),
+  (table) => [
+    index('diet_plan_meals_diet_plan_id_idx').on(table.dietPlanId),
+    index('diet_plan_meals_food_id_idx').on(table.foodId),
+  ],
 );
 
 // Better Auth schema tables
@@ -279,10 +280,10 @@ export const sessions = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('sessions_user_id_idx').on(table.userId),
-    tokenIdx: index('sessions_token_idx').on(table.token),
-  }),
+  (table) => [
+    index('sessions_user_id_idx').on(table.userId),
+    index('sessions_token_idx').on(table.token),
+  ],
 );
 
 export const accounts = pgTable(
@@ -304,10 +305,10 @@ export const accounts = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    userIdIdx: index('accounts_user_id_idx').on(table.userId),
-    providerIdIdx: index('accounts_provider_id_idx').on(table.providerId),
-  }),
+  (table) => [
+    index('accounts_user_id_idx').on(table.userId),
+    index('accounts_provider_id_idx').on(table.providerId),
+  ],
 );
 
 export const verifications = pgTable(
@@ -320,9 +321,7 @@ export const verifications = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  (table) => ({
-    identifierIdx: index('verifications_identifier_idx').on(table.identifier),
-  }),
+  (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
 
 // ============================================
@@ -360,12 +359,15 @@ export const foodPhotosRelations = relations(foodPhotos, ({ one }) => ({
   }),
 }));
 
-export const foodAltMeasuresRelations = relations(foodAltMeasures, ({ one }) => ({
-  food: one(foods, {
-    fields: [foodAltMeasures.foodId],
-    references: [foods.id],
+export const foodAltMeasuresRelations = relations(
+  foodAltMeasures,
+  ({ one }) => ({
+    food: one(foods, {
+      fields: [foodAltMeasures.foodId],
+      references: [foods.id],
+    }),
   }),
-}));
+);
 
 export const foodLogsRelations = relations(foodLogs, ({ one }) => ({
   user: one(users, {

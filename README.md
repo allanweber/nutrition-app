@@ -47,8 +47,8 @@ pnpm dev
 To create the database tables, run:
 
 ```bash
-npx drizzle-kit generate:migration
-npx drizzle-kit migrate:up
+npx drizzle-kit generate
+npx drizzle-kit migrate
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
