@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { users } from '@/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { nutritionGoals } from '@/server/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 
 // Get user's nutrition goals
@@ -22,19 +22,29 @@ export async function GET() {
       sodium: 2300,
     };
 
-    const userData = await db
-      .select({
-        nutritionGoals: users.nutritionGoals,
-      })
-      .from(users)
-      .where(eq(users.id, user.id))
-      .limit(1);
+    // Get the most recent active goal for the user
+    const activeGoal = await db.query.nutritionGoals.findFirst({
+      where: and(
+        eq(nutritionGoals.userId, user.id),
+        eq(nutritionGoals.isActive, true)
+      ),
+      orderBy: desc(nutritionGoals.createdAt),
+    });
 
-    // JSONB columns are automatically parsed by Drizzle, no need to JSON.parse
-    const storedGoals = userData[0]?.nutritionGoals;
-    const goals = storedGoals && typeof storedGoals === 'object' 
-      ? { ...defaultGoals, ...storedGoals }
-      : defaultGoals;
+    if (!activeGoal) {
+      return NextResponse.json({ goals: defaultGoals });
+    }
+
+    const goals = {
+      calories: activeGoal.targetCalories ? Number(activeGoal.targetCalories) : defaultGoals.calories,
+      protein: activeGoal.targetProtein ? Number(activeGoal.targetProtein) : defaultGoals.protein,
+      carbs: activeGoal.targetCarbs ? Number(activeGoal.targetCarbs) : defaultGoals.carbs,
+      fat: activeGoal.targetFat ? Number(activeGoal.targetFat) : defaultGoals.fat,
+      fiber: activeGoal.targetFiber ? Number(activeGoal.targetFiber) : defaultGoals.fiber,
+      sodium: activeGoal.targetSodium ? Number(activeGoal.targetSodium) : defaultGoals.sodium,
+      goalType: activeGoal.goalType,
+      activityLevel: activeGoal.activityLevel,
+    };
 
     return NextResponse.json({ goals });
   } catch (error) {
@@ -76,13 +86,43 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update user goals - store as JSONB object directly (Drizzle handles serialization)
+    // Deactivate existing active goals
     await db
-      .update(users)
-      .set({ nutritionGoals: goals })
-      .where(eq(users.id, user.id));
+      .update(nutritionGoals)
+      .set({ isActive: false })
+      .where(and(
+        eq(nutritionGoals.userId, user.id),
+        eq(nutritionGoals.isActive, true)
+      ));
 
-    return NextResponse.json({ success: true, goals });
+    // Create new goal record
+    const [newGoal] = await db.insert(nutritionGoals).values({
+      userId: user.id,
+      goalType: goals.goalType || 'maintenance',
+      targetCalories: String(goals.calories),
+      targetProtein: String(goals.protein),
+      targetCarbs: String(goals.carbs),
+      targetFat: String(goals.fat),
+      targetFiber: String(goals.fiber),
+      targetSodium: String(goals.sodium),
+      activityLevel: goals.activityLevel || null,
+      startDate: new Date(),
+      isActive: true,
+    }).returning();
+
+    return NextResponse.json({ 
+      success: true, 
+      goals: {
+        calories: Number(newGoal.targetCalories),
+        protein: Number(newGoal.targetProtein),
+        carbs: Number(newGoal.targetCarbs),
+        fat: Number(newGoal.targetFat),
+        fiber: Number(newGoal.targetFiber),
+        sodium: Number(newGoal.targetSodium),
+        goalType: newGoal.goalType,
+        activityLevel: newGoal.activityLevel,
+      }
+    });
   } catch (error) {
     console.error('Goals PUT error:', error);
     return NextResponse.json(

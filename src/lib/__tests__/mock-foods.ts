@@ -1,4 +1,4 @@
-import { BaseFood, FoodSource } from '@/types/food';
+import { BaseFood } from '@/types/food';
 
 // Generic mock food data for multiple sources
 export const mockFoods: BaseFood[] = [
@@ -20,8 +20,9 @@ export const mockFoods: BaseFood[] = [
     sugar: 3,
     sodium: 150,
     photoUrl: null,
-    upc: null,
-    metadata: { isPublic: false, userCreated: true },
+    isRaw: false,
+    isCustom: true,
+    userId: 'user_001',
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   },
@@ -42,8 +43,9 @@ export const mockFoods: BaseFood[] = [
     sugar: 3,
     sodium: 200,
     photoUrl: null,
-    upc: null,
-    metadata: { isPublic: false, userCreated: true },
+    isRaw: false,
+    isCustom: true,
+    userId: 'user_001',
     createdAt: new Date('2024-01-02T00:00:00.000Z'),
     updatedAt: new Date('2024-01-02T00:00:00.000Z')
   },
@@ -66,8 +68,8 @@ export const mockFoods: BaseFood[] = [
     sugar: 0.4,
     sodium: 79,
     photoUrl: null,
-    upc: null,
-    metadata: { ndbNo: 10162, verifiedBy: 'USDA' },
+    isRaw: true,
+    isCustom: false,
     createdAt: new Date('2024-01-15T00:00:00.000Z'),
     updatedAt: new Date('2024-01-15T00:00:00.000Z')
   },
@@ -89,8 +91,8 @@ export const mockFoods: BaseFood[] = [
     sugar: 25,
     sodium: 200,
     photoUrl: null,
-    upc: '123456789012',
-    metadata: { barcodeScanned: true, customEntry: true },
+    isRaw: false,
+    isCustom: false,
     createdAt: new Date('2024-02-01T00:00:00.000Z'),
     updatedAt: new Date('2024-02-01T00:00:00.000Z')
   },
@@ -113,8 +115,8 @@ export const mockFoods: BaseFood[] = [
     sugar: 0,
     sodium: 74,
     photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_123.jpg',
-    upc: null,
-    metadata: { is_raw_food: false },
+    isRaw: false,
+    isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   },
@@ -135,8 +137,8 @@ export const mockFoods: BaseFood[] = [
     sugar: 0.7,
     sodium: 5,
     photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_456.jpg',
-    upc: null,
-    metadata: { is_raw_food: false },
+    isRaw: false,
+    isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   }

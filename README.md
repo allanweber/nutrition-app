@@ -9,7 +9,7 @@ To get started, follow these steps:
 Make sure you have a PostgreSQL database set up in docker
 
 ```bash
-docker run --name nutrition_app -e POSTGRES_PASSWORD=password -e POSTGRES_USER=password -e POSTGRES_DB=nutrition_app -p 5432:5432 -d postgres
+docker run --name nutrition_app -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=nutrition_app -p 5432:5432 -d postgres
 ```
 
 or user the provided `docker-compose.yml`

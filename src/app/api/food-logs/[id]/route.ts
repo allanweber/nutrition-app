@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
-import { foodLogs, foods } from '@/server/db/schema';
+import { foodLogs, foods, foodPhotos } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // GET - Fetch a specific food log entry
@@ -50,11 +50,12 @@ export async function GET(
           sodium: foods.sodium,
           servingQty: foods.servingQty,
           servingUnit: foods.servingUnit,
-          photoUrl: foods.photoUrl,
         },
+        photoThumb: foodPhotos.thumb,
       })
       .from(foodLogs)
       .innerJoin(foods, eq(foodLogs.foodId, foods.id))
+      .leftJoin(foodPhotos, eq(foods.id, foodPhotos.foodId))
       .where(
         and(
           eq(foodLogs.id, logId),
@@ -69,7 +70,21 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ log });
+    // Transform to include photoUrl in food object
+    const transformedLog = {
+      id: log.id,
+      quantity: log.quantity,
+      servingUnit: log.servingUnit,
+      mealType: log.mealType,
+      consumedAt: log.consumedAt,
+      createdAt: log.createdAt,
+      food: {
+        ...log.food,
+        photoUrl: log.photoThumb,
+      },
+    };
+
+    return NextResponse.json({ log: transformedLog });
 
   } catch (error) {
     console.error('Food log fetch error:', error);

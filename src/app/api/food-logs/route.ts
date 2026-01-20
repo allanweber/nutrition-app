@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
 import { nutritionixAPI } from '@/lib/nutritionix';
 import { db } from '@/server/db';
-import { foods, foodLogs } from '@/server/db/schema';
+import { foods, foodLogs, foodPhotos, foodAltMeasures } from '@/server/db/schema';
 import { eq, and, gte, lt, desc, sql } from 'drizzle-orm';
 
-import { NutritionixFood, BaseFood, nutritionixToBaseFood } from '@/types/food';
+import { NutritionixFood, nutritionixToBaseFood } from '@/types/food';
 
 // Helper to get or create food in cache
 async function getOrCreateFood(nutritionixData: NutritionixFood) {
@@ -14,6 +14,9 @@ async function getOrCreateFood(nutritionixData: NutritionixFood) {
   // Check if food exists in cache
   const existingFood = await db.query.foods.findFirst({
     where: eq(foods.sourceId, sourceId),
+    with: {
+      photo: true,
+    },
   });
 
   if (existingFood) {
@@ -26,7 +29,7 @@ async function getOrCreateFood(nutritionixData: NutritionixFood) {
   // Create new food entry
   const [newFood] = await db.insert(foods).values({
     sourceId: baseFoodData.sourceId,
-    sourceType: 'nutritionix',
+    source: baseFoodData.source,
     name: baseFoodData.name,
     brandName: baseFoodData.brandName || null,
     servingQty: baseFoodData.servingQty ? String(baseFoodData.servingQty) : null,
@@ -40,12 +43,41 @@ async function getOrCreateFood(nutritionixData: NutritionixFood) {
     sugar: baseFoodData.sugar ? String(baseFoodData.sugar) : null,
     sodium: baseFoodData.sodium ? String(baseFoodData.sodium) : null,
     fullNutrients: baseFoodData.fullNutrients || null,
-    photoUrl: baseFoodData.photoUrl || null,
-    upc: baseFoodData.upc || null,
-    metadata: baseFoodData.metadata || null,
+    isRaw: baseFoodData.isRaw || false,
+    isCustom: false,
   }).returning();
 
-  return newFood;
+  // Insert photo if available
+  if (baseFoodData.photo && (baseFoodData.photo.thumb || baseFoodData.photo.highres)) {
+    await db.insert(foodPhotos).values({
+      foodId: newFood.id,
+      thumb: baseFoodData.photo.thumb || null,
+      highres: baseFoodData.photo.highres || null,
+    });
+  }
+
+  // Insert alternative measures if available
+  if (baseFoodData.altMeasures && baseFoodData.altMeasures.length > 0) {
+    await db.insert(foodAltMeasures).values(
+      baseFoodData.altMeasures.map((m, index) => ({
+        foodId: newFood.id,
+        servingWeight: String(m.serving_weight),
+        measure: m.measure,
+        seq: m.seq || index + 1,
+        qty: String(m.qty),
+      }))
+    );
+  }
+
+  // Fetch and return food with photo
+  const foodWithPhoto = await db.query.foods.findFirst({
+    where: eq(foods.id, newFood.id),
+    with: {
+      photo: true,
+    },
+  });
+
+  return foodWithPhoto || newFood;
 }
 
 // POST - Create a new food log entry
@@ -108,6 +140,11 @@ export async function POST(request: NextRequest) {
       consumedAt: logDate,
     }).returning();
     
+    // Get photo URL from relation or null
+    const photoThumb = cachedFood && 'photo' in cachedFood && cachedFood.photo 
+      ? (cachedFood.photo as { thumb?: string | null })?.thumb || null 
+      : null;
+    
     return NextResponse.json({ 
       success: true, 
       log: {
@@ -130,8 +167,7 @@ export async function POST(request: NextRequest) {
           servingQty: cachedFood.servingQty,
           servingWeightGrams: cachedFood.servingWeightGrams,
           servingUnit: cachedFood.servingUnit,
-          photoUrl: cachedFood.photoUrl,
-          upc: cachedFood.upc,
+          photoUrl: photoThumb,
         }
       }
     });
@@ -159,7 +195,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    // Query food logs with related food data
+    // Query food logs with related food data and photos
     const logs = await db
       .select({
         id: foodLogs.id,
@@ -180,12 +216,12 @@ export async function GET(request: NextRequest) {
           sodium: foods.sodium,
           servingQty: foods.servingQty,
           servingUnit: foods.servingUnit,
-          photoUrl: foods.photoUrl,
-          upc: foods.upc,
-        }
+        },
+        photoThumb: foodPhotos.thumb,
       })
       .from(foodLogs)
       .leftJoin(foods, eq(foodLogs.foodId, foods.id))
+      .leftJoin(foodPhotos, eq(foods.id, foodPhotos.foodId))
       .where(and(
         eq(foodLogs.userId, user.id),
         gte(foodLogs.consumedAt, new Date(date)),
@@ -193,6 +229,19 @@ export async function GET(request: NextRequest) {
       ))
       .orderBy(desc(foodLogs.consumedAt))
       .limit(50);
+
+    // Transform logs to include photoUrl in food object
+    const transformedLogs = logs.map(log => ({
+      id: log.id,
+      quantity: log.quantity,
+      servingUnit: log.servingUnit,
+      mealType: log.mealType,
+      consumedAt: log.consumedAt,
+      food: {
+        ...log.food,
+        photoUrl: log.photoThumb,
+      }
+    }));
 
     // Calculate daily totals
     const totals = await db
@@ -218,7 +267,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      logs,
+      logs: transformedLogs,
       summary: totalsData[0] || {
         calories: 0,
         protein: 0,

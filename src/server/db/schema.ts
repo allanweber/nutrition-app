@@ -11,6 +11,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 // Enums
@@ -37,6 +38,7 @@ export const verificationStatusEnum = pgEnum('verification_status', [
 ]);
 
 // Users table (Better Auth compatible)
+// NOTE: nutritionGoals jsonb removed - use nutrition_goals table instead
 export const users = pgTable(
   'user',
   {
@@ -46,7 +48,6 @@ export const users = pgTable(
     image: varchar('image', { length: 500 }),
     role: userRoleEnum('role').notNull().default('individual'),
     emailVerified: boolean('email_verified').default(false),
-    nutritionGoals: jsonb('nutrition_goals'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -64,7 +65,7 @@ export const professionalVerification = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     licenseNumber: varchar('license_number', { length: 100 }),
-    specialization: text('specialification'),
+    specialization: text('specialization'),
     credentials: jsonb('credentials'),
     verificationStatus: verificationStatusEnum('verification_status')
       .notNull()
@@ -77,12 +78,15 @@ export const professionalVerification = pgTable(
   }),
 );
 
-// Foods table (generic food data from multiple sources)
+// Foods table (consolidated - includes custom foods)
+// CHANGES:
+// - Removed: upc, metadata, photoUrl
+// - Added: isRaw, isCustom, userId (for custom foods ownership)
 export const foods = pgTable(
   'foods',
   {
     id: serial('id').primaryKey(),
-    sourceId: varchar('source_id', { length: 100 }), // Generic ID from source system
+    sourceId: varchar('source_id', { length: 100 }), // External API ID (e.g., Nutritionix item ID)
     source: varchar('source', { length: 100 }).notNull().default('user_custom'),
     name: varchar('name', { length: 500 }).notNull(),
     brandName: varchar('brand_name', { length: 500 }),
@@ -100,9 +104,9 @@ export const foods = pgTable(
     sugar: decimal('sugar', { precision: 10, scale: 2 }),
     sodium: decimal('sodium', { precision: 10, scale: 2 }),
     fullNutrients: jsonb('full_nutrients'),
-    photoUrl: varchar('photo_url', { length: 500 }),
-    upc: varchar('upc', { length: 50 }),
-    metadata: jsonb('metadata'), // Store source-specific data
+    isRaw: boolean('is_raw').default(false), // NEW: is raw/unprocessed food
+    isCustom: boolean('is_custom').default(false), // NEW: user-created food
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }), // NEW: owner for custom foods (nullable)
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -110,7 +114,49 @@ export const foods = pgTable(
     nameIdx: index('foods_name_idx').on(table.name),
     sourceIdIdx: index('foods_source_id_idx').on(table.sourceId),
     sourceIdx: index('foods_source_idx').on(table.source),
-    upcIdx: index('foods_upc_idx').on(table.upc),
+    userIdIdx: index('foods_user_id_idx').on(table.userId),
+    isCustomIdx: index('foods_is_custom_idx').on(table.isCustom),
+  }),
+);
+
+// Food photos table (NEW - 1:1 relation with foods)
+// Stores thumbnail and high-resolution photo URLs separately
+export const foodPhotos = pgTable(
+  'food_photos',
+  {
+    id: serial('id').primaryKey(),
+    foodId: integer('food_id')
+      .notNull()
+      .references(() => foods.id, { onDelete: 'cascade' })
+      .unique(),
+    thumb: varchar('thumb', { length: 500 }), // Thumbnail URL
+    highres: varchar('highres', { length: 500 }), // High-resolution URL
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    foodIdIdx: index('food_photos_food_id_idx').on(table.foodId),
+  }),
+);
+
+// Food alternative measures table (NEW - 1:many relation with foods)
+// Allows calculating nutrients for different serving sizes
+// Formula: multiplier = alt_measure.serving_weight / food.servingWeightGrams
+//          adjusted_nutrient = food.nutrient * multiplier
+export const foodAltMeasures = pgTable(
+  'food_alt_measures',
+  {
+    id: serial('id').primaryKey(),
+    foodId: integer('food_id')
+      .notNull()
+      .references(() => foods.id, { onDelete: 'cascade' }),
+    servingWeight: decimal('serving_weight', { precision: 10, scale: 2 }).notNull(), // Weight in grams
+    measure: varchar('measure', { length: 100 }).notNull(), // e.g., "cup", "tbsp", "slice"
+    seq: integer('seq').default(1), // Display order
+    qty: decimal('qty', { precision: 10, scale: 2 }).notNull().default('1'), // Quantity (e.g., 1, 0.5)
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    foodIdIdx: index('food_alt_measures_food_id_idx').on(table.foodId),
   }),
 );
 
@@ -218,36 +264,6 @@ export const dietPlanMeals = pgTable(
   }),
 );
 
-// Custom foods table
-export const customFoods = pgTable(
-  'custom_foods',
-  {
-    id: serial('id').primaryKey(),
-    userId: text('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    name: varchar('name', { length: 500 }).notNull(),
-    brandName: varchar('brand_name', { length: 500 }),
-    servingQty: decimal('serving_qty', { precision: 10, scale: 2 }).notNull(),
-    servingUnit: varchar('serving_unit', { length: 100 }).notNull(),
-    calories: decimal('calories', { precision: 10, scale: 2 }).notNull(),
-    protein: decimal('protein', { precision: 10, scale: 2 }),
-    carbs: decimal('carbs', { precision: 10, scale: 2 }),
-    fat: decimal('fat', { precision: 10, scale: 2 }),
-    fiber: decimal('fiber', { precision: 10, scale: 2 }),
-    sugar: decimal('sugar', { precision: 10, scale: 2 }),
-    sodium: decimal('sodium', { precision: 10, scale: 2 }),
-    photoUrl: varchar('photo_url', { length: 500 }),
-    isPublic: boolean('is_public').default(false),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    userIdIdx: index('custom_foods_user_id_idx').on(table.userId),
-    nameIdx: index('custom_foods_name_idx').on(table.name),
-  }),
-);
-
 // Better Auth schema tables
 export const sessions = pgTable(
   'session',
@@ -309,11 +325,125 @@ export const verifications = pgTable(
   }),
 );
 
-// Zod schemas for validation
+// ============================================
+// RELATIONS
+// ============================================
+
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
+  foodLogs: many(foodLogs),
+  nutritionGoals: many(nutritionGoals),
+  dietPlans: many(dietPlans),
+  customFoods: many(foods), // Custom foods owned by user
+  professionalVerification: many(professionalVerification),
+}));
+
+export const foodsRelations = relations(foods, ({ one, many }) => ({
+  photo: one(foodPhotos, {
+    fields: [foods.id],
+    references: [foodPhotos.foodId],
+  }),
+  altMeasures: many(foodAltMeasures),
+  foodLogs: many(foodLogs),
+  dietPlanMeals: many(dietPlanMeals),
+  user: one(users, {
+    fields: [foods.userId],
+    references: [users.id],
+  }),
+}));
+
+export const foodPhotosRelations = relations(foodPhotos, ({ one }) => ({
+  food: one(foods, {
+    fields: [foodPhotos.foodId],
+    references: [foods.id],
+  }),
+}));
+
+export const foodAltMeasuresRelations = relations(foodAltMeasures, ({ one }) => ({
+  food: one(foods, {
+    fields: [foodAltMeasures.foodId],
+    references: [foods.id],
+  }),
+}));
+
+export const foodLogsRelations = relations(foodLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [foodLogs.userId],
+    references: [users.id],
+  }),
+  food: one(foods, {
+    fields: [foodLogs.foodId],
+    references: [foods.id],
+  }),
+}));
+
+export const nutritionGoalsRelations = relations(nutritionGoals, ({ one }) => ({
+  user: one(users, {
+    fields: [nutritionGoals.userId],
+    references: [users.id],
+  }),
+}));
+
+export const dietPlansRelations = relations(dietPlans, ({ one, many }) => ({
+  user: one(users, {
+    fields: [dietPlans.userId],
+    references: [users.id],
+  }),
+  client: one(users, {
+    fields: [dietPlans.clientId],
+    references: [users.id],
+  }),
+  meals: many(dietPlanMeals),
+}));
+
+export const dietPlanMealsRelations = relations(dietPlanMeals, ({ one }) => ({
+  dietPlan: one(dietPlans, {
+    fields: [dietPlanMeals.dietPlanId],
+    references: [dietPlans.id],
+  }),
+  food: one(foods, {
+    fields: [dietPlanMeals.foodId],
+    references: [foods.id],
+  }),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const professionalVerificationRelations = relations(
+  professionalVerification,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [professionalVerification.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+// ============================================
+// ZOD SCHEMAS FOR VALIDATION
+// ============================================
+
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertFoodSchema = createInsertSchema(foods);
 export const selectFoodSchema = createSelectSchema(foods);
+export const insertFoodPhotoSchema = createInsertSchema(foodPhotos);
+export const selectFoodPhotoSchema = createSelectSchema(foodPhotos);
+export const insertFoodAltMeasureSchema = createInsertSchema(foodAltMeasures);
+export const selectFoodAltMeasureSchema = createSelectSchema(foodAltMeasures);
 export const insertFoodLogSchema = createInsertSchema(foodLogs);
 export const selectFoodLogSchema = createSelectSchema(foodLogs);
 export const insertNutritionGoalSchema = createInsertSchema(nutritionGoals);
@@ -322,14 +452,19 @@ export const insertDietPlanSchema = createInsertSchema(dietPlans);
 export const selectDietPlanSchema = createSelectSchema(dietPlans);
 export const insertDietPlanMealSchema = createInsertSchema(dietPlanMeals);
 export const selectDietPlanMealSchema = createSelectSchema(dietPlanMeals);
-export const insertCustomFoodSchema = createInsertSchema(customFoods);
-export const selectCustomFoodSchema = createSelectSchema(customFoods);
 
-// Types
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Food = typeof foods.$inferSelect;
 export type NewFood = typeof foods.$inferInsert;
+export type FoodPhoto = typeof foodPhotos.$inferSelect;
+export type NewFoodPhoto = typeof foodPhotos.$inferInsert;
+export type FoodAltMeasure = typeof foodAltMeasures.$inferSelect;
+export type NewFoodAltMeasure = typeof foodAltMeasures.$inferInsert;
 export type FoodLog = typeof foodLogs.$inferSelect;
 export type NewFoodLog = typeof foodLogs.$inferInsert;
 export type NutritionGoal = typeof nutritionGoals.$inferSelect;
@@ -338,8 +473,6 @@ export type DietPlan = typeof dietPlans.$inferSelect;
 export type NewDietPlan = typeof dietPlans.$inferInsert;
 export type DietPlanMeal = typeof dietPlanMeals.$inferSelect;
 export type NewDietPlanMeal = typeof dietPlanMeals.$inferInsert;
-export type CustomFood = typeof customFoods.$inferSelect;
-export type NewCustomFood = typeof customFoods.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

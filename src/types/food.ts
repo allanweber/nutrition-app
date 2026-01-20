@@ -2,6 +2,23 @@
 
 export type FoodSource = 'nutritionix' | 'user_custom' | 'usda' | 'manual' | 'database';
 
+export interface FoodPhoto {
+  thumb?: string | null;
+  highres?: string | null;
+}
+
+export interface AlternativeMeasure {
+  serving_weight: number;
+  measure: string;
+  seq?: number;
+  qty: number;
+}
+
+export interface Nutrient {
+  attr_id: number;
+  value: number;
+}
+
 export interface BaseFood {
   id: number;
   sourceId: string | null; // Generic ID from source system
@@ -19,27 +36,19 @@ export interface BaseFood {
   sugar?: number;
   sodium?: number;
   fullNutrients?: Nutrient[];
-  photoUrl?: string | null;
-  upc?: string | null;
-  metadata?: Record<string, unknown> | null; // Store source-specific data
+  isRaw?: boolean;
+  isCustom?: boolean;
+  userId?: string | null;
+  photo?: FoodPhoto | null;
+  photoUrl?: string | null; // Flattened photo URL for API responses
+  altMeasures?: AlternativeMeasure[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface Nutrient {
-  attr_id: number;
-  value: number;
-}
-
-export interface AlternativeMeasure {
-  serving_weight: number;
-  measure: string;
-  qty: number;
-}
-
 export interface FoodLogEntry {
   id: number;
-  userId: number;
+  userId: string;
   foodId: number;
   quantity: string;
   servingUnit?: string;
@@ -159,13 +168,36 @@ export interface InstantSearchResponse {
   branded?: NutritionixSearchResult['branded'];
 }
 
+// Helper function return type for conversion
+export interface ConvertedFood {
+  sourceId: string | null;
+  source: string;
+  name: string;
+  brandName: string | null;
+  servingQty: number;
+  servingUnit: string;
+  servingWeightGrams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  fullNutrients: Nutrient[];
+  isRaw: boolean;
+  isCustom: boolean;
+  photo?: FoodPhoto | null;
+  altMeasures?: AlternativeMeasure[];
+}
+
 // Helper functions to convert between types
-export function nutritionixToBaseFood(nutritionixFood: NutritionixFood): Omit<BaseFood, 'id' | 'createdAt' | 'updatedAt'> {
+export function nutritionixToBaseFood(nutritionixFood: NutritionixFood): ConvertedFood {
   return {
     sourceId: nutritionixFood.nix_item_id || nutritionixFood.upc || null,
-    sourceType: 'nutritionix',
+    source: 'nutritionix',
     name: nutritionixFood.food_name,
-    brandName: nutritionixFood.brand_name,
+    brandName: nutritionixFood.brand_name || null,
     servingQty: nutritionixFood.serving_qty,
     servingUnit: nutritionixFood.serving_unit,
     servingWeightGrams: nutritionixFood.serving_weight_grams,
@@ -177,30 +209,52 @@ export function nutritionixToBaseFood(nutritionixFood: NutritionixFood): Omit<Ba
     sugar: nutritionixFood.nf_sugars,
     sodium: nutritionixFood.nf_sodium,
     fullNutrients: nutritionixFood.full_nutrients,
-    photoUrl: nutritionixFood.photo?.thumb || null,
-    upc: nutritionixFood.upc || null,
-    metadata: nutritionixFood.metadata,
+    isRaw: nutritionixFood.metadata?.is_raw_food || false,
+    isCustom: false,
+    photo: nutritionixFood.photo ? {
+      thumb: nutritionixFood.photo.thumb,
+      highres: nutritionixFood.photo.highres,
+    } : null,
+    altMeasures: nutritionixFood.alt_measures?.map((m, i) => ({
+      serving_weight: m.serving_weight,
+      measure: m.measure,
+      seq: i + 1,
+      qty: m.qty,
+    })),
   };
 }
 
-export function customFoodToBaseFood(customFood: any): Omit<BaseFood, 'id' | 'createdAt' | 'updatedAt'> {
+export function customFoodToBaseFood(customFood: {
+  name: string;
+  brandName?: string;
+  servingQty: number;
+  servingUnit: string;
+  servingWeightGrams?: number;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+}): ConvertedFood {
   return {
     sourceId: null,
-    sourceType: 'user_custom',
+    source: 'user_custom',
     name: customFood.name,
     brandName: customFood.brandName || null,
     servingQty: customFood.servingQty,
     servingUnit: customFood.servingUnit,
-    servingWeightGrams: customFood.servingWeightGrams,
+    servingWeightGrams: customFood.servingWeightGrams || 0,
     calories: customFood.calories,
-    protein: customFood.protein,
-    carbs: customFood.carbs,
-    fat: customFood.fat,
-    fiber: customFood.fiber,
-    sugar: customFood.sugar,
-    sodium: customFood.sodium,
-    photoUrl: customFood.photoUrl || null,
-    upc: customFood.upc || null,
-    metadata: { isPublic: customFood.isPublic || false },
+    protein: customFood.protein || 0,
+    carbs: customFood.carbs || 0,
+    fat: customFood.fat || 0,
+    fiber: customFood.fiber || 0,
+    sugar: customFood.sugar || 0,
+    sodium: customFood.sodium || 0,
+    fullNutrients: [],
+    isRaw: false,
+    isCustom: true,
   };
 }
