@@ -263,20 +263,39 @@ export async function GET(request: NextRequest) {
         lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z'))
       ));
 
-    const totalsData = await totals;
+    const totalsData = totals[0] || {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      foodCount: 0
+    };
+
+    // Group logs by meal type
+    const logsByMeal: Record<string, typeof transformedLogs> = {};
+    for (const log of transformedLogs) {
+      const mealType = log.mealType;
+      if (!logsByMeal[mealType]) {
+        logsByMeal[mealType] = [];
+      }
+      logsByMeal[mealType].push(log);
+    }
 
     return NextResponse.json({
       success: true,
       logs: transformedLogs,
-      summary: totalsData[0] || {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        fiber: 0,
-        sugar: 0,
-        sodium: 0,
-        foodCount: 0
+      logsByMeal,
+      totals: {
+        calories: Math.round(totalsData.calories || 0),
+        protein: Math.round((totalsData.protein || 0) * 10) / 10,
+        carbs: Math.round((totalsData.carbs || 0) * 10) / 10,
+        fat: Math.round((totalsData.fat || 0) * 10) / 10,
+        fiber: Math.round((totalsData.fiber || 0) * 10) / 10,
+        sugar: Math.round((totalsData.sugar || 0) * 10) / 10,
+        sodium: Math.round((totalsData.sodium || 0) * 10) / 10,
       }
     });
   } catch (error) {
