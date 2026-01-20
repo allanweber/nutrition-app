@@ -14,6 +14,7 @@ import {
   FAQ,
   FinalCTA,
   Footer,
+  ScrollToTop,
 } from '@/components/landing';
 
 export default async function Home() {
@@ -38,6 +39,7 @@ export default async function Home() {
       <FAQ />
       <FinalCTA />
       <Footer />
+      <ScrollToTop />
     </main>
   );
 }

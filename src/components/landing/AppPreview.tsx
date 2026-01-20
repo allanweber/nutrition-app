@@ -12,6 +12,15 @@ import {
   TrendingUp,
   Calendar
 } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -227,8 +236,21 @@ function FoodLogPreview() {
 }
 
 function AnalyticsPreview() {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const values = [85, 92, 78, 95, 88, 70, 82];
+  const chartData = [
+    { day: 'Mon', calories: 1850, protein: 95, carbs: 220 },
+    { day: 'Tue', calories: 2100, protein: 110, carbs: 245 },
+    { day: 'Wed', calories: 1780, protein: 88, carbs: 195 },
+    { day: 'Thu', calories: 1950, protein: 102, carbs: 230 },
+    { day: 'Fri', calories: 2050, protein: 115, carbs: 240 },
+    { day: 'Sat', calories: 1650, protein: 78, carbs: 180 },
+    { day: 'Sun', calories: 1920, protein: 98, carbs: 215 },
+  ];
+
+  const weeklyStats = [
+    { label: 'Avg Calories', value: '1,900', change: '+3%', positive: true },
+    { label: 'Protein Goal', value: '92%', change: '+8%', positive: true },
+    { label: 'Streak', value: '7 days', change: '', positive: true },
+  ];
 
   return (
     <motion.div
@@ -236,39 +258,97 @@ function AnalyticsPreview() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
+      className="space-y-6"
     >
-      <div className="flex items-center justify-between mb-6">
-       <div className="flex items-center space-x-2">
-         <TrendingUp className="h-5 w-5 text-emerald-500" />
-         <span className="font-semibold text-foreground">Weekly Goal Progress</span>
-       </div>
-       <span className="text-sm text-muted-foreground">This week</span>
-      </div>
-
-      <div className="flex items-end justify-between h-48 px-4">
-        {days.map((day, index) => (
-          <div key={day} className="flex flex-col items-center space-y-2">
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: `${values[index]}%` }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`w-8 md:w-12 rounded-t-md ${
-                values[index] >= 80 ? 'bg-emerald-500' : 'bg-emerald-200'
-              }`}
-            />
-             <span className="text-xs text-muted-foreground">{day}</span>
-          </div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-4">
+        {weeklyStats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            className="bg-card rounded-lg p-4 border border-border"
+          >
+            <div className="text-sm text-muted-foreground">{stat.label}</div>
+            <div className="flex items-end space-x-2 mt-1">
+              <span className="text-xl font-bold text-foreground">{stat.value}</span>
+              {stat.change && (
+                <span className={`text-xs ${stat.positive ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {stat.change}
+                </span>
+              )}
+            </div>
+          </motion.div>
         ))}
       </div>
 
-      <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-emerald-500" />
-          <span className="text-muted-foreground">Goal met (80%+)</span>
-         </div>
-         <div className="flex items-center space-x-2">
-           <div className="w-3 h-3 rounded bg-emerald-200" />
-           <span className="text-muted-foreground">Below goal</span>
+      {/* Chart */}
+      <div className="bg-card rounded-xl p-5 border border-border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5 text-emerald-500" />
+            <span className="font-semibold text-foreground">Calorie Intake</span>
+          </div>
+          <span className="text-sm text-muted-foreground">This week</span>
+        </div>
+
+        {/* Area Chart */}
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="calorieGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <XAxis 
+                dataKey="day" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+                domain={[1400, 2400]}
+                tickFormatter={(value) => `${value / 1000}k`}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+                formatter={(value) => [`${value} cal`, 'Calories']}
+              />
+              <Area
+                type="monotone"
+                dataKey="calories"
+                stroke="#10b981"
+                strokeWidth={2}
+                fill="url(#calorieGradient)"
+                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: '#10b981' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Legend */}
+        <div className="mt-2 flex items-center justify-center space-x-6 text-sm">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+            <span className="text-muted-foreground">Daily Calories</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-6 border-t-2 border-dashed border-gray-400" />
+            <span className="text-muted-foreground">Goal: 2,000</span>
+          </div>
         </div>
       </div>
     </motion.div>
