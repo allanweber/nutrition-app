@@ -78,7 +78,7 @@ export default function ForProfessionals() {
   return (
     <section
       id="for-professionals"
-      className="py-20 md:py-28 bg-slate-900 overflow-hidden"
+      className="py-20 md:py-28 bg-background overflow-hidden"
     >
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -91,19 +91,19 @@ export default function ForProfessionals() {
             className="order-2 lg:order-1"
           >
             {/* Dashboard Card */}
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl overflow-hidden">
               {/* Dashboard Header */}
-              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
+              <div className="bg-primary p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-white font-bold text-lg">
+                    <h3 className="text-primary-foreground font-bold text-lg">
                       Client Dashboard
                     </h3>
-                    <p className="text-emerald-100 text-sm">8 active clients</p>
+                    <p className="text-accent text-sm">8 active clients</p>
                   </div>
-                  <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
-                    <BadgeCheck className="h-4 w-4 text-white" />
-                    <span className="text-white text-sm font-medium">
+                   <div className="flex items-center space-x-2 bg-primary-foreground/20 rounded-full px-3 py-1">
+                    <BadgeCheck className="h-4 w-4 text-primary-foreground" />
+                    <span className="text-primary-foreground text-sm font-medium">
                       Verified RD
                     </span>
                   </div>
@@ -144,64 +144,64 @@ export default function ForProfessionals() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     viewport={{ once: true }}
-                    className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
-                        {client.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {client.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {client.goal}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">
-                          {client.progress}%
-                        </div>
-                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${client.progress}%` }}
-                            transition={{
-                              duration: 0.8,
-                              delay: 0.5 + index * 0.1,
-                            }}
-                            viewport={{ once: true }}
-                            className={`h-full rounded-full ${
-                              client.status === 'on-track'
-                                ? 'bg-emerald-500'
-                                : 'bg-amber-500'
-                            }`}
-                          />
-                        </div>
-                      </div>
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          client.status === 'on-track'
-                            ? 'bg-emerald-500'
-                            : 'bg-amber-500'
-                        }`}
-                      />
+                     className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                   >
+                     <div className="flex items-center space-x-3">
+                       <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-medium">
+                         {client.name.charAt(0)}
+                       </div>
+                       <div>
+                         <div className="font-medium text-card-foreground">
+                           {client.name}
+                         </div>
+                         <div className="text-xs text-muted-foreground">
+                           {client.goal}
+                         </div>
+                       </div>
+                     </div>
+                     <div className="flex items-center space-x-3">
+                       <div className="text-right">
+                         <div className="text-sm font-medium text-card-foreground">
+                           {client.progress}%
+                         </div>
+                         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                           <motion.div
+                             initial={{ width: 0 }}
+                             whileInView={{ width: `${client.progress}%` }}
+                             transition={{
+                               duration: 0.8,
+                               delay: 0.5 + index * 0.1,
+                             }}
+                             viewport={{ once: true }}
+                             className={`h-full rounded-full ${
+                               client.status === 'on-track'
+                                 ? 'bg-primary'
+                                 : 'bg-amber-500'
+                             }`}
+                           />
+                         </div>
+                       </div>
+                       <div
+                         className={`w-2 h-2 rounded-full ${
+                           client.status === 'on-track'
+                             ? 'bg-primary'
+                             : 'bg-amber-500'
+                         }`}
+                       />
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Quick Actions */}
-              <div className="bg-gray-50 p-4 flex gap-3">
-                <button className="flex-1 bg-emerald-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-emerald-700 transition-colors">
-                  + Add Client
-                </button>
-                <button className="flex-1 bg-white border border-gray-200 text-gray-700 rounded-lg py-2 text-sm font-medium hover:bg-gray-50 transition-colors">
-                  Create Plan
-                </button>
-              </div>
+               {/* Quick Actions */}
+               <div className="bg-muted p-4 flex gap-3">
+                 <button className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
+                   + Add Client
+                 </button>
+                 <button className="flex-1 bg-card border border-border text-card-foreground rounded-lg py-2 text-sm font-medium hover:bg-muted transition-colors">
+                   Create Plan
+                 </button>
+               </div>
             </div>
           </motion.div>
 
@@ -213,18 +213,18 @@ export default function ForProfessionals() {
             viewport={{ once: true }}
             className="order-1 lg:order-2"
           >
-            <div className="inline-flex items-center px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-3 py-1 bg-primary/20 text-accent rounded-full text-sm font-medium mb-6">
               For Professionals
             </div>
 
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
               Powerful Tools for{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+              <span className="text-primary">
                 Nutrition Professionals
               </span>
             </h2>
 
-            <p className="text-lg text-gray-400 mb-8">
+            <p className="text-lg text-muted-foreground mb-8">
               Manage clients, create personalized meal plans, and grow your
               practice with our comprehensive suite of professional tools.
             </p>
@@ -240,45 +240,45 @@ export default function ForProfessionals() {
                   viewport={{ once: true }}
                   className="flex items-start space-x-3"
                 >
-                  <feature.icon className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-white text-sm">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-500 text-xs">
-                      {feature.description}
-                    </p>
-                  </div>
+                  <feature.icon className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                   <div>
+                     <h3 className="font-medium text-foreground text-sm">
+                       {feature.title}
+                     </h3>
+                     <p className="text-muted-foreground text-xs">
+                       {feature.description}
+                     </p>
+                   </div>
                 </motion.div>
               ))}
             </div>
 
-            {/* How It Works for Pros */}
-            <div className="bg-slate-800 rounded-xl p-5 mb-8">
-              <h3 className="text-white font-semibold mb-4">How It Works</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {steps.map((step, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="text-emerald-400 font-bold text-sm">
-                      {step.number}
-                    </div>
-                    <div>
-                      <div className="text-white text-sm font-medium">
-                        {step.title}
-                      </div>
-                      <div className="text-gray-500 text-xs">
-                        {step.description}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+               {/* How It Works for Pros */}
+               <div className="bg-card rounded-xl p-5 mb-8">
+                 <h3 className="text-foreground font-semibold mb-4">How It Works</h3>
+                 <div className="grid grid-cols-2 gap-4">
+                   {steps.map((step, index) => (
+                     <div key={index} className="flex items-start space-x-3">
+                       <div className="text-accent font-bold text-sm">
+                         {step.number}
+                       </div>
+                       <div>
+                         <div className="text-foreground text-sm font-medium">
+                           {step.title}
+                         </div>
+                         <div className="text-muted-foreground text-xs">
+                           {step.description}
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 asChild
               >
                 <Link href="/signup?type=professional">
@@ -289,7 +289,7 @@ export default function ForProfessionals() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-emerald-400 text-emerald-400 hover:bg-emerald-400 hover:text-white"
+                className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                 asChild
               >
                 <a href="#pricing">View Pro Pricing</a>

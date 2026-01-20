@@ -76,7 +76,7 @@ export default function HowItWorks() {
     activeTab === 'individual' ? individualSteps : professionalSteps;
 
   return (
-    <section className="py-20 md:py-28 bg-white">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -86,22 +86,22 @@ export default function HowItWorks() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             How It Works
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Get started in minutes, not hours. Our streamlined process makes
             nutrition tracking effortless.
           </p>
 
           {/* Tab Switcher */}
-          <div className="inline-flex items-center bg-gray-100 rounded-full p-1">
+          <div className="inline-flex items-center bg-muted rounded-full p-1">
             <button
               onClick={() => setActiveTab('individual')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 activeTab === 'individual'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               For Individuals
@@ -110,8 +110,8 @@ export default function HowItWorks() {
               onClick={() => setActiveTab('professional')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 activeTab === 'professional'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               For Professionals
@@ -123,7 +123,7 @@ export default function HowItWorks() {
         <div className="max-w-5xl mx-auto">
           <div className="relative">
             {/* Connection Line */}
-            <div className="hidden md:block absolute top-36 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-200 via-teal-300 to-emerald-200" />
+            <div className="hidden md:block absolute top-36 left-0 right-0 h-0.5 bg-gradient-to-r from-border via-primary/30 to-border" />
 
             {/* Steps Grid */}
             <motion.div
@@ -144,19 +144,19 @@ export default function HowItWorks() {
                 >
                   {/* Step Number */}
                   <div className="relative z-10 mx-auto mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200 mx-auto transform hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 mx-auto transform hover:scale-105 transition-transform">
                       <step.icon className="h-7 w-7 text-white" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md text-sm font-bold text-emerald-600">
+                    <div className="absolute -right-2 w-7 h-7 bg-background rounded-full flex items-center justify-center shadow-md text-sm font-bold text-primary">
                       {index + 1}
                     </div>
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {step.title}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mt-4">
+                  <p className="text-muted-foreground text-sm leading-relaxed mt-8">
                     {step.description}
                   </p>
                 </motion.div>

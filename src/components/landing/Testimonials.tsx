@@ -56,7 +56,7 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-20 md:py-28 bg-gray-50 overflow-hidden">
+    <section className="py-20 md:py-28 bg-muted overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -66,10 +66,10 @@ export default function Testimonials() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Loved by Thousands
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             See what individuals and professionals are saying about NutritionTracker.
           </p>
         </motion.div>
@@ -83,13 +83,13 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              className="bg-card rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
             >
               {/* Quote Icon */}
               <Quote className="h-8 w-8 text-emerald-200 mb-4" />
 
               {/* Content */}
-              <p className="text-gray-700 mb-6 leading-relaxed">
+              <p className="text-foreground mb-6 leading-relaxed">
                 &ldquo;{testimonial.content}&rdquo;
               </p>
 
@@ -102,7 +102,7 @@ export default function Testimonials() {
 
               {/* Author */}
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground font-medium ${
                   testimonial.type === 'professional' 
                     ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
                     : 'bg-gradient-to-br from-emerald-500 to-teal-600'
@@ -110,8 +110,8 @@ export default function Testimonials() {
                   {testimonial.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900">{testimonial.name}</div>
-                  <div className="text-sm text-gray-500 flex items-center">
+                  <div className="font-medium text-foreground">{testimonial.name}</div>
+                  <div className="text-sm text-muted-foreground flex items-center">
                     {testimonial.role}
                     {testimonial.type === 'professional' && (
                       <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">

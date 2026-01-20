@@ -119,7 +119,7 @@ export default function Pricing() {
   const plans = planType === 'individual' ? individualPlans : professionalPlans;
 
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-white">
+    <section id="pricing" className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -129,21 +129,21 @@ export default function Pricing() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Choose the plan that&apos;s right for you. All plans include a free trial.
           </p>
 
           {/* Plan Type Switcher */}
-          <div className="inline-flex items-center bg-gray-100 rounded-full p-1">
+          <div className="inline-flex items-center bg-muted rounded-full p-1">
             <button
               onClick={() => setPlanType('individual')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 planType === 'individual'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               For Individuals
@@ -152,8 +152,8 @@ export default function Pricing() {
               onClick={() => setPlanType('professional')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 planType === 'professional'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               For Professionals
@@ -178,8 +178,8 @@ export default function Pricing() {
               viewport={{ once: true }}
               className={`relative rounded-2xl p-8 ${
                 plan.popular
-                  ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-200'
-                  : 'bg-white border border-gray-200'
+                  ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-primary-foreground shadow-xl shadow-emerald-200'
+                  : 'bg-card border border-border'
               }`}
             >
               {/* Popular Badge */}
@@ -203,20 +203,20 @@ export default function Pricing() {
 
               {/* Plan Header */}
               <div className="text-center mb-6">
-                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
                   {plan.name}
                 </h3>
-                <p className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-gray-500'}`}>
+                <p className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-muted-foreground'}`}>
                   {plan.description}
                 </p>
               </div>
 
               {/* Price */}
               <div className="text-center mb-6">
-                <span className={`text-4xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>
+                <span className={`text-4xl font-bold ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
                   {plan.price}
                 </span>
-                <span className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-gray-500'}`}>
+                <span className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-muted-foreground'}`}>
                   {' '}/{plan.period}
                 </span>
               </div>
@@ -227,13 +227,13 @@ export default function Pricing() {
                   <li key={featureIndex} className="flex items-start space-x-3">
                     {feature.included ? (
                       <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-200' : 'text-emerald-500'}`} />
-                    ) : (
-                      <X className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-300/50' : 'text-gray-300'}`} />
-                    )}
-                    <span className={`text-sm ${
-                      feature.included 
-                        ? plan.popular ? 'text-white' : 'text-gray-700'
-                        : plan.popular ? 'text-emerald-200/50' : 'text-gray-400'
+                     ) : (
+                       <X className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-300/50' : 'text-muted-foreground/50'}`} />
+                     )}
+                     <span className={`text-sm ${
+                       feature.included 
+                         ? plan.popular ? 'text-primary-foreground' : 'text-foreground'
+                         : plan.popular ? 'text-emerald-200/50' : 'text-muted-foreground'
                     }`}>
                       {feature.text}
                     </span>
@@ -265,11 +265,11 @@ export default function Pricing() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           viewport={{ once: true }}
-          className="text-center mt-12 text-gray-500 text-sm"
+          className="text-center mt-12 text-muted-foreground text-sm"
         >
           <p>All plans include a 14-day free trial. No credit card required to start.</p>
           <p className="mt-2">
-            Questions? <a href="/contact" className="text-emerald-600 hover:underline">Contact our sales team</a>
+            Questions? <a href="/contact" className="text-primary hover:underline">Contact our sales team</a>
           </p>
         </motion.div>
       </div>

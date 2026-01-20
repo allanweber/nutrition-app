@@ -31,7 +31,7 @@ export default function Navbar() {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm'
+          ? 'bg-card/95 backdrop-blur-md shadow-sm'
           : 'bg-transparent'
       }`}
     >
@@ -39,12 +39,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <span className={`font-bold text-xl ${isScrolled ? 'text-gray-900' : 'text-gray-900'}`}>
-              NutritionTracker
-            </span>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+               <span className="text-primary-foreground font-bold text-lg">N</span>
+             </div>
+             <span className={`font-bold text-xl ${isScrolled ? 'text-foreground' : 'text-foreground'}`}>
+               NutritionTracker
+             </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -53,8 +53,8 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-emerald-600 ${
-                  isScrolled ? 'text-gray-600' : 'text-gray-700'
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  isScrolled ? 'text-muted-foreground' : 'text-muted-foreground'
                 }`}
               >
                 {link.label}
@@ -69,7 +69,7 @@ export default function Navbar() {
             </Button>
             <Button 
               asChild
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Link href="/signup">Get Started</Link>
             </Button>
@@ -81,11 +81,11 @@ export default function Navbar() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6 text-gray-900" />
-            ) : (
-              <Menu className="h-6 w-6 text-gray-900" />
-            )}
+             {isMobileMenuOpen ? (
+               <X className="h-6 w-6 text-foreground" />
+             ) : (
+               <Menu className="h-6 w-6 text-foreground" />
+             )}
           </button>
         </div>
 
@@ -95,14 +95,14 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t"
+            className="md:hidden bg-card border-t border-border"
           >
             <div className="px-4 py-6 space-y-4">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="block text-gray-600 hover:text-emerald-600 font-medium"
+                  className="block text-muted-foreground hover:text-primary font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
@@ -112,7 +112,7 @@ export default function Navbar() {
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/login">Log in</Link>
                 </Button>
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700" asChild>
+                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
                   <Link href="/signup">Get Started</Link>
                 </Button>
               </div>

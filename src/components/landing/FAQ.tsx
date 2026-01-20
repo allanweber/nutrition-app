@@ -68,7 +68,7 @@ export default function FAQ() {
   };
 
   return (
-    <section className="py-20 md:py-28 bg-gray-50">
+    <section className="py-20 md:py-28 bg-muted">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -78,10 +78,10 @@ export default function FAQ() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Frequently Asked Questions
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Everything you need to know about NutritionTracker.
           </p>
         </motion.div>
@@ -96,7 +96,7 @@ export default function FAQ() {
               transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full mr-3" />
                 {category.category}
               </h3>
@@ -109,17 +109,17 @@ export default function FAQ() {
                   return (
                     <div
                       key={itemId}
-                      className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+                      className="bg-card rounded-xl border border-border overflow-hidden"
                     >
                       <button
                         onClick={() => toggleItem(itemId)}
-                        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-muted transition-colors"
                       >
-                        <span className="font-medium text-gray-900 pr-4">
+                        <span className="font-medium text-foreground pr-4">
                           {faq.question}
                         </span>
                         <ChevronDown
-                          className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${
+                          className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${
                             isOpen ? 'rotate-180' : ''
                           }`}
                         />
@@ -133,7 +133,7 @@ export default function FAQ() {
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="px-6 pb-4 text-gray-600 leading-relaxed">
+                            <div className="px-6 pb-4 text-muted-foreground leading-relaxed">
                               {faq.answer}
                             </div>
                           </motion.div>
@@ -155,7 +155,7 @@ export default function FAQ() {
           viewport={{ once: true }}
           className="text-center mt-12"
         >
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Still have questions?{' '}
             <a href="/contact" className="text-emerald-600 font-medium hover:underline">
               Contact our support team

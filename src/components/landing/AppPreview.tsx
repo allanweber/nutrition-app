@@ -23,7 +23,7 @@ export default function AppPreview() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <section id="demo" className="py-20 md:py-28 bg-white">
+    <section id="demo" className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <motion.div
@@ -33,10 +33,10 @@ export default function AppPreview() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             See It In Action
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             A powerful yet simple interface designed to make nutrition tracking effortless.
           </p>
         </motion.div>
@@ -63,19 +63,19 @@ export default function AppPreview() {
           </div>
 
           {/* App Content */}
-          <div className="bg-gray-50 rounded-b-xl border border-t-0 border-gray-200 overflow-hidden">
-            {/* Tab Navigation */}
-            <div className="bg-white border-b border-gray-200 px-4">
+            <div className="bg-muted rounded-b-xl border border-t-0 border-border overflow-hidden">
+             {/* Tab Navigation */}
+             <div className="bg-card border-b border-border px-4">
               <div className="flex space-x-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors relative ${
-                      activeTab === tab.id
-                        ? 'text-emerald-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                     className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors relative ${
+                       activeTab === tab.id
+                         ? 'text-emerald-600'
+                         : 'text-muted-foreground hover:text-foreground'
+                     }`}
                   >
                     <tab.icon className="h-4 w-4" />
                     <span>{tab.label}</span>
@@ -115,15 +115,15 @@ function DashboardPreview() {
       className="grid md:grid-cols-3 gap-4"
     >
       {/* Calories Card */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Calories</h3>
-          <Flame className="h-5 w-5 text-orange-500" />
-        </div>
-        <div className="flex items-end space-x-2">
-          <span className="text-3xl font-bold text-gray-900">1,560</span>
-          <span className="text-gray-500 mb-1">/ 2,000</span>
-        </div>
+      <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
+         <div className="flex items-center justify-between mb-4">
+           <h3 className="font-semibold text-foreground">Calories</h3>
+           <Flame className="h-5 w-5 text-orange-500" />
+         </div>
+         <div className="flex items-end space-x-2">
+           <span className="text-3xl font-bold text-foreground">1,560</span>
+           <span className="text-muted-foreground mb-1">/ 2,000</span>
+         </div>
         <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
@@ -135,15 +135,15 @@ function DashboardPreview() {
       </div>
 
       {/* Protein Card */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Protein</h3>
-          <Beef className="h-5 w-5 text-red-500" />
-        </div>
-        <div className="flex items-end space-x-2">
-          <span className="text-3xl font-bold text-gray-900">85g</span>
-          <span className="text-gray-500 mb-1">/ 120g</span>
-        </div>
+       <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
+         <div className="flex items-center justify-between mb-4">
+           <h3 className="font-semibold text-foreground">Protein</h3>
+           <Beef className="h-5 w-5 text-red-500" />
+         </div>
+         <div className="flex items-end space-x-2">
+           <span className="text-3xl font-bold text-foreground">85g</span>
+           <span className="text-muted-foreground mb-1">/ 120g</span>
+         </div>
         <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
@@ -155,15 +155,15 @@ function DashboardPreview() {
       </div>
 
       {/* Carbs Card */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Carbs</h3>
-          <Wheat className="h-5 w-5 text-amber-500" />
-        </div>
-        <div className="flex items-end space-x-2">
-          <span className="text-3xl font-bold text-gray-900">180g</span>
-          <span className="text-gray-500 mb-1">/ 250g</span>
-        </div>
+       <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
+         <div className="flex items-center justify-between mb-4">
+           <h3 className="font-semibold text-foreground">Carbs</h3>
+           <Wheat className="h-5 w-5 text-amber-500" />
+         </div>
+         <div className="flex items-end space-x-2">
+           <span className="text-3xl font-bold text-foreground">180g</span>
+           <span className="text-muted-foreground mb-1">/ 250g</span>
+         </div>
         <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
@@ -193,33 +193,33 @@ function FoodLogPreview() {
       className="space-y-4"
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Calendar className="h-5 w-5 text-gray-400" />
-          <span className="font-semibold text-gray-900">Today, January 20</span>
-        </div>
+         <div className="flex items-center space-x-3">
+           <Calendar className="h-5 w-5 text-muted-foreground" />
+           <span className="font-semibold text-foreground">Today, January 20</span>
+         </div>
         <span className="text-emerald-600 font-medium">1,180 cal logged</span>
       </div>
 
       <div className="space-y-3">
         {meals.map((meal, index) => (
-          <motion.div
-            key={meal.meal}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">{meal.time}</span>
-                <span className="font-medium text-gray-900">{meal.meal}</span>
-              </div>
-              <span className="text-sm font-medium text-gray-600">{meal.calories} cal</span>
-            </div>
-            <div className="text-sm text-gray-500">
-              {meal.foods.join(' - ')}
-            </div>
-          </motion.div>
+             <motion.div
+             key={meal.meal}
+             initial={{ opacity: 0, x: -20 }}
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ duration: 0.3, delay: index * 0.1 }}
+             className="bg-card rounded-lg p-4 shadow-sm border border-border"
+           >
+             <div className="flex items-center justify-between mb-2">
+               <div className="flex items-center space-x-3">
+                 <span className="text-sm text-muted-foreground">{meal.time}</span>
+                 <span className="font-medium text-foreground">{meal.meal}</span>
+               </div>
+               <span className="text-sm font-medium text-muted-foreground">{meal.calories} cal</span>
+             </div>
+             <div className="text-sm text-muted-foreground">
+               {meal.foods.join(' - ')}
+             </div>
+           </motion.div>
         ))}
       </div>
     </motion.div>
@@ -238,11 +238,11 @@ function AnalyticsPreview() {
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <TrendingUp className="h-5 w-5 text-emerald-500" />
-          <span className="font-semibold text-gray-900">Weekly Goal Progress</span>
-        </div>
-        <span className="text-sm text-gray-500">This week</span>
+       <div className="flex items-center space-x-2">
+         <TrendingUp className="h-5 w-5 text-emerald-500" />
+         <span className="font-semibold text-foreground">Weekly Goal Progress</span>
+       </div>
+       <span className="text-sm text-muted-foreground">This week</span>
       </div>
 
       <div className="flex items-end justify-between h-48 px-4">
@@ -256,7 +256,7 @@ function AnalyticsPreview() {
                 values[index] >= 80 ? 'bg-emerald-500' : 'bg-emerald-200'
               }`}
             />
-            <span className="text-xs text-gray-500">{day}</span>
+             <span className="text-xs text-muted-foreground">{day}</span>
           </div>
         ))}
       </div>
@@ -264,11 +264,11 @@ function AnalyticsPreview() {
       <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 rounded bg-emerald-500" />
-          <span className="text-gray-600">Goal met (80%+)</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-emerald-200" />
-          <span className="text-gray-600">Below goal</span>
+          <span className="text-muted-foreground">Goal met (80%+)</span>
+         </div>
+         <div className="flex items-center space-x-2">
+           <div className="w-3 h-3 rounded bg-emerald-200" />
+           <span className="text-muted-foreground">Below goal</span>
         </div>
       </div>
     </motion.div>

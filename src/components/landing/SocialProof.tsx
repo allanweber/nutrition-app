@@ -47,13 +47,13 @@ function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
       viewport={{ once: true }}
       className="flex flex-col items-center"
     >
-      <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-3">
-        <Icon className="h-6 w-6 text-emerald-400" />
+      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
+        <Icon className="h-6 w-6 text-primary" />
       </div>
-      <div className="text-3xl md:text-4xl font-bold text-white mb-1">
-        {count.toLocaleString()}{suffix}
-      </div>
-      <div className="text-emerald-200 text-sm">{label}</div>
+        <div className="text-3xl md:text-4xl font-bold text-foreground mb-1">
+          {count.toLocaleString()}{suffix}
+        </div>
+        <div className="text-muted-foreground text-sm">{label}</div>
     </motion.div>
   );
 }
@@ -67,7 +67,7 @@ export default function SocialProof() {
   ];
 
   return (
-    <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 py-12 md:py-16">
+    <section className="bg-muted py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, index) => (
