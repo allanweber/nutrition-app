@@ -16,7 +16,7 @@ export class LoginPage {
     this.submitButton = page.getByTestId('submit-button');
     this.googleButton = page.getByTestId('google-button');
     this.errorMessage = page.getByTestId('error-message');
-    this.signupLink = page.getByRole('link', { name: 'Sign up' });
+    this.signupLink = page.getByRole('link', { name: 'Create one free' });
   }
 
   async goto() {
