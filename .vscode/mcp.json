@@ -3,6 +3,10 @@
     "github-mcp": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
     }
   }
 }
