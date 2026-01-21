@@ -22,7 +22,6 @@ const footerLinks = {
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Cookie Policy', href: '/cookies' },
-    { label: 'HIPAA', href: '/hipaa' },
   ],
   support: [
     { label: 'Help Center', href: '/help' },
