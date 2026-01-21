@@ -52,3 +52,17 @@ npx drizzle-kit migrate
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Databases and apis that contain nutrition information
+
+USDA FoodData Central - Free government database and api for nutrition information on a variety of branded and basic foods.
+OpenFoodFacts - Free crowdsourced database of food products.
+ESHA - Nutrition database API.
+Zestful - API to turn plain recipe strings into structured JSON.
+Spoonacular - Nutrition and recipe API.
+Edamam - Nutrition database and API.
+FatSecret - Nutrition database and API.
+NutritionX - Nutrition database and API.
+Samsung Food Recipe Nutrition Calculator - Nutrition calculator for recipes.
+Documenu - Restaurant menu API.
+TheMealDB - Small meal and recipe database and API.
