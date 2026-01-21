@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export async function proxy(request: NextRequest) {
-  // Skip auth for API routes, static files, and auth routes
+  // Skip auth for API routes, static files, auth routes, and legal pages
   if (
     request.nextUrl.pathname.startsWith('/api/auth') ||
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/static') ||
     request.nextUrl.pathname === '/login' ||
     request.nextUrl.pathname === '/signup' ||
-    request.nextUrl.pathname === '/'
+    request.nextUrl.pathname === '/' ||
+    request.nextUrl.pathname.startsWith('/terms') ||
+    request.nextUrl.pathname.startsWith('/privacy')
   ) {
     return NextResponse.next();
   }
@@ -33,7 +35,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
