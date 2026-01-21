@@ -1,5 +1,9 @@
+import {
+  DailyNutritionSummary,
+  FoodLogEntry,
+  NutritionGoals,
+} from '@/types/food';
 import { create } from 'zustand';
-import { DailyNutritionSummary, NutritionGoals, FoodLogEntry } from '@/types/nutritionix';
 
 interface DashboardStore {
   // State
@@ -17,7 +21,7 @@ interface DashboardStore {
   setRecentLogs: (logs: FoodLogEntry[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  
+
   // Computed
   getCaloriePercentage: () => number;
   getProteinPercentage: () => number;
@@ -46,13 +50,19 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   getCaloriePercentage: () => {
     const { todaySummary, goals } = get();
     if (!todaySummary || !goals || goals.calories === 0) return 0;
-    return Math.min(Math.round((todaySummary.calories / goals.calories) * 100), 100);
+    return Math.min(
+      Math.round((todaySummary.calories / goals.calories) * 100),
+      100,
+    );
   },
 
   getProteinPercentage: () => {
     const { todaySummary, goals } = get();
     if (!todaySummary || !goals || goals.protein === 0) return 0;
-    return Math.min(Math.round((todaySummary.protein / goals.protein) * 100), 100);
+    return Math.min(
+      Math.round((todaySummary.protein / goals.protein) * 100),
+      100,
+    );
   },
 
   getCarbsPercentage: () => {

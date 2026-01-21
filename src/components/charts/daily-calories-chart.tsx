@@ -1,9 +1,17 @@
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DailyNutritionSummary } from '@/types/nutritionix';
-import { NutritionGoals } from '@/types/nutritionix';
+import { DailyNutritionSummary, NutritionGoals } from '@/types/food';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface DailyCaloriesChartProps {
   data: DailyNutritionSummary[];
@@ -26,11 +34,11 @@ export function DailyCaloriesChart({ data, goals }: DailyCaloriesChartProps) {
     );
   }
 
-  const chartData = data.map(item => ({
-    date: new Date(item.date).toLocaleDateString('en-US', { 
+  const chartData = data.map((item) => ({
+    date: new Date(item.date).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     }),
     calories: item.calories,
   }));
@@ -46,23 +54,18 @@ export function DailyCaloriesChart({ data, goals }: DailyCaloriesChartProps) {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date"
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
+            <XAxis dataKey="date" angle={-45} textAnchor="end" height={60} />
             <YAxis />
             <Tooltip />
-            <ReferenceLine 
-              y={goalLine} 
-              stroke="#ef4444" 
+            <ReferenceLine
+              y={goalLine}
+              stroke="#ef4444"
               strokeDasharray="5 5"
               label={`Goal: ${goalLine}`}
             />
-            <Line 
-              type="monotone" 
-              dataKey="calories" 
+            <Line
+              type="monotone"
+              dataKey="calories"
               stroke="#8b5cf6"
               strokeWidth={2}
               dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DailyNutritionSummary, FoodLogEntry } from '@/types/nutritionix';
+import { DailyNutritionSummary, FoodLogEntry } from '@/types/food';
+import { useEffect, useState } from 'react';
 
 export function useDailyNutrition(date?: string) {
   const [data, setData] = useState<DailyNutritionSummary | null>(null);
@@ -12,14 +12,14 @@ export function useDailyNutrition(date?: string) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const targetDate = date || new Date().toISOString().split('T')[0];
         const response = await fetch(`/api/analytics/daily?date=${targetDate}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch daily nutrition');
         }
-        
+
         const result = await response.json();
         setData(result.summary);
         setLogs(result.logs);

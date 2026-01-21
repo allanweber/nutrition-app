@@ -1,6 +1,11 @@
 // Generic food data types - source agnostic
 
-export type FoodSource = 'nutritionix' | 'user_custom' | 'usda' | 'manual' | 'database';
+export type FoodSource =
+  | 'nutritionix'
+  | 'user_custom'
+  | 'usda'
+  | 'manual'
+  | 'database';
 
 export interface FoodPhoto {
   thumb?: string | null;
@@ -50,7 +55,7 @@ export interface FoodLogEntry {
   id: number;
   userId: string;
   foodId: number;
-  quantity: string;
+  quantity: number;
   servingUnit?: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   consumedAt: Date;
@@ -71,6 +76,22 @@ export interface DailyNutritionSummary {
   foodCount: number;
 }
 
+export type GoalType =
+  | 'weight_loss'
+  | 'maintenance'
+  | 'weight_gain'
+  | 'muscle_gain'
+  | 'fat_loss'
+  | 'performance'
+  | 'general_health';
+
+export type ActivityLevel =
+  | 'sedentary'
+  | 'light'
+  | 'moderate'
+  | 'active'
+  | 'extra_active';
+
 export interface NutritionGoals {
   calories: number;
   protein: number;
@@ -78,8 +99,8 @@ export interface NutritionGoals {
   fat: number;
   fiber: number;
   sodium: number;
-  goalType?: 'weight_loss' | 'maintenance' | 'weight_gain';
-  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active';
+  goalType?: GoalType;
+  activityLevel?: ActivityLevel;
 }
 
 // Source-specific types
@@ -192,7 +213,9 @@ export interface ConvertedFood {
 }
 
 // Helper functions to convert between types
-export function nutritionixToBaseFood(nutritionixFood: NutritionixFood): ConvertedFood {
+export function nutritionixToBaseFood(
+  nutritionixFood: NutritionixFood,
+): ConvertedFood {
   return {
     sourceId: nutritionixFood.nix_item_id || nutritionixFood.upc || null,
     source: 'nutritionix',
@@ -211,10 +234,12 @@ export function nutritionixToBaseFood(nutritionixFood: NutritionixFood): Convert
     fullNutrients: nutritionixFood.full_nutrients,
     isRaw: nutritionixFood.metadata?.is_raw_food || false,
     isCustom: false,
-    photo: nutritionixFood.photo ? {
-      thumb: nutritionixFood.photo.thumb,
-      highres: nutritionixFood.photo.highres,
-    } : null,
+    photo: nutritionixFood.photo
+      ? {
+          thumb: nutritionixFood.photo.thumb,
+          highres: nutritionixFood.photo.highres,
+        }
+      : null,
     altMeasures: nutritionixFood.alt_measures?.map((m, i) => ({
       serving_weight: m.serving_weight,
       measure: m.measure,

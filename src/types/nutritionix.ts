@@ -118,39 +118,3 @@ export interface CachedFood {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export interface FoodLogEntry {
-  id: number;
-  userId: number;
-  foodId: number;
-  quantity: number;
-  servingUnit?: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  consumedAt: Date;
-  createdAt: Date;
-  food: CachedFood;
-}
-
-// Nutrition summary types
-export interface DailyNutritionSummary {
-  date: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  foodCount: number;
-}
-
-export interface NutritionGoals {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sodium: number;
-  goalType?: 'weight_loss' | 'maintenance' | 'weight_gain';
-  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active';
-}

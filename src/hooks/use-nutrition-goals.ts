@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { NutritionGoals } from '@/types/nutritionix';
+import { NutritionGoals } from '@/types/food';
+import { useEffect, useState } from 'react';
 
 export function useNutritionGoals() {
   const [data, setData] = useState<NutritionGoals | null>(null);
@@ -11,13 +11,13 @@ export function useNutritionGoals() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const response = await fetch('/api/goals');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch goals');
         }
-        
+
         const result = await response.json();
         setData(result.goals);
       } catch (err) {
@@ -33,7 +33,7 @@ export function useNutritionGoals() {
   const updateGoals = async (goals: NutritionGoals) => {
     try {
       setError(null);
-      
+
       const response = await fetch('/api/goals', {
         method: 'PUT',
         headers: {
@@ -41,11 +41,11 @@ export function useNutritionGoals() {
         },
         body: JSON.stringify({ goals }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update goals');
       }
-      
+
       const result = await response.json();
       setData(result.goals);
       return true;

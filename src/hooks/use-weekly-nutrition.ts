@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DailyNutritionSummary } from '@/types/nutritionix';
+import { DailyNutritionSummary } from '@/types/food';
+import { useEffect, useState } from 'react';
 
 export function useWeeklyNutrition(days: number = 7) {
   const [data, setData] = useState<DailyNutritionSummary[]>([]);
@@ -11,13 +11,13 @@ export function useWeeklyNutrition(days: number = 7) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const response = await fetch(`/api/analytics/weekly?days=${days}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch weekly nutrition');
         }
-        
+
         const result = await response.json();
         setData(result.data);
       } catch (err) {

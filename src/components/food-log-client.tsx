@@ -1,22 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCallback, useEffect, useState } from 'react';
 
-import { 
-  Flame, 
-  Beef, 
-  Wheat, 
-  Trash2, 
-  ChevronLeft, 
-  ChevronRight,
+import { addDays, format, isToday, subDays } from 'date-fns';
+import {
+  Beef,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
   Loader2,
+  Trash2,
+  Wheat,
 } from 'lucide-react';
-import { format, addDays, subDays, isToday } from 'date-fns';
 
 import { FoodLogEntry } from '@/types/food';
 
@@ -45,9 +45,11 @@ const mealTypeLabels: Record<string, string> = {
 
 export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
   const [logs, setLogs] = useState<FoodLogEntry[]>([]);
-  const [logsByMeal, setLogsByMeal] = useState<Record<string, FoodLogEntry[]>>({});
+  const [logsByMeal, setLogsByMeal] = useState<Record<string, FoodLogEntry[]>>(
+    {},
+  );
   const [selectedDate, setSelectedDate] = useState<Date>(
-    initialDate ? new Date(initialDate) : new Date()
+    initialDate ? new Date(initialDate) : new Date(),
   );
   const [totals, setTotals] = useState<Totals>({
     calories: 0,
@@ -67,19 +69,21 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
       const dateStr = format(date, 'yyyy-MM-dd');
       const response = await fetch(`/api/food-logs?date=${dateStr}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setLogs(data.logs || []);
         setLogsByMeal(data.logsByMeal || {});
-        setTotals(data.totals || {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-          fiber: 0,
-          sugar: 0,
-          sodium: 0,
-        });
+        setTotals(
+          data.totals || {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0,
+            sugar: 0,
+            sodium: 0,
+          },
+        );
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -93,11 +97,11 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
   }, [selectedDate, fetchLogs]);
 
   const handlePreviousDay = () => {
-    setSelectedDate(prev => subDays(prev, 1));
+    setSelectedDate((prev) => subDays(prev, 1));
   };
 
   const handleNextDay = () => {
-    setSelectedDate(prev => addDays(prev, 1));
+    setSelectedDate((prev) => addDays(prev, 1));
   };
 
   const handleToday = () => {
@@ -131,7 +135,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
   };
 
   const calculateLogNutrients = (log: FoodLogEntry) => {
-    const qty = parseFloat(log.quantity) || 1;
+    const qty = log.quantity || 1;
     const servingQty = log.food?.servingQty || 1;
     const multiplier = qty / servingQty;
 
@@ -152,11 +156,13 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
             <Button variant="outline" size="icon" onClick={handlePreviousDay}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-center">
                 <div className="text-lg font-semibold">
-                  {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEEE')}
+                  {isToday(selectedDate)
+                    ? 'Today'
+                    : format(selectedDate, 'EEEE')}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {format(selectedDate, 'MMMM d, yyyy')}
@@ -169,10 +175,10 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                 </Button>
               )}
             </div>
-            
-            <Button 
-              variant="outline" 
-              size="icon" 
+
+            <Button
+              variant="outline"
+              size="icon"
               onClick={handleNextDay}
               disabled={isToday(selectedDate)}
             >
@@ -191,22 +197,32 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
               <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{totals.calories}</div>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {totals.calories}
+              </div>
               <div className="text-sm text-muted-foreground">Calories</div>
             </div>
             <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
               <Beef className="h-6 w-6 text-red-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{totals.protein}g</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {totals.protein}g
+              </div>
               <div className="text-sm text-muted-foreground">Protein</div>
             </div>
             <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
               <Wheat className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{totals.carbs}g</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                {totals.carbs}g
+              </div>
               <div className="text-sm text-muted-foreground">Carbs</div>
             </div>
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-              <div className="h-6 w-6 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-bold">F</div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totals.fat}g</div>
+              <div className="h-6 w-6 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-bold">
+                F
+              </div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {totals.fat}g
+              </div>
               <div className="text-sm text-muted-foreground">Fat</div>
             </div>
           </div>
@@ -226,7 +242,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
       ) : logs.length === 0 ? (
         <Card>
           <CardContent className="py-8">
-            <div 
+            <div
               className="text-center text-muted-foreground"
               data-testid="empty-state"
             >
@@ -237,7 +253,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {mealTypeOrder.map(mealType => {
+          {mealTypeOrder.map((mealType) => {
             const mealLogs = logsByMeal[mealType] || [];
             if (mealLogs.length === 0) return null;
 
@@ -251,24 +267,26 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                   fat: acc.fat + nutrients.fat,
                 };
               },
-              { calories: 0, protein: 0, carbs: 0, fat: 0 }
+              { calories: 0, protein: 0, carbs: 0, fat: 0 },
             );
 
             return (
               <Card key={mealType}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{mealTypeLabels[mealType]}</CardTitle>
+                    <CardTitle className="text-lg">
+                      {mealTypeLabels[mealType]}
+                    </CardTitle>
                     <Badge variant="secondary">{mealTotals.calories} cal</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {mealLogs.map(log => {
+                    {mealLogs.map((log) => {
                       const nutrients = calculateLogNutrients(log);
                       return (
-                        <div 
-                          key={log.id} 
+                        <div
+                          key={log.id}
                           className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                           data-testid={`food-log-${log.id}`}
                         >
@@ -280,18 +298,26 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">{log.food.name}</div>
+                            <div className="font-medium truncate">
+                              {log.food.name}
+                            </div>
                             {log.food.brandName && (
-                              <div className="text-sm text-muted-foreground truncate">{log.food.brandName}</div>
+                              <div className="text-sm text-muted-foreground truncate">
+                                {log.food.brandName}
+                              </div>
                             )}
                             <div className="text-sm text-muted-foreground">
-                              {log.quantity} {log.servingUnit || log.food.servingUnit}
+                              {log.quantity}{' '}
+                              {log.servingUnit || log.food.servingUnit}
                             </div>
                           </div>
                           <div className="text-right hidden sm:block">
-                            <div className="font-medium">{nutrients.calories} cal</div>
+                            <div className="font-medium">
+                              {nutrients.calories} cal
+                            </div>
                             <div className="text-xs text-muted-foreground">
-                              P: {nutrients.protein}g | C: {nutrients.carbs}g | F: {nutrients.fat}g
+                              P: {nutrients.protein}g | C: {nutrients.carbs}g |
+                              F: {nutrients.fat}g
                             </div>
                           </div>
                           <Button

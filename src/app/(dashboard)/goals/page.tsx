@@ -1,13 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Target, TrendingUp, Activity, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
+import type { ActivityLevel, GoalType } from '@/types/food';
+import { Activity, Loader2, Target, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
 
 export default function GoalsPage() {
   const { data: goals, isLoading, updateGoals } = useNutritionGoals();
@@ -17,8 +24,8 @@ export default function GoalsPage() {
 
   // Track local edits - null means use value from goals
   const [localEdits, setLocalEdits] = useState<{
-    goalType?: 'weight_loss' | 'maintenance' | 'weight_gain';
-    activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active';
+    goalType?: GoalType;
+    activityLevel?: ActivityLevel;
     calories?: string;
     protein?: string;
     carbs?: string;
@@ -42,8 +49,8 @@ export default function GoalsPage() {
     return defaultValue;
   };
 
-  const goalType = getValue<'weight_loss' | 'maintenance' | 'weight_gain'>('goalType', 'maintenance');
-  const activityLevel = getValue<'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active'>('activityLevel', 'moderate');
+  const goalType = getValue<GoalType>('goalType', 'maintenance');
+  const activityLevel = getValue<ActivityLevel>('activityLevel', 'moderate');
   const calories = getValue<string>('calories', '2000');
   const protein = getValue<string>('protein', '150');
   const carbs = getValue<string>('carbs', '250');
@@ -69,7 +76,7 @@ export default function GoalsPage() {
     };
 
     const success = await updateGoals(goalsData);
-    
+
     setIsSaving(false);
     if (success) {
       setSaveSuccess(true);
@@ -110,36 +117,56 @@ export default function GoalsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="goalType">Goal Type</Label>
-                    <Select 
-                      value={goalType} 
-                      onValueChange={(value) => setLocalEdits(prev => ({ ...prev, goalType: value as 'weight_loss' | 'maintenance' | 'weight_gain' }))}
+                    <Select
+                      value={goalType}
+                      onValueChange={(value) =>
+                        setLocalEdits((prev) => ({
+                          ...prev,
+                          goalType: value as GoalType,
+                        }))
+                      }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select your goal" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="weight_loss">Weight Loss</SelectItem>
+                        <SelectItem value="fat_loss">Fat Loss</SelectItem>
                         <SelectItem value="maintenance">Maintenance</SelectItem>
                         <SelectItem value="weight_gain">Weight Gain</SelectItem>
+                        <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
+                        <SelectItem value="performance">Performance</SelectItem>
+                        <SelectItem value="general_health">
+                          General Health
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="activityLevel">Activity Level</Label>
-                    <Select 
-                      value={activityLevel} 
-                      onValueChange={(value) => setLocalEdits(prev => ({ ...prev, activityLevel: value as 'sedentary' | 'light' | 'moderate' | 'active' | 'extra_active' }))}
+                    <Select
+                      value={activityLevel}
+                      onValueChange={(value) =>
+                        setLocalEdits((prev) => ({
+                          ...prev,
+                          activityLevel: value as ActivityLevel,
+                        }))
+                      }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select activity level" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sedentary">Sedentary</SelectItem>
                         <SelectItem value="light">Light Activity</SelectItem>
-                        <SelectItem value="moderate">Moderate Activity</SelectItem>
+                        <SelectItem value="moderate">
+                          Moderate Activity
+                        </SelectItem>
                         <SelectItem value="active">Very Active</SelectItem>
-                        <SelectItem value="extra_active">Extra Active</SelectItem>
+                        <SelectItem value="extra_active">
+                          Extra Active
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -153,7 +180,12 @@ export default function GoalsPage() {
                         id="calories"
                         type="number"
                         value={calories}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, calories: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            calories: e.target.value,
+                          }))
+                        }
                         placeholder="2000"
                         min="0"
                       />
@@ -165,7 +197,12 @@ export default function GoalsPage() {
                         id="protein"
                         type="number"
                         value={protein}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, protein: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            protein: e.target.value,
+                          }))
+                        }
                         placeholder="150"
                         min="0"
                       />
@@ -177,7 +214,12 @@ export default function GoalsPage() {
                         id="carbs"
                         type="number"
                         value={carbs}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, carbs: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            carbs: e.target.value,
+                          }))
+                        }
                         placeholder="250"
                         min="0"
                       />
@@ -189,7 +231,12 @@ export default function GoalsPage() {
                         id="fat"
                         type="number"
                         value={fat}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, fat: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            fat: e.target.value,
+                          }))
+                        }
                         placeholder="65"
                         min="0"
                       />
@@ -201,7 +248,12 @@ export default function GoalsPage() {
                         id="fiber"
                         type="number"
                         value={fiber}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, fiber: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            fiber: e.target.value,
+                          }))
+                        }
                         placeholder="25"
                         min="0"
                       />
@@ -213,7 +265,12 @@ export default function GoalsPage() {
                         id="sodium"
                         type="number"
                         value={sodium}
-                        onChange={(e) => setLocalEdits(prev => ({ ...prev, sodium: e.target.value }))}
+                        onChange={(e) =>
+                          setLocalEdits((prev) => ({
+                            ...prev,
+                            sodium: e.target.value,
+                          }))
+                        }
                         placeholder="2300"
                         min="0"
                       />
@@ -260,7 +317,8 @@ export default function GoalsPage() {
                 <div className="text-center">
                   <Target className="h-12 w-12 text-blue-500 mx-auto mb-2" />
                   <div className="text-sm text-muted-foreground">
-                    Use our calculator to get personalized recommendations based on your age, gender, weight, and activity level.
+                    Use our calculator to get personalized recommendations based
+                    on your age, gender, weight, and activity level.
                   </div>
                 </div>
                 <Button className="w-full" variant="outline">
@@ -292,7 +350,9 @@ export default function GoalsPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-foreground">0%</div>
-                  <div className="text-sm text-muted-foreground">Goals achieved this month</div>
+                  <div className="text-sm text-muted-foreground">
+                    Goals achieved this month
+                  </div>
                 </div>
               </div>
             </CardContent>

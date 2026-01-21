@@ -53,6 +53,46 @@ npx drizzle-kit migrate
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Seed Data
+
+To populate the database with sample data for testing, run the seed script. **Note:** The dev server must be running for this to work.
+
+```bash
+# In one terminal
+npm run dev
+
+# In another terminal
+npm run db:seed
+```
+
+### Test Accounts
+
+All test accounts use the password: `Password123!`
+
+#### Individual Users (one per goal type)
+
+| Email                           | Name                 | Goal           |
+| ------------------------------- | -------------------- | -------------- |
+| user.weight-loss@example.com    | Alex Weight Loss     | weight_loss    |
+| user.maintenance@example.com    | Jordan Maintenance   | maintenance    |
+| user.weight-gain@example.com    | Sam Weight Gain      | weight_gain    |
+| user.muscle-gain@example.com    | Chris Muscle Gain    | muscle_gain    |
+| user.fat-loss@example.com       | Taylor Fat Loss      | fat_loss       |
+| user.performance@example.com    | Morgan Performance   | performance    |
+| user.general-health@example.com | Casey General Health | general_health |
+
+#### Professional Users
+
+| Email                         | Name              |
+| ----------------------------- | ----------------- |
+| dr.sarah.wilson@example.com   | Dr. Sarah Wilson  |
+| mark.nutritionist@example.com | Mark Thompson, RD |
+
+The seed creates:
+- 15 sample foods (fruits, proteins, grains, etc.)
+- 7 individual users with nutrition goals and 14 days of food logs each
+- 2 professional users (dietitians)
+
 ## Databases and apis that contain nutrition information
 
 USDA FoodData Central - Free government database and api for nutrition information on a variety of branded and basic foods.

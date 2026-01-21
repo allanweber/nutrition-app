@@ -1,8 +1,16 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DailyNutritionSummary } from '@/types/nutritionix';
+import { DailyNutritionSummary } from '@/types/food';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface WeeklyTrendChartProps {
   data: DailyNutritionSummary[];
@@ -34,11 +42,11 @@ export function WeeklyTrendChart({ data, metric }: WeeklyTrendChartProps) {
     );
   }
 
-  const chartData = data.map(item => ({
-    date: new Date(item.date).toLocaleDateString('en-US', { 
+  const chartData = data.map((item) => ({
+    date: new Date(item.date).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     }),
     value: item[metric],
   }));
@@ -52,19 +60,10 @@ export function WeeklyTrendChart({ data, metric }: WeeklyTrendChartProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date"
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
+            <XAxis dataKey="date" angle={-45} textAnchor="end" height={60} />
             <YAxis />
             <Tooltip />
-            <Bar 
-              dataKey="value" 
-              fill={config.color}
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey="value" fill={config.color} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

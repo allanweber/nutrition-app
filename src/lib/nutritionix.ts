@@ -1,4 +1,8 @@
-import { NutritionixFood, NaturalLanguageResponse, InstantSearchResponse } from '@/types/nutritionix';
+import {
+  InstantSearchResponse,
+  NaturalLanguageResponse,
+  NutritionixFood,
+} from '@/types/nutritionix';
 
 class NutritionixAPI {
   private baseUrl = 'https://trackapi.nutritionix.com/v2';
@@ -25,17 +29,23 @@ class NutritionixAPI {
   async searchFoods(query: string): Promise<InstantSearchResponse> {
     // Use mock data when USE_MOCK_NUTRITIONIX is set (for E2E tests)
     if (process.env.USE_MOCK_NUTRITIONIX === 'true') {
-      const { getMockSearchResults } = await import('@/lib/__tests__/mock-nutritionix');
+      const { getMockSearchResults } =
+        await import('@/lib/__tests__/mock-nutritionix');
       return getMockSearchResults(query);
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/search/instant?query=${encodeURIComponent(query)}`, {
-        headers: this.getHeaders(),
-      });
+      const response = await fetch(
+        `${this.baseUrl}/search/instant?query=${encodeURIComponent(query)}`,
+        {
+          headers: this.getHeaders(),
+        },
+      );
 
       if (!response.ok) {
-        throw new Error(`Nutritionix search failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Nutritionix search failed: ${response.status} ${response.statusText}`,
+        );
       }
 
       return await response.json();
@@ -48,7 +58,8 @@ class NutritionixAPI {
   async getNaturalNutrients(query: string): Promise<NaturalLanguageResponse> {
     // Use mock data when USE_MOCK_NUTRITIONIX is set (for E2E tests)
     if (process.env.USE_MOCK_NUTRITIONIX === 'true') {
-      const { getMockNutrientData } = await import('@/lib/__tests__/mock-nutritionix');
+      const { getMockNutrientData } =
+        await import('@/lib/__tests__/mock-nutritionix');
       return getMockNutrientData(query);
     }
 
@@ -63,7 +74,9 @@ class NutritionixAPI {
       });
 
       if (!response.ok) {
-        throw new Error(`Nutritionix natural nutrients failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Nutritionix natural nutrients failed: ${response.status} ${response.statusText}`,
+        );
       }
 
       return await response.json();
@@ -80,7 +93,9 @@ class NutritionixAPI {
       });
 
       if (!response.ok) {
-        throw new Error(`Nutritionix UPC lookup failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Nutritionix UPC lookup failed: ${response.status} ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
