@@ -630,6 +630,14 @@ npm run test:e2e:headed
 npx playwright show-report
 ```
 
+## COMMANDS
+
+```
+Search for any other repositories for organizing extra curricular activities
+Please compare these features to our project. Which would be new?
+I like it. Let's create issues for these in my repository.
+```
+
 ---
 
 ## 🎯 Next Steps
