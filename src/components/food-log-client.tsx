@@ -4,7 +4,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { addDays, format, isToday, subDays } from 'date-fns';
 import {
@@ -31,7 +31,12 @@ interface Totals {
 }
 
 interface FoodLogClientProps {
-  initialDate?: string;
+  logs: FoodLogEntry[];
+  logsByMeal: Record<string, FoodLogEntry[]>;
+  totals: Totals;
+  isLoading?: boolean;
+  onDateChange: (date: Date) => void;
+  onDeleteLog: (logId: number) => void;
 }
 
 const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -43,69 +48,33 @@ const mealTypeLabels: Record<string, string> = {
   snack: 'Snack',
 };
 
-export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
-  const [logs, setLogs] = useState<FoodLogEntry[]>([]);
-  const [logsByMeal, setLogsByMeal] = useState<Record<string, FoodLogEntry[]>>(
-    {},
-  );
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    initialDate ? new Date(initialDate) : new Date(),
-  );
-  const [totals, setTotals] = useState<Totals>({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    fiber: 0,
-    sugar: 0,
-    sodium: 0,
-  });
-  const [loading, setLoading] = useState(true);
+export default function FoodLogClient({
+  logs,
+  logsByMeal,
+  totals,
+  isLoading = false,
+  onDateChange,
+  onDeleteLog
+}: FoodLogClientProps) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [deleting, setDeleting] = useState<number | null>(null);
 
-  const fetchLogs = useCallback(async (date: Date) => {
-    setLoading(true);
-    try {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const response = await fetch(`/api/food-logs?date=${dateStr}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setLogs(data.logs || []);
-        setLogsByMeal(data.logsByMeal || {});
-        setTotals(
-          data.totals || {
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fat: 0,
-            fiber: 0,
-            sugar: 0,
-            sodium: 0,
-          },
-        );
-      }
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLogs(selectedDate);
-  }, [selectedDate, fetchLogs]);
-
   const handlePreviousDay = () => {
-    setSelectedDate((prev) => subDays(prev, 1));
+    const newDate = subDays(selectedDate, 1);
+    setSelectedDate(newDate);
+    onDateChange(newDate);
   };
 
   const handleNextDay = () => {
-    setSelectedDate((prev) => addDays(prev, 1));
+    const newDate = addDays(selectedDate, 1);
+    setSelectedDate(newDate);
+    onDateChange(newDate);
   };
 
   const handleToday = () => {
-    setSelectedDate(new Date());
+    const newDate = new Date();
+    setSelectedDate(newDate);
+    onDateChange(newDate);
   };
 
   const handleDelete = async (logId: number) => {
@@ -115,17 +84,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
 
     setDeleting(logId);
     try {
-      const response = await fetch(`/api/food-logs/${logId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        // Refresh logs
-        fetchLogs(selectedDate);
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to delete food log');
-      }
+      await onDeleteLog(logId);
     } catch (error) {
       console.error('Error deleting log:', error);
       alert('Failed to delete food log');
@@ -230,7 +189,7 @@ export default function FoodLogClient({ initialDate }: FoodLogClientProps) {
       </Card>
 
       {/* Food Logs by Meal */}
-      {loading ? (
+      {isLoading ? (
         <Card>
           <CardContent className="py-8">
             <div className="flex items-center justify-center text-muted-foreground">

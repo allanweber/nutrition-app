@@ -1,17 +1,37 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import FoodSearch from '@/components/food-search';
 import FoodLogClient from '@/components/food-log-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFoodLogsQuery, useCreateFoodLogMutation, useDeleteFoodLogMutation } from '@/queries/food-logs';
+import { useFoodSearchQuery } from '@/queries/foods';
+import { format } from 'date-fns';
 
 export default function FoodLogPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleFoodAdded = useCallback(() => {
-    // Trigger refresh of food log list
-    setRefreshKey(prev => prev + 1);
-  }, []);
+  const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
+  const logsQuery = useFoodLogsQuery(dateStr);
+  const createMutation = useCreateFoodLogMutation();
+  const deleteMutation = useDeleteFoodLogMutation();
+  const searchQueryHook = useFoodSearchQuery(searchQuery);
+
+  const handleFoodAdded = async (food: { food_name: string; brand_name?: string; serving_unit: string }, quantity: string, mealType: string) => {
+    await createMutation.mutateAsync({
+      foodName: food.food_name,
+      brandName: food.brand_name,
+      quantity,
+      servingUnit: food.serving_unit,
+      mealType,
+    });
+  };
+
+  const handleDeleteLog = async (logId: number) => {
+    await deleteMutation.mutateAsync(logId);
+  };
 
   return (
     <div className="space-y-6">
@@ -29,14 +49,34 @@ export default function FoodLogPage() {
                 <span>Add Food</span>
               </CardTitle>
           </CardHeader>
-          <CardContent>
-            <FoodSearch onFoodAdded={handleFoodAdded} />
-          </CardContent>
+           <CardContent>
+             <FoodSearch
+               searchResults={searchQueryHook.data}
+               isSearching={searchQueryHook.isLoading}
+               onSearch={setSearchQuery}
+               onAddFood={handleFoodAdded}
+             />
+           </CardContent>
         </Card>
       </div>
 
-      {/* Food Log Display */}
-      <FoodLogClient key={refreshKey} />
+       {/* Food Log Display */}
+       <FoodLogClient
+         logs={logsQuery.data?.logs || []}
+         logsByMeal={logsQuery.data?.logsByMeal || {}}
+         totals={logsQuery.data?.totals || {
+           calories: 0,
+           protein: 0,
+           carbs: 0,
+           fat: 0,
+           fiber: 0,
+           sugar: 0,
+           sodium: 0,
+         }}
+         isLoading={logsQuery.isLoading}
+         onDateChange={setSelectedDate}
+         onDeleteLog={handleDeleteLog}
+       />
     </div>
   );
 }

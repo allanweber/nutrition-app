@@ -1,37 +1,12 @@
-import { DailyNutritionSummary, FoodLogEntry } from '@/types/food';
-import { useEffect, useState } from 'react';
+import { useDailyAnalyticsQuery } from '@/queries/analytics'
 
 export function useDailyNutrition(date?: string) {
-  const [data, setData] = useState<DailyNutritionSummary | null>(null);
-  const [logs, setLogs] = useState<FoodLogEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const query = useDailyAnalyticsQuery(date)
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const targetDate = date || new Date().toISOString().split('T')[0];
-        const response = await fetch(`/api/analytics/daily?date=${targetDate}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch daily nutrition');
-        }
-
-        const result = await response.json();
-        setData(result.summary);
-        setLogs(result.logs);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [date]);
-
-  return { data, logs, isLoading, error };
+  return {
+    data: query.data?.summary || null,
+    logs: query.data?.logs || [],
+    isLoading: query.isLoading,
+    error: query.error?.message || null,
+  }
 }

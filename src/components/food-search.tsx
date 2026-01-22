@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,53 +21,25 @@ interface Food {
 }
 
 interface FoodSearchProps {
-  onFoodAdded?: () => void;
+  searchResults?: { common?: Food[], branded?: Food[] };
+  isSearching?: boolean;
+  onSearch: (query: string) => void;
+  onAddFood: (food: Food, quantity: string, mealType: string) => void;
 }
 
-export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
+export default function FoodSearch({
+  searchResults = {},
+  isSearching = false,
+  onSearch,
+  onAddFood
+}: FoodSearchProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ common?: Food[], branded?: Food[] }>({});
-  const [loading, setLoading] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [quantity, setQuantity] = useState('1');
   const [mealType, setMealType] = useState<string>('breakfast');
   const [adding, setAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const searchFoods = useCallback(async (searchQuery: string) => {
-    if (searchQuery.length < 2) {
-      setResults({});
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}`);
-      const data = await response.json();
-      
-      if (data.results) {
-        setResults(data.results);
-      } else {
-        setResults({});
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-      setResults({});
-      setError('Failed to search foods');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchFoods(query);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [query, searchFoods]);
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
@@ -77,39 +49,15 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
     setAddSuccess(false);
 
     try {
-      const response = await fetch('/api/food-logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          foodName: selectedFood.food_name,
-          brandName: selectedFood.brand_name,
-          quantity: quantity,
-          servingUnit: selectedFood.serving_unit,
-          mealType,
-        }),
-      });
+      await onAddFood(selectedFood, quantity, mealType);
 
-      const data = await response.json();
+      setAddSuccess(true);
+      setSelectedFood(null);
+      setQuantity('1');
+      setQuery('');
 
-      if (response.ok) {
-        setAddSuccess(true);
-        setSelectedFood(null);
-        setQuantity('1');
-        setQuery('');
-        setResults({});
-        
-        // Notify parent component
-        if (onFoodAdded) {
-          onFoodAdded();
-        }
-
-        // Reset success state after 2 seconds
-        setTimeout(() => setAddSuccess(false), 2000);
-      } else {
-        setError(data.error || 'Failed to add food');
-      }
+      // Reset success state after 2 seconds
+      setTimeout(() => setAddSuccess(false), 2000);
     } catch (err) {
       console.error('Error adding food:', err);
       setError('Failed to add food. Please try again.');
@@ -135,7 +83,10 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
         <Input
           placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            onSearch(e.target.value);
+          }}
           className="pl-10"
           data-testid="food-search-input"
         />
@@ -157,7 +108,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
       )}
 
       {/* Loading State */}
-      {loading && (
+      {isSearching && (
         <div className="flex items-center justify-center py-4 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
           Searching...
@@ -252,13 +203,13 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
       )}
 
       {/* Search Results */}
-      {(results.common?.length || results.branded?.length) && !selectedFood ? (
+      {(searchResults.common?.length || searchResults.branded?.length) && !selectedFood ? (
         <div className="space-y-4" data-testid="search-results">
-          {results.common && results.common.length > 0 && (
+          {searchResults.common && searchResults.common.length > 0 && (
             <div>
               <h3 className="font-semibold text-foreground mb-2">Common Foods</h3>
               <div className="space-y-2">
-                {results.common.slice(0, 5).map((food, index) => (
+                {searchResults.common.slice(0, 5).map((food: Food, index: number) => (
                   <Card
                     key={`common-${index}`}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -289,11 +240,11 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
             </div>
           )}
 
-          {results.branded && results.branded.length > 0 && (
+          {searchResults.branded && searchResults.branded.length > 0 && (
             <div>
               <h3 className="font-semibold text-foreground mb-2">Branded Products</h3>
               <div className="space-y-2">
-                {results.branded.slice(0, 5).map((food, index) => (
+                {searchResults.branded.slice(0, 5).map((food: Food, index: number) => (
                   <Card
                     key={`branded-${index}`}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -324,7 +275,7 @@ export default function FoodSearch({ onFoodAdded }: FoodSearchProps) {
             </div>
           )}
         </div>
-      ) : query.length >= 2 && !loading && !selectedFood ? (
+      ) : query.length >= 2 && !isSearching && !selectedFood ? (
         <div className="text-center py-8 text-muted-foreground">
           No foods found. Try different search terms.
         </div>
