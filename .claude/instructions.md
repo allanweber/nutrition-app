@@ -21,11 +21,91 @@ Use this file as project-specific guidance for Claude when working in this repos
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Data Fetching:** React Server Components (RSC), Server Actions
+- **Data Fetching:** TanStack Query (default), React Server Components (RSC), Server Actions
 - **Database:** PostgreSQL with Drizzle ORM
 - **Authentication:** BetterAuth
 - **State Management:** Zustand
 - **Testing:** Playwright for end-to-end tests
+
+## Data Fetching & State Management
+
+### TanStack Query (React Query) - Default Library
+
+**All API requests must use TanStack Query.** This is the default and required library for data fetching and mutations.
+
+#### Architecture Rules
+
+- **Only pages can use queries directly.** Components must receive data as props from their parent pages.
+- All domain-specific queries are organized in `src/queries/` with files like `goals.ts`, `analytics.ts`, `foods.ts`, `food-logs.ts`.
+- Mutations automatically invalidate related queries to ensure cache consistency.
+- Hooks in `src/hooks/` are maintained for backward compatibility but now use TanStack Query internally.
+
+#### Query Configuration
+
+- Default stale time: 5 minutes
+- Default cache time: 10 minutes (formerly cacheTime)
+- Devtools enabled in development mode
+
+#### Available Query Domains
+
+- **Goals**: `useGoalsQuery()`, `useUpdateGoalsMutation()` - Nutrition goals management
+- **Analytics**: `useDailyAnalyticsQuery()`, `useWeeklyAnalyticsQuery()` - Daily and weekly nutrition summaries
+- **Foods**: `useFoodSearchQuery()` - Food search functionality
+- **Food Logs**: `useFoodLogsQuery()`, `useCreateFoodLogMutation()`, `useDeleteFoodLogMutation()` - CRUD operations for food logs
+
+#### Usage Examples
+
+**Pages (correct usage):**
+
+```typescript
+// src/app/(dashboard)/goals/page.tsx
+'use client'
+
+import { useGoalsQuery, useUpdateGoalsMutation } from '@/queries/goals'
+
+export default function GoalsPage() {
+  const { data: goals, isLoading, error } = useGoalsQuery()
+  const updateMutation = useUpdateGoalsMutation()
+
+  const handleUpdate = (newGoals) => {
+    updateMutation.mutate(newGoals)
+  }
+
+  return <GoalsComponent goals={goals} onUpdate={handleUpdate} />
+}
+```
+
+**Components (receive data as props - correct usage):**
+
+```typescript
+// src/components/goals-component.tsx
+interface GoalsComponentProps {
+  goals: NutritionGoals | undefined
+  onUpdate: (goals: NutritionGoals) => void
+}
+
+export default function GoalsComponent({ goals, onUpdate }: GoalsComponentProps) {
+  // No queries here - only receives data via props
+  return <div>...</div>
+}
+```
+
+**❌ Incorrect usage (components using queries directly):**
+
+```typescript
+// src/components/goals-component.tsx - WRONG!
+export default function GoalsComponent() {
+  const { data: goals } = useGoalsQuery() // ❌ Never do this
+  return <div>...</div>
+}
+```
+
+#### Cache Invalidation Rules
+
+Mutations automatically handle cache invalidation:
+
+- Creating/updating/deleting food logs invalidates both food logs and analytics queries
+- Updating goals invalidates goals queries
 
 ## Available Commands
 
