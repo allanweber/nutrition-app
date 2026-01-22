@@ -60,7 +60,7 @@ CREATE TABLE "food_logs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"food_id" integer NOT NULL,
-	"quantity" varchar(50) NOT NULL,
+	"quantity" numeric(10, 2) NOT NULL,
 	"serving_unit" varchar(100),
 	"meal_type" "meal_type" NOT NULL,
 	"consumed_at" timestamp NOT NULL,

@@ -183,7 +183,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { quantity, mealType, consumedAt } = body;
+    const { mealType, consumedAt } = body;
 
     // Check if the log exists and belongs to the user
     const existingLog = await db.query.foodLogs.findFirst({
@@ -202,7 +202,16 @@ export async function PATCH(
 
     // Build update object
     const updateData: Record<string, string | Date> = {};
-    if (quantity !== undefined) updateData.quantity = String(quantity);
+    if (body.quantity !== undefined) {
+      const quantity = parseFloat(body.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        return NextResponse.json(
+          { error: 'Quantity must be a positive number' },
+          { status: 400 }
+        );
+      }
+      updateData.quantity = quantity.toString();
+    }
     if (mealType !== undefined) {
       const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
       if (!validMealTypes.includes(mealType)) {

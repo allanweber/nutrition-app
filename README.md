@@ -73,22 +73,23 @@ All test accounts use the password: `Password123!`
 
 | Email                           | Name                 | Goal           |
 | ------------------------------- | -------------------- | -------------- |
-| user.weight-loss@example.com    | Alex Weight Loss     | weight_loss    |
-| user.maintenance@example.com    | Jordan Maintenance   | maintenance    |
-| user.weight-gain@example.com    | Sam Weight Gain      | weight_gain    |
-| user.muscle-gain@example.com    | Chris Muscle Gain    | muscle_gain    |
-| user.fat-loss@example.com       | Taylor Fat Loss      | fat_loss       |
-| user.performance@example.com    | Morgan Performance   | performance    |
-| user.general-health@example.com | Casey General Health | general_health |
+| <user.weight-loss@example.com>    | Alex Weight Loss     | weight_loss    |
+| <user.maintenance@example.com>    | Jordan Maintenance   | maintenance    |
+| <user.weight-gain@example.com>    | Sam Weight Gain      | weight_gain    |
+| <user.muscle-gain@example.com>    | Chris Muscle Gain    | muscle_gain    |
+| <user.fat-loss@example.com>       | Taylor Fat Loss      | fat_loss       |
+| <user.performance@example.com>    | Morgan Performance   | performance    |
+| <user.general-health@example.com> | Casey General Health | general_health |
 
 #### Professional Users
 
 | Email                         | Name              |
 | ----------------------------- | ----------------- |
-| dr.sarah.wilson@example.com   | Dr. Sarah Wilson  |
-| mark.nutritionist@example.com | Mark Thompson, RD |
+| <dr.sarah.wilson@example.com>   | Dr. Sarah Wilson  |
+| <mark.nutritionist@example.com> | Mark Thompson, RD |
 
 The seed creates:
+
 - 15 sample foods (fruits, proteins, grains, etc.)
 - 7 individual users with nutrition goals and 14 days of food logs each
 - 2 professional users (dietitians)

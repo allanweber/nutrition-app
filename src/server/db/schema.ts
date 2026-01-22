@@ -176,7 +176,7 @@ export const foodLogs = pgTable(
     foodId: integer('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' }),
-    quantity: varchar('quantity', { length: 50 }).notNull(),
+    quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
     servingUnit: varchar('serving_unit', { length: 100 }),
     mealType: mealTypeEnum('meal_type').notNull(),
     consumedAt: timestamp('consumed_at').notNull(),

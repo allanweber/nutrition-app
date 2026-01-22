@@ -93,11 +93,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { foodName, quantity, servingUnit, mealType, consumedAt } = body;
+    const { foodName, servingUnit, mealType, consumedAt } = body;
+    const quantity = parseFloat(body.quantity);
     
-    if (!foodName || !quantity || !mealType) {
+    if (!foodName || !body.quantity || !mealType) {
       return NextResponse.json(
         { error: 'Missing required fields: foodName, quantity, mealType' },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(quantity) || quantity <= 0) {
+      return NextResponse.json(
+        { error: 'Quantity must be a positive number' },
         { status: 400 }
       );
     }
@@ -134,7 +142,7 @@ export async function POST(request: NextRequest) {
     const [newLog] = await db.insert(foodLogs).values({
       userId: user.id,
       foodId: cachedFood.id,
-      quantity: String(quantity),
+      quantity: quantity.toString(),
       servingUnit: nutritionInfo.serving_unit,
       mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
       consumedAt: logDate,
@@ -246,13 +254,13 @@ export async function GET(request: NextRequest) {
     // Calculate daily totals
     const totals = await db
       .select({
-        calories: sql<number>`SUM(CAST(${foods.calories} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        protein: sql<number>`SUM(CAST(${foods.protein} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        carbs: sql<number>`SUM(CAST(${foods.carbs} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        fat: sql<number>`SUM(CAST(${foods.fat} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        fiber: sql<number>`SUM(CAST(${foods.fiber} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        sugar: sql<number>`SUM(CAST(${foods.sugar} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
-        sodium: sql<number>`SUM(CAST(${foods.sodium} AS NUMERIC) * CAST(${foodLogs.quantity} AS NUMERIC))`.mapWith(Number),
+        calories: sql<number>`SUM(CAST(${foods.calories} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        protein: sql<number>`SUM(CAST(${foods.protein} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        carbs: sql<number>`SUM(CAST(${foods.carbs} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        fat: sql<number>`SUM(CAST(${foods.fat} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        fiber: sql<number>`SUM(CAST(${foods.fiber} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        sugar: sql<number>`SUM(CAST(${foods.sugar} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
+        sodium: sql<number>`SUM(CAST(${foods.sodium} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(Number),
         foodCount: sql<number>`COUNT(${foodLogs.id})`.mapWith(Number)
       })
       .from(foodLogs)
