@@ -178,6 +178,63 @@ API validation errors return structured responses:
 
 This allows client components to display field-specific error messages and provide better user experience.
 
+### Form Requirements
+
+**ALL forms in the application MUST use TanStack Form (@tanstack/react-form):**
+
+- **Client-side validation** using schemas from `src/lib/form-validation.ts`
+- **Field-level error display** with red borders and error messages below fields
+- **Form-level error display** for submission errors
+- **Loading states** during form submission
+- **Proper field state changes** (error states, touched states, etc.)
+
+#### Form Implementation Pattern
+
+```typescript
+import { useForm } from '@tanstack/react-form';
+import { loginSchema } from '@/lib/form-validation';
+
+export default function LoginForm() {
+  const form = useForm({
+    defaultValues: { email: '', password: '' },
+    onSubmit: async ({ value }) => {
+      // Handle form submission
+      const result = await apiCall(value);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    },
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }}>
+      <form.Field
+        name="email"
+        validators={{
+          onChange: ({ value }) => !value ? 'Email is required' : undefined,
+        }}
+        children={(field) => (
+          <div>
+            <input
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              className={field.state.meta.errors.length ? 'border-red-500' : ''}
+            />
+            {field.state.meta.errors[0] && (
+              <div className="text-red-600">{field.state.meta.errors[0]}</div>
+            )}
+          </div>
+        )}
+      />
+      {/* Error display */}
+      <form.Subscribe selector={(state) => [state.errorMap]}>
+        {/* Form submission errors */}
+      </form.Subscribe>
+    </form>
+  );
+}
+```
+
 #### Cache Invalidation Rules
 
 Mutations automatically handle cache invalidation:

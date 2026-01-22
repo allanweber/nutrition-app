@@ -4,30 +4,31 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { signIn } from '@/lib/auth-client';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Apple, ArrowLeft, Flame, Target, TrendingUp, Loader2 } from 'lucide-react';
+import { useForm } from '@tanstack/react-form';
+import { loginSchema, type LoginFormData } from '@/lib/form-validation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    } as LoginFormData,
+    onSubmit: async ({ value }) => {
+      setAuthError(null);
 
-    try {
       const result = await signIn.email(
         {
-          email,
-          password,
+          email: value.email,
+          password: value.password,
         },
         {
           onSuccess: () => {
@@ -35,25 +36,23 @@ export default function LoginPage() {
             router.refresh();
           },
           onError: (ctx) => {
-            setError(ctx.error.message || 'Invalid email or password');
+            const errorMessage = ctx.error.message || 'Invalid email or password';
+            setAuthError(errorMessage);
+            throw new Error(errorMessage);
           },
         }
       );
 
       if (result.error) {
-        setError(result.error.message || 'Invalid email or password');
+        const errorMessage = result.error.message || 'Invalid email or password';
+        setAuthError(errorMessage);
+        throw new Error(errorMessage);
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred. Please try again.';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    setError('');
 
     try {
       await signIn.social({
@@ -61,8 +60,8 @@ export default function LoginPage() {
         callbackURL: '/dashboard',
       });
     } catch {
-      setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);
+      // Error will be shown through form state if needed
     }
   };
 
@@ -215,60 +214,112 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="h-12"
-                data-testid="email-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-foreground">Password</Label>
-                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-                className="h-12"
-                data-testid="password-input"
-              />
-            </div>
-
-            {error && (
-              <div className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
-                {error}
-              </div>
-            )}
-
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-medium" 
-              disabled={loading}
-              data-testid="submit-button"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign in'
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+            className="space-y-5"
+          >
+            <form.Field
+              name="email"
+              validators={{
+                onChange: ({ value }) =>
+                  !value
+                    ? 'Email is required'
+                    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+                    ? 'Please enter a valid email address'
+                    : undefined,
+              }}
+              children={(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-foreground">Email address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="you@example.com"
+                    className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                    data-testid="email-input"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
               )}
-            </Button>
+            />
+
+            <form.Field
+              name="password"
+              validators={{
+                onChange: ({ value }) =>
+                  !value
+                    ? 'Password is required'
+                    : value.length < 6
+                    ? 'Password must be at least 6 characters'
+                    : undefined,
+              }}
+              children={(field) => (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-foreground">Password</Label>
+                    <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Enter your password"
+                    className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                    data-testid="password-input"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+
+            <form.Subscribe
+              selector={(state) => [state.errorMap]}
+              children={([errorMap]) =>
+                errorMap.onSubmit || authError ? (
+                  <div className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
+                    {errorMap.onSubmit || authError}
+                  </div>
+                ) : null
+              }
+            />
+
+            <form.Subscribe
+              selector={(state) => [state.isSubmitting]}
+              children={([isSubmitting]) => (
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-base font-medium"
+                  disabled={isSubmitting}
+                  data-testid="submit-button"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign in'
+                  )}
+                </Button>
+              )}
+            />
           </form>
 
           {/* Sign Up Link */}

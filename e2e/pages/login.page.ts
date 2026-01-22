@@ -7,6 +7,8 @@ export class LoginPage {
   readonly submitButton: Locator;
   readonly googleButton: Locator;
   readonly errorMessage: Locator;
+  readonly emailError: Locator;
+  readonly passwordError: Locator;
   readonly signupLink: Locator;
 
   constructor(page: Page) {
@@ -16,6 +18,8 @@ export class LoginPage {
     this.submitButton = page.getByTestId('submit-button');
     this.googleButton = page.getByTestId('google-button');
     this.errorMessage = page.getByTestId('error-message');
+    this.emailError = page.locator('[data-testid="email-input"] + div').filter({ hasText: /.+/ });
+    this.passwordError = page.locator('[data-testid="password-input"] + div').filter({ hasText: /.+/ });
     this.signupLink = page.getByRole('link', { name: 'Create one free' });
   }
 

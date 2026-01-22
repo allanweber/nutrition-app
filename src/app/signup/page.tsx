@@ -1,8 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,28 +14,28 @@ import { ArrowLeft, Check, Loader2, Sparkles, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { signupSchema, type SignupFormData } from '@/lib/form-validation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<'individual' | 'professional'>('individual');
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      role: 'individual' as const,
+    } as SignupFormData,
+    onSubmit: async ({ value }) => {
       const result = await signUp.email(
         {
-          email,
-          password,
-          name,
+          email: value.email,
+          password: value.password,
+          name: value.name,
         },
         {
           onSuccess: () => {
@@ -45,28 +43,19 @@ export default function SignupPage() {
             router.refresh();
           },
           onError: (ctx) => {
-            setError(ctx.error.message || 'Signup failed');
+            throw new Error(ctx.error.message || 'Signup failed');
           },
-        },
+        }
       );
 
       if (result.error) {
-        setError(result.error.message || 'Signup failed');
+        throw new Error(result.error.message || 'Signup failed');
       }
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'An error occurred. Please try again.';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    setError('');
 
     try {
       await signIn.social({
@@ -74,8 +63,8 @@ export default function SignupPage() {
         callbackURL: '/dashboard',
       });
     } catch {
-      setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);
+      // Error will be handled by the auth system
     }
   };
 
@@ -260,122 +249,191 @@ export default function SignupPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">
-                Full name
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="John Doe"
-                className="h-12"
-                data-testid="name-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="h-12"
-                data-testid="email-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Min. 8 characters"
-                minLength={8}
-                className="h-12"
-                data-testid="password-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role" className="text-foreground">
-                I am a...
-              </Label>
-              <Select
-                value={role}
-                onValueChange={(value: 'individual' | 'professional') =>
-                  setRole(value)
-                }
-              >
-                <SelectTrigger
-                  data-testid="role-select"
-                  className="w-full h-12"
-                >
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="individual">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-2 text-muted-foreground" />
-                      Individual tracking my nutrition
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+            className="space-y-4"
+          >
+            <form.Field
+              name="name"
+              validators={{
+                onChange: ({ value }) =>
+                  !value
+                    ? 'Full name is required'
+                    : value.length < 2
+                    ? 'Name must be at least 2 characters'
+                    : !/^[a-zA-Z\s'-]+$/.test(value)
+                    ? 'Name can only contain letters, spaces, hyphens, and apostrophes'
+                    : undefined,
+              }}
+              children={(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-foreground">
+                    Full name
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="John Doe"
+                    className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                    data-testid="name-input"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
                     </div>
-                  </SelectItem>
-                  <SelectItem value="professional">
-                    <div className="flex items-center">
-                      <Sparkles className="w-4 h-4 mr-2 text-muted-foreground" />
-                      Professional dietitian/nutritionist
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {error && (
-              <div
-                className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg"
-                data-testid="error-message"
-              >
-                {error}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium"
-              disabled={loading}
-              data-testid="submit-button"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                'Create account'
+                  )}
+                </div>
               )}
-            </Button>
+            />
 
-            <p className="text-xs text-center text-muted-foreground">
-              By signing up, you agree to our{' '}
-              <Link href="/terms" className="text-primary hover:underline">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-primary hover:underline">
-                Privacy Policy
-              </Link>
-            </p>
+            <form.Field
+              name="email"
+              validators={{
+                onChange: ({ value }) =>
+                  !value
+                    ? 'Email is required'
+                    : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+                    ? 'Please enter a valid email address'
+                    : undefined,
+              }}
+              children={(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-foreground">
+                    Email address
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="you@example.com"
+                    className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                    data-testid="email-input"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+
+            <form.Field
+              name="password"
+              validators={{
+                onChange: ({ value }) =>
+                  !value
+                    ? 'Password is required'
+                    : value.length < 8
+                    ? 'Password must be at least 8 characters'
+                    : !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)
+                    ? 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                    : undefined,
+              }}
+              children={(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-foreground">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                    data-testid="password-input"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+
+            <form.Field
+              name="role"
+              children={(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="text-foreground">
+                    I am a...
+                  </Label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value as 'individual' | 'professional')}
+                  >
+                    <SelectTrigger
+                      className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                      data-testid="role-select"
+                    >
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="text-sm text-red-600 dark:text-red-400">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+
+            <form.Subscribe
+              selector={(state) => [state.errorMap]}
+              children={([errorMap]) =>
+                errorMap.onSubmit ? (
+                  <div className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
+                    {errorMap.onSubmit}
+                  </div>
+                ) : null
+              }
+            />
+
+            <form.Subscribe
+              selector={(state) => [state.isSubmitting]}
+              children={([isSubmitting]) => (
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-base font-medium"
+                  disabled={isSubmitting}
+                  data-testid="submit-button"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    'Create account'
+                  )}
+                </Button>
+              )}
+            />
           </form>
+
+          <p className="text-xs text-center text-muted-foreground">
+            By signing up, you agree to our{' '}
+            <Link href="/terms" className="text-primary hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
 
           {/* Sign In Link */}
           <p className="text-center text-muted-foreground">

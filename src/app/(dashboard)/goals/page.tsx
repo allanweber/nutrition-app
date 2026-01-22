@@ -12,80 +12,47 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
-import type { ActivityLevel, GoalType } from '@/types/food';
 import { Activity, Loader2, Target, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { goalsFormSchema, type GoalsFormData } from '@/lib/form-validation';
+import type { GoalType, ActivityLevel } from '@/types/food';
 
 export default function GoalsPage() {
   const { data: goals, isLoading, updateGoals } = useNutritionGoals();
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Track local edits - null means use value from goals
-  const [localEdits, setLocalEdits] = useState<{
-    goalType?: GoalType;
-    activityLevel?: ActivityLevel;
-    calories?: string;
-    protein?: string;
-    carbs?: string;
-    fat?: string;
-    fiber?: string;
-    sodium?: string;
-  }>({});
+  const form = useForm({
+    defaultValues: {
+      goalType: (goals?.goalType as GoalType) || 'maintenance',
+      activityLevel: (goals?.activityLevel as ActivityLevel) || 'moderate',
+      calories: goals?.calories?.toString() || '2000',
+      protein: goals?.protein?.toString() || '150',
+      carbs: goals?.carbs?.toString() || '250',
+      fat: goals?.fat?.toString() || '65',
+      fiber: goals?.fiber?.toString() || '25',
+      sodium: goals?.sodium?.toString() || '2300',
+    } as any, // GoalsFormData expects numbers but form uses strings
+    onSubmit: async ({ value }) => {
+      const result = await updateGoals({
+        goalType: value.goalType,
+        activityLevel: value.activityLevel,
+        calories: parseInt(value.calories),
+        protein: parseInt(value.protein),
+        carbs: parseInt(value.carbs),
+        fat: parseInt(value.fat),
+        fiber: parseInt(value.fiber),
+        sodium: parseInt(value.sodium),
+      });
 
-  // Get current form values (local edit or fetched goal)
-  const getValue = <T,>(field: keyof typeof localEdits, defaultValue: T): T => {
-    if (localEdits[field] !== undefined) {
-      return localEdits[field] as T;
-    }
-    if (goals && field in goals) {
-      const goalValue = goals[field as keyof typeof goals];
-      if (typeof defaultValue === 'string' && typeof goalValue === 'number') {
-        return goalValue.toString() as T;
+      if (result.success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        throw new Error(result.error || 'Failed to save goals');
       }
-      return goalValue as T;
-    }
-    return defaultValue;
-  };
-
-  const goalType = getValue<GoalType>('goalType', 'maintenance');
-  const activityLevel = getValue<ActivityLevel>('activityLevel', 'moderate');
-  const calories = getValue<string>('calories', '2000');
-  const protein = getValue<string>('protein', '150');
-  const carbs = getValue<string>('carbs', '250');
-  const fat = getValue<string>('fat', '65');
-  const fiber = getValue<string>('fiber', '25');
-  const sodium = getValue<string>('sodium', '2300');
-
-  const handleSaveGoals = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setSaveError(null);
-    setSaveSuccess(false);
-
-    const goalsData = {
-      goalType,
-      activityLevel,
-      calories: parseInt(calories) || 2000,
-      protein: parseInt(protein) || 150,
-      carbs: parseInt(carbs) || 250,
-      fat: parseInt(fat) || 65,
-      fiber: parseInt(fiber) || 25,
-      sodium: parseInt(sodium) || 2300,
-    };
-
-    const result = await updateGoals(goalsData);
-
-    setIsSaving(false);
-    if (result.success) {
-      setSaveSuccess(true);
-      setLocalEdits({}); // Clear local edits after successful save
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } else {
-      setSaveError(result.error || 'Failed to save goals. Please try again.');
-    }
-  };
+    },
+  });
 
   if (isLoading) {
     return (
@@ -113,176 +80,259 @@ export default function GoalsPage() {
               <CardTitle>Daily Nutrition Targets</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveGoals} className="space-y-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  form.handleSubmit();
+                }}
+                className="space-y-6"
+              >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="goalType">Goal Type</Label>
-                    <Select
-                      value={goalType}
-                      onValueChange={(value) =>
-                        setLocalEdits((prev) => ({
-                          ...prev,
-                          goalType: value as GoalType,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select your goal" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weight_loss">Weight Loss</SelectItem>
-                        <SelectItem value="fat_loss">Fat Loss</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                        <SelectItem value="weight_gain">Weight Gain</SelectItem>
-                        <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
-                        <SelectItem value="performance">Performance</SelectItem>
-                        <SelectItem value="general_health">
-                          General Health
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <form.Field
+                    name="goalType"
+                    children={(field) => (
+                      <div className="space-y-2">
+                        <Label htmlFor="goalType">Goal Type</Label>
+                        <Select
+                          value={field.state.value}
+                          onValueChange={(value) => field.handleChange(value as GoalType)}
+                        >
+                          <SelectTrigger className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}>
+                            <SelectValue placeholder="Select your goal" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weight_loss">Weight Loss</SelectItem>
+                            <SelectItem value="fat_loss">Fat Loss</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="weight_gain">Weight Gain</SelectItem>
+                            <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
+                            <SelectItem value="performance">Performance</SelectItem>
+                            <SelectItem value="general_health">General Health</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {field.state.meta.errors.length > 0 && (
+                          <div className="text-sm text-red-600 dark:text-red-400">
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="activityLevel">Activity Level</Label>
-                    <Select
-                      value={activityLevel}
-                      onValueChange={(value) =>
-                        setLocalEdits((prev) => ({
-                          ...prev,
-                          activityLevel: value as ActivityLevel,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select activity level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sedentary">Sedentary</SelectItem>
-                        <SelectItem value="light">Light Activity</SelectItem>
-                        <SelectItem value="moderate">
-                          Moderate Activity
-                        </SelectItem>
-                        <SelectItem value="active">Very Active</SelectItem>
-                        <SelectItem value="extra_active">
-                          Extra Active
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <form.Field
+                    name="activityLevel"
+                    children={(field) => (
+                      <div className="space-y-2">
+                        <Label htmlFor="activityLevel">Activity Level</Label>
+                        <Select
+                          value={field.state.value}
+                          onValueChange={(value) => field.handleChange(value as ActivityLevel)}
+                        >
+                          <SelectTrigger className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}>
+                            <SelectValue placeholder="Select activity level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sedentary">Sedentary</SelectItem>
+                            <SelectItem value="light">Light Activity</SelectItem>
+                            <SelectItem value="moderate">Moderate Activity</SelectItem>
+                            <SelectItem value="active">Very Active</SelectItem>
+                            <SelectItem value="extra_active">Extra Active</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {field.state.meta.errors.length > 0 && (
+                          <div className="text-sm text-red-600 dark:text-red-400">
+                            {field.state.meta.errors[0]}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="calories">Target Calories</Label>
-                      <Input
-                        id="calories"
-                        type="number"
-                        value={calories}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            calories: e.target.value,
-                          }))
-                        }
-                        placeholder="2000"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="calories"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 500 || parseInt(value) > 15000
+                            ? 'Calories must be between 500 and 15,000'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="calories">Target Calories</Label>
+                          <Input
+                            id="calories"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="2000"
+                            min="500"
+                            max="15000"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="protein">Target Protein (g)</Label>
-                      <Input
-                        id="protein"
-                        type="number"
-                        value={protein}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            protein: e.target.value,
-                          }))
-                        }
-                        placeholder="150"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="protein"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 2000
+                            ? 'Protein must be between 0 and 2,000g'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="protein">Target Protein (g)</Label>
+                          <Input
+                            id="protein"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="150"
+                            min="0"
+                            max="2000"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="carbs">Target Carbs (g)</Label>
-                      <Input
-                        id="carbs"
-                        type="number"
-                        value={carbs}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            carbs: e.target.value,
-                          }))
-                        }
-                        placeholder="250"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="carbs"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 3000
+                            ? 'Carbs must be between 0 and 3,000g'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="carbs">Target Carbs (g)</Label>
+                          <Input
+                            id="carbs"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="250"
+                            min="0"
+                            max="3000"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="fat">Target Fat (g)</Label>
-                      <Input
-                        id="fat"
-                        type="number"
-                        value={fat}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            fat: e.target.value,
-                          }))
-                        }
-                        placeholder="65"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="fat"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 1000
+                            ? 'Fat must be between 0 and 1,000g'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="fat">Target Fat (g)</Label>
+                          <Input
+                            id="fat"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="65"
+                            min="0"
+                            max="1000"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="fiber">Target Fiber (g)</Label>
-                      <Input
-                        id="fiber"
-                        type="number"
-                        value={fiber}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            fiber: e.target.value,
-                          }))
-                        }
-                        placeholder="25"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="fiber"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 200
+                            ? 'Fiber must be between 0 and 200g'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="fiber">Target Fiber (g)</Label>
+                          <Input
+                            id="fiber"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="25"
+                            min="0"
+                            max="200"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="sodium">Target Sodium (mg)</Label>
-                      <Input
-                        id="sodium"
-                        type="number"
-                        value={sodium}
-                        onChange={(e) =>
-                          setLocalEdits((prev) => ({
-                            ...prev,
-                            sodium: e.target.value,
-                          }))
-                        }
-                        placeholder="2300"
-                        min="0"
-                      />
-                    </div>
+                    <form.Field
+                      name="sodium"
+                      validators={{
+                        onChange: ({ value }) =>
+                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 100000
+                            ? 'Sodium must be between 0 and 100,000mg'
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor="sodium">Target Sodium (mg)</Label>
+                          <Input
+                            id="sodium"
+                            type="number"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="2300"
+                            min="0"
+                            max="100000"
+                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                          />
+                          {field.state.meta.errors.length > 0 && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {field.state.meta.errors[0]}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
                   </div>
                 </div>
-
-                {saveError && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                    {saveError}
-                  </div>
-                )}
 
                 {saveSuccess && (
                   <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
@@ -290,17 +340,33 @@ export default function GoalsPage() {
                   </div>
                 )}
 
+                <form.Subscribe
+                  selector={(state) => [state.errorMap]}
+                  children={([errorMap]) =>
+                    errorMap.onSubmit ? (
+                      <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                        {errorMap.onSubmit}
+                      </div>
+                    ) : null
+                  }
+                />
+
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Goals'
+                  <form.Subscribe
+                    selector={(state) => [state.isSubmitting]}
+                    children={([isSubmitting]) => (
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save Goals'
+                        )}
+                      </Button>
                     )}
-                  </Button>
+                  />
                 </div>
               </form>
             </CardContent>

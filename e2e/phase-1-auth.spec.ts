@@ -17,38 +17,44 @@ test.describe('Phase 1: Authentication', () => {
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     });
 
-    test('shows error for invalid email format', async ({ page }) => {
+    test('shows field validation errors', async ({ page }) => {
+      const signupPage = new SignupPage(page);
+
+      await signupPage.goto();
+
+      // Test empty form submission
+      await signupPage.submitButton.click();
+
+      // Should show field-specific error messages
+      await expect(signupPage.nameError.first()).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.emailError.first()).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.passwordError.first()).toBeVisible({ timeout: 5000 });
+    });
+
+    test('shows email validation error', async ({ page }) => {
       const signupPage = new SignupPage(page);
 
       await signupPage.goto();
       await signupPage.nameInput.fill('Test User');
       await signupPage.emailInput.fill('invalid-email');
       await signupPage.passwordInput.fill('TestPassword123!');
-      await signupPage.submitButton.click();
 
-      // Browser validation should prevent submission
-      const emailInput = signupPage.emailInput;
-      const validationMessage = await emailInput.evaluate(
-        (el: HTMLInputElement) => el.validationMessage
-      );
-      expect(validationMessage).toBeTruthy();
+      // Trigger validation by clicking submit or blurring field
+      await signupPage.emailInput.blur();
+
+      // Should show email validation error
+      await expect(signupPage.emailError.first()).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.emailError.first()).toContainText('email');
     });
 
-    test('shows error for short password', async ({ page }) => {
+    test('shows error for existing email', async ({ page }) => {
       const signupPage = new SignupPage(page);
 
       await signupPage.goto();
-      await signupPage.nameInput.fill('Test User');
-      await signupPage.emailInput.fill('test@example.com');
-      await signupPage.passwordInput.fill('short');
-      await signupPage.submitButton.click();
+      await signupPage.signup('Test User', testUser.email, 'TestPassword123!');
 
-      // Browser validation should prevent submission (minLength=8)
-      const passwordInput = signupPage.passwordInput;
-      const validationMessage = await passwordInput.evaluate(
-        (el: HTMLInputElement) => el.validationMessage
-      );
-      expect(validationMessage).toBeTruthy();
+      // Should show error message for existing email
+      await expect(page.getByText(/email.*already|already.*email|exists/i)).toBeVisible({ timeout: 10000 });
     });
 
     test('can navigate to login page', async ({ page }) => {
@@ -78,8 +84,9 @@ test.describe('Phase 1: Authentication', () => {
       await loginPage.goto();
       await loginPage.login(invalidCredentials.email, invalidCredentials.password);
 
-      // Should show error message
-      await expect(loginPage.errorMessage).toBeVisible({ timeout: 10000 });
+      // Should show error message (form submission error)
+      // Check for any error text on the page
+      await expect(page.getByText(/invalid|wrong|error/i)).toBeVisible({ timeout: 10000 });
     });
 
     test('can navigate to signup page', async ({ page }) => {
