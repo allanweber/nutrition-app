@@ -36,9 +36,9 @@ Use this file as project-specific guidance for Claude when working in this repos
 | `npm run build`           | Build for production                       |
 | `npm run start`           | Start production server                    |
 | `npm run lint`            | Run ESLint                                 |
-| `npm run test:e2e`        | Run Playwright E2E tests                   |
-| `npm run test:e2e:ui`     | Run Playwright tests with UI               |
-| `npm run test:e2e:headed` | Run Playwright tests in headed browser     |
+| `npm run test:e2e`        | Run E2E tests with isolated Docker DB      |
+| `npm run test:e2e:ui`     | Run E2E tests with Playwright UI           |
+| `npm run test:e2e:headed` | Run E2E tests in headed browser            |
 | `npm run db:push`         | Push schema changes to database            |
 | `npm run db:studio`       | Open Drizzle Studio                        |
 | `npm run db:seed`         | Seed database with sample data             |
@@ -151,6 +151,26 @@ const [isLoading, setIsLoading] = useState(false);
 - Unit tests for utilities (when present/appropriate).
 - Integration tests for API routes.
 - E2E tests for critical user flows (Playwright).
+
+### E2E Test Infrastructure
+
+E2E tests run with an **isolated Docker database** that is created fresh for each test run:
+
+```bash
+npm run test:e2e          # Full run with Docker DB lifecycle
+npm run test:e2e:ui       # With Playwright UI
+npm run test:e2e:headed   # In headed browser mode
+```
+
+The test runner script (`scripts/run-e2e.sh`):
+
+1. Starts a fresh PostgreSQL container on port 5433
+2. Runs database migrations
+3. Seeds the database with test accounts
+4. Runs Playwright tests
+5. Tears down the container on exit
+
+Tests use seeded accounts (see test accounts in Database Setup section) rather than creating new users, ensuring predictable test data.
 
 ## Commit Conventions
 

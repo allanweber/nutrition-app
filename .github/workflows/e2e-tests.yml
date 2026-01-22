@@ -1,0 +1,114 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nutrition_app_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+        run: npx drizzle-kit push --force
+
+      - name: Start dev server and seed database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+          BETTER_AUTH_SECRET: test-secret-for-ci
+          BETTER_AUTH_URL: http://localhost:3001
+          GOOGLE_CLIENT_ID: test_client_id
+          GOOGLE_CLIENT_SECRET: test_client_secret
+          NUTRITIONIX_APP_ID: test_app_id
+          NUTRITIONIX_API_KEY: test_api_key
+          USE_MOCK_NUTRITIONIX: 'true'
+          NODE_ENV: test
+          PORT: '3001'
+        run: |
+          # Start dev server in background on port 3001
+          npm run dev -- --port 3001 &
+          DEV_PID=$!
+          
+          # Wait for server to be ready
+          echo "Waiting for dev server to start on port 3001..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3001/api/auth/session > /dev/null 2>&1; then
+              echo "Server is ready!"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Run seed
+          echo "Seeding database..."
+          npx tsx src/server/db/seed.ts
+          
+          # Stop the dev server (Playwright will start its own)
+          kill $DEV_PID 2>/dev/null || true
+
+      - name: Run E2E tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+          BETTER_AUTH_SECRET: test-secret-for-ci
+          BETTER_AUTH_URL: http://localhost:3001
+          GOOGLE_CLIENT_ID: test_client_id
+          GOOGLE_CLIENT_SECRET: test_client_secret
+          NUTRITIONIX_APP_ID: test_app_id
+          NUTRITIONIX_API_KEY: test_api_key
+          USE_MOCK_NUTRITIONIX: 'true'
+          NODE_ENV: test
+          PORT: '3001'
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3001
+          CI: true
+        run: npx playwright test --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-screenshots
+          path: test-results/
+          retention-days: 7

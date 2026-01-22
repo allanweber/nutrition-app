@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/login.page';
 import { SignupPage } from './pages/signup.page';
-import { invalidCredentials, routes } from './fixtures/test-data';
+import { testUser, newUser, invalidCredentials, routes } from './fixtures/test-data';
 
 test.describe('Phase 1: Authentication', () => {
   test.describe('User Registration', () => {
     test('user can register with email/password', async ({ page }) => {
       const signupPage = new SignupPage(page);
-      const uniqueEmail = `test-${Date.now()}@example.com`;
+      // Use unique email to avoid conflicts with seed data
+      const uniqueEmail = `signup-test-${Date.now()}@example.com`;
 
       await signupPage.goto();
       await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
@@ -62,23 +63,11 @@ test.describe('Phase 1: Authentication', () => {
   });
 
   test.describe('User Login', () => {
-    test('user can login with email/password', async ({ page }) => {
-      // First create a user
-      const signupPage = new SignupPage(page);
-      const uniqueEmail = `test-${Date.now()}@example.com`;
-      const password = 'TestPassword123!';
-
-      await signupPage.goto();
-      await signupPage.signup('Test User', uniqueEmail, password);
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
-
-      // Clear cookies/session to logout
-      await page.context().clearCookies();
-
-      // Now login
+    test('user can login with seeded account', async ({ page }) => {
       const loginPage = new LoginPage(page);
+
       await loginPage.goto();
-      await loginPage.login(uniqueEmail, password);
+      await loginPage.login(testUser.email, testUser.password);
 
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     });
@@ -106,12 +95,10 @@ test.describe('Phase 1: Authentication', () => {
 
   test.describe('Session Management', () => {
     test('session persists across page reload', async ({ page }) => {
-      // Create and login user
-      const signupPage = new SignupPage(page);
-      const uniqueEmail = `test-${Date.now()}@example.com`;
+      const loginPage = new LoginPage(page);
 
-      await signupPage.goto();
-      await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
+      await loginPage.goto();
+      await loginPage.login(testUser.email, testUser.password);
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 
       // Reload page
@@ -123,12 +110,10 @@ test.describe('Phase 1: Authentication', () => {
     });
 
     test('user can logout', async ({ page }) => {
-      // Create and login user
-      const signupPage = new SignupPage(page);
-      const uniqueEmail = `test-${Date.now()}@example.com`;
+      const loginPage = new LoginPage(page);
 
-      await signupPage.goto();
-      await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
+      await loginPage.goto();
+      await loginPage.login(testUser.email, testUser.password);
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
 
       // Find and click logout button (if exists in dashboard layout)

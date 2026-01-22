@@ -36,9 +36,9 @@ Use this file as project-specific guidance for Claude when working in this repos
 | `npm run build`           | Build for production                       |
 | `npm run start`           | Start production server                    |
 | `npm run lint`            | Run ESLint                                 |
-| `npm run test:e2e`        | Run Playwright E2E tests                   |
-| `npm run test:e2e:ui`     | Run Playwright tests with UI               |
-| `npm run test:e2e:headed` | Run Playwright tests in headed browser     |
+| `npm run test:e2e`        | Run E2E tests with isolated Docker DB      |
+| `npm run test:e2e:ui`     | Run E2E tests with Playwright UI           |
+| `npm run test:e2e:headed` | Run E2E tests in headed browser            |
 | `npm run db:push`         | Push schema changes to database            |
 | `npm run db:studio`       | Open Drizzle Studio                        |
 | `npm run db:seed`         | Seed database with sample data             |

@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Test server runs on port 3001 to avoid conflicts with dev server on 3000
+const TEST_PORT = process.env.PORT || '3001';
+const TEST_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://localhost:${TEST_PORT}`;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -9,7 +13,7 @@ export default defineConfig({
   reporter: 'html',
   timeout: 60000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
+    baseURL: TEST_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 10000,
@@ -24,10 +28,12 @@ export default defineConfig({
       use: { ...devices['iPhone 13'] },
     },
   ],
+  // When running via run-e2e.sh, the script manages the server
+  // When running directly or in CI, start a server
   webServer: {
-    command: 'USE_MOCK_NUTRITIONIX=true npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: `npx dotenv -e .env.test -o -- npm run dev -- --port ${TEST_PORT}`,
+    url: TEST_URL,
+    reuseExistingServer: true, // Reuse if script already started one
     timeout: 120 * 1000,
   },
 });

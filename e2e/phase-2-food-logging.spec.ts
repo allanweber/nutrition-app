@@ -1,21 +1,29 @@
 import { test, expect } from '@playwright/test';
-import { SignupPage } from './pages/signup.page';
+import { LoginPage } from './pages/login.page';
 import { FoodLogPage } from './pages/food-log.page';
+import { testUser, seedUsers, newUser } from './fixtures/test-data';
 
 test.describe('Phase 2: Food Logging', () => {
-  // Helper to create a logged-in user session
-  async function loginAsNewUser(page: import('@playwright/test').Page) {
-    const signupPage = new SignupPage(page);
-    const uniqueEmail = `test-food-${Date.now()}@example.com`;
-    
-    await signupPage.goto();
-    await signupPage.signup('Food Test User', uniqueEmail, 'TestPassword123!');
+  // Helper to login with seeded user
+  async function loginAsTestUser(page: import('@playwright/test').Page) {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login(testUser.email, testUser.password);
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+  }
+
+  // Helper for tests that need a fresh user (no food logs)
+  async function loginAsFreshUser(page: import('@playwright/test').Page) {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    // Use professional user who has no food logs in seed
+    await loginPage.login(seedUsers.professional1.email, seedUsers.professional1.password);
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   }
 
   test.describe('Food Search', () => {
     test('user can search for food', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -44,7 +52,7 @@ test.describe('Phase 2: Food Logging', () => {
     });
 
     test('search shows loading state', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -58,8 +66,8 @@ test.describe('Phase 2: Food Logging', () => {
   });
 
   test.describe('Food Log Display', () => {
-    test('empty state shows when no logs', async ({ page }) => {
-      await loginAsNewUser(page);
+    test('seeded user has existing food logs', async ({ page }) => {
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -67,12 +75,13 @@ test.describe('Phase 2: Food Logging', () => {
       // Wait for page to load
       await page.waitForLoadState('networkidle');
       
-      // New user should see empty state
-      await expect(foodLogPage.emptyState).toBeVisible({ timeout: 10000 });
+      // Seeded user should have food logs
+      const logCount = await foodLogPage.getFoodLogCount();
+      expect(logCount).toBeGreaterThan(0);
     });
 
-    test('daily summary shows zero values for new user', async ({ page }) => {
-      await loginAsNewUser(page);
+    test('daily summary shows values for seeded user', async ({ page }) => {
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -80,15 +89,28 @@ test.describe('Phase 2: Food Logging', () => {
       // Check that daily summary section exists
       await expect(foodLogPage.dailySummary).toBeVisible();
       
-      // Check for zero calories (new user, no logs)
+      // Seeded user should have calories
       const calories = await foodLogPage.getCaloriesTotal();
-      expect(calories).toBe(0);
+      expect(calories).toBeGreaterThan(0);
+    });
+
+    test('empty state shows for professional user without logs', async ({ page }) => {
+      await loginAsFreshUser(page);
+      
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+      
+      // Wait for page to load
+      await page.waitForLoadState('networkidle');
+      
+      // Professional user should see empty state (no food logs in seed)
+      await expect(foodLogPage.emptyState).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('Date Navigation', () => {
     test('can navigate to previous day', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -106,7 +128,7 @@ test.describe('Phase 2: Food Logging', () => {
     });
 
     test('can navigate back to today', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -122,7 +144,7 @@ test.describe('Phase 2: Food Logging', () => {
     });
 
     test('cannot navigate to future dates', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -137,7 +159,7 @@ test.describe('Phase 2: Food Logging', () => {
 
   test.describe('Page Structure', () => {
     test('food log page has required sections', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -156,7 +178,7 @@ test.describe('Phase 2: Food Logging', () => {
     });
 
     test('food log page is responsive on mobile', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
@@ -184,10 +206,13 @@ test.describe('Phase 2: Food Logging', () => {
   // These tests use mock Nutritionix data (USE_MOCK_NUTRITIONIX=true in playwright config)
   test.describe('Food Logging with Mock API', () => {
     test('user can add food to log', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
+      
+      // Get initial count
+      const initialCount = await foodLogPage.getFoodLogCount();
       
       // Search for apple (exists in mock data)
       await foodLogPage.searchInput.fill('apple');
@@ -221,35 +246,18 @@ test.describe('Phase 2: Food Logging', () => {
       // Wait for the log to appear
       await page.waitForTimeout(1000);
       
-      // Food should appear in the log
-      const logCount = await foodLogPage.getFoodLogCount();
-      expect(logCount).toBeGreaterThan(0);
+      // Food count should increase
+      const newCount = await foodLogPage.getFoodLogCount();
+      expect(newCount).toBeGreaterThan(initialCount);
     });
 
     test('user can delete food from log', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
       
-      // First add a food (banana exists in mock)
-      await foodLogPage.searchInput.fill('banana');
-      await page.waitForTimeout(400);
-      
-      await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
-      
-      const firstResult = page.getByTestId('food-result-0');
-      await expect(firstResult).toBeVisible({ timeout: 5000 });
-      await firstResult.click();
-      
-      await foodLogPage.quantityInput.fill('1');
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /snack/i }).click();
-      await foodLogPage.addFoodButton.click();
-      
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({ timeout: 10000 });
-      
-      // Wait for the food log entry to appear
+      // Wait for the food log entry to appear (seeded user has logs)
       const foodLogEntry = page.locator('[data-testid^="food-log-"]').first();
       await expect(foodLogEntry).toBeVisible({ timeout: 10000 });
       
@@ -267,29 +275,22 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(deleteButton).toBeVisible({ timeout: 5000 });
       await deleteButton.click();
       
-      // Wait for the food log entry to be removed from DOM or empty state to show
-      await Promise.race([
-        foodLogEntry.waitFor({ state: 'hidden', timeout: 10000 }),
-        page.getByTestId('empty-state').waitFor({ state: 'visible', timeout: 10000 }),
-      ]);
+      // Wait for the food log entry to be removed from DOM or count to decrease
+      await page.waitForTimeout(1000);
       
-      // Wait a bit for the data to refresh
-      await page.waitForTimeout(500);
-      
-      // Count should decrease or be zero (empty state shows instead)
+      // Count should decrease
       const newCount = await foodLogPage.getFoodLogCount();
       expect(newCount).toBeLessThan(initialCount);
     });
 
     test('daily totals update correctly after adding food', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsTestUser(page);
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
       
-      // Get initial calories (should be 0 for new user)
+      // Get initial calories
       const initialCalories = await foodLogPage.getCaloriesTotal();
-      expect(initialCalories).toBe(0);
       
       // Add food (chicken exists in mock with known calories)
       await foodLogPage.searchInput.fill('chicken');
@@ -317,7 +318,7 @@ test.describe('Phase 2: Food Logging', () => {
     });
 
     test('can add multiple foods to different meals', async ({ page }) => {
-      await loginAsNewUser(page);
+      await loginAsFreshUser(page); // Use fresh user for predictable state
       
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();

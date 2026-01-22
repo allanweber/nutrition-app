@@ -94,6 +94,28 @@ The seed creates:
 - 7 individual users with nutrition goals and 14 days of food logs each
 - 2 professional users (dietitians)
 
+## Running E2E Tests
+
+E2E tests run with an isolated Docker database that is created fresh for each test run:
+
+```bash
+npm run test:e2e          # Full run with Docker DB lifecycle
+npm run test:e2e:ui       # With Playwright UI
+npm run test:e2e:headed   # In headed browser mode
+```
+
+**Requirements:**
+- Docker must be running
+- Port 5433 must be available (test database)
+
+The test runner automatically:
+1. Starts a fresh PostgreSQL container
+2. Runs migrations and seeds test data
+3. Runs Playwright tests
+4. Cleans up the container on exit
+
+Tests use the seeded accounts listed above for predictable test data.
+
 ## Databases and apis that contain nutrition information
 
 USDA FoodData Central - Free government database and api for nutrition information on a variety of branded and basic foods.
