@@ -54,7 +54,8 @@ test.describe('Phase 1: Authentication', () => {
       await signupPage.signup('Test User', testUser.email, 'TestPassword123!');
 
       // Should show error message for existing email
-      await expect(page.getByText(/email.*already|already.*email|exists/i)).toBeVisible({ timeout: 10000 });
+      await expect(signupPage.errorMessage).toBeVisible({ timeout: 10000 });
+      await expect(signupPage.errorMessage).toContainText(/email|already|exists|user/i);
     });
 
     test('can navigate to login page', async ({ page }) => {

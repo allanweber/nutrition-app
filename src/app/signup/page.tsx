@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 
 export default function SignupPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm({
@@ -31,6 +32,8 @@ export default function SignupPage() {
       role: 'individual' as const,
     } as SignupFormData,
     onSubmit: async ({ value }) => {
+      setAuthError(null);
+
       const result = await signUp.email(
         {
           email: value.email,
@@ -43,13 +46,17 @@ export default function SignupPage() {
             router.refresh();
           },
           onError: (ctx) => {
-            throw new Error(ctx.error.message || 'Signup failed');
+            const errorMessage = ctx.error.message || 'Signup failed';
+            setAuthError(errorMessage);
+            throw new Error(errorMessage);
           },
         }
       );
 
       if (result.error) {
-        throw new Error(result.error.message || 'Signup failed');
+        const errorMessage = result.error.message || 'Signup failed';
+        setAuthError(errorMessage);
+        throw new Error(errorMessage);
       }
     },
   });
@@ -394,9 +401,9 @@ export default function SignupPage() {
             <form.Subscribe
               selector={(state) => [state.errorMap]}
               children={([errorMap]) =>
-                errorMap.onSubmit ? (
+                errorMap.onSubmit || authError ? (
                   <div className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
-                    {errorMap.onSubmit}
+                    {errorMap.onSubmit || authError}
                   </div>
                 ) : null
               }
