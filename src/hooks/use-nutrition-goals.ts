@@ -8,9 +8,23 @@ export function useNutritionGoals() {
   const updateGoals = async (goals: NutritionGoals) => {
     try {
       await mutation.mutateAsync(goals)
-      return true
+      return { success: true, error: null }
     } catch (error) {
-      return false
+      // Parse the API error message
+      let errorMessage = 'Failed to save goals'
+      if (error instanceof Error) {
+        // Try to extract the error message from the API response
+        try {
+          const errorData = JSON.parse(error.message)
+          if (errorData.error) {
+            errorMessage = errorData.error
+          }
+        } catch {
+          // If not JSON, use the error message as-is
+          errorMessage = error.message
+        }
+      }
+      return { success: false, error: errorMessage }
     }
   }
 

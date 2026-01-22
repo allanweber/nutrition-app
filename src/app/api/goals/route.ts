@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { nutritionGoals } from '@/server/db/schema';
+import { nutritionGoals, insertNutritionGoalSchema } from '@/server/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
+import { validateApiInput, createValidationErrorResponse, nutritionGoalsSchema, transformNutritionGoalsForDB } from '@/lib/api-validation';
 
 // Get user's nutrition goals
 export async function GET() {
@@ -64,7 +65,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { goals } = await request.json();
+    const body = await request.json();
+    const goals = body.goals;
 
     if (!goals || typeof goals !== 'object') {
       return NextResponse.json(
@@ -73,17 +75,20 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Validate required fields
-    const requiredFields = ['calories', 'protein', 'carbs', 'fat', 'fiber', 'sodium'];
-    const missingFields = requiredFields.filter(field => 
-      goals[field] === undefined || goals[field] === null || goals[field] < 0
-    );
+    // Validate the goals object (API input validation)
+    const apiValidation = validateApiInput(nutritionGoalsSchema, goals, 'goals');
+    if (!apiValidation.success) {
+      return createValidationErrorResponse(apiValidation.error, apiValidation.field);
+    }
 
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { error: `Missing or invalid fields: ${missingFields.join(', ')}` },
-        { status: 400 }
-      );
+    // Transform API format to database format
+    const dbData = transformNutritionGoalsForDB(apiValidation.data, user.id);
+
+    // Validate with database schema (ensures data integrity)
+    const dbValidation = validateApiInput(insertNutritionGoalSchema, dbData, 'goals');
+    if (!dbValidation.success) {
+      console.error('Database schema validation failed:', dbValidation);
+      return NextResponse.json({ error: 'Invalid goal data' }, { status: 400 });
     }
 
     // Deactivate existing active goals
@@ -96,19 +101,7 @@ export async function PUT(request: NextRequest) {
       ));
 
     // Create new goal record
-    const [newGoal] = await db.insert(nutritionGoals).values({
-      userId: user.id,
-      goalType: goals.goalType || 'maintenance',
-      targetCalories: String(goals.calories),
-      targetProtein: String(goals.protein),
-      targetCarbs: String(goals.carbs),
-      targetFat: String(goals.fat),
-      targetFiber: String(goals.fiber),
-      targetSodium: String(goals.sodium),
-      activityLevel: goals.activityLevel || null,
-      startDate: new Date(),
-      isActive: true,
-    }).returning();
+    const [newGoal] = await db.insert(nutritionGoals).values(dbValidation.data).returning();
 
     return NextResponse.json({ 
       success: true, 

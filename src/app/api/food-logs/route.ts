@@ -6,6 +6,7 @@ import { foods, foodLogs, foodPhotos, foodAltMeasures } from '@/server/db/schema
 import { eq, and, gte, lt, desc, sql } from 'drizzle-orm';
 
 import { NutritionixFood, nutritionixToBaseFood } from '@/types/food';
+import { validateRequestBody, createFoodLogSchema, dateSchema, validateApiInput } from '@/lib/api-validation';
 
 // Helper to get or create food in cache
 async function getOrCreateFood(nutritionixData: NutritionixFood) {
@@ -84,7 +85,7 @@ async function getOrCreateFood(nutritionixData: NutritionixFood) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -92,32 +93,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { foodName, servingUnit, mealType, consumedAt } = body;
-    const quantity = parseFloat(body.quantity);
-    
-    if (!foodName || !body.quantity || !mealType) {
-      return NextResponse.json(
-        { error: 'Missing required fields: foodName, quantity, mealType' },
-        { status: 400 }
-      );
+    // Validate request body
+    const validation = await validateRequestBody(request, createFoodLogSchema);
+    if (!validation.success) {
+      return validation.response;
     }
 
-    if (isNaN(quantity) || quantity <= 0) {
-      return NextResponse.json(
-        { error: 'Quantity must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    // Validate meal type
-    const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-    if (!validMealTypes.includes(mealType)) {
-      return NextResponse.json(
-        { error: 'Invalid meal type. Must be: breakfast, lunch, dinner, or snack' },
-        { status: 400 }
-      );
-    }
+    const { foodName, brandName, quantity, servingUnit, mealType, consumedAt } = validation.data;
 
     // Get nutrition data from Nutritionix
     const nutritionData = await nutritionixAPI.getNaturalNutrients(
@@ -201,7 +183,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const dateParam = searchParams.get('date') || new Date().toISOString().split('T')[0];
+
+    // Validate date parameter
+    const dateValidation = validateApiInput(dateSchema, dateParam, 'date');
+    if (!dateValidation.success) {
+      return NextResponse.json(
+        { error: dateValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const date = dateValidation.data;
 
     // Query food logs with related food data and photos
     const logs = await db

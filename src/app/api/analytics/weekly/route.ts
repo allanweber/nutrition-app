@@ -3,6 +3,7 @@ import { db } from '@/server/db';
 import { foodLogs, foods } from '@/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
+import { daysSchema, validateApiInput } from '@/lib/api-validation';
 
 // Get weekly nutrition data
 export async function GET(request: NextRequest) {
@@ -13,7 +14,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '7');
+    const daysParam = parseInt(searchParams.get('days') || '7');
+
+    // Validate days parameter
+    const daysValidation = validateApiInput(daysSchema, daysParam, 'days');
+    if (!daysValidation.success) {
+      return NextResponse.json(
+        { error: daysValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const days = daysValidation.data;
     
     // Get date range for the last N days
     const endDate = new Date();

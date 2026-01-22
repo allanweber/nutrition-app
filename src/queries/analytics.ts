@@ -10,9 +10,10 @@ export function useDailyAnalyticsQuery(date?: string) {
   return useQuery({
     queryKey: DAILY_ANALYTICS_QUERY_KEY(targetDate),
     queryFn: async (): Promise<{ summary: DailyNutritionSummary; logs: FoodLogEntry[] }> => {
-      const response = await fetch(`/api/analytics/daily?date=${targetDate}`)
+      const response = await fetch(`/api/analytics/daily?date=${encodeURIComponent(targetDate)}`)
       if (!response.ok) {
-        throw new Error('Failed to fetch daily nutrition')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch daily nutrition')
       }
       const result = await response.json()
       return { summary: result.summary, logs: result.logs }
@@ -26,7 +27,8 @@ export function useWeeklyAnalyticsQuery(days: number = 7) {
     queryFn: async (): Promise<DailyNutritionSummary[]> => {
       const response = await fetch(`/api/analytics/weekly?days=${days}`)
       if (!response.ok) {
-        throw new Error('Failed to fetch weekly nutrition')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch weekly nutrition')
       }
       const result = await response.json()
       return result.data

@@ -29,7 +29,8 @@ export function useFoodSearchQuery(searchQuery: string) {
     queryFn: async (): Promise<FoodSearchResult> => {
       const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}`)
       if (!response.ok) {
-        throw new Error('Failed to search foods')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to search foods')
       }
       const data = await response.json()
       return data.results || {}

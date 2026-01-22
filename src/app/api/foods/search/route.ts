@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nutritionixAPI } from '@/lib/nutritionix';
+import { searchQuerySchema, validateApiInput } from '@/lib/api-validation';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q');
+    const queryParam = searchParams.get('q');
 
-    if (!query) {
+    if (!queryParam) {
       return NextResponse.json(
         { error: 'Query parameter is required' },
         { status: 400 }
       );
     }
 
-    if (query.length < 2) {
-      return NextResponse.json({ results: [] });
+    // Validate search query
+    const queryValidation = validateApiInput(searchQuerySchema, queryParam, 'query');
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { error: queryValidation.error },
+        { status: 400 }
+      );
     }
+
+    const query = queryValidation.data;
 
     const isConfigured = await nutritionixAPI.isConfigured();
     if (!isConfigured) {

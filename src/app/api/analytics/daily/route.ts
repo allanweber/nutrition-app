@@ -3,6 +3,7 @@ import { db } from '@/server/db';
 import { foodLogs, foods } from '@/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
+import { dateSchema, validateApiInput } from '@/lib/api-validation';
 
 // Helper function to get start and end of day
 function getDayRange(date: Date) {
@@ -22,16 +23,25 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
-    
-    if (!date) {
+    const dateParam = searchParams.get('date');
+
+    if (!dateParam) {
       return NextResponse.json(
         { error: 'Date parameter is required' },
         { status: 400 }
       );
     }
 
-    const targetDate = new Date(date);
+    // Validate date parameter
+    const dateValidation = validateApiInput(dateSchema, dateParam, 'date');
+    if (!dateValidation.success) {
+      return NextResponse.json(
+        { error: dateValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const targetDate = new Date(dateValidation.data);
     const { start, end } = getDayRange(targetDate);
 
     // Get food logs for the day with food data
@@ -102,7 +112,7 @@ export async function GET(request: NextRequest) {
     );
 
     const summary = {
-      date: date,
+      date: dateValidation.data,
       ...totals,
     };
 

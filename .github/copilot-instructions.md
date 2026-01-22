@@ -46,13 +46,6 @@ Use this file as project-specific guidance for Claude when working in this repos
 - Default cache time: 10 minutes (formerly cacheTime)
 - Devtools enabled in development mode
 
-#### Available Query Domains
-
-- **Goals**: `useGoalsQuery()`, `useUpdateGoalsMutation()` - Nutrition goals management
-- **Analytics**: `useDailyAnalyticsQuery()`, `useWeeklyAnalyticsQuery()` - Daily and weekly nutrition summaries
-- **Foods**: `useFoodSearchQuery()` - Food search functionality
-- **Food Logs**: `useFoodLogsQuery()`, `useCreateFoodLogMutation()`, `useDeleteFoodLogMutation()` - CRUD operations for food logs
-
 #### Usage Examples
 
 **Pages (correct usage):**
@@ -99,6 +92,91 @@ export default function GoalsComponent() {
   return <div>...</div>
 }
 ```
+
+#### API Input Validation & Error Handling
+
+**ALL API endpoints MUST validate inputs on the server side using Zod schemas:**
+
+- **Server-Side Validation**: All API routes validate inputs using `src/lib/api-validation.ts`
+- **Input Sanitization**: All string inputs are automatically sanitized to prevent XSS and injection attacks
+- **Structured Error Responses**: Validation errors return specific field information and user-friendly messages
+- **Client Error Display**: Client components use `src/lib/api-error.ts` to display detailed error messages
+
+#### API Validation Schemas (`src/lib/api-validation.ts`)
+
+**Uses existing Zod schemas from `src/server/db/schema.ts` where possible:**
+
+#### API Usage Example
+
+```typescript
+// In API routes
+import { validateRequestBody, dateSchema } from '@/lib/api-validation';
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const dateParam = searchParams.get('date');
+
+  if (!dateParam) {
+    return NextResponse.json(
+      { error: 'Date parameter is required' },
+      { status: 400 },
+    );
+  }
+
+  const dateValidation = validateApiInput(dateSchema, dateParam, 'date');
+  if (!dateValidation.success) {
+    return createValidationErrorResponse(
+      dateValidation.error,
+      dateValidation.field,
+    );
+  }
+
+  // Use dateValidation.data (validated and sanitized)
+}
+```
+
+#### Client Error Handling (`src/lib/api-error.ts`)
+
+Client components use the error handling utilities to display detailed validation errors:
+
+```typescript
+// In client components
+import { useApiError, ValidationError } from '@/lib/api-error'
+
+export default function MyForm() {
+  const { error, handleError } = useApiError()
+
+  const handleSubmit = async (data) => {
+    try {
+      await myMutation.mutateAsync(data)
+    } catch (err) {
+      handleError(err) // Parses API validation errors
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="email" />
+      <ValidationError error={error} field="email" />
+      {error && <ValidationError error={error} />} {/* General error */}
+    </form>
+  )
+}
+```
+
+#### Error Response Format
+
+API validation errors return structured responses:
+
+```json
+{
+  "success": false,
+  "error": "Calories must be at least 800",
+  "field": "calories"
+}
+```
+
+This allows client components to display field-specific error messages and provide better user experience.
 
 #### Cache Invalidation Rules
 

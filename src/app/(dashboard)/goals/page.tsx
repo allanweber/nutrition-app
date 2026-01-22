@@ -75,15 +75,15 @@ export default function GoalsPage() {
       sodium: parseInt(sodium) || 2300,
     };
 
-    const success = await updateGoals(goalsData);
+    const result = await updateGoals(goalsData);
 
     setIsSaving(false);
-    if (success) {
+    if (result.success) {
       setSaveSuccess(true);
       setLocalEdits({}); // Clear local edits after successful save
       setTimeout(() => setSaveSuccess(false), 3000);
     } else {
-      setSaveError('Failed to save goals. Please try again.');
+      setSaveError(result.error || 'Failed to save goals. Please try again.');
     }
   };
 

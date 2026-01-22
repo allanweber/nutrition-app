@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { foodLogs, foods, foodPhotos } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { foodLogIdSchema, updateFoodLogSchema, validateApiInput, validateRequestBody } from '@/lib/api-validation';
 
 // GET - Fetch a specific food log entry
 export async function GET(
@@ -11,7 +12,7 @@ export async function GET(
 ) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -20,14 +21,17 @@ export async function GET(
     }
 
     const { id } = await params;
-    const logId = parseInt(id, 10);
 
-    if (isNaN(logId)) {
+    // Validate food log ID
+    const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
+    if (!idValidation.success) {
       return NextResponse.json(
-        { error: 'Invalid log ID' },
+        { error: idValidation.error },
         { status: 400 }
       );
     }
+
+    const logId = idValidation.data;
 
     const [log] = await db
       .select({
@@ -102,7 +106,7 @@ export async function DELETE(
 ) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -111,14 +115,17 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const logId = parseInt(id, 10);
 
-    if (isNaN(logId)) {
+    // Validate food log ID
+    const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
+    if (!idValidation.success) {
       return NextResponse.json(
-        { error: 'Invalid log ID' },
+        { error: idValidation.error },
         { status: 400 }
       );
     }
+
+    const logId = idValidation.data;
 
     // Check if the log exists and belongs to the user
     const existingLog = await db.query.foodLogs.findFirst({
@@ -164,7 +171,7 @@ export async function PATCH(
 ) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -173,17 +180,25 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const logId = parseInt(id, 10);
 
-    if (isNaN(logId)) {
+    // Validate food log ID
+    const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
+    if (!idValidation.success) {
       return NextResponse.json(
-        { error: 'Invalid log ID' },
+        { error: idValidation.error },
         { status: 400 }
       );
     }
 
-    const body = await request.json();
-    const { mealType, consumedAt } = body;
+    const logId = idValidation.data;
+
+    // Validate request body
+    const validation = await validateRequestBody(request, updateFoodLogSchema);
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const updateData = validation.data;
 
     // Check if the log exists and belongs to the user
     const existingLog = await db.query.foodLogs.findFirst({
@@ -200,33 +215,26 @@ export async function PATCH(
       );
     }
 
-    // Build update object
-    const updateData: Record<string, string | Date> = {};
-    if (body.quantity !== undefined) {
-      const quantity = parseFloat(body.quantity);
-      if (isNaN(quantity) || quantity <= 0) {
-        return NextResponse.json(
-          { error: 'Quantity must be a positive number' },
-          { status: 400 }
-        );
-      }
-      updateData.quantity = quantity.toString();
-    }
-    if (mealType !== undefined) {
-      const validMealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
-      if (!validMealTypes.includes(mealType)) {
-        return NextResponse.json(
-          { error: 'Invalid meal type' },
-          { status: 400 }
-        );
-      }
-      updateData.mealType = mealType;
-    }
-    if (consumedAt !== undefined) updateData.consumedAt = new Date(consumedAt);
+    // Build update object with proper typing
+    const dbUpdateData: {
+      quantity?: string
+      mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+      consumedAt?: Date
+    } = {};
 
-    if (Object.keys(updateData).length === 0) {
+    if (updateData.quantity !== undefined) {
+      dbUpdateData.quantity = updateData.quantity.toString();
+    }
+    if (updateData.mealType !== undefined) {
+      dbUpdateData.mealType = updateData.mealType;
+    }
+    if (updateData.consumedAt !== undefined) {
+      dbUpdateData.consumedAt = updateData.consumedAt;
+    }
+
+    if (Object.keys(dbUpdateData).length === 0) {
       return NextResponse.json(
-        { error: 'No update fields provided' },
+        { error: 'No valid update fields provided' },
         { status: 400 }
       );
     }
@@ -234,7 +242,7 @@ export async function PATCH(
     // Update the log
     const [updatedLog] = await db
       .update(foodLogs)
-      .set(updateData)
+      .set(dbUpdateData)
       .where(
         and(
           eq(foodLogs.id, logId),

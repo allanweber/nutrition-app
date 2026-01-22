@@ -21,9 +21,10 @@ export function useFoodLogsQuery(date: string) {
   return useQuery({
     queryKey: FOOD_LOGS_QUERY_KEY(date),
     queryFn: async (): Promise<FoodLogsResponse> => {
-      const response = await fetch(`/api/food-logs?date=${date}`)
+      const response = await fetch(`/api/food-logs?date=${encodeURIComponent(date)}`)
       if (!response.ok) {
-        throw new Error('Failed to fetch food logs')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch food logs')
       }
       const data = await response.json()
       return {
