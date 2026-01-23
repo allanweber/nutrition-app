@@ -20,6 +20,10 @@ It is intended to prevent quality regressions, UX inconsistency, and architectur
 
 ## Core Principles
 
+### 0) Requirements
+
+All tech stack and project summary can be found in [AGENTS.md](../AGENTS.md).
+
 ### 1) Code Quality & Maintainability
 
 Code MUST be readable, type-safe, and easy to change.
