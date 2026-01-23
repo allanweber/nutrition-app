@@ -1,24 +1,24 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { NutritionGoals } from '@/types/food'
+import type { NutritionGoals } from '@/types/goals';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-const GOALS_QUERY_KEY = ['goals']
+const GOALS_QUERY_KEY = ['goals'];
 
 export function useGoalsQuery() {
   return useQuery({
     queryKey: GOALS_QUERY_KEY,
     queryFn: async (): Promise<NutritionGoals> => {
-      const response = await fetch('/api/goals')
+      const response = await fetch('/api/goals');
       if (!response.ok) {
-        throw new Error('Failed to fetch goals')
+        throw new Error('Failed to fetch goals');
       }
-      const result = await response.json()
-      return result.goals
+      const result = await response.json();
+      return result.goals;
     },
-  })
+  });
 }
 
 export function useUpdateGoalsMutation() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (goals: NutritionGoals): Promise<NutritionGoals> => {
@@ -28,18 +28,18 @@ export function useUpdateGoalsMutation() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ goals }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to update goals')
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update goals');
       }
 
-      const result = await response.json()
-      return result.goals
+      const result = await response.json();
+      return result.goals;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(GOALS_QUERY_KEY, data)
+      queryClient.setQueryData(GOALS_QUERY_KEY, data);
     },
-  })
+  });
 }

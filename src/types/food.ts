@@ -76,33 +76,6 @@ export interface DailyNutritionSummary {
   foodCount: number;
 }
 
-export type GoalType =
-  | 'weight_loss'
-  | 'maintenance'
-  | 'weight_gain'
-  | 'muscle_gain'
-  | 'fat_loss'
-  | 'performance'
-  | 'general_health';
-
-export type ActivityLevel =
-  | 'sedentary'
-  | 'light'
-  | 'moderate'
-  | 'active'
-  | 'extra_active';
-
-export interface NutritionGoals {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sodium: number;
-  goalType?: GoalType;
-  activityLevel?: ActivityLevel;
-}
-
 // Source-specific types
 export interface NutritionixFood {
   food_name: string;

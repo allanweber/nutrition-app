@@ -1,7 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DailyNutritionSummary, NutritionGoals } from '@/types/food';
+import { DailyNutritionSummary } from '@/types/food';
+import type { NutritionGoals } from '@/types/goals';
 import {
   CartesianGrid,
   Line,

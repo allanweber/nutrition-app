@@ -2,9 +2,15 @@
 
 This task list turns the spec in `.github/prompts/plan-phase4GoalsSystemDetailedV2.prompt.md` into concrete work items.
 
+Workflow note:
+
+- One branch per GitHub issue (`{issue-id}-{lowercasetitle}`)
+- Make incremental changes freely, but do not commit until the issue is fully implemented and verified
+- After finishing an issue: commit + push, then wait for approval before opening a PR to `main`
+
 ## A) Database & Types
 
-- [ ] A1. Add goal-history fields to `nutrition_goals` table ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
+- [x] A1. Add goal-history fields to `nutrition_goals` table ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
   - Files: [src/server/db/schema.ts](src/server/db/schema.ts)
   - Add columns (per spec):
     - normalized inputs: `ageYears`, `sex`, `heightCm`, `weightKg`, `activityMultiplier`, `goalRateKgPerWeek`
@@ -13,15 +19,15 @@ This task list turns the spec in `.github/prompts/plan-phase4GoalsSystemDetailed
     - raw inputs: `inputUnitSystem`, `wizardInputs`
   - DoD: schema compiles; Drizzle types updated.
 
-- [ ] A2. Create and apply a Drizzle migration for the new columns ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
+- [x] A2. Create and apply a Drizzle migration for the new columns ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
   - Files: `drizzle/*.sql` (new)
   - DoD: `npm run db:push` (or migrate flow) succeeds locally.
 
-- [ ] A3. Update goal-related TypeScript types used by UI/queries ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
-  - Files: [src/types/food.ts](src/types/food.ts) (or wherever `NutritionGoals` / goal history types live)
+- [x] A3. Update goal-related TypeScript types used by UI/queries ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
+  - Files: [src/types/goals.ts](src/types/goals.ts)
   - DoD: goal history record type + wizard input types exist and are used in API/queries.
 
-- [ ] A4. Add body check-ins table for goal feedback history ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
+- [x] A4. Add body check-ins table for goal feedback history ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
   - Files: [src/server/db/schema.ts](src/server/db/schema.ts)
   - Create table `body_checkins` with:
     - required: `weightKg` (normalized), `checkInDate`, `userId`
@@ -30,7 +36,7 @@ This task list turns the spec in `.github/prompts/plan-phase4GoalsSystemDetailed
     - raw input: `inputUnitSystem`, `rawWeight`
   - DoD: types exported + relations (user/checkins, goal/checkins).
 
-- [ ] A5. Create and apply a Drizzle migration for `body_checkins` ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
+- [x] A5. Create and apply a Drizzle migration for `body_checkins` ([Issue #14](https://github.com/allanweber/nutrition-app/issues/14))
   - Files: `drizzle/*.sql` (new)
   - DoD: schema push/migrate succeeds locally.
 

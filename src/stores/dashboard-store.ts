@@ -1,8 +1,5 @@
-import {
-  DailyNutritionSummary,
-  FoodLogEntry,
-  NutritionGoals,
-} from '@/types/food';
+import { DailyNutritionSummary, FoodLogEntry } from '@/types/food';
+import type { NutritionGoals } from '@/types/goals';
 import { create } from 'zustand';
 
 interface DashboardStore {

@@ -5,18 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
+import type { ActivityLevel, GoalType } from '@/types/goals';
+import { useForm } from '@tanstack/react-form';
 import { Activity, Loader2, Target, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from '@tanstack/react-form';
-import { goalsFormSchema, type GoalsFormData } from '@/lib/form-validation';
-import type { GoalType, ActivityLevel } from '@/types/food';
 
 export default function GoalsPage() {
   const { data: goals, isLoading, updateGoals } = useNutritionGoals();
@@ -96,19 +95,35 @@ export default function GoalsPage() {
                         <Label htmlFor="goalType">Goal Type</Label>
                         <Select
                           value={field.state.value}
-                          onValueChange={(value) => field.handleChange(value as GoalType)}
+                          onValueChange={(value) =>
+                            field.handleChange(value as GoalType)
+                          }
                         >
-                          <SelectTrigger className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}>
+                          <SelectTrigger
+                            className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                          >
                             <SelectValue placeholder="Select your goal" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="weight_loss">Weight Loss</SelectItem>
+                            <SelectItem value="weight_loss">
+                              Weight Loss
+                            </SelectItem>
                             <SelectItem value="fat_loss">Fat Loss</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                            <SelectItem value="weight_gain">Weight Gain</SelectItem>
-                            <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
-                            <SelectItem value="performance">Performance</SelectItem>
-                            <SelectItem value="general_health">General Health</SelectItem>
+                            <SelectItem value="maintenance">
+                              Maintenance
+                            </SelectItem>
+                            <SelectItem value="weight_gain">
+                              Weight Gain
+                            </SelectItem>
+                            <SelectItem value="muscle_gain">
+                              Muscle Gain
+                            </SelectItem>
+                            <SelectItem value="performance">
+                              Performance
+                            </SelectItem>
+                            <SelectItem value="general_health">
+                              General Health
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         {field.state.meta.errors.length > 0 && (
@@ -127,17 +142,27 @@ export default function GoalsPage() {
                         <Label htmlFor="activityLevel">Activity Level</Label>
                         <Select
                           value={field.state.value}
-                          onValueChange={(value) => field.handleChange(value as ActivityLevel)}
+                          onValueChange={(value) =>
+                            field.handleChange(value as ActivityLevel)
+                          }
                         >
-                          <SelectTrigger className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}>
+                          <SelectTrigger
+                            className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
+                          >
                             <SelectValue placeholder="Select activity level" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="sedentary">Sedentary</SelectItem>
-                            <SelectItem value="light">Light Activity</SelectItem>
-                            <SelectItem value="moderate">Moderate Activity</SelectItem>
+                            <SelectItem value="light">
+                              Light Activity
+                            </SelectItem>
+                            <SelectItem value="moderate">
+                              Moderate Activity
+                            </SelectItem>
                             <SelectItem value="active">Very Active</SelectItem>
-                            <SelectItem value="extra_active">Extra Active</SelectItem>
+                            <SelectItem value="extra_active">
+                              Extra Active
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         {field.state.meta.errors.length > 0 && (
@@ -156,7 +181,10 @@ export default function GoalsPage() {
                       name="calories"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 500 || parseInt(value) > 15000
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 500 ||
+                          parseInt(value) > 15000
                             ? 'Calories must be between 500 and 15,000'
                             : undefined,
                       }}
@@ -171,7 +199,11 @@ export default function GoalsPage() {
                             placeholder="2000"
                             min="500"
                             max="15000"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
@@ -186,7 +218,10 @@ export default function GoalsPage() {
                       name="protein"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 2000
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 0 ||
+                          parseInt(value) > 2000
                             ? 'Protein must be between 0 and 2,000g'
                             : undefined,
                       }}
@@ -201,7 +236,11 @@ export default function GoalsPage() {
                             placeholder="150"
                             min="0"
                             max="2000"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
@@ -216,7 +255,10 @@ export default function GoalsPage() {
                       name="carbs"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 3000
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 0 ||
+                          parseInt(value) > 3000
                             ? 'Carbs must be between 0 and 3,000g'
                             : undefined,
                       }}
@@ -231,7 +273,11 @@ export default function GoalsPage() {
                             placeholder="250"
                             min="0"
                             max="3000"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
@@ -246,7 +292,10 @@ export default function GoalsPage() {
                       name="fat"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 1000
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 0 ||
+                          parseInt(value) > 1000
                             ? 'Fat must be between 0 and 1,000g'
                             : undefined,
                       }}
@@ -261,7 +310,11 @@ export default function GoalsPage() {
                             placeholder="65"
                             min="0"
                             max="1000"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
@@ -276,7 +329,10 @@ export default function GoalsPage() {
                       name="fiber"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 200
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 0 ||
+                          parseInt(value) > 200
                             ? 'Fiber must be between 0 and 200g'
                             : undefined,
                       }}
@@ -291,7 +347,11 @@ export default function GoalsPage() {
                             placeholder="25"
                             min="0"
                             max="200"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
@@ -306,7 +366,10 @@ export default function GoalsPage() {
                       name="sodium"
                       validators={{
                         onChange: ({ value }) =>
-                          !value || isNaN(parseInt(value)) || parseInt(value) < 0 || parseInt(value) > 100000
+                          !value ||
+                          isNaN(parseInt(value)) ||
+                          parseInt(value) < 0 ||
+                          parseInt(value) > 100000
                             ? 'Sodium must be between 0 and 100,000mg'
                             : undefined,
                       }}
@@ -321,7 +384,11 @@ export default function GoalsPage() {
                             placeholder="2300"
                             min="0"
                             max="100000"
-                            className={field.state.meta.errors.length > 0 ? 'border-red-500' : ''}
+                            className={
+                              field.state.meta.errors.length > 0
+                                ? 'border-red-500'
+                                : ''
+                            }
                           />
                           {field.state.meta.errors.length > 0 && (
                             <div className="text-sm text-red-600 dark:text-red-400">
