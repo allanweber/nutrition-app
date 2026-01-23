@@ -57,6 +57,7 @@ These are authoritative guides; prefer linking to them rather than copying large
 - Next.js LLM reference: <https://nextjs.org/docs/llms-full.txt>
 - shadcn/ui LLM reference: <https://ui.shadcn.com/llms.txt>
 - Drizzle ORM LLM reference: <https://orm.drizzle.team/llms-full.txt>
+- Resend LLM reference: <https://resend.com/docs/llms-full.txt>
 
 ## Data Fetching Rules (TanStack Query)
 
