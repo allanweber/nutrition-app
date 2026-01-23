@@ -303,10 +303,14 @@ e2e/
 
 #### Tasks
 
+Calculate nutrition goals based on user input (BMR/TDEE) user inputs its data and we calculate their goals based on the selected goal (weight loss, maintenance, gain etc).
+All the goal is set via a wizard that helps the user to set up their goals.
+The goal wizard must be a multi step form that collects the necessary data from the user to calculate their goals, and a generic component that can be reused in other parts of the app if needed (for professionals to set goals for clients).
+
 | #   | Task                              | Files to Create/Modify                   | Est. Time |
-| --- | --------------------------------- | ---------------------------------------- | --------- |
-| 4.1 | Create goals CRUD API             | `src/app/api/goals/route.ts`             | 2 hours   |
-| 4.2 | Create goal calculator (BMR/TDEE) | `src/app/api/goals/calculate/route.ts`   | 2 hours   |
+| --- | --------------------------------- | ---------------------------------------- | --------- | --- |
+| 4.1 | Create goal calculator (BMR/TDEE) | `src/app/api/goals/calculate/route.ts`   | 2 hours   | \*  |
+| 4.2 | Create goals CRUD API             | `src/app/api/goals/route.ts`             | 2 hours   |
 | 4.3 | Create goal templates             | `src/lib/goal-templates.ts`              | 1 hour    |
 | 4.4 | Update goals page with real CRUD  | `src/app/(dashboard)/goals/page.tsx`     | 3 hours   |
 | 4.5 | Add goal selection wizard         | `src/components/goal-wizard.tsx`         | 2 hours   |
