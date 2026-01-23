@@ -198,6 +198,38 @@ export const nutritionGoals = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     goalType: goalTypeEnum('goal_type').notNull(),
+
+    // Wizard input snapshot (normalized)
+    ageYears: integer('age_years'),
+    sex: varchar('sex', { length: 20 }),
+    heightCm: decimal('height_cm', { precision: 10, scale: 2 }),
+    weightKg: decimal('weight_kg', { precision: 10, scale: 2 }),
+    activityMultiplier: decimal('activity_multiplier', {
+      precision: 6,
+      scale: 3,
+    }),
+    goalRateKgPerWeek: decimal('goal_rate_kg_per_week', {
+      precision: 6,
+      scale: 3,
+    }),
+
+    // Preset + rule snapshot
+    macroPresetId: varchar('macro_preset_id', { length: 50 }),
+    proteinGPerKg: decimal('protein_g_per_kg', { precision: 6, scale: 2 }),
+
+    // Calculation snapshot
+    bmrCalories: decimal('bmr_calories', { precision: 10, scale: 2 }),
+    tdeeCalories: decimal('tdee_calories', { precision: 10, scale: 2 }),
+    recommendedTargets: jsonb('recommended_targets'),
+    wasManuallyOverridden: boolean('was_manually_overridden').default(false),
+    calorieAdjustmentStrategy: varchar('calorie_adjustment_strategy', {
+      length: 30,
+    }),
+
+    // Raw/original wizard inputs (store-all)
+    inputUnitSystem: varchar('input_unit_system', { length: 10 }),
+    wizardInputs: jsonb('wizard_inputs'),
+
     targetCalories: decimal('target_calories', { precision: 10, scale: 2 }),
     targetProtein: decimal('target_protein', { precision: 10, scale: 2 }),
     targetCarbs: decimal('target_carbs', { precision: 10, scale: 2 }),
@@ -210,7 +242,50 @@ export const nutritionGoals = pgTable(
     isActive: boolean('is_active').default(true),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => [index('nutrition_goals_user_id_idx').on(table.userId)],
+  (table) => [
+    index('nutrition_goals_user_id_idx').on(table.userId),
+    index('nutrition_goals_user_start_date_idx').on(
+      table.userId,
+      table.startDate,
+    ),
+    index('nutrition_goals_user_end_date_idx').on(table.userId, table.endDate),
+  ],
+);
+
+// Body check-ins table (goal feedback history)
+export const bodyCheckins = pgTable(
+  'body_checkins',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    goalId: integer('goal_id').references(() => nutritionGoals.id, {
+      onDelete: 'set null',
+    }),
+    checkInDate: timestamp('check_in_date').notNull(),
+
+    inputUnitSystem: varchar('input_unit_system', { length: 10 }),
+    weightKg: decimal('weight_kg', { precision: 10, scale: 2 }).notNull(),
+    rawWeight: jsonb('raw_weight'),
+
+    photos: jsonb('photos'),
+    skinfoldsMm: jsonb('skinfolds_mm'),
+    notes: text('notes'),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('body_checkins_user_id_idx').on(table.userId),
+    index('body_checkins_user_check_in_date_idx').on(
+      table.userId,
+      table.checkInDate,
+    ),
+    index('body_checkins_goal_id_check_in_date_idx').on(
+      table.goalId,
+      table.checkInDate,
+    ),
+  ],
 );
 
 // Diet plans table
@@ -333,6 +408,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   foodLogs: many(foodLogs),
   nutritionGoals: many(nutritionGoals),
+  bodyCheckins: many(bodyCheckins),
   dietPlans: many(dietPlans),
   customFoods: many(foods), // Custom foods owned by user
   professionalVerification: many(professionalVerification),
@@ -384,6 +460,17 @@ export const nutritionGoalsRelations = relations(nutritionGoals, ({ one }) => ({
   user: one(users, {
     fields: [nutritionGoals.userId],
     references: [users.id],
+  }),
+}));
+
+export const bodyCheckinsRelations = relations(bodyCheckins, ({ one }) => ({
+  user: one(users, {
+    fields: [bodyCheckins.userId],
+    references: [users.id],
+  }),
+  goal: one(nutritionGoals, {
+    fields: [bodyCheckins.goalId],
+    references: [nutritionGoals.id],
   }),
 }));
 
@@ -450,6 +537,8 @@ export const insertFoodLogSchema = createInsertSchema(foodLogs);
 export const selectFoodLogSchema = createSelectSchema(foodLogs);
 export const insertNutritionGoalSchema = createInsertSchema(nutritionGoals);
 export const selectNutritionGoalSchema = createSelectSchema(nutritionGoals);
+export const insertBodyCheckinSchema = createInsertSchema(bodyCheckins);
+export const selectBodyCheckinSchema = createSelectSchema(bodyCheckins);
 export const insertDietPlanSchema = createInsertSchema(dietPlans);
 export const selectDietPlanSchema = createSelectSchema(dietPlans);
 export const insertDietPlanMealSchema = createInsertSchema(dietPlanMeals);
@@ -471,6 +560,8 @@ export type FoodLog = typeof foodLogs.$inferSelect;
 export type NewFoodLog = typeof foodLogs.$inferInsert;
 export type NutritionGoal = typeof nutritionGoals.$inferSelect;
 export type NewNutritionGoal = typeof nutritionGoals.$inferInsert;
+export type BodyCheckin = typeof bodyCheckins.$inferSelect;
+export type NewBodyCheckin = typeof bodyCheckins.$inferInsert;
 export type DietPlan = typeof dietPlans.$inferSelect;
 export type NewDietPlan = typeof dietPlans.$inferInsert;
 export type DietPlanMeal = typeof dietPlanMeals.$inferSelect;
