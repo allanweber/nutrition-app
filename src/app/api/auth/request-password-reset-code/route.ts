@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -99,6 +99,16 @@ export async function POST(request: NextRequest) {
     let code: string | null = null;
 
     if (user) {
+      // Enforce "latest code only": invalidate any previous reset codes.
+      await db
+        .delete(verifications)
+        .where(
+          and(
+            eq(verifications.value, user.id),
+            like(verifications.identifier, 'reset-password:%'),
+          ),
+        );
+
       // Generate a 6-digit code with best-effort collision avoidance.
       for (let i = 0; i < 10; i += 1) {
         const candidate = generate6DigitCode();

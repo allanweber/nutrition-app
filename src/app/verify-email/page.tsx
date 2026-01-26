@@ -75,7 +75,14 @@ export default function VerifyEmailPage({
       await requestCodeMutation.mutateAsync({ callbackURL });
       setCooldownSecondsLeft(RESEND_COOLDOWN_SECONDS);
     } catch (e) {
-      handleError(e);
+      const parsed = handleError(e);
+      const match = parsed.message.match(/Please wait (\d+)s/i);
+      if (match) {
+        const seconds = Number(match[1]);
+        if (Number.isFinite(seconds) && seconds > 0) {
+          setCooldownSecondsLeft(seconds);
+        }
+      }
     }
   };
 
@@ -90,7 +97,7 @@ export default function VerifyEmailPage({
           <div>
             <h1 className="text-2xl font-semibold">Verify your email</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Enter the 6-digit code we sent to your email.
+              Enter the 6-digit code we sent to your email. Codes expire in ~10 minutes.
             </p>
           </div>
           <LogoutButton />
@@ -145,6 +152,8 @@ export default function VerifyEmailPage({
             )}
           </form.Field>
 
+          {error?.field == null ? <ValidationError error={error} /> : null}
+
           <Button type="submit" className="w-full" disabled={isBusy}>
             {isBusy ? 'Verifying…' : 'Verify email'}
           </Button>
@@ -163,7 +172,7 @@ export default function VerifyEmailPage({
                   : 'Resend code'}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Didn’t get it? Check spam, then resend.
+              Didn’t get it? Check spam, then resend (60s cooldown, ~5/hour).
             </p>
           </div>
         </form>

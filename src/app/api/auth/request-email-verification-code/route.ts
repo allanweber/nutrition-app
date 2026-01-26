@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     if (existing?.lockedUntil && existing.lockedUntil > now) {
       return createValidationErrorResponse(
-        'Too many attempts. Try again later.',
+        'Too many attempts. Try again in a few minutes.',
         undefined,
         400,
       );
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     if (sentCount >= RESEND_MAX_PER_WINDOW) {
       return createValidationErrorResponse(
-        'Too many codes requested. Try again later.',
+        'Too many codes requested. Please try again in about an hour.',
         undefined,
         400,
       );

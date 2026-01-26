@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,16 @@ export default function ForgotPasswordPage({
   searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
   const defaultEmail = use(searchParams).email ?? '';
+
+  const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState<number>(0);
+
+  useEffect(() => {
+    if (cooldownSecondsLeft <= 0) return;
+    const id = window.setInterval(() => {
+      setCooldownSecondsLeft((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [cooldownSecondsLeft]);
 
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const {
@@ -48,7 +58,25 @@ export default function ForgotPasswordPage({
     },
   });
 
+  const handleResend = async () => {
+    if (!submittedEmail) return;
+    clearError();
+    try {
+      await requestMutation.mutateAsync({ email: submittedEmail });
+    } catch (e) {
+      const parsed = handleError(e);
+      const match = parsed.message.match(/Please wait (\d+)s/i);
+      if (match) {
+        const seconds = Number(match[1]);
+        if (Number.isFinite(seconds) && seconds > 0) {
+          setCooldownSecondsLeft(seconds);
+        }
+      }
+    }
+  };
+
   const isBusy = isSubmitting || requestMutation.isPending;
+  const isResendDisabled = requestMutation.isPending || cooldownSecondsLeft > 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
@@ -69,8 +97,12 @@ export default function ForgotPasswordPage({
             </p>
             <p className="text-sm text-muted-foreground">
               Check your inbox (and spam), then enter the code to set a new
-              password.
+              password. Codes expire in ~10 minutes.
             </p>
+            <p className="text-xs text-muted-foreground">
+              You can request another code after 60 seconds (limit ~5/hour).
+            </p>
+            <ValidationError error={error} />
             <div className="flex gap-2">
               <Button asChild className="w-full">
                 <Link
@@ -78,6 +110,18 @@ export default function ForgotPasswordPage({
                 >
                   Continue
                 </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResend}
+                disabled={isResendDisabled}
+              >
+                {requestMutation.isPending
+                  ? 'Sending…'
+                  : cooldownSecondsLeft > 0
+                    ? `Resend in ${cooldownSecondsLeft}s`
+                    : 'Resend code'}
               </Button>
             </div>
             <div className="text-center">

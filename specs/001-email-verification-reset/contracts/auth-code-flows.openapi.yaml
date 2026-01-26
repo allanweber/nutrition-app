@@ -28,6 +28,10 @@ components:
         field:
           type: string
           nullable: true
+          description: |-
+            Optional field name associated with the error.
+            Use `null` for form-level or rate-limit errors.
+            Known field values: `email`, `code`, `callbackURL`.
       required: [success, error]
 
     StandardOk:
@@ -104,7 +108,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StandardOk'
         '400':
-          description: Validation or rate limit error.
+          description: Validation or rate limit error. `field` is usually `null` or `callbackURL`.
           content:
             application/json:
               schema:
@@ -131,7 +135,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StandardOk'
         '400':
-          description: Invalid/expired code or throttled.
+          description: Invalid/expired code or throttled. `field` is typically `code`.
           content:
             application/json:
               schema:
@@ -156,7 +160,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StandardOk'
         '400':
-          description: Validation or rate limit error.
+          description: Validation or rate limit error. `field` is typically `email` or `null`.
           content:
             application/json:
               schema:
@@ -179,7 +183,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StandardOk'
         '400':
-          description: Invalid/expired code or password policy error.
+          description: Invalid/expired code or password policy error. `field` is typically `code` or `newPassword`.
           content:
             application/json:
               schema:

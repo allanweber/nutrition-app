@@ -44,12 +44,16 @@ export default function SignupPage() {
         {
           onSuccess: () => {
             // New email signups are auto-signed-in, then gated until email is verified.
+            // Best-effort: keepalive helps ensure this survives navigation.
             void fetch('/api/auth/request-email-verification-code', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({ callbackURL: '/dashboard' }),
+              keepalive: true,
+            }).catch(() => {
+              // Best-effort; user can still resend on the verify page.
             });
 
             router.push('/verify-email?callbackURL=/dashboard');

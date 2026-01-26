@@ -45,6 +45,13 @@ API endpoints:
 4. Enter the code.
 5. After success, access to authenticated pages should work.
 
+### Resend / throttling sanity checks
+
+- On `/verify-email`, click “Resend code” twice quickly.
+  - Expect a friendly message like “Please wait Ns…” (cooldown enforced server-side).
+- On `/forgot-password`, submit the same email twice quickly.
+  - Expect a friendly message like “Please wait Ns…” while still keeping account-existence messaging generic.
+
 ## Manual password reset flow test
 
 1. Visit `/login` → click “Forgot password?”

@@ -212,6 +212,10 @@ Common scripts (see `package.json` for the full list):
 - `npm run db:seed`
 - `npm run test:e2e`
 
+E2E runner convention:
+
+- Always run Playwright E2E through `./scripts/run-e2e.sh` (it provisions the Docker test DB, runs migrations + seed, and starts the dev server on the test port). Pass any Playwright args through, e.g. `./scripts/run-e2e.sh e2e/phase-1-auth.spec.ts -g "cooldown"`.
+
 Notes:
 
 - For local env setup, follow `README.md` and copy `.env.example` to `.env.local`.

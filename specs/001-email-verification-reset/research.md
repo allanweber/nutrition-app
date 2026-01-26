@@ -29,6 +29,10 @@
 - **Rationale**: Matches FR-017 (do not block existing legacy unverified users).
 - **Alternatives considered**: Add `requiresEmailVerification` boolean column on `user` (viable, but requires careful migration/backfill and Better Auth integration).
 
+#### Implementation note
+
+- Gating is enforced server-side by checking for an `email_verification_challenge` row for the signed-in user. This ensures only “new signups” (who get a challenge row at signup time) are redirected to `/verify-email`, and legacy unverified users are not impacted.
+
 ### Decision: Rate limiting via DB (no new infra dependency)
 - **Chosen**: Implement resend + wrong-code throttles using Postgres/Drizzle state (counters + timestamps).
 - **Rationale**: Avoids introducing Redis/Upstash/etc. without approval; satisfies FR-016.

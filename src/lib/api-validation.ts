@@ -214,7 +214,7 @@ export function createValidationErrorResponse(
     {
       success: false,
       error,
-      field,
+      field: field ?? null,
     },
     { status },
   );

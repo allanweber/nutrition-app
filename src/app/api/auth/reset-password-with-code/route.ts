@@ -111,6 +111,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Best-effort: remove the code so it's single-use even if the auth layer changes.
+    await db
+      .delete(verifications)
+      .where(eq(verifications.identifier, identifier));
+
     await logSecurityEvent({
       type: 'password_reset_completed',
       userId: user!.id,

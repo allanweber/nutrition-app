@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     if (challenge.lockedUntil && challenge.lockedUntil > now) {
       return createValidationErrorResponse(
-        'Invalid or expired code.',
+        'Too many attempts. Try again in 15 minutes.',
         'code',
         400,
       );

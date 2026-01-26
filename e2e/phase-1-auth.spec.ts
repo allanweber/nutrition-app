@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { invalidCredentials, routes, resetPasswordUser, testUser } from './fixtures/test-data';
-import { fetchLatestEmailVerificationCode } from './helpers/email-verification';
+import {
+  fetchLatestEmailVerificationCode,
+  waitForEmailVerificationChallenge,
+} from './helpers/email-verification';
 import { fetchLatestPasswordResetCode } from './helpers/password-reset';
 import { LoginPage } from './pages/login.page';
 import { SignupPage } from './pages/signup.page';
@@ -67,6 +70,32 @@ test.describe('Phase 1: Authentication', () => {
       await page.goto(routes.dashboard);
       await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+    });
+
+    test('verification resend cooldown blocks rapid resends with friendly message', async ({
+      page,
+    }) => {
+      const signupPage = new SignupPage(page);
+      const uniqueEmail = `signup-resend-cooldown-${Date.now()}@example.com`;
+
+      await signupPage.goto();
+      await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
+      await expect(page).toHaveURL(/\/verify-email/, { timeout: 15000 });
+
+      // Ensure a challenge exists.
+      await waitForEmailVerificationChallenge({ email: uniqueEmail });
+
+      // Force a fresh "send" right now (server-side), then reload so client-side cooldown state
+      // doesn't hide the server's cooldown message.
+      await page.request.post('/api/auth/request-email-verification-code');
+      await page.reload();
+      await expect(page).toHaveURL(/\/verify-email/, { timeout: 15000 });
+
+      await page.getByRole('button', { name: /resend code/i }).click();
+
+      await expect(page.getByText(/please wait\s+\d+s/i)).toBeVisible({
+        timeout: 15000,
+      });
     });
 
     test('shows field validation errors', async ({ page }) => {
@@ -238,6 +267,33 @@ test.describe('Phase 1: Authentication', () => {
       const loginPage = new LoginPage(page);
       await loginPage.login(resetPasswordUser.email, newPassword);
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+    });
+
+    test('reset-code request rate limits are enforced with generic UI messaging', async ({
+      page,
+    }) => {
+      const email = `unknown-rate-limit-${Date.now()}@example.com`;
+
+      await page.goto('/forgot-password');
+      await page.waitForLoadState('networkidle');
+
+      await page.getByLabel(/email/i).fill(email);
+      await page
+        .getByRole('button', { name: /send reset code|send code|continue/i })
+        .click();
+
+      await expect(page.getByText(/if an account exists/i)).toBeVisible({
+        timeout: 15000,
+      });
+
+      // Rapid resend should be throttled by the server.
+      await page.getByRole('button', { name: /resend code/i }).click();
+      await expect(page.getByText(/please wait\s+\d+s/i)).toBeVisible({
+        timeout: 15000,
+      });
+      await expect(page.getByRole('button', { name: /resend in/i })).toBeDisabled({
+        timeout: 15000,
+      });
     });
   });
 

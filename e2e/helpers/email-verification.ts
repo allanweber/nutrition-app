@@ -53,3 +53,30 @@ export async function fetchLatestEmailVerificationCode(params: {
     await sql.end({ timeout: 5 });
   }
 }
+
+export async function waitForEmailVerificationChallenge(params: {
+  email: string;
+  timeoutMs?: number;
+}): Promise<void> {
+  const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
+  const timeoutMs = params.timeoutMs ?? 10_000;
+  const start = Date.now();
+
+  try {
+    while (Date.now() - start < timeoutMs) {
+      const rows = await sql<Array<{ id: string }>>`
+        select id
+        from email_verification_challenge
+        where email = ${params.email}
+        limit 1
+      `;
+
+      if (rows[0]?.id) return;
+      await sleep(250);
+    }
+
+    throw new Error('Timed out waiting for email verification challenge');
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}

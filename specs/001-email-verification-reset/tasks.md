@@ -117,15 +117,15 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 ### Tests (Playwright)
 
-- [ ] T035 [P] [US3] Add E2E: verification resend cooldown blocks rapid resends with friendly message in `e2e/phase-1-auth.spec.ts`
-- [ ] T036 [P] [US3] Add E2E: reset-code request rate limits are enforced with generic UI messaging in `e2e/phase-1-auth.spec.ts`
+- [x] T035 [P] [US3] Add E2E: verification resend cooldown blocks rapid resends with friendly message in `e2e/phase-1-auth.spec.ts`
+- [x] T036 [P] [US3] Add E2E: reset-code request rate limits are enforced with generic UI messaging in `e2e/phase-1-auth.spec.ts`
 
 ### Implementation
 
-- [ ] T037 [US3] Implement hourly resend cap and wrong-code attempt throttling logic for verification in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/verify-email-code/route.ts`
-- [ ] T038 [US3] Implement rate limiting for password reset requests in `src/app/api/auth/request-password-reset-code/route.ts`
-- [ ] T039 [US3] Ensure “latest code only” invalidation is enforced for both flows in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/request-password-reset-code/route.ts`
-- [ ] T040 [US3] Improve UX messaging for throttles and expiry guidance in `src/app/verify-email/page.tsx` and `src/app/forgot-password/page.tsx`
+- [x] T037 [US3] Implement hourly resend cap and wrong-code attempt throttling logic for verification in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/verify-email-code/route.ts`
+- [x] T038 [US3] Implement rate limiting for password reset requests in `src/app/api/auth/request-password-reset-code/route.ts`
+- [x] T039 [US3] Ensure “latest code only” invalidation is enforced for both flows in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/request-password-reset-code/route.ts`
+- [x] T040 [US3] Improve UX messaging for throttles and expiry guidance in `src/app/verify-email/page.tsx` and `src/app/forgot-password/page.tsx`
 
 **Checkpoint**: US3 complete—resends are safe and user-friendly.
 
@@ -133,9 +133,9 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T041 [P] Add doc note about “new signups only” gating mechanism in `specs/001-email-verification-reset/research.md`
-- [ ] T042 Normalize structured error `field` values across endpoints and document them in `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
-- [ ] T043 Run `specs/001-email-verification-reset/quickstart.md` end-to-end and update it with any missing steps
+- [x] T041 [P] Add doc note about “new signups only” gating mechanism in `specs/001-email-verification-reset/research.md`
+- [x] T042 Normalize structured error `field` values across endpoints and document them in `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T043 Run `specs/001-email-verification-reset/quickstart.md` end-to-end and update it with any missing steps
 
 ---
 
