@@ -17,6 +17,17 @@ import { useForm } from '@tanstack/react-form';
 import { Activity, Loader2, Target, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
+type GoalsFormValues = {
+  goalType: GoalType;
+  activityLevel: ActivityLevel;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+  fiber: string;
+  sodium: string;
+};
+
 export default function GoalsPage() {
   const { data: goals, isLoading, updateGoals } = useNutritionGoals();
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -31,17 +42,17 @@ export default function GoalsPage() {
       fat: goals?.fat?.toString() || '65',
       fiber: goals?.fiber?.toString() || '25',
       sodium: goals?.sodium?.toString() || '2300',
-    } as any, // GoalsFormData expects numbers but form uses strings
+    } satisfies GoalsFormValues,
     onSubmit: async ({ value }) => {
       const result = await updateGoals({
         goalType: value.goalType,
         activityLevel: value.activityLevel,
-        calories: parseInt(value.calories),
-        protein: parseInt(value.protein),
-        carbs: parseInt(value.carbs),
-        fat: parseInt(value.fat),
-        fiber: parseInt(value.fiber),
-        sodium: parseInt(value.sodium),
+        calories: parseInt(value.calories, 10),
+        protein: parseInt(value.protein, 10),
+        carbs: parseInt(value.carbs, 10),
+        fat: parseInt(value.fat, 10),
+        fiber: parseInt(value.fiber, 10),
+        sodium: parseInt(value.sodium, 10),
       });
 
       if (result.success) {
@@ -88,9 +99,8 @@ export default function GoalsPage() {
                 className="space-y-6"
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <form.Field
-                    name="goalType"
-                    children={(field) => (
+                  <form.Field name="goalType">
+                    {(field) => (
                       <div className="space-y-2">
                         <Label htmlFor="goalType">Goal Type</Label>
                         <Select
@@ -133,11 +143,10 @@ export default function GoalsPage() {
                         )}
                       </div>
                     )}
-                  />
+                  </form.Field>
 
-                  <form.Field
-                    name="activityLevel"
-                    children={(field) => (
+                  <form.Field name="activityLevel">
+                    {(field) => (
                       <div className="space-y-2">
                         <Label htmlFor="activityLevel">Activity Level</Label>
                         <Select
@@ -172,7 +181,7 @@ export default function GoalsPage() {
                         )}
                       </div>
                     )}
-                  />
+                  </form.Field>
                 </div>
 
                 <div className="space-y-4">
@@ -188,7 +197,8 @@ export default function GoalsPage() {
                             ? 'Calories must be between 500 and 15,000'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="calories">Target Calories</Label>
                           <Input
@@ -212,7 +222,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
 
                     <form.Field
                       name="protein"
@@ -225,7 +235,8 @@ export default function GoalsPage() {
                             ? 'Protein must be between 0 and 2,000g'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="protein">Target Protein (g)</Label>
                           <Input
@@ -249,7 +260,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
 
                     <form.Field
                       name="carbs"
@@ -262,7 +273,8 @@ export default function GoalsPage() {
                             ? 'Carbs must be between 0 and 3,000g'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="carbs">Target Carbs (g)</Label>
                           <Input
@@ -286,7 +298,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
 
                     <form.Field
                       name="fat"
@@ -299,7 +311,8 @@ export default function GoalsPage() {
                             ? 'Fat must be between 0 and 1,000g'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="fat">Target Fat (g)</Label>
                           <Input
@@ -323,7 +336,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
 
                     <form.Field
                       name="fiber"
@@ -336,7 +349,8 @@ export default function GoalsPage() {
                             ? 'Fiber must be between 0 and 200g'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="fiber">Target Fiber (g)</Label>
                           <Input
@@ -360,7 +374,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
 
                     <form.Field
                       name="sodium"
@@ -373,7 +387,8 @@ export default function GoalsPage() {
                             ? 'Sodium must be between 0 and 100,000mg'
                             : undefined,
                       }}
-                      children={(field) => (
+                    >
+                      {(field) => (
                         <div className="space-y-2">
                           <Label htmlFor="sodium">Target Sodium (mg)</Label>
                           <Input
@@ -397,7 +412,7 @@ export default function GoalsPage() {
                           )}
                         </div>
                       )}
-                    />
+                    </form.Field>
                   </div>
                 </div>
 
@@ -407,21 +422,19 @@ export default function GoalsPage() {
                   </div>
                 )}
 
-                <form.Subscribe
-                  selector={(state) => [state.errorMap]}
-                  children={([errorMap]) =>
+                <form.Subscribe selector={(state) => [state.errorMap]}>
+                  {([errorMap]) =>
                     errorMap.onSubmit ? (
                       <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
                         {errorMap.onSubmit}
                       </div>
                     ) : null
                   }
-                />
+                </form.Subscribe>
 
                 <div className="flex justify-end">
-                  <form.Subscribe
-                    selector={(state) => [state.isSubmitting]}
-                    children={([isSubmitting]) => (
+                  <form.Subscribe selector={(state) => [state.isSubmitting]}>
+                    {([isSubmitting]) => (
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? (
                           <>
@@ -433,7 +446,7 @@ export default function GoalsPage() {
                         )}
                       </Button>
                     )}
-                  />
+                  </form.Subscribe>
                 </div>
               </form>
             </CardContent>

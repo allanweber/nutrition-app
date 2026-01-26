@@ -376,6 +376,25 @@ const sampleUserDefs = {
         activityLevel: 'light',
       },
     },
+
+    // Dedicated account for password-reset / change-password E2E flows.
+    // Keep this email unique and unused by other tests.
+    {
+      email: 'reset-pwd-test@mail.com',
+      name: 'Reset Password Test User',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
   ],
   professionals: [
     {

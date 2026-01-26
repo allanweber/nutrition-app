@@ -57,6 +57,7 @@ These are authoritative guides; prefer linking to them rather than copying large
 - Next.js LLM reference: <https://nextjs.org/docs/llms-full.txt>
 - shadcn/ui LLM reference: <https://ui.shadcn.com/llms.txt>
 - Drizzle ORM LLM reference: <https://orm.drizzle.team/llms-full.txt>
+- Resend LLM reference: <https://resend.com/docs/llms-full.txt>
 
 ## Data Fetching Rules (TanStack Query)
 
@@ -210,6 +211,10 @@ Common scripts (see `package.json` for the full list):
 - `npm run db:push`
 - `npm run db:seed`
 - `npm run test:e2e`
+
+E2E runner convention:
+
+- Always run Playwright E2E through `./scripts/run-e2e.sh` (it provisions the Docker test DB, runs migrations + seed, and starts the dev server on the test port). Pass any Playwright args through, e.g. `./scripts/run-e2e.sh e2e/phase-1-auth.spec.ts -g "cooldown"`.
 
 Notes:
 

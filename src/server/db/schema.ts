@@ -399,6 +399,59 @@ export const verifications = pgTable(
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
 
+export const emailVerificationChallenges = pgTable(
+  'email_verification_challenge',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' })
+      .unique(),
+    email: varchar('email', { length: 255 }).notNull(),
+    codeHash: text('code_hash').notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    sentCountHour: integer('sent_count_hour').notNull().default(0),
+    sentCountWindowStart: timestamp('sent_count_window_start')
+      .notNull()
+      .defaultNow(),
+    lastSentAt: timestamp('last_sent_at').notNull().defaultNow(),
+    failedCountWindow: integer('failed_count_window').notNull().default(0),
+    failedCountWindowStart: timestamp('failed_count_window_start')
+      .notNull()
+      .defaultNow(),
+    lockedUntil: timestamp('locked_until'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('email_verification_challenge_user_id_idx').on(table.userId),
+    index('email_verification_challenge_email_idx').on(table.email),
+  ],
+);
+
+export const securityEvents = pgTable(
+  'security_event',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    email: varchar('email', { length: 255 }),
+    type: varchar('type', { length: 64 }).notNull(),
+    ip: varchar('ip', { length: 64 }),
+    userAgent: text('user_agent'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('security_event_user_id_created_at_idx').on(
+      table.userId,
+      table.createdAt,
+    ),
+    index('security_event_type_created_at_idx').on(table.type, table.createdAt),
+  ],
+);
+
 // ============================================
 // RELATIONS
 // ============================================

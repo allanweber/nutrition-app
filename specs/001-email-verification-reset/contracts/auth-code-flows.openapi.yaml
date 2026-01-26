@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: Nutrition App — Auth Code Flows
+  version: 0.1.0
+  description: |
+    Code-based email verification (post-signup) and password reset flows.
+    These endpoints are implemented as Next.js App Router route handlers under `/api/auth/*`.
+
+servers:
+  - url: http://localhost:3000
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+
+  schemas:
+    StandardError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+        field:
+          type: string
+          nullable: true
+          description: |-
+            Optional field name associated with the error.
+            Use `null` for form-level or rate-limit errors.
+            Known field values: `email`, `code`, `callbackURL`.
+      required: [success, error]
+
+    StandardOk:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+      required: [success]
+
+    RequestEmailVerificationCodeRequest:
+      type: object
+      properties:
+        callbackURL:
+          type: string
+          nullable: true
+          maxLength: 2048
+          pattern: '^/.*'
+          description: Optional internal redirect path after verification (must start with '/').
+
+    VerifyEmailCodeRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 6-digit numeric code.
+          minLength: 6
+          maxLength: 6
+          pattern: '^\\d{6}$'
+      required: [code]
+
+    RequestPasswordResetCodeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    ResetPasswordWithCodeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          description: 6-digit numeric code.
+          minLength: 6
+          maxLength: 6
+          pattern: '^\\d{6}$'
+        newPassword:
+          type: string
+          minLength: 8
+      required: [email, code, newPassword]
+
+paths:
+  /api/auth/request-email-verification-code:
+    post:
+      summary: Send/resend email verification code for signed-in unverified user
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestEmailVerificationCodeRequest'
+      responses:
+        '200':
+          description: Always returns success when request is accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardOk'
+        '400':
+          description: Validation or rate limit error. `field` is usually `null` or `callbackURL`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '401':
+          description: Not authenticated.
+
+  /api/auth/verify-email-code:
+    post:
+      summary: Verify the signed-in user email via a code
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailCodeRequest'
+      responses:
+        '200':
+          description: Verified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardOk'
+        '400':
+          description: Invalid/expired code or throttled. `field` is typically `code`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '401':
+          description: Not authenticated.
+
+  /api/auth/request-password-reset-code:
+    post:
+      summary: Request a password reset code (generic response)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestPasswordResetCodeRequest'
+      responses:
+        '200':
+          description: Always returns success to avoid account enumeration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardOk'
+        '400':
+          description: Validation or rate limit error. `field` is typically `email` or `null`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
+  /api/auth/reset-password-with-code:
+    post:
+      summary: Reset password using code + new password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordWithCodeRequest'
+      responses:
+        '200':
+          description: Password reset succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardOk'
+        '400':
+          description: Invalid/expired code or password policy error. `field` is typically `code` or `newPassword`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
