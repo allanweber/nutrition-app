@@ -12,7 +12,10 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === '/signup' ||
     request.nextUrl.pathname === '/' ||
     request.nextUrl.pathname.startsWith('/terms') ||
-    request.nextUrl.pathname.startsWith('/privacy')
+    request.nextUrl.pathname.startsWith('/privacy') ||
+    request.nextUrl.pathname.startsWith('/forgot-password') ||
+    request.nextUrl.pathname.startsWith('/reset-password') ||
+    request.nextUrl.pathname.startsWith('/verify-email')
   ) {
     return NextResponse.next();
   }

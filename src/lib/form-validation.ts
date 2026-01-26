@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_POLICY_MESSAGE,
+  PASSWORD_POLICY_REGEX,
+} from '@/lib/password-policy';
+
 // ============================================
 // CLIENT-SIDE FORM VALIDATION SCHEMAS
 // ============================================
@@ -31,8 +37,8 @@ export const signupSchema = z.object({
   password: z
     .string()
     .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+    .regex(PASSWORD_POLICY_REGEX, PASSWORD_POLICY_MESSAGE),
   role: z.enum(['individual', 'professional']),
 })
 

@@ -14,6 +14,29 @@
 - `npm run dev`
 - Visit `http://localhost:3000/signup`
 
+## Useful links
+
+Docs:
+
+- Spec: `specs/001-email-verification-reset/spec.md`
+- Plan: `specs/001-email-verification-reset/plan.md`
+- OpenAPI contract: `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+
+Pages:
+
+- Signup: `/signup`
+- Login: `/login`
+- Verify email: `/verify-email`
+- Forgot password: `/forgot-password`
+- Reset password: `/reset-password`
+
+API endpoints:
+
+- `POST /api/auth/request-email-verification-code`
+- `POST /api/auth/verify-email-code`
+- `POST /api/auth/request-password-reset-code`
+- `POST /api/auth/reset-password-with-code`
+
 ## Manual verification flow test
 
 1. Sign up with email/password.

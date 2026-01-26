@@ -1,4 +1,4 @@
-import { type Page, type Locator } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
 export class SignupPage {
   readonly page: Page;
@@ -23,9 +23,15 @@ export class SignupPage {
     this.submitButton = page.getByTestId('submit-button');
     this.googleButton = page.getByTestId('google-button');
     this.errorMessage = page.getByTestId('error-message');
-    this.nameError = page.locator('[data-testid="name-input"] + div').filter({ hasText: /.+/ });
-    this.emailError = page.locator('[data-testid="email-input"] + div').filter({ hasText: /.+/ });
-    this.passwordError = page.locator('[data-testid="password-input"] + div').filter({ hasText: /.+/ });
+    this.nameError = page
+      .locator('[data-testid="name-input"] + div')
+      .filter({ hasText: /.+/ });
+    this.emailError = page
+      .locator('[data-testid="email-input"] + div')
+      .filter({ hasText: /.+/ });
+    this.passwordError = page
+      .locator('[data-testid="password-input"] + div')
+      .filter({ hasText: /.+/ });
     this.loginLink = page.getByRole('link', { name: 'Sign in' });
   }
 
@@ -39,9 +45,10 @@ export class SignupPage {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
-    
+
     // Wait for navigation or error message
     await Promise.race([
+      this.page.waitForURL('**/verify-email**', { timeout: 15000 }),
       this.page.waitForURL('**/dashboard**', { timeout: 15000 }),
       this.errorMessage.waitFor({ state: 'visible', timeout: 15000 }),
     ]).catch(() => {});

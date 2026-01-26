@@ -23,8 +23,8 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 **Purpose**: Ensure repo has the minimal configuration and scaffolding needed to implement and validate the feature.
 
-- [ ] T001 Confirm required env vars are documented in `.env.example` (RESEND_API_KEY, EMAIL_FROM) and `README.md` (if present)
-- [ ] T002 [P] Add feature doc cross-links in `specs/001-email-verification-reset/quickstart.md` (link endpoints + pages)
+- [x] T001 Confirm required env vars are documented in `.env.example` (RESEND_API_KEY, EMAIL_FROM) and `README.md` (if present)
+- [x] T002 [P] Add feature doc cross-links in `specs/001-email-verification-reset/quickstart.md` (link endpoints + pages)
 
 ---
 
@@ -32,14 +32,14 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 **Purpose**: Core infrastructure that MUST be complete before any user story work can ship.
 
-- [ ] T003 Resolve spec/contract mismatch for reset input (`email` required in OpenAPI but not stated in FR-009) by updating `specs/001-email-verification-reset/spec.md` and `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
-- [ ] T004 Resolve spec/contract mismatch for `callbackURL` (present in OpenAPI but not required in spec) by updating `specs/001-email-verification-reset/spec.md` and/or `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
-- [ ] T005 Add Resend email utility and templates in `src/server/email/resend.ts` and `src/server/email/templates.ts`
-- [ ] T006 Add DB tables for `email_verification_challenge` and `security_event` in `src/server/db/schema.ts`
-- [ ] T007 Generate a Drizzle migration SQL for new tables under `drizzle/` (e.g., `drizzle/0002_email_verification_and_security_events.sql`)
-- [ ] T008 Add server-side helpers for security event logging in `src/server/security-events.ts`
-- [ ] T009 Add shared code utilities (generate code, hash, expiry calculations) in `src/lib/auth-codes.ts`
-- [ ] T010 Update Better Auth configuration for session revocation on password reset (FR-014) in `src/lib/auth.ts`
+- [x] T003 Resolve spec/contract mismatch for reset input (`email` required in OpenAPI but not stated in FR-009) by updating `specs/001-email-verification-reset/spec.md` and `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T004 Resolve spec/contract mismatch for `callbackURL` (present in OpenAPI but not required in spec) by updating `specs/001-email-verification-reset/spec.md` and/or `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T005 Add Resend email utility and templates in `src/server/email/resend.ts` and `src/server/email/templates.ts`
+- [x] T006 Add DB tables for `email_verification_challenge` and `security_event` in `src/server/db/schema.ts`
+- [x] T007 Generate a Drizzle migration SQL for new tables under `drizzle/` (e.g., `drizzle/0002_email_verification_and_security_events.sql`)
+- [x] T008 Add server-side helpers for security event logging in `src/server/security-events.ts`
+- [x] T009 Add shared code utilities (generate code, hash, expiry calculations) in `src/lib/auth-codes.ts`
+- [x] T010 Update Better Auth configuration for session revocation on password reset (FR-014) in `src/lib/auth.ts`
 
 **Checkpoint**: Foundation ready—route handlers and UI can be implemented.
 
@@ -53,28 +53,27 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 ### Tests (Playwright)
 
-- [ ] T011 [P] [US1] Add E2E: signup redirects to `/verify-email` and blocks `/dashboard` in `e2e/phase-1-auth.spec.ts`
-- [ ] T012 [P] [US1] Add E2E: enter wrong code shows error and stays gated in `e2e/phase-1-auth.spec.ts`
-- [ ] T013 [P] [US1] Add E2E: enter correct code verifies and allows dashboard access in `e2e/phase-1-auth.spec.ts`
+- [x] T011 [P] [US1] Add E2E: signup redirects to `/verify-email` and blocks `/dashboard` in `e2e/phase-1-auth.spec.ts`
+- [x] T012 [P] [US1] Add E2E: enter wrong code shows error and stays gated in `e2e/phase-1-auth.spec.ts`
+- [x] T013 [P] [US1] Add E2E: enter correct code verifies and allows dashboard access in `e2e/phase-1-auth.spec.ts`
 
 ### API + DB
-
-- [ ] T014 [P] [US1] Implement `POST /api/auth/request-email-verification-code` in `src/app/api/auth/request-email-verification-code/route.ts`
-- [ ] T015 [P] [US1] Implement `POST /api/auth/verify-email-code` in `src/app/api/auth/verify-email-code/route.ts`
-- [ ] T016 [P] [US1] Add rate-limit enforcement for resend + wrong-code attempts in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/verify-email-code/route.ts`
-- [ ] T017 [P] [US1] Add security event writes (requested, failed, verified) in `src/app/api/auth/request-email-verification-code/route.ts`, `src/app/api/auth/verify-email-code/route.ts`, and `src/server/security-events.ts`
+- [x] T014 [P] [US1] Implement `POST /api/auth/request-email-verification-code` in `src/app/api/auth/request-email-verification-code/route.ts`
+- [x] T015 [P] [US1] Implement `POST /api/auth/verify-email-code` in `src/app/api/auth/verify-email-code/route.ts`
+- [x] T016 [P] [US1] Add rate-limit enforcement for resend + wrong-code attempts in `src/app/api/auth/request-email-verification-code/route.ts` and `src/app/api/auth/verify-email-code/route.ts`
+- [x] T017 [P] [US1] Add security event writes (requested, failed, verified) in `src/app/api/auth/request-email-verification-code/route.ts`, `src/app/api/auth/verify-email-code/route.ts`, and `src/server/security-events.ts`
 
 ### UI
 
-- [ ] T018 [P] [US1] Add TanStack Query mutations for auth-code endpoints in `src/queries/auth-codes.ts`
-- [ ] T019 [US1] Build verification page UI with TanStack Form + field-level validation in `src/app/verify-email/page.tsx`
-- [ ] T020 [US1] Add resend UX (cooldown + hourly cap messages) in `src/app/verify-email/page.tsx`
-- [ ] T021 [US1] Update signup flow to (a) call request-verification-code immediately after signup and (b) route to `/verify-email` in `src/app/signup/page.tsx`
+- [x] T018 [P] [US1] Add TanStack Query mutations for auth-code endpoints in `src/queries/auth-codes.ts`
+- [x] T019 [US1] Build verification page UI with TanStack Form + field-level validation in `src/app/verify-email/page.tsx`
+- [x] T020 [US1] Add resend UX (cooldown + hourly cap messages) in `src/app/verify-email/page.tsx`
+- [x] T021 [US1] Update signup flow to (a) call request-verification-code immediately after signup and (b) route to `/verify-email` in `src/app/signup/page.tsx`
 
 ### Gating
 
-- [ ] T022 [US1] Add server-side gating for “new signups only” using `email_verification_challenge` presence in `src/app/(dashboard)/layout.tsx`
-- [ ] T023 [US1] Ensure gated users can still log out (and are not stuck) by updating `src/components/logout-button.tsx` if needed
+- [x] T022 [US1] Add server-side gating for “new signups only” using `email_verification_challenge` presence in `src/app/(dashboard)/layout.tsx`
+- [x] T023 [US1] Ensure gated users can still log out (and are not stuck) by updating `src/components/logout-button.tsx` if needed
 
 **Checkpoint**: US1 complete—email signups are gated until verified.
 
@@ -88,23 +87,23 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 ### Tests (Playwright)
 
-- [ ] T024 [P] [US2] Add E2E: request reset returns generic success for unknown email in `e2e/phase-1-auth.spec.ts`
-- [ ] T025 [P] [US2] Add E2E: reset with invalid/expired code fails with friendly error in `e2e/phase-1-auth.spec.ts`
-- [ ] T026 [P] [US2] Add E2E: reset with valid code changes password and allows login in `e2e/phase-1-auth.spec.ts`
+- [x] T024 [P] [US2] Add E2E: request reset returns generic success for unknown email in `e2e/phase-1-auth.spec.ts`
+- [x] T025 [P] [US2] Add E2E: reset with invalid/expired code fails with friendly error in `e2e/phase-1-auth.spec.ts`
+- [x] T026 [P] [US2] Add E2E: reset with valid code changes password and allows login in `e2e/phase-1-auth.spec.ts`
 
 ### API
 
-- [ ] T027 [P] [US2] Implement `POST /api/auth/request-password-reset-code` in `src/app/api/auth/request-password-reset-code/route.ts`
-- [ ] T028 [P] [US2] Implement `POST /api/auth/reset-password-with-code` in `src/app/api/auth/reset-password-with-code/route.ts`
-- [ ] T029 [P] [US2] Ensure generic success behavior (no enumeration) in `src/app/api/auth/request-password-reset-code/route.ts`
-- [ ] T030 [P] [US2] Add security event writes (requested, failed, completed) in `src/app/api/auth/request-password-reset-code/route.ts`, `src/app/api/auth/reset-password-with-code/route.ts`, and `src/server/security-events.ts`
+- [x] T027 [P] [US2] Implement `POST /api/auth/request-password-reset-code` in `src/app/api/auth/request-password-reset-code/route.ts`
+- [x] T028 [P] [US2] Implement `POST /api/auth/reset-password-with-code` in `src/app/api/auth/reset-password-with-code/route.ts`
+- [x] T029 [P] [US2] Ensure generic success behavior (no enumeration) in `src/app/api/auth/request-password-reset-code/route.ts`
+- [x] T030 [P] [US2] Add security event writes (requested, failed, completed) in `src/app/api/auth/request-password-reset-code/route.ts`, `src/app/api/auth/reset-password-with-code/route.ts`, and `src/server/security-events.ts`
 
 ### UI
 
-- [ ] T031 [US2] Add “Forgot password?” entry point on login page in `src/app/login/page.tsx`
-- [ ] T032 [US2] Build “Forgot password” request form (TanStack Form + validation + generic success UI) in `src/app/forgot-password/page.tsx`
-- [ ] T033 [US2] Build “Reset password” form (code + newPassword) with error display in `src/app/reset-password/page.tsx`
-- [ ] T034 [P] [US2] Add TanStack Query mutations for reset endpoints in `src/queries/auth-codes.ts`
+- [x] T031 [US2] Add “Forgot password?” entry point on login page in `src/app/login/page.tsx`
+- [x] T032 [US2] Build “Forgot password” request form (TanStack Form + validation + generic success UI) in `src/app/forgot-password/page.tsx`
+- [x] T033 [US2] Build “Reset password” form (code + newPassword) with error display in `src/app/reset-password/page.tsx`
+- [x] T034 [P] [US2] Add TanStack Query mutations for reset endpoints in `src/queries/auth-codes.ts`
 
 **Checkpoint**: US2 complete—password reset works and sessions are revoked.
 

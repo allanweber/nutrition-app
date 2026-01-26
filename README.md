@@ -42,13 +42,29 @@ yarn dev
 pnpm dev
 ```
 
+### Environment variables
+
+Copy `.env.example` to `.env.local` and fill in required values.
+
+At minimum, you will need:
+
+- `DATABASE_URL`
+- `BETTER_AUTH_URL`
+- `BETTER_AUTH_SECRET`
+- `NUTRITIONIX_APP_ID`
+- `NUTRITIONIX_API_KEY`
+- `GOOGLE_CLIENT_ID` (optional if you don't use Google sign-in)
+- `GOOGLE_CLIENT_SECRET` (optional if you don't use Google sign-in)
+- `RESEND_API_KEY` (required for email verification/password reset emails)
+- `EMAIL_FROM` (e.g. `Nutrition App <no-reply@yourdomain.com>`)
+
 ## Drizzle Commands
 
 To create the database tables, run:
 
 ```bash
 npx drizzle-kit generate
-npx drizzle-kit migrate
+npx drizzle-kit push
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -105,10 +121,12 @@ npm run test:e2e:headed   # In headed browser mode
 ```
 
 **Requirements:**
+
 - Docker must be running
 - Port 5433 must be available (test database)
 
 The test runner automatically:
+
 1. Starts a fresh PostgreSQL container
 2. Runs migrations and seeds test data
 3. Runs Playwright tests
@@ -129,3 +147,13 @@ NutritionX - Nutrition database and API.
 Samsung Food Recipe Nutrition Calculator - Nutrition calculator for recipes.
 Documenu - Restaurant menu API.
 TheMealDB - Small meal and recipe database and API.
+
+## Speckit flow
+
+1. specify
+2. clarify
+3. plan
+4. checklist
+5. tasks
+6. analyze
+7. implement

@@ -100,8 +100,8 @@ As a user who didn’t receive a code or let it expire, I want to request anothe
   - Rate limit keys:
     - For authenticated verification endpoints: per-user (userId).
     - For public reset-code request endpoint: per-email and per-IP (generic success still required).
-      - For `POST /api/auth/reset-password-with-code`, wrong-code attempts MUST be throttled per email + IP (15-minute window) and MAY additionally throttle per code token when available; on throttle, return the same generic invalid/expired error shape (no additional account linkage signals).
-  - **FR-017**: System MUST apply email verification gating (route blocking + redirect to “Verify Email”) only for accounts created via email signup after this feature is released.
+    - For `POST /api/auth/reset-password-with-code`, wrong-code attempts MUST be throttled per email + IP (15-minute window) and MAY additionally throttle per code token when available; on throttle, return the same generic invalid/expired error shape (no additional account linkage signals).
+- **FR-017**: System MUST apply email verification gating (route blocking + redirect to “Verify Email”) only for accounts created via email signup after this feature is released.
 
 ### Key Entities *(include if feature involves data)*
 
