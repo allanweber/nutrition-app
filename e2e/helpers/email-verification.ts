@@ -1,7 +1,23 @@
 import postgres from 'postgres';
 
-async function sleep(ms: number) {
+import crypto from 'node:crypto';
+
+export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function sha256Hex(input: string): string {
+  return crypto.createHash('sha256').update(input).digest('hex');
+}
+
+function reverse6DigitSha256Hex(hashHex: string): string | null {
+  // The app stores email verification codes as an unsalted SHA-256 hex hash.
+  // For E2E tests we can deterministically recover the 6-digit code.
+  for (let i = 0; i <= 999_999; i += 1) {
+    const candidate = i.toString().padStart(6, '0');
+    if (sha256Hex(candidate) === hashHex) return candidate;
+  }
+  return null;
 }
 
 export async function fetchLatestEmailVerificationCode(params: {
@@ -15,18 +31,18 @@ export async function fetchLatestEmailVerificationCode(params: {
   try {
     // Poll until the event is written.
     while (Date.now() - start < timeoutMs) {
-      const rows = await sql<Array<{ code: string | null }>>`
-        select (metadata->>'code') as code
-        from security_event
-        where type = 'email_verification_requested'
-          and email = ${params.email}
+      const rows = await sql<Array<{ codeHash: string | null }>>`
+        select code_hash as "codeHash"
+        from email_verification_challenge
+        where email = ${params.email}
         order by created_at desc
         limit 1
       `;
 
-      const code = rows[0]?.code ?? null;
-      if (code && /^\d{6}$/.test(code)) {
-        return code;
+      const codeHash = rows[0]?.codeHash ?? null;
+      if (codeHash) {
+        const code = reverse6DigitSha256Hex(codeHash);
+        if (code) return code;
       }
 
       await sleep(250);

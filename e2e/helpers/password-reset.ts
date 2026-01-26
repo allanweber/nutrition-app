@@ -14,18 +14,30 @@ export async function fetchLatestPasswordResetCode(params: {
 
   try {
     while (Date.now() - start < timeoutMs) {
-      const rows = await sql<Array<{ code: string | null }>>`
-        select (metadata->>'code') as code
-        from security_event
-        where type = 'password_reset_requested'
-          and email = ${params.email}
-        order by created_at desc
+      const userRows = await sql<Array<{ id: string }>>`
+        select id
+        from "user"
+        where email = ${params.email}
         limit 1
       `;
 
-      const code = rows[0]?.code ?? null;
-      if (code && /^\d{6}$/.test(code)) {
-        return code;
+      const userId = userRows[0]?.id ?? null;
+      if (userId) {
+        const rows = await sql<Array<{ identifier: string }>>`
+          select identifier
+          from verification
+          where value = ${userId}
+            and identifier like 'reset-password:%'
+            and expires_at > now()
+          order by created_at desc
+          limit 1
+        `;
+
+        const identifier = rows[0]?.identifier ?? null;
+        const code = identifier?.split(':')[1] ?? null;
+        if (code && /^\d{6}$/.test(code)) {
+          return code;
+        }
       }
 
       await sleep(250);

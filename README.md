@@ -118,6 +118,9 @@ E2E tests run with an isolated Docker database that is created fresh for each te
 npm run test:e2e          # Full run with Docker DB lifecycle
 npm run test:e2e:ui       # With Playwright UI
 npm run test:e2e:headed   # In headed browser mode
+
+# Or run a specific test file with optional grep
+./scripts/run-e2e.sh --headed e2e/phase-1-auth.spec.ts -g "user can logout"
 ```
 
 **Requirements:**

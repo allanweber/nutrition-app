@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { invalidCredentials, routes, testUser } from './fixtures/test-data';
+import { invalidCredentials, routes, resetPasswordUser, testUser } from './fixtures/test-data';
 import { fetchLatestEmailVerificationCode } from './helpers/email-verification';
 import { fetchLatestPasswordResetCode } from './helpers/password-reset';
 import { LoginPage } from './pages/login.page';
@@ -190,7 +190,7 @@ test.describe('Phase 1: Authentication', () => {
       await page.goto('/reset-password');
       await page.waitForLoadState('networkidle');
 
-      await page.getByLabel(/email/i).fill(testUser.email);
+      await page.getByLabel(/email/i).fill(resetPasswordUser.email);
       await page.getByLabel(/code/i).fill('000000');
       await page.getByLabel(/new password/i).fill('NewPassword123!');
       await page
@@ -210,7 +210,7 @@ test.describe('Phase 1: Authentication', () => {
       await page.goto('/forgot-password');
       await page.waitForLoadState('networkidle');
 
-      await page.getByLabel(/email/i).fill(testUser.email);
+      await page.getByLabel(/email/i).fill(resetPasswordUser.email);
       await page
         .getByRole('button', { name: /send reset code|send code|continue/i })
         .click();
@@ -220,13 +220,13 @@ test.describe('Phase 1: Authentication', () => {
       });
 
       const code = await fetchLatestPasswordResetCode({
-        email: testUser.email,
+        email: resetPasswordUser.email,
       });
 
       await page.goto('/reset-password');
       await page.waitForLoadState('networkidle');
 
-      await page.getByLabel(/email/i).fill(testUser.email);
+      await page.getByLabel(/email/i).fill(resetPasswordUser.email);
       await page.getByLabel(/code/i).fill(code);
       await page.getByLabel(/new password/i).fill(newPassword);
       await page
@@ -236,7 +236,7 @@ test.describe('Phase 1: Authentication', () => {
       await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
 
       const loginPage = new LoginPage(page);
-      await loginPage.login(testUser.email, newPassword);
+      await loginPage.login(resetPasswordUser.email, newPassword);
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     });
   });

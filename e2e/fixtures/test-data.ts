@@ -59,10 +59,22 @@ export const seedUsers = {
     password: 'Password123!',
     role: 'professional',
   },
+
+  // Dedicated account for password reset/change password tests.
+  // Do not use this email in any other tests.
+  resetPassword: {
+    name: 'Reset Password Test User',
+    email: 'reset-pwd-test@mail.com',
+    password: 'Password123!',
+    goal: 'maintenance',
+  },
 };
 
 // Default test user for most tests (has food logs and goals)
 export const testUser = seedUsers.weightLoss;
+
+// Dedicated user for password reset/change password flows
+export const resetPasswordUser = seedUsers.resetPassword;
 
 // User for signup tests (not in seed, will be created fresh)
 export const newUser = {
