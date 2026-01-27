@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:fdc.nal.usda.gov)",
+      "WebFetch(domain:developer.edamam.com)",
+      "WebFetch(domain:zestfuldata.com)",
+      "WebFetch(domain:www.themealdb.com)",
+      "WebFetch(domain:platform.fatsecret.com)"
+    ]
+  }
+}

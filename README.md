@@ -153,10 +153,10 @@ TheMealDB - Small meal and recipe database and API.
 
 ## Speckit flow
 
-1. specify
-2. clarify
-3. plan
-4. checklist
-5. tasks
-6. analyze
-7. implement
+1. specify - what and why, no technical details
+2. clarify - questions to ensure understanding
+3. checklist(optional) - Clarify underspecified areas (recommended before /speckit.plan)
+4. plan - steps to achieve the goal
+5. tasks - Generate actionable task lists for implementation
+6. analyze(optional) - Cross-artifact consistency & coverage analysis (run after /speckit.tasks, before /speckit.implement)
+7. implement - Execute all tasks to build the feature according to the plan
