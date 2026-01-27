@@ -51,8 +51,10 @@ At minimum, you will need:
 - `DATABASE_URL`
 - `BETTER_AUTH_URL`
 - `BETTER_AUTH_SECRET`
-- `NUTRITIONIX_APP_ID`
-- `NUTRITIONIX_API_KEY`
+- `USDA_API_KEY` (required for USDA FoodData Central)
+- `FATSECRET_CLIENT_ID` (required for FatSecret)
+- `FATSECRET_CLIENT_SECRET` (required for FatSecret)
+- `USE_MOCK_NUTRITION_SOURCES` (optional; set to `true` to use deterministic mock foods)
 - `GOOGLE_CLIENT_ID` (optional if you don't use Google sign-in)
 - `GOOGLE_CLIENT_SECRET` (optional if you don't use Google sign-in)
 - `RESEND_API_KEY` (required for email verification/password reset emails)

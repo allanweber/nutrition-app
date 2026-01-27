@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { nutritionixAPI } from '@/lib/nutritionix';
+import { searchAllSources } from '@/lib/nutrition-sources/aggregator';
 import { searchQuerySchema, validateApiInput } from '@/lib/api-validation';
 
 export async function GET(request: NextRequest) {
@@ -25,16 +25,8 @@ export async function GET(request: NextRequest) {
 
     const query = queryValidation.data;
 
-    const isConfigured = await nutritionixAPI.isConfigured();
-    if (!isConfigured) {
-      return NextResponse.json(
-        { error: 'Nutritionix API not configured' },
-        { status: 500 }
-      );
-    }
+    const results = await searchAllSources(query);
 
-    const results = await nutritionixAPI.searchFoods(query);
-    
     return NextResponse.json({ results });
   } catch (error) {
     console.error('Food search error:', error);

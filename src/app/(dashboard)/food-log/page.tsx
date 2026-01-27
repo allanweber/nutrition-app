@@ -5,12 +5,14 @@ import FoodSearch from '@/components/food-search';
 import FoodLogClient from '@/components/food-log-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFoodLogsQuery, useCreateFoodLogMutation, useDeleteFoodLogMutation } from '@/queries/food-logs';
-import { useFoodSearchQuery } from '@/queries/foods';
+import { useBarcodeQuery, useFoodSearchQuery } from '@/queries/foods';
 import { format } from 'date-fns';
+import type { NutritionSourceFood } from '@/lib/nutrition-sources/types';
 
 export default function FoodLogPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [barcode, setBarcode] = useState('');
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -18,13 +20,15 @@ export default function FoodLogPage() {
   const createMutation = useCreateFoodLogMutation();
   const deleteMutation = useDeleteFoodLogMutation();
   const searchQueryHook = useFoodSearchQuery(searchQuery);
+  const barcodeQueryHook = useBarcodeQuery(barcode);
 
-  const handleFoodAdded = async (food: { food_name: string; brand_name?: string; serving_unit: string }, quantity: string, mealType: string) => {
+  const handleFoodAdded = async (food: NutritionSourceFood, quantity: string, mealType: string) => {
     await createMutation.mutateAsync({
-      foodName: food.food_name,
-      brandName: food.brand_name,
+      foodId: food.id,
+      foodName: food.name,
+      brandName: food.brandName ?? undefined,
       quantity,
-      servingUnit: food.serving_unit,
+      servingUnit: food.servingUnit,
       mealType,
     });
   };
@@ -54,6 +58,9 @@ export default function FoodLogPage() {
                searchResults={searchQueryHook.data}
                isSearching={searchQueryHook.isLoading}
                onSearch={setSearchQuery}
+               barcodeResults={barcodeQueryHook.data}
+               isBarcodeSearching={barcodeQueryHook.isLoading}
+               onLookupUpc={setBarcode}
                onAddFood={handleFoodAdded}
              />
            </CardContent>

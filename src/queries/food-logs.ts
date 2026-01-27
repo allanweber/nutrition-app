@@ -45,6 +45,7 @@ export function useFoodLogsQuery(date: string) {
 }
 
 interface CreateFoodLogData {
+    foodId?: number
   foodName: string
   brandName?: string
   quantity: string

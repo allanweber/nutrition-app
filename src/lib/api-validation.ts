@@ -44,11 +44,13 @@ export const daysSchema = z
 // Food log creation validation - based on client input format
 // Note: Uses subset of mealTypeEnum values (client only sends basic meal types)
 export const createFoodLogSchema = z.object({
+  foodId: z.number().int().positive().optional(),
   foodName: z
     .string()
     .min(1, 'Food name is required')
     .max(200, 'Food name must be at most 200 characters')
-    .transform(sanitizeString),
+    .transform(sanitizeString)
+    .optional(),
   brandName: z
     .string()
     .optional()
@@ -74,6 +76,9 @@ export const createFoodLogSchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
+}).refine((data) => data.foodId !== undefined || (data.foodName && data.foodName.length > 0), {
+  message: 'foodId or foodName is required',
+  path: ['foodId'],
 });
 
 // Food log update validation

@@ -54,9 +54,10 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3001
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
-          NUTRITIONIX_APP_ID: test_app_id
-          NUTRITIONIX_API_KEY: test_api_key
-          USE_MOCK_NUTRITIONIX: 'true'
+          USDA_API_KEY: ''
+          FATSECRET_CLIENT_ID: ''
+          FATSECRET_CLIENT_SECRET: ''
+          USE_MOCK_NUTRITION_SOURCES: 'true'
           NODE_ENV: test
           PORT: '3001'
         run: |
@@ -88,9 +89,10 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3001
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
-          NUTRITIONIX_APP_ID: test_app_id
-          NUTRITIONIX_API_KEY: test_api_key
-          USE_MOCK_NUTRITIONIX: 'true'
+          USDA_API_KEY: ''
+          FATSECRET_CLIENT_ID: ''
+          FATSECRET_CLIENT_SECRET: ''
+          USE_MOCK_NUTRITION_SOURCES: 'true'
           NODE_ENV: test
           PORT: '3001'
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3001

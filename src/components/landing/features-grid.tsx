@@ -15,7 +15,7 @@ const features = [
     icon: Search,
     title: 'Smart Food Search',
     description:
-      'Search 1M+ foods from Nutritionix. Scan barcodes, use natural language like "2 eggs and toast".',
+      'Search foods across multiple nutrition data sources and quickly look up products by barcode.',
     color: 'bg-primary',
   },
   {

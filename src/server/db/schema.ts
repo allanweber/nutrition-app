@@ -92,7 +92,7 @@ export const foods = pgTable(
   'foods',
   {
     id: serial('id').primaryKey(),
-    sourceId: varchar('source_id', { length: 100 }), // External API ID (e.g., Nutritionix item ID)
+    sourceId: varchar('source_id', { length: 100 }), // External source ID (e.g., USDA FDC ID, OFF product code)
     source: varchar('source', { length: 100 }).notNull().default('user_custom'),
     name: varchar('name', { length: 500 }).notNull(),
     brandName: varchar('brand_name', { length: 500 }),

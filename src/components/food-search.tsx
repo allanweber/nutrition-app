@@ -5,41 +5,51 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Search, Plus, Loader2, Check } from 'lucide-react';
 
-interface Food {
-  food_name: string;
-  brand_name?: string;
-  serving_unit: string;
-  serving_qty: number;
-  photo?: {
-    thumb: string;
-  };
-  tag_id?: number;
-  nix_item_id?: string;
-}
+import type {
+  NutritionSourceFood,
+  SearchAggregatorResult,
+} from '@/lib/nutrition-sources/types';
 
 interface FoodSearchProps {
-  searchResults?: { common?: Food[], branded?: Food[] };
+  searchResults?: SearchAggregatorResult;
+  barcodeResults?: SearchAggregatorResult;
   isSearching?: boolean;
+  isBarcodeSearching?: boolean;
   onSearch: (query: string) => void;
-  onAddFood: (food: Food, quantity: string, mealType: string) => void;
+  onLookupUpc: (upc: string) => void;
+  onAddFood: (food: NutritionSourceFood, quantity: string, mealType: string) => void;
 }
 
 export default function FoodSearch({
-  searchResults = {},
+  searchResults,
+  barcodeResults,
   isSearching = false,
+  isBarcodeSearching = false,
   onSearch,
-  onAddFood
+  onLookupUpc,
+  onAddFood,
 }: FoodSearchProps) {
   const [query, setQuery] = useState('');
-  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
+  const [upc, setUpc] = useState('');
+  const [selectedFood, setSelectedFood] = useState<NutritionSourceFood | null>(null);
   const [quantity, setQuantity] = useState('1');
   const [mealType, setMealType] = useState<string>('breakfast');
   const [adding, setAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const foods = searchResults?.foods ?? [];
+  const barcodeFoods = barcodeResults?.foods ?? [];
+  const hasResults = foods.length > 0 || barcodeFoods.length > 0;
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
@@ -66,18 +76,48 @@ export default function FoodSearch({
     }
   };
 
-  const selectFood = (food: Food) => {
-    if (selectedFood === food) {
+  const selectFood = (food: NutritionSourceFood) => {
+    if (selectedFood?.sourceId === food.sourceId && selectedFood?.source === food.source) {
       setSelectedFood(null);
-    } else {
-      setSelectedFood(food);
-      setQuantity(String(food.serving_qty || 1));
+      return;
     }
+
+    setSelectedFood(food);
+    setQuantity(String(food.servingQty || 1));
   };
 
   return (
     <div className="space-y-4">
-      {/* Search Input */}
+      {/* UPC Lookup */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter UPC/barcode"
+          value={upc}
+          onChange={(e) => setUpc(e.target.value)}
+          data-testid="upc-input"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setError(null);
+            onLookupUpc(upc);
+          }}
+          disabled={isBarcodeSearching || upc.trim().length < 6}
+          data-testid="upc-lookup-button"
+        >
+          {isBarcodeSearching ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Looking up...
+            </>
+          ) : (
+            'Lookup by UPC'
+          )}
+        </Button>
+      </div>
+
+      {/* Name Search */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
@@ -102,7 +142,10 @@ export default function FoodSearch({
 
       {/* Error Message */}
       {error && (
-        <div className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg" data-testid="error-message">
+        <div
+          className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg"
+          data-testid="error-message"
+        >
           {error}
         </div>
       )}
@@ -123,18 +166,18 @@ export default function FoodSearch({
               {selectedFood.photo?.thumb && (
                 <img
                   src={selectedFood.photo.thumb}
-                  alt={selectedFood.food_name}
+                  alt={selectedFood.name}
                   className="w-16 h-16 rounded object-cover"
                 />
               )}
               <div className="flex-1 space-y-3">
                 <div>
-                  <div className="font-medium text-lg">{selectedFood.food_name}</div>
-                  {selectedFood.brand_name && (
-                    <div className="text-sm text-muted-foreground">{selectedFood.brand_name}</div>
+                  <div className="font-medium text-lg">{selectedFood.name}</div>
+                  {selectedFood.brandName && (
+                    <div className="text-sm text-muted-foreground">{selectedFood.brandName}</div>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-1">
@@ -149,7 +192,7 @@ export default function FoodSearch({
                       data-testid="quantity-input"
                     />
                     <div className="text-xs text-muted-foreground mt-1">
-                      {selectedFood.serving_unit}
+                      {selectedFood.servingUnit}
                     </div>
                   </div>
                   <div>
@@ -171,8 +214,8 @@ export default function FoodSearch({
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button 
-                    onClick={handleAddFood} 
+                  <Button
+                    onClick={handleAddFood}
                     disabled={adding}
                     className="flex-1"
                     data-testid="add-food-button"
@@ -189,10 +232,7 @@ export default function FoodSearch({
                       </>
                     )}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedFood(null)}
-                  >
+                  <Button variant="outline" onClick={() => setSelectedFood(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -202,34 +242,34 @@ export default function FoodSearch({
         </Card>
       )}
 
-      {/* Search Results */}
-      {(searchResults.common?.length || searchResults.branded?.length) && !selectedFood ? (
+      {/* Results (only when no food selected) */}
+      {!selectedFood && hasResults && (
         <div className="space-y-4" data-testid="search-results">
-          {searchResults.common && searchResults.common.length > 0 && (
+          {barcodeFoods.length > 0 && (
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Common Foods</h3>
+              <h3 className="font-semibold text-foreground mb-2">Barcode Result</h3>
               <div className="space-y-2">
-                {searchResults.common.slice(0, 5).map((food: Food, index: number) => (
+                {barcodeFoods.slice(0, 3).map((food, index) => (
                   <Card
-                    key={`common-${index}`}
+                    key={`barcode-${food.source}-${food.sourceId}`}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => selectFood(food)}
-                    data-testid={`food-result-${index}`}
+                    data-testid={`barcode-result-${index}`}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
                         {food.photo?.thumb && (
                           <img
                             src={food.photo.thumb}
-                            alt={food.food_name}
+                            alt={food.name}
                             className="w-12 h-12 rounded object-cover"
                           />
                         )}
                         <div className="flex-1">
-                          <div className="font-medium">{food.food_name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {food.serving_qty} {food.serving_unit}
-                          </div>
+                          <div className="font-medium">{food.name}</div>
+                          {food.brandName && (
+                            <div className="text-sm text-muted-foreground">{food.brandName}</div>
+                          )}
                         </div>
                         <Plus className="h-5 w-5 text-muted-foreground" />
                       </div>
@@ -240,30 +280,33 @@ export default function FoodSearch({
             </div>
           )}
 
-          {searchResults.branded && searchResults.branded.length > 0 && (
+          {foods.length > 0 && (
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Branded Products</h3>
+              <h3 className="font-semibold text-foreground mb-2">Results</h3>
               <div className="space-y-2">
-                {searchResults.branded.slice(0, 5).map((food: Food, index: number) => (
+                {foods.slice(0, 10).map((food, index) => (
                   <Card
-                    key={`branded-${index}`}
+                    key={`${food.source}-${food.sourceId}`}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => selectFood(food)}
+                    data-testid={`food-result-${index}`}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
                         {food.photo?.thumb && (
                           <img
                             src={food.photo.thumb}
-                            alt={food.food_name}
+                            alt={food.name}
                             className="w-12 h-12 rounded object-cover"
                           />
                         )}
                         <div className="flex-1">
-                          <div className="font-medium">{food.food_name}</div>
-                          <div className="text-sm text-muted-foreground">{food.brand_name}</div>
+                          <div className="font-medium">{food.name}</div>
+                          {food.brandName && (
+                            <div className="text-sm text-muted-foreground">{food.brandName}</div>
+                          )}
                           <div className="text-sm text-muted-foreground">
-                            {food.serving_qty} {food.serving_unit}
+                            {food.servingQty} {food.servingUnit}
                           </div>
                         </div>
                         <Plus className="h-5 w-5 text-muted-foreground" />
@@ -275,11 +318,14 @@ export default function FoodSearch({
             </div>
           )}
         </div>
-      ) : query.length >= 2 && !isSearching && !selectedFood ? (
+      )}
+
+      {/* Empty results message (name search only) */}
+      {!selectedFood && query.length >= 2 && !isSearching && foods.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No foods found. Try different search terms.
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

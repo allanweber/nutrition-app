@@ -73,11 +73,11 @@ export const mockFoods: BaseFood[] = [
     createdAt: new Date('2024-01-15T00:00:00.000Z'),
     updatedAt: new Date('2024-01-15T00:00:00.000Z')
   },
-  // Manual entry foods
+  // Open Food Facts foods
   {
     id: 4,
-    sourceId: 'manual_001',
-    sourceType: 'manual',
+    sourceId: 'off_001',
+    sourceType: 'openfoodfacts',
     name: 'Energy Bar',
     brandName: 'Custom Brand',
     servingQty: 1,
@@ -97,11 +97,11 @@ export const mockFoods: BaseFood[] = [
     updatedAt: new Date('2024-02-01T00:00:00.000Z')
   },
 
-  // Nutritionix foods (still can coexist)
+  // FatSecret foods
   {
     id: 5,
-    sourceId: 'nix_item_001',
-    sourceType: 'nutritionix',
+    sourceId: 'fatsecret_001',
+    sourceType: 'fatsecret',
     name: 'Chicken Breast',
     brandName: 'Generic',
     servingQty: 100,
@@ -114,7 +114,7 @@ export const mockFoods: BaseFood[] = [
     fiber: 0,
     sugar: 0,
     sodium: 74,
-    photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_123.jpg',
+    photoUrl: null,
     isRaw: false,
     isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -122,8 +122,8 @@ export const mockFoods: BaseFood[] = [
   },
   {
     id: 6,
-    sourceId: 'nix_item_002',
-    sourceType: 'nutritionix',
+    sourceId: 'off_002',
+    sourceType: 'openfoodfacts',
     name: 'Brown Rice',
     brandName: null,
     servingQty: 1,
@@ -136,62 +136,10 @@ export const mockFoods: BaseFood[] = [
     fiber: 3.5,
     sugar: 0.7,
     sodium: 5,
-    photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_456.jpg',
+    photoUrl: null,
     isRaw: false,
     isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   }
 ];
-
-// Search mock that returns different sources
-export const mockFoodSearch = {
-  // Common foods (USDA + user custom)
-  common: [
-    {
-      food_name: 'Raw Spinach',
-      tag_id: 10162,
-      serving_unit: '100g',
-      photo: {
-        thumb: 'https://nix-tag-images.s3.amazonaws.com/common_10162.jpg'
-      }
-    },
-    {
-      food_name: 'Greek Salad', 
-      tag_id: 'custom_001',
-      serving_unit: 'bowl',
-      photo: {
-        thumb: null
-      }
-    }
-  ],
-  // Branded products
-  branded: [
-    {
-      food_name: 'Energy Bar',
-      brand_name: 'Custom Brand',
-      nix_brand_id: 'brand_001',
-      nix_item_id: 'manual_001',
-      nix_item_name: 'Energy Bar',
-      serving_qty: 1,
-      serving_unit: 'bar',
-      tag_id: 'custom_001',
-      photo: {
-        thumb: null
-      }
-    },
-    {
-      food_name: 'Chicken Breast',
-      brand_name: 'Generic',
-      nix_brand_id: 'brand_002',
-      nix_item_id: 'nix_item_001',
-      nix_item_name: 'Chicken Breast',
-      serving_qty: 100,
-      serving_unit: 'g',
-      tag_id: 123,
-      photo: {
-        thumb: 'https://nix-tag-images.s3.amazonaws.com/common_123.jpg'
-      }
-    }
-  ]
-};

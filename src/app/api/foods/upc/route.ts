@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { nutritionixAPI } from '@/lib/nutritionix';
+import { searchByBarcode } from '@/lib/nutrition-sources/aggregator';
+import { validateApiInput } from '@/lib/api-validation';
+import { z } from 'zod';
+
+const upcSchema = z
+  .string()
+  .min(6, 'UPC is too short')
+  .max(32, 'UPC is too long')
+  .regex(/^[0-9]+$/, 'UPC must be numeric');
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,16 +21,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const isConfigured = await nutritionixAPI.isConfigured();
-    if (!isConfigured) {
+    const upcValidation = validateApiInput(upcSchema, upc, 'upc');
+    if (!upcValidation.success) {
+      return NextResponse.json({ error: upcValidation.error }, { status: 400 });
+    }
+
+    const results = await searchByBarcode(upcValidation.data);
+
+    if (!results.foods.length) {
       return NextResponse.json(
-        { error: 'Nutritionix API not configured' },
-        { status: 500 }
+        { error: 'Product not found', results },
+        { status: 404 },
       );
     }
 
-    const results = await nutritionixAPI.getFoodByUPC(upc);
-    
     return NextResponse.json({ results });
   } catch (error) {
     console.error('UPC lookup error:', error);

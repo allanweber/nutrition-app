@@ -58,6 +58,19 @@ test.describe('Phase 2: Food Logging', () => {
       expect(hasResults || hasNoResults).toBeTruthy();
     });
 
+    test('shows empty state when no results found', async ({ page }) => {
+      await loginAsTestUser(page);
+
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      await foodLogPage.searchFood('zzzzzzzzzzzzzzzz');
+
+      await expect(page.getByText('No foods found. Try different search terms.')).toBeVisible({
+        timeout: 10000,
+      });
+    });
+
     test('search shows loading state', async ({ page }) => {
       await loginAsTestUser(page);
 
@@ -214,8 +227,26 @@ test.describe('Phase 2: Food Logging', () => {
     });
   });
 
-  // These tests use mock Nutritionix data (USE_MOCK_NUTRITIONIX=true in playwright config)
+  // These tests use mock multi-source data (USE_MOCK_NUTRITION_SOURCES=true in .env.test)
   test.describe('Food Logging with Mock API', () => {
+    test('search results are cached on repeat requests (mock mode)', async ({ page }) => {
+      // API routes are public; no login required for this cache check.
+      const first = await page.request.get(
+        '/api/foods/search?q=' + encodeURIComponent('cheerios'),
+      );
+      expect(first.ok()).toBeTruthy();
+      const firstJson = await first.json();
+      expect(firstJson.results?.foods?.length).toBeGreaterThan(0);
+
+      const second = await page.request.get(
+        '/api/foods/search?q=' + encodeURIComponent('cheerios'),
+      );
+      expect(second.ok()).toBeTruthy();
+      const secondJson = await second.json();
+      expect(secondJson.results?.foods?.length).toBeGreaterThan(0);
+      expect(secondJson.results?.fromCache).toBeTruthy();
+    });
+
     test('user can add food to log', async ({ page }) => {
       await loginAsTestUser(page);
 
@@ -264,6 +295,37 @@ test.describe('Phase 2: Food Logging', () => {
       expect(newCount).toBeGreaterThan(initialCount);
     });
 
+    test('user can lookup barcode and add food to log (mock mode)', async ({ page }) => {
+      await loginAsFreshUser(page);
+
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      const logsLocator = page.locator('[data-testid^="food-log-"]');
+      const initialCount = await foodLogPage.getFoodLogCount();
+
+      // Mock barcode from src/lib/nutrition-sources/mock-sources.ts
+      await page.getByTestId('upc-input').fill('0016000275123');
+      await page.getByTestId('upc-lookup-button').click();
+
+      const barcodeResult = page.getByTestId('barcode-result-0');
+      await expect(barcodeResult).toBeVisible({ timeout: 10000 });
+      await barcodeResult.click();
+
+      await expect(foodLogPage.quantityInput).toBeVisible();
+      await foodLogPage.quantityInput.fill('1');
+      await foodLogPage.mealTypeSelect.click();
+      await page.getByRole('option', { name: /breakfast/i }).click();
+
+      await foodLogPage.addFoodButton.click();
+      await expect(page.getByText(/food added successfully/i)).toBeVisible({
+        timeout: 10000,
+      });
+
+      // Wait for the log list to update. This also makes the test safe under retries.
+      await expect(logsLocator).toHaveCount(initialCount + 1, { timeout: 10000 });
+    });
+
     test('user can delete food from log', async ({ page }) => {
       await loginAsTestUser(page);
 
@@ -278,6 +340,8 @@ test.describe('Phase 2: Food Logging', () => {
       const initialCount = await foodLogPage.getFoodLogCount();
       expect(initialCount).toBeGreaterThan(0);
 
+      const logsLocator = page.locator('[data-testid^="food-log-"]');
+
       // Set up dialog handler to accept confirmation BEFORE clicking
       page.on('dialog', async (dialog) => {
         await dialog.accept();
@@ -288,12 +352,8 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(deleteButton).toBeVisible({ timeout: 5000 });
       await deleteButton.click();
 
-      // Wait for the food log entry to be removed from DOM or count to decrease
-      await page.waitForTimeout(1000);
-
-      // Count should decrease
-      const newCount = await foodLogPage.getFoodLogCount();
-      expect(newCount).toBeLessThan(initialCount);
+      // Count should decrease (auto-waits for query invalidation + rerender)
+      await expect(logsLocator).toHaveCount(initialCount - 1, { timeout: 10000 });
     });
 
     test('daily totals update correctly after adding food', async ({
@@ -340,6 +400,8 @@ test.describe('Phase 2: Food Logging', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
+      const initialLogCount = await foodLogPage.getFoodLogCount();
+
       // Add apple to breakfast
       await foodLogPage.searchInput.fill('apple');
       await page.waitForTimeout(400);
@@ -359,6 +421,10 @@ test.describe('Phase 2: Food Logging', () => {
         timeout: 5000,
       });
 
+      await expect
+        .poll(async () => foodLogPage.getFoodLogCount(), { timeout: 10000 })
+        .toBe(initialLogCount + 1);
+
       // Add rice to lunch
       await foodLogPage.searchInput.fill('rice');
       await page.waitForTimeout(400);
@@ -374,6 +440,10 @@ test.describe('Phase 2: Food Logging', () => {
         timeout: 10000,
       });
 
+      await expect
+        .poll(async () => foodLogPage.getFoodLogCount(), { timeout: 10000 })
+        .toBe(initialLogCount + 2);
+
       // Wait for the log to refresh and show both meals
       await page.waitForTimeout(1000);
 
@@ -385,9 +455,9 @@ test.describe('Phase 2: Food Logging', () => {
         page.locator('text=Lunch').or(page.locator('text=lunch')),
       ).toBeVisible();
 
-      // Verify food count is 2
+      // Verify we added exactly 2 foods (relative to initial state)
       const logCount = await foodLogPage.getFoodLogCount();
-      expect(logCount).toBe(2);
+      expect(logCount).toBe(initialLogCount + 2);
     });
   });
 });

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+build
+
+# Test artifacts
+coverage
+playwright-report
+test-results
+
+# Local env files
+.env*
+!.env.example
+!.env.test
+
+# VCS
+.git
+
+# Misc
+.DS_Store
+*.log

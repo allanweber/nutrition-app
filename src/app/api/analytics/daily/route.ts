@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { foodLogs, foods } from '@/server/db/schema';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { eq, and, gte, lt, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 import { dateSchema, validateApiInput } from '@/lib/api-validation';
+import { addDays, parseISO, startOfDay } from 'date-fns';
 
-// Helper function to get start and end of day
-function getDayRange(date: Date) {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
+function getDayRangeFromDateString(date: string) {
+  const start = startOfDay(parseISO(date));
+  const end = addDays(start, 1);
   return { start, end };
 }
 
@@ -41,8 +39,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const targetDate = new Date(dateValidation.data);
-    const { start, end } = getDayRange(targetDate);
+    const { start, end } = getDayRangeFromDateString(dateValidation.data);
 
     // Get food logs for the day with food data
     const dayLogs = await db
@@ -69,7 +66,7 @@ export async function GET(request: NextRequest) {
         and(
           eq(foodLogs.userId, user.id),
           gte(foodLogs.consumedAt, start),
-          lte(foodLogs.consumedAt, end)
+          lt(foodLogs.consumedAt, end)
         )
       )
       .orderBy(desc(foodLogs.consumedAt));

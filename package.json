@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:mock": "USE_MOCK_NUTRITIONIX=true next dev",
+    "dev:mock": "USE_MOCK_NUTRITION_SOURCES=true next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

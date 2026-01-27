@@ -813,9 +813,12 @@ nutrition-app/
 # Database (Local Docker PostgreSQL)
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nutrition_app"
 
-# Nutritionix API (User has credentials)
-NUTRITIONIX_APP_ID="your_actual_app_id"
-NUTRITIONIX_API_KEY="your_actual_api_key"
+# USDA FoodData Central (server-side only)
+USDA_API_KEY="your_usda_api_key"
+
+# FatSecret Platform API (server-side only)
+FATSECRET_CLIENT_ID="your_fatsecret_client_id"
+FATSECRET_CLIENT_SECRET="your_fatsecret_client_secret"
 
 # Better Auth
 BETTER_AUTH_SECRET="nutrition-app-secret-change-in-production-abc123"
@@ -830,6 +833,9 @@ NODE_ENV="development"
 
 # Playwright
 PLAYWRIGHT_TEST_BASE_URL="http://localhost:3000"
+
+# Feature Flags
+USE_MOCK_NUTRITION_SOURCES="false"
 ```
 
 ---

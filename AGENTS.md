@@ -228,15 +228,16 @@ Copy `.env.example` to `.env.local` and fill in the values:
 | Variable                   | Description                                              |
 | -------------------------- | -------------------------------------------------------- |
 | `DATABASE_URL`             | PostgreSQL connection string                             |
-| `NUTRITIONIX_APP_ID`       | Nutritionix API app ID                                   |
-| `NUTRITIONIX_API_KEY`      | Nutritionix API key                                      |
+| `USDA_API_KEY`             | USDA FoodData Central API key (server-side)              |
+| `FATSECRET_CLIENT_ID`      | FatSecret client id (server-side)                        |
+| `FATSECRET_CLIENT_SECRET`  | FatSecret client secret (server-side)                    |
 | `BETTER_AUTH_SECRET`       | Secret for BetterAuth (use strong random string in prod) |
 | `BETTER_AUTH_URL`          | Base URL for auth (e.g., `http://localhost:3000`)        |
 | `GOOGLE_CLIENT_ID`         | Google OAuth client ID                                   |
 | `GOOGLE_CLIENT_SECRET`     | Google OAuth client secret                               |
 | `NODE_ENV`                 | `development` or `production`                            |
 | `PLAYWRIGHT_TEST_BASE_URL` | Base URL for E2E tests                                   |
-| `USE_MOCK_NUTRITIONIX`     | Set to `true` to use mock API in tests                   |
+| `USE_MOCK_NUTRITION_SOURCES` | Set to `true` to use mock nutrition sources (tests)    |
 
 ## Error Handling
 

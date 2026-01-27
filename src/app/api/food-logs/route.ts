@@ -1,14 +1,14 @@
-import { nutritionixAPI } from '@/lib/nutritionix';
 import { getCurrentUser } from '@/lib/session';
+import { searchAllSources } from '@/lib/nutrition-sources/aggregator';
 import { db } from '@/server/db';
 import {
-  foodAltMeasures,
   foodLogs,
   foodPhotos,
   foods,
 } from '@/server/db/schema';
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { addDays, parseISO, startOfDay } from 'date-fns';
 
 import {
   createFoodLogSchema,
@@ -16,91 +16,25 @@ import {
   validateApiInput,
   validateRequestBody,
 } from '@/lib/api-validation';
-import { NutritionixFood, nutritionixToBaseFood } from '@/types/food';
 
-// Helper to get or create food in cache
-async function getOrCreateFood(nutritionixData: NutritionixFood) {
-  const sourceId =
-    nutritionixData.nix_item_id ||
-    `common_${nutritionixData.tags?.tag_id || nutritionixData.food_name}`;
-
-  // Check if food exists in cache
-  const existingFood = await db.query.foods.findFirst({
-    where: eq(foods.sourceId, sourceId),
-    with: {
-      photo: true,
-    },
-  });
-
-  if (existingFood) {
-    return existingFood;
-  }
-
-  // Convert nutritionix food to base food format
-  const baseFoodData = nutritionixToBaseFood(nutritionixData);
-
-  // Create new food entry
-  const [newFood] = await db
-    .insert(foods)
-    .values({
-      sourceId: baseFoodData.sourceId,
-      source: baseFoodData.source,
-      name: baseFoodData.name,
-      brandName: baseFoodData.brandName || null,
-      servingQty: baseFoodData.servingQty
-        ? String(baseFoodData.servingQty)
-        : null,
-      servingUnit: baseFoodData.servingUnit || null,
-      servingWeightGrams: baseFoodData.servingWeightGrams
-        ? String(baseFoodData.servingWeightGrams)
-        : null,
-      calories: baseFoodData.calories ? String(baseFoodData.calories) : null,
-      protein: baseFoodData.protein ? String(baseFoodData.protein) : null,
-      carbs: baseFoodData.carbs ? String(baseFoodData.carbs) : null,
-      fat: baseFoodData.fat ? String(baseFoodData.fat) : null,
-      fiber: baseFoodData.fiber ? String(baseFoodData.fiber) : null,
-      sugar: baseFoodData.sugar ? String(baseFoodData.sugar) : null,
-      sodium: baseFoodData.sodium ? String(baseFoodData.sodium) : null,
-      fullNutrients: baseFoodData.fullNutrients || null,
-      isRaw: baseFoodData.isRaw || false,
-      isCustom: false,
-    })
-    .returning();
-
-  // Insert photo if available
-  if (
-    baseFoodData.photo &&
-    (baseFoodData.photo.thumb || baseFoodData.photo.highres)
-  ) {
-    await db.insert(foodPhotos).values({
-      foodId: newFood.id,
-      thumb: baseFoodData.photo.thumb || null,
-      highres: baseFoodData.photo.highres || null,
+async function resolveFoodForLog(input: {
+  foodId?: number;
+  foodName?: string;
+}): Promise<{ id: number; name: string; brandName: string | null } | null> {
+  if (typeof input.foodId === 'number' && Number.isFinite(input.foodId)) {
+    const food = await db.query.foods.findFirst({
+      where: eq(foods.id, input.foodId),
     });
+    return food ? { id: food.id, name: food.name, brandName: food.brandName ?? null } : null;
   }
 
-  // Insert alternative measures if available
-  if (baseFoodData.altMeasures && baseFoodData.altMeasures.length > 0) {
-    await db.insert(foodAltMeasures).values(
-      baseFoodData.altMeasures.map((m, index) => ({
-        foodId: newFood.id,
-        servingWeight: String(m.serving_weight),
-        measure: m.measure,
-        seq: m.seq || index + 1,
-        qty: String(m.qty),
-      })),
-    );
-  }
+  if (!input.foodName) return null;
 
-  // Fetch and return food with photo
-  const foodWithPhoto = await db.query.foods.findFirst({
-    where: eq(foods.id, newFood.id),
-    with: {
-      photo: true,
-    },
-  });
+  const results = await searchAllSources(input.foodName);
+  const best = results.foods.find((f) => typeof f.id === 'number');
+  if (!best?.id) return null;
 
-  return foodWithPhoto || newFood;
+  return { id: best.id, name: best.name, brandName: best.brandName ?? null };
 }
 
 // POST - Create a new food log entry
@@ -124,22 +58,14 @@ export async function POST(request: NextRequest) {
     const { foodName, quantity, servingUnit, mealType, consumedAt } =
       validation.data;
 
-    // Get nutrition data from Nutritionix
-    const nutritionData = await nutritionixAPI.getNaturalNutrients(
-      `${quantity} ${servingUnit || ''} ${foodName}`.trim(),
-    );
+    const resolved = await resolveFoodForLog({
+      foodId: validation.data.foodId,
+      foodName,
+    });
 
-    if (!nutritionData.foods || nutritionData.foods.length === 0) {
-      return NextResponse.json(
-        { error: 'Food not found in database' },
-        { status: 404 },
-      );
+    if (!resolved) {
+      return NextResponse.json({ error: 'Food not found' }, { status: 404 });
     }
-
-    const nutritionInfo = nutritionData.foods[0];
-
-    // Get or create food in our cache
-    const cachedFood = await getOrCreateFood(nutritionInfo);
 
     // Create food log entry
     const logDate = consumedAt ? new Date(consumedAt) : new Date();
@@ -148,19 +74,20 @@ export async function POST(request: NextRequest) {
       .insert(foodLogs)
       .values({
         userId: user.id,
-        foodId: cachedFood.id,
+        foodId: resolved.id,
         quantity: quantity.toString(),
-        servingUnit: nutritionInfo.serving_unit,
+        servingUnit: servingUnit || null,
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
         consumedAt: logDate,
       })
       .returning();
 
-    // Get photo URL from relation or null
-    const photoThumb =
-      cachedFood && 'photo' in cachedFood && cachedFood.photo
-        ? (cachedFood.photo as { thumb?: string | null })?.thumb || null
-        : null;
+    const cachedFood = await db.query.foods.findFirst({
+      where: eq(foods.id, resolved.id),
+      with: { photo: true },
+    });
+
+    const photoThumb = cachedFood?.photo?.thumb ?? null;
 
     return NextResponse.json({
       success: true,
@@ -171,19 +98,19 @@ export async function POST(request: NextRequest) {
         mealType: newLog.mealType,
         consumedAt: newLog.consumedAt,
         food: {
-          id: cachedFood.id,
-          name: cachedFood.name,
-          brandName: cachedFood.brandName,
-          calories: cachedFood.calories,
-          protein: cachedFood.protein,
-          carbs: cachedFood.carbs,
-          fat: cachedFood.fat,
-          fiber: cachedFood.fiber,
-          sugar: cachedFood.sugar,
-          sodium: cachedFood.sodium,
-          servingQty: cachedFood.servingQty,
-          servingWeightGrams: cachedFood.servingWeightGrams,
-          servingUnit: cachedFood.servingUnit,
+          id: cachedFood?.id ?? resolved.id,
+          name: cachedFood?.name ?? resolved.name,
+          brandName: cachedFood?.brandName ?? resolved.brandName,
+          calories: cachedFood?.calories ?? null,
+          protein: cachedFood?.protein ?? null,
+          carbs: cachedFood?.carbs ?? null,
+          fat: cachedFood?.fat ?? null,
+          fiber: cachedFood?.fiber ?? null,
+          sugar: cachedFood?.sugar ?? null,
+          sodium: cachedFood?.sodium ?? null,
+          servingQty: cachedFood?.servingQty ?? null,
+          servingWeightGrams: cachedFood?.servingWeightGrams ?? null,
+          servingUnit: cachedFood?.servingUnit ?? null,
           photoUrl: photoThumb,
         },
       },
@@ -224,6 +151,9 @@ export async function GET(request: NextRequest) {
 
     const date = dateValidation.data;
 
+    const dayStart = startOfDay(parseISO(date));
+    const dayEnd = addDays(dayStart, 1);
+
     // Query food logs with related food data and photos
     const logs = await db
       .select({
@@ -254,8 +184,8 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, new Date(date)),
-          lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z')),
+          gte(foodLogs.consumedAt, dayStart),
+          lt(foodLogs.consumedAt, dayEnd),
         ),
       )
       .orderBy(desc(foodLogs.consumedAt))
@@ -311,8 +241,8 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, new Date(date)),
-          lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z')),
+          gte(foodLogs.consumedAt, dayStart),
+          lt(foodLogs.consumedAt, dayEnd),
         ),
       );
 

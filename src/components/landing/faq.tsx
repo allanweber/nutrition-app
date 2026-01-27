@@ -14,7 +14,7 @@ const faqs = [
       },
       {
         question: 'What food database do you use?',
-        answer: 'We use the Nutritionix database, which contains over 1 million foods including restaurant items, grocery products, and generic foods. The database is updated regularly to ensure accuracy.',
+        answer: 'We aggregate nutrition data from multiple sources (including USDA FoodData Central, Open Food Facts, and FatSecret) and store foods you use in our database to improve speed and reliability over time.',
       },
       {
         question: 'Is there a mobile app?',
