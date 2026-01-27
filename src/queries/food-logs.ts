@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FoodLogEntry } from '@/types/food'
+import type { NutritionSourceFood } from '@/lib/nutrition-sources/types'
 
 interface FoodLogsResponse {
   logs: FoodLogEntry[]
@@ -45,7 +46,8 @@ export function useFoodLogsQuery(date: string) {
 }
 
 interface CreateFoodLogData {
-    foodId?: number
+  foodId?: number
+  food?: NutritionSourceFood
   foodName: string
   brandName?: string
   quantity: string

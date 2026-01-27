@@ -45,6 +45,45 @@ export const daysSchema = z
 // Note: Uses subset of mealTypeEnum values (client only sends basic meal types)
 export const createFoodLogSchema = z.object({
   foodId: z.number().int().positive().optional(),
+  food: z
+    .object({
+      id: z.number().int().positive().optional(),
+      sourceId: z.string().min(1).max(128).transform(sanitizeString),
+      source: z.enum(['usda', 'openfoodfacts', 'fatsecret', 'database']),
+      name: z.string().min(1).max(200).transform(sanitizeString),
+      brandName: z
+        .string()
+        .nullable()
+        .optional()
+        .transform((val) => (val ? sanitizeString(val) : undefined)),
+      servingQty: z.number().finite().nonnegative(),
+      servingUnit: z.string().min(1).max(50).transform(sanitizeString),
+      servingWeightGrams: z.number().finite().nonnegative().optional(),
+      calories: z.number().finite().nonnegative(),
+      protein: z.number().finite().nonnegative(),
+      carbs: z.number().finite().nonnegative(),
+      fat: z.number().finite().nonnegative(),
+      fiber: z.number().finite().nonnegative().optional(),
+      sugar: z.number().finite().nonnegative().optional(),
+      sodium: z.number().finite().nonnegative().optional(),
+      barcode: z
+        .string()
+        .nullable()
+        .optional()
+        .transform((val) => (val ? sanitizeString(val) : undefined)),
+      isRaw: z.boolean().optional(),
+      fullNutrients: z
+        .array(z.object({ attr_id: z.number().int(), value: z.number().finite() }))
+        .optional(),
+      photo: z
+        .object({
+          thumb: z.string().optional(),
+          highres: z.string().optional(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .optional(),
   foodName: z
     .string()
     .min(1, 'Food name is required')
@@ -53,6 +92,7 @@ export const createFoodLogSchema = z.object({
     .optional(),
   brandName: z
     .string()
+    .nullable()
     .optional()
     .transform((val) => (val ? sanitizeString(val) : undefined)),
   quantity: z
@@ -76,8 +116,8 @@ export const createFoodLogSchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
-}).refine((data) => data.foodId !== undefined || (data.foodName && data.foodName.length > 0), {
-  message: 'foodId or foodName is required',
+}).refine((data) => data.foodId !== undefined || data.food !== undefined || (data.foodName && data.foodName.length > 0), {
+  message: 'foodId, food, or foodName is required',
   path: ['foodId'],
 });
 

@@ -25,6 +25,7 @@ export default function FoodLogPage() {
   const handleFoodAdded = async (food: NutritionSourceFood, quantity: string, mealType: string) => {
     await createMutation.mutateAsync({
       foodId: food.id,
+      food,
       foodName: food.name,
       brandName: food.brandName ?? undefined,
       quantity,

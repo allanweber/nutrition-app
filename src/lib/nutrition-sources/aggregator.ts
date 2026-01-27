@@ -93,7 +93,7 @@ async function searchDatabase(query: string): Promise<NutritionSourceFood[]> {
   }));
 }
 
-async function persistFood(food: NutritionSourceFood): Promise<NutritionSourceFood> {
+export async function persistFood(food: NutritionSourceFood): Promise<NutritionSourceFood> {
   const existingBySource = await db.query.foods.findFirst({
     where: and(eq(foods.sourceId, food.sourceId), eq(foods.source, food.source)),
     with: { photo: true },
@@ -287,6 +287,7 @@ export async function searchAllSources(query: string): Promise<SearchAggregatorR
     const start = Date.now();
     try {
       const result = await withTimeout(withRetry(() => adapter.search(query), 1), 3000);
+      console.log(`Source ${adapter.name} returned ${JSON.stringify(result.foods)} results for query "${query}"`);
       return {
         adapter,
         status: {
@@ -319,18 +320,8 @@ export async function searchAllSources(query: string): Promise<SearchAggregatorR
     sources.push(item.status);
   }
 
-  const persistedExternal: NutritionSourceFood[] = [];
-  for (const item of settled) {
-    for (const food of item.foods) {
-      try {
-        persistedExternal.push(await persistFood(food));
-      } catch {
-        // Best-effort persistence.
-      }
-    }
-  }
-
-  const combined = [...dbFoods, ...persistedExternal];
+  const externalFoods = settled.flatMap((item) => item.foods);
+  const combined = [...dbFoods, ...externalFoods];
 
   // Sort by priority, then dedupe.
   combined.sort((a, b) => priority(a.source) - priority(b.source));
@@ -420,10 +411,9 @@ export async function searchByBarcode(barcode: string): Promise<SearchAggregator
         continue;
       }
 
-      const persisted = await persistFood(result);
       sources.push({ name: adapter.name, status: 'success', count: 1, durationMs: Date.now() - start });
-      searchCache.set(cacheKey, [persisted]);
-      return { foods: [persisted], sources, fromCache: false };
+      searchCache.set(cacheKey, [result]);
+      return { foods: [result], sources, fromCache: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
       sources.push({ name: adapter.name, status: message === 'timeout' ? 'timeout' : 'error', count: 0, error: message, durationMs: Date.now() - start });

@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@/lib/session';
-import { searchAllSources } from '@/lib/nutrition-sources/aggregator';
+import { persistFood, searchAllSources } from '@/lib/nutrition-sources/aggregator';
+import type { NutritionSourceFood } from '@/lib/nutrition-sources/types';
 import { db } from '@/server/db';
 import {
   foodLogs,
@@ -20,6 +21,7 @@ import {
 async function resolveFoodForLog(input: {
   foodId?: number;
   foodName?: string;
+  food?: NutritionSourceFood;
 }): Promise<{ id: number; name: string; brandName: string | null } | null> {
   if (typeof input.foodId === 'number' && Number.isFinite(input.foodId)) {
     const food = await db.query.foods.findFirst({
@@ -28,13 +30,37 @@ async function resolveFoodForLog(input: {
     return food ? { id: food.id, name: food.name, brandName: food.brandName ?? null } : null;
   }
 
+  if (input.food) {
+    if (typeof input.food.id === 'number' && Number.isFinite(input.food.id)) {
+      const food = await db.query.foods.findFirst({
+        where: eq(foods.id, input.food.id),
+      });
+      return food ? { id: food.id, name: food.name, brandName: food.brandName ?? null } : null;
+    }
+
+    if (input.food.source === 'database') {
+      return null;
+    }
+
+    const persisted = await persistFood(input.food);
+    if (!persisted.id) return null;
+    return { id: persisted.id, name: persisted.name, brandName: persisted.brandName ?? null };
+  }
+
   if (!input.foodName) return null;
 
   const results = await searchAllSources(input.foodName);
-  const best = results.foods.find((f) => typeof f.id === 'number');
-  if (!best?.id) return null;
+  const best = results.foods[0];
+  if (!best) return null;
 
-  return { id: best.id, name: best.name, brandName: best.brandName ?? null };
+  if (typeof best.id === 'number' && Number.isFinite(best.id)) {
+    return { id: best.id, name: best.name, brandName: best.brandName ?? null };
+  }
+
+  if (best.source === 'database') return null;
+  const persisted = await persistFood(best);
+  if (!persisted.id) return null;
+  return { id: persisted.id, name: persisted.name, brandName: persisted.brandName ?? null };
 }
 
 // POST - Create a new food log entry
@@ -60,6 +86,7 @@ export async function POST(request: NextRequest) {
 
     const resolved = await resolveFoodForLog({
       foodId: validation.data.foodId,
+      food: validation.data.food,
       foodName,
     });
 
