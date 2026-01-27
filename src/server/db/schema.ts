@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   decimal,
@@ -118,10 +118,10 @@ export const foods = pgTable(
   },
   (table) => [
     index('foods_name_idx').on(table.name),
-    index('foods_source_id_idx').on(table.sourceId),
-    index('foods_source_idx').on(table.source),
+    index('idx_foods_name_lower').on(sql`lower(${table.name})`),
     index('foods_user_id_idx').on(table.userId),
     index('foods_is_custom_idx').on(table.isCustom),
+    index('idx_foods_brand_lower').on(sql`lower(${table.brandName})`),
   ],
 );
 
