@@ -1,4 +1,5 @@
 import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
+import { logSourceError, logSourceRequest, logSourceResponse, newRequestId } from './http-logging';
 
 type USDAFoodNutrient = {
   nutrientName?: string;
@@ -73,17 +74,48 @@ export class USDAFoodDataCentralSource implements NutritionSource {
     url.searchParams.set('pageNumber', String(page + 1));
     url.searchParams.set('dataType', 'Foundation');
 
-    const response = await fetch(url.toString(), {
-      // Keep request server-side only.
-      cache: 'no-store',
-    });
+    const requestId = newRequestId('usda');
+    logSourceRequest('usda', requestId, { method: 'GET', url: url.toString(), note: 'foods/search' });
+    const start = Date.now();
+
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), {
+        // Keep request server-side only.
+        cache: 'no-store',
+      });
+    } catch (error) {
+      logSourceError('usda', requestId, {
+        method: 'GET',
+        url: url.toString(),
+        durationMs: Date.now() - start,
+        error,
+      });
+      throw error;
+    }
 
     if (!response.ok) {
       // Graceful degradation: return empty list.
+      logSourceResponse('usda', requestId, {
+        method: 'GET',
+        url: url.toString(),
+        status: response.status,
+        durationMs: Date.now() - start,
+      });
       return { foods: [], source: this.name, cached: false };
     }
 
     const data = (await response.json()) as USDAFoodSearchResponse;
+
+    logSourceResponse('usda', requestId, {
+      method: 'GET',
+      url: url.toString(),
+      status: response.status,
+      durationMs: Date.now() - start,
+      body: {
+        foodsCount: (data.foods ?? []).length,
+      },
+    });
     const foods = (data.foods ?? []).map((item): NutritionSourceFood => {
       const servingSize = asNumber(item.servingSize);
       const servingUnit = item.servingSizeUnit || 'g';

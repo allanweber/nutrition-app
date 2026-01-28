@@ -66,3 +66,26 @@ export function useInfiniteFoodSearchQuery(searchQuery: string, pageSize = 25) {
     },
   })
 }
+
+export const FOOD_IMAGE_QUERY_KEY = (foodUrl: string) => ['foods', 'image', foodUrl]
+
+export async function fetchFoodImageUrl(foodUrl: string): Promise<string | null> {
+  const response = await fetch(`/api/foods/image?food_url=${encodeURIComponent(foodUrl)}`)
+
+  if (response.status === 404) {
+    return null
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof data?.error === 'string' && data.error.trim().length > 0
+        ? data.error
+        : 'Failed to fetch food image'
+    throw new Error(errorMessage)
+  }
+
+  const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl : null
+  return imageUrl
+}

@@ -33,13 +33,49 @@ function toAbsoluteUrl(baseUrl: string, src: string): string {
   return new URL(src, baseUrl).toString();
 }
 
+function extractBestImageSrc(htmlSlice: string): string | null {
+  const matches = Array.from(
+    htmlSlice.matchAll(/<img[^>]+src\s*=\s*(?:"([^"]+)"|'([^']+)')/gi),
+  ).map((m) => m[1] ?? m[2]).filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+
+  if (matches.length === 0) return null;
+
+  // Prefer actual food photos over icons/ads/etc.
+  const preferred = matches.find((src) => /\/food\//i.test(src) && /_sq\.(jpg|jpeg|png|webp)$/i.test(src))
+    ?? matches.find((src) => /\/food\//i.test(src) && /\.(jpg|jpeg|png|webp)$/i.test(src))
+    ?? matches.find((src) => /\.(jpg|jpeg|png|webp)$/i.test(src))
+    ?? matches[0];
+
+  return preferred ?? null;
+}
+
+function extractPhotosSectionImageSrc(html: string): string | null {
+  const lower = html.toLowerCase();
+
+  // The Photos section is typically headed by an <h4> that contains the word "Photos"
+  // (often preceded by an icon <img>). We look for the closing tag so we can start
+  // scanning AFTER the header to avoid picking the camera icon.
+  const photosHeaderClose = lower.indexOf('photos</h4>');
+  if (photosHeaderClose < 0) return null;
+
+  const headerEnd = lower.indexOf('</h4>', photosHeaderClose);
+  if (headerEnd < 0) return null;
+
+  const searchFrom = headerEnd + '</h4>'.length;
+  const tableIndex = lower.indexOf('<table class="generic"', searchFrom);
+  if (tableIndex < 0) return null;
+
+  // The Photos table is small; grab a bounded slice to keep work cheap.
+  const slice = html.slice(tableIndex, tableIndex + 30_000);
+  return extractBestImageSrc(slice);
+}
+
 function extractFirstGenericTableImageSrc(html: string): string | null {
   const tableIndex = html.toLowerCase().indexOf('<table class="generic"');
   if (tableIndex < 0) return null;
 
   const slice = html.slice(tableIndex, tableIndex + 50_000);
-  const imgMatch = /<img[^>]+src\s*=\s*(?:"([^"]+)"|'([^']+)')/i.exec(slice);
-  return imgMatch?.[1] ?? imgMatch?.[2] ?? null;
+  return extractBestImageSrc(slice);
 }
 
 async function fetchHtmlFollowingAllowedRedirects(
@@ -103,7 +139,7 @@ export async function getFoodImageUrlForFoodUrl(foodUrl: string): Promise<string
   }
 
   const html = await response.text();
-  const src = extractFirstGenericTableImageSrc(html);
+  const src = extractPhotosSectionImageSrc(html) ?? extractFirstGenericTableImageSrc(html);
 
   const imageUrl = src ? toAbsoluteUrl(normalized, src) : null;
   foodUrlImageCache.set(normalized, imageUrl);

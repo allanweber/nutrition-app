@@ -5,8 +5,9 @@ import { useMemo, useState } from 'react';
 import FoodSearch from '@/components/food-search';
 import FoodLogClient from '@/components/food-log-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQueries } from '@tanstack/react-query';
 import { useFoodLogsQuery, useCreateFoodLogMutation, useDeleteFoodLogMutation } from '@/queries/food-logs';
-import { useInfiniteFoodSearchQuery } from '@/queries/foods';
+import { FOOD_IMAGE_QUERY_KEY, fetchFoodImageUrl, useInfiniteFoodSearchQuery } from '@/queries/foods';
 import { format } from 'date-fns';
 import type { NutritionSourceFood } from '@/lib/nutrition-sources/types';
 
@@ -54,6 +55,69 @@ export default function FoodLogPage() {
     };
   }, [searchQueryHook.data, searchQueryHook.hasNextPage]);
 
+  const foodUrlsNeedingImages = useMemo(() => {
+    const foods = mergedSearchResults?.foods ?? [];
+    const urls: string[] = [];
+    const seen = new Set<string>();
+
+    for (const food of foods) {
+      const url = (food.foodUrl ?? '').trim();
+      if (!url) continue;
+      if (food.photo?.thumb || food.photo?.highres) continue;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      urls.push(url);
+      // Avoid spamming many requests for large result lists.
+      if (urls.length >= 20) break;
+    }
+
+    return urls;
+  }, [mergedSearchResults?.foods]);
+
+  const foodImageQueries = useQueries({
+    queries: foodUrlsNeedingImages.map((foodUrl) => ({
+      queryKey: FOOD_IMAGE_QUERY_KEY(foodUrl),
+      queryFn: () => fetchFoodImageUrl(foodUrl),
+      enabled: searchQuery.trim().length >= 3,
+      staleTime: 30 * 24 * 60 * 60 * 1000,
+      gcTime: 30 * 24 * 60 * 60 * 1000,
+      retry: 1,
+    })),
+  });
+
+  const enrichedSearchResults = useMemo(() => {
+    if (!mergedSearchResults) return undefined;
+    if (foodUrlsNeedingImages.length === 0) return mergedSearchResults;
+
+    const urlToImage = new Map<string, string>();
+    for (let i = 0; i < foodUrlsNeedingImages.length; i += 1) {
+      const url = foodUrlsNeedingImages[i];
+      const imageUrl = foodImageQueries[i]?.data;
+      if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+        urlToImage.set(url, imageUrl);
+      }
+    }
+
+    if (urlToImage.size === 0) return mergedSearchResults;
+
+    return {
+      ...mergedSearchResults,
+      foods: mergedSearchResults.foods.map((food) => {
+        if (food.photo?.thumb || food.photo?.highres) return food;
+        const url = (food.foodUrl ?? '').trim();
+        const imageUrl = url ? urlToImage.get(url) : undefined;
+        if (!imageUrl) return food;
+        return {
+          ...food,
+          photo: {
+            thumb: imageUrl,
+            highres: imageUrl,
+          },
+        };
+      }),
+    };
+  }, [mergedSearchResults, foodImageQueries, foodUrlsNeedingImages]);
+
   const handleFoodAdded = async (food: NutritionSourceFood, quantity: string, mealType: string) => {
     await createMutation.mutateAsync({
       foodId: food.id,
@@ -87,8 +151,15 @@ export default function FoodLogPage() {
               </CardTitle>
           </CardHeader>
            <CardContent>
+             {searchQuery.trim().length >= 3 && searchQueryHook.isError && (
+               <div className="mb-3 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                 {searchQueryHook.error instanceof Error
+                   ? searchQueryHook.error.message
+                   : 'Food search failed. Please try again.'}
+               </div>
+             )}
              <FoodSearch
-               searchResults={mergedSearchResults}
+               searchResults={enrichedSearchResults}
                isSearching={searchQueryHook.isFetching && !searchQueryHook.isFetchingNextPage && !searchQueryHook.data}
                isLoadingMore={searchQueryHook.isFetchingNextPage}
                onSearch={setSearchQuery}

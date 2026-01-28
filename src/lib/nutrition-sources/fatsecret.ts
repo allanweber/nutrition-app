@@ -1,4 +1,5 @@
 import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
+import { logSourceError, logSourceRequest, logSourceResponse, newRequestId } from './http-logging';
 
 type FatSecretTokenResponse = {
   access_token: string;
@@ -24,17 +25,49 @@ type FatSecretFoodsSearchV1Response = {
       total_results?: string | number;
     };
   };
+  // Some FatSecret endpoints/versions return a different envelope.
+  foods?: {
+    food?: FatSecretFoodItem | FatSecretFoodItem[];
+    results?: {
+      food?: FatSecretFoodItem | FatSecretFoodItem[];
+    };
+    page_number?: string | number;
+    max_results?: string | number;
+    total_results?: string | number;
+  };
 };
+
+function asFoodItemArray(value: FatSecretFoodItem | FatSecretFoodItem[] | undefined): FatSecretFoodItem[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
 
 type FatSecretServing = {
   calories?: string | number;
   fat?: string | number;
   carbohydrate?: string | number;
   protein?: string | number;
+  // FatSecret may provide both a short measurement description and a richer serving description.
   measurement_description?: string;
+  serving_description?: string;
   metric_serving_amount?: string | number;
   metric_serving_unit?: string;
   number_of_units?: string | number;
+  fiber?: string | number;
+  sugar?: string | number;
+  sodium?: string | number;
+
+  // Additional nutrients (commonly present in FatSecret responses)
+  cholesterol?: string | number;
+  potassium?: string | number;
+  saturated_fat?: string | number;
+  monounsaturated_fat?: string | number;
+  polyunsaturated_fat?: string | number;
+  trans_fat?: string | number;
+  vitamin_a?: string | number;
+  vitamin_c?: string | number;
+  calcium?: string | number;
+  iron?: string | number;
 };
 
 type FatSecretFoodGetResponse = {
@@ -96,24 +129,58 @@ async function getAccessToken(): Promise<string> {
 
     const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
-    const response = await fetch('https://oauth.fatsecret.com/connect/token', {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${basic}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        scope: 'basic',
-      }).toString(),
-      cache: 'no-store',
-    });
+    const requestId = newRequestId('fatsecret');
+    const url = 'https://oauth.fatsecret.com/connect/token';
+    logSourceRequest('fatsecret', requestId, { method: 'POST', url, note: 'oauth token' });
+    const start = Date.now();
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          // Intentionally not logged (redacted by logger even if it were).
+          Authorization: `Basic ${basic}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          scope: 'basic',
+        }).toString(),
+        cache: 'no-store',
+      });
+    } catch (error) {
+      logSourceError('fatsecret', requestId, {
+        method: 'POST',
+        url,
+        durationMs: Date.now() - start,
+        error,
+      });
+      throw error;
+    }
 
     if (!response.ok) {
+      logSourceResponse('fatsecret', requestId, {
+        method: 'POST',
+        url,
+        status: response.status,
+        durationMs: Date.now() - start,
+      });
       throw new Error(`FatSecret token request failed: ${response.status}`);
     }
 
     const data = (await response.json()) as FatSecretTokenResponse;
+
+    logSourceResponse('fatsecret', requestId, {
+      method: 'POST',
+      url,
+      status: response.status,
+      durationMs: Date.now() - start,
+      body: {
+        token_type: data.token_type,
+        expires_in: data.expires_in,
+      },
+    });
 
     const expiresAt = Date.now() + (data.expires_in - 60) * 1000; // refresh 1m early
     tokenCache = { token: data.access_token, expiresAt };
@@ -135,31 +202,103 @@ async function fatSecretRestGet(path: string, params: Record<string, string>): P
     url.searchParams.set(key, value);
   }
 
-  const response = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: 'no-store',
-  });
+  const requestId = newRequestId('fatsecret');
+  logSourceRequest('fatsecret', requestId, { method: 'GET', url: url.toString(), note: path });
+  const start = Date.now();
 
-  if (response.status === 401) {
-    tokenCache = null;
-    const retryToken = await getAccessToken();
-    const retryResponse = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${retryToken}` },
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: 'no-store',
     });
+  } catch (error) {
+    logSourceError('fatsecret', requestId, {
+      method: 'GET',
+      url: url.toString(),
+      durationMs: Date.now() - start,
+      error,
+    });
+    throw error;
+  }
+
+  if (response.status === 401) {
+    logSourceResponse('fatsecret', requestId, {
+      method: 'GET',
+      url: url.toString(),
+      status: response.status,
+      durationMs: Date.now() - start,
+    });
+
+    tokenCache = null;
+    const retryToken = await getAccessToken();
+
+    const retryRequestId = newRequestId('fatsecret');
+    logSourceRequest('fatsecret', retryRequestId, {
+      method: 'GET',
+      url: url.toString(),
+      note: `${path} (retry after 401)`,
+    });
+    const retryStart = Date.now();
+
+    let retryResponse: Response;
+    try {
+      retryResponse = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${retryToken}` },
+        cache: 'no-store',
+      });
+    } catch (error) {
+      logSourceError('fatsecret', retryRequestId, {
+        method: 'GET',
+        url: url.toString(),
+        durationMs: Date.now() - retryStart,
+        error,
+      });
+      throw error;
+    }
+
     if (!retryResponse.ok) {
+      logSourceResponse('fatsecret', retryRequestId, {
+        method: 'GET',
+        url: url.toString(),
+        status: retryResponse.status,
+        durationMs: Date.now() - retryStart,
+      });
       throw new Error(`FatSecret API call failed: ${retryResponse.status}`);
     }
-    return retryResponse.json();
+
+    const json = await retryResponse.json();
+    logSourceResponse('fatsecret', retryRequestId, {
+      method: 'GET',
+      url: url.toString(),
+      status: retryResponse.status,
+      durationMs: Date.now() - retryStart,
+      body: json,
+    });
+    return json;
   }
 
   if (!response.ok) {
+    logSourceResponse('fatsecret', requestId, {
+      method: 'GET',
+      url: url.toString(),
+      status: response.status,
+      durationMs: Date.now() - start,
+    });
     throw new Error(`FatSecret API call failed: ${response.status}`);
   }
 
-  return response.json();
+  const json = await response.json();
+  logSourceResponse('fatsecret', requestId, {
+    method: 'GET',
+    url: url.toString(),
+    status: response.status,
+    durationMs: Date.now() - start,
+    body: json,
+  });
+  return json;
 }
 
 function toFood(item: FatSecretFoodItem): NutritionSourceFood | null {
@@ -167,7 +306,9 @@ function toFood(item: FatSecretFoodItem): NutritionSourceFood | null {
   const name = item?.food_name;
   if (!id || !name) return null;
 
-  const brand = item?.brand_name ?? item?.food_type ?? null;
+  const foodType = (item?.food_type ?? '').toLowerCase().trim();
+  // FatSecret uses food_type like "Generic" / "Brand". "Generic" should be treated as a common food.
+  const brand = foodType === 'generic' ? null : (item?.brand_name ?? null);
 
   const desc = item?.food_description ?? '';
   const parsed = parseDescriptionMacros(desc);
@@ -219,6 +360,41 @@ function looksLike100gServing(serving: FatSecretServing): boolean {
   return unit === 'g' || measure === 'g' || measure.includes('gram');
 }
 
+const FATSECRET_FULL_NUTRIENT_ATTR_IDS: Record<string, number> = {
+  cholesterol: 601,
+  potassium: 306,
+  saturated_fat: 606,
+  monounsaturated_fat: 645,
+  polyunsaturated_fat: 646,
+  trans_fat: 605,
+  vitamin_a: 318,
+  vitamin_c: 401,
+  calcium: 301,
+  iron: 303,
+};
+
+function buildFullNutrients(serving: FatSecretServing): Array<{ attr_id: number; value: number }> {
+  const excluded = new Set([
+    'calories',
+    'fat',
+    'carbohydrate',
+    'protein',
+    'fiber',
+    'sugar',
+    'sodium',
+  ]);
+
+  const result: Array<{ attr_id: number; value: number }> = [];
+  for (const [key, attrId] of Object.entries(FATSECRET_FULL_NUTRIENT_ATTR_IDS)) {
+    if (excluded.has(key)) continue;
+    const value = num((serving as Record<string, unknown>)[key]);
+    if (value === undefined) continue;
+    result.push({ attr_id: attrId, value });
+  }
+
+  return result;
+}
+
 export async function fetchFatSecretFoodDetails(foodId: string): Promise<{
   food: NutritionSourceFood;
   altMeasures: FatSecretAltMeasure[];
@@ -240,12 +416,17 @@ export async function fetchFatSecretFoodDetails(foodId: string): Promise<{
   }
 
   const chosenGrams = servingWeightGrams(chosen);
-  const servingUnit = chosen.measurement_description ?? 'serving';
+  const servingUnit = chosen.serving_description ?? chosen.measurement_description ?? 'serving';
 
   const calories = num(chosen.calories) ?? 0;
   const fat = num(chosen.fat) ?? 0;
   const carbs = num(chosen.carbohydrate) ?? 0;
   const protein = num(chosen.protein) ?? 0;
+  const fiber = num(chosen.fiber);
+  const sugar = num(chosen.sugar);
+  const sodium = num(chosen.sodium);
+
+  const fullNutrients = buildFullNutrients(chosen);
 
   const food: NutritionSourceFood = {
     sourceId: foodId,
@@ -260,17 +441,23 @@ export async function fetchFatSecretFoodDetails(foodId: string): Promise<{
     protein,
     carbs,
     fat,
+    fiber,
+    sugar,
+    sodium,
+    fullNutrients: fullNutrients.length > 0 ? fullNutrients : undefined,
   };
 
   const altMeasures: FatSecretAltMeasure[] = [];
   let seq = 1;
   for (const s of servings) {
-    if (s === chosen) continue;
+    // Persist all alternative servings except the canonical 100g metric entry.
+    if (s === chosen || looksLike100gServing(s)) continue;
     const grams = servingWeightGrams(s);
     if (!grams || grams <= 0) continue;
     altMeasures.push({
       servingWeight: grams,
-      measure: s.measurement_description ?? 'serving',
+      // Prefer serving_description for UI-friendly labels; fallback to measurement_description.
+      measure: s.serving_description ?? s.measurement_description ?? 'serving',
       qty: num(s.number_of_units) ?? 1,
       seq,
     });
@@ -301,8 +488,12 @@ export class FatSecretSource implements NutritionSource {
       page_number: String(page),
     })) as FatSecretFoodsSearchV1Response;
 
-    const list = data?.foods_search?.results?.food;
-    const items: FatSecretFoodItem[] = Array.isArray(list) ? list : list ? [list] : [];
+    const list =
+      data?.foods_search?.results?.food ??
+      data?.foods?.results?.food ??
+      data?.foods?.food;
+
+    const items = asFoodItemArray(list);
 
     const foods = items
       .map(toFood)

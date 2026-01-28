@@ -418,8 +418,20 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
 
   const sources: SourceStatus[] = [];
   const dbStart = Date.now();
-  const dbFoods = await searchDatabase(query);
-  sources.push({ name: 'database', status: 'success', count: dbFoods.length, durationMs: Date.now() - dbStart });
+  let dbFoods: NutritionSourceFood[] = [];
+  try {
+    dbFoods = await searchDatabase(query);
+    sources.push({ name: 'database', status: 'success', count: dbFoods.length, durationMs: Date.now() - dbStart });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unknown error';
+    sources.push({
+      name: 'database',
+      status: 'error',
+      count: 0,
+      error: message,
+      durationMs: Date.now() - dbStart,
+    });
+  }
 
   const adapters = getSources();
 
@@ -478,12 +490,14 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
 
   let externalFoods = fatSecretResult.foods;
 
-  if (fatSecretResult.status.status !== 'success' || fatSecretResult.foods.length === 0) {
+  // USDA is only queried if FatSecret fails (error/timeout/not configured/etc).
+  // If FatSecret succeeds but returns 0 items, we do NOT fall back.
+  if (fatSecretResult.status.status !== 'success') {
     const usdaResult = await runAdapter(usdaAdapter);
     sources.push(usdaResult.status);
     externalFoods = [...externalFoods, ...usdaResult.foods];
   } else if (usdaAdapter) {
-    sources.push({ name: 'usda', status: 'skipped', count: 0, error: 'fatsecret had results' });
+    sources.push({ name: 'usda', status: 'skipped', count: 0, error: 'fatsecret succeeded' });
   }
 
   const combined = [...dbFoods, ...externalFoods];
