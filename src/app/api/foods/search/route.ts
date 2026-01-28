@@ -6,6 +6,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const queryParam = searchParams.get('q');
+    const pageParam = searchParams.get('page');
+    const pageSizeParam = searchParams.get('pageSize');
 
     if (!queryParam) {
       return NextResponse.json(
@@ -25,7 +27,13 @@ export async function GET(request: NextRequest) {
 
     const query = queryValidation.data;
 
-    const results = await searchAllSources(query);
+    const page = pageParam ? Number(pageParam) : 0;
+    const pageSize = pageSizeParam ? Number(pageSizeParam) : 25;
+
+    const safePage = Number.isFinite(page) && page >= 0 ? Math.floor(page) : 0;
+    const safePageSize = Number.isFinite(pageSize) && pageSize > 0 ? Math.min(Math.floor(pageSize), 50) : 25;
+
+    const results = await searchAllSources(query, { page: safePage, pageSize: safePageSize });
 
     return NextResponse.json({ results });
   } catch (error) {

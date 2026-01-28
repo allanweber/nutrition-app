@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,20 +23,24 @@ interface FoodSearchProps {
   searchResults?: SearchAggregatorResult;
   barcodeResults?: SearchAggregatorResult;
   isSearching?: boolean;
+  isLoadingMore?: boolean;
   isBarcodeSearching?: boolean;
   onSearch: (query: string) => void;
   onLookupUpc: (upc: string) => void;
   onAddFood: (food: NutritionSourceFood, quantity: string, mealType: string) => void;
+  onLoadMore?: () => void;
 }
 
 export default function FoodSearch({
   searchResults,
   barcodeResults,
   isSearching = false,
+  isLoadingMore = false,
   isBarcodeSearching = false,
   onSearch,
   onLookupUpc,
   onAddFood,
+  onLoadMore,
 }: FoodSearchProps) {
   const [query, setQuery] = useState('');
   const [upc, setUpc] = useState('');
@@ -46,10 +50,65 @@ export default function FoodSearch({
   const [adding, setAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'common' | 'branded' | 'custom'>('common');
+
+  const debouncedQueryKey = query.trim();
 
   const foods = searchResults?.foods ?? [];
   const barcodeFoods = barcodeResults?.foods ?? [];
   const hasResults = foods.length > 0 || barcodeFoods.length > 0;
+  const hasMore = Boolean(searchResults?.hasMore);
+
+  const hasPhoto = (food: NutritionSourceFood) => Boolean(food.photo?.thumb || food.photo?.highres);
+
+  const toPer100g = (food: NutritionSourceFood) => {
+    const grams = food.servingWeightGrams;
+    if (!grams || grams <= 0) return null;
+    const factor = 100 / grams;
+    return {
+      calories: food.calories * factor,
+      protein: food.protein * factor,
+      carbs: food.carbs * factor,
+      fat: food.fat * factor,
+      sodium: food.sodium !== undefined ? food.sodium * factor : undefined,
+    };
+  };
+
+  const isCustomFood = (food: NutritionSourceFood) => Boolean(food.isCustom);
+  const isBrandedFood = (food: NutritionSourceFood) => !isCustomFood(food) && Boolean((food.brandName ?? '').trim());
+  const isCommonFood = (food: NutritionSourceFood) => !isCustomFood(food) && !isBrandedFood(food);
+
+  const commonFoods = foods
+    .filter(isCommonFood)
+    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
+  const brandedFoods = foods
+    .filter(isBrandedFood)
+    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
+  const customFoods = foods
+    .filter(isCustomFood)
+    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
+
+  const foodsForTab =
+    activeTab === 'common'
+      ? commonFoods
+      : activeTab === 'branded'
+        ? brandedFoods
+        : customFoods;
+
+  // Debounce search calls (500ms) and require 3+ chars.
+  // Keeps parent/query logic simple and avoids spam.
+  useEffect(() => {
+    const trimmed = debouncedQueryKey;
+    const timer = setTimeout(() => {
+      if (trimmed.length >= 3) {
+        onSearch(trimmed);
+      } else {
+        onSearch('');
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [debouncedQueryKey, onSearch]);
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
@@ -125,11 +184,13 @@ export default function FoodSearch({
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            onSearch(e.target.value);
           }}
           className="pl-10"
           data-testid="food-search-input"
         />
+        {query.trim().length > 0 && query.trim().length < 3 && (
+          <div className="mt-1 text-xs text-muted-foreground">Type at least 3 characters to search</div>
+        )}
       </div>
 
       {/* Success Message */}
@@ -282,9 +343,39 @@ export default function FoodSearch({
 
           {foods.length > 0 && (
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Results</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-foreground">Results</h3>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === 'common' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('common')}
+                  >
+                    Common ({commonFoods.length})
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === 'branded' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('branded')}
+                  >
+                    Branded ({brandedFoods.length})
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={activeTab === 'custom' ? 'default' : 'outline'}
+                    onClick={() => setActiveTab('custom')}
+                  >
+                    Custom ({customFoods.length})
+                  </Button>
+                </div>
+              </div>
               <div className="space-y-2">
-                {foods.slice(0, 10).map((food, index) => (
+                {foodsForTab.map((food, index) => {
+                  const p100 = toPer100g(food);
+                  return (
                   <Card
                     key={`${food.source}-${food.sourceId}`}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -293,35 +384,64 @@ export default function FoodSearch({
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center space-x-3">
-                        {food.photo?.thumb && (
+                        {food.photo?.thumb ? (
                           <img
                             src={food.photo.thumb}
                             alt={food.name}
                             className="w-12 h-12 rounded object-cover"
+                            loading="lazy"
                           />
+                        ) : (
+                          <div className="w-12 h-12 rounded bg-muted" />
                         )}
                         <div className="flex-1">
                           <div className="font-medium">{food.name}</div>
                           {food.brandName && (
                             <div className="text-sm text-muted-foreground">{food.brandName}</div>
                           )}
-                          <div className="text-sm text-muted-foreground">
-                            {food.servingQty} {food.servingUnit}
+                          <div className="text-xs text-muted-foreground">
+                            {p100 ? (
+                              <span>
+                                {Math.round(p100.calories)} kcal · P {p100.protein.toFixed(1)}g · C {p100.carbs.toFixed(1)}g · F {p100.fat.toFixed(1)}g
+                                {p100.sodium !== undefined ? ` · Na ${Math.round(p100.sodium)}mg` : ''} · /100g
+                              </span>
+                            ) : (
+                              <span>
+                                {food.calories} kcal · P {food.protein}g · C {food.carbs}g · F {food.fat}g
+                                {food.sodium !== undefined ? ` · Na ${food.sodium}mg` : ''}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <Plus className="h-5 w-5 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
+
+              {onLoadMore && hasMore && (
+                <div className="mt-3 flex justify-center">
+                  <Button type="button" variant="outline" onClick={onLoadMore} disabled={isLoadingMore || isSearching}>
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Loading...
+                      </>
+                    ) : (
+                      'Load more'
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* Empty results message (name search only) */}
-      {!selectedFood && query.length >= 2 && !isSearching && foods.length === 0 && (
+      {!selectedFood && query.trim().length >= 3 && !isSearching && foods.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No foods found. Try different search terms.
         </div>

@@ -2,10 +2,11 @@ import { db } from '@/server/db';
 import { foodPhotos, foods } from '@/server/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
 
-import { searchCache } from './cache';
+import { barcodeCache, searchCache } from './cache';
 import type {
   NutritionSource,
   NutritionSourceFood,
+  NutritionSourceSearchOptions,
   SearchAggregatorResult,
   SourceStatus,
 } from './types';
@@ -13,6 +14,8 @@ import { fatSecretSource } from './fatsecret';
 import { openFoodFactsSource } from './openfoodfacts';
 import { usdaSource } from './usda';
 import { createMockSources } from './mock-sources';
+
+type SearchOptions = NutritionSourceSearchOptions;
 
 function normalizeDbSource(source: string): NutritionSourceFood['source'] {
   if (source === 'usda' || source === 'openfoodfacts' || source === 'fatsecret') {
@@ -35,6 +38,82 @@ function normalizeForDedup(name: string, brand?: string | null): string {
     .join('|')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
+}
+
+function normalizeNameForSimilarity(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function tokenJaccard(a: string, b: string): number {
+  const aTokens = new Set(a.split(' ').filter(Boolean));
+  const bTokens = new Set(b.split(' ').filter(Boolean));
+  if (aTokens.size === 0 || bTokens.size === 0) return 0;
+  let intersection = 0;
+  for (const t of aTokens) {
+    if (bTokens.has(t)) intersection += 1;
+  }
+  const union = aTokens.size + bTokens.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+function per100g(food: NutritionSourceFood): {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sodium?: number;
+} | null {
+  const grams = food.servingWeightGrams;
+  if (!grams || grams <= 0) return null;
+  const factor = 100 / grams;
+  return {
+    calories: food.calories * factor,
+    protein: food.protein * factor,
+    carbs: food.carbs * factor,
+    fat: food.fat * factor,
+    sodium: food.sodium !== undefined ? food.sodium * factor : undefined,
+  };
+}
+
+function isDuplicateFood(a: NutritionSourceFood, b: NutritionSourceFood): boolean {
+  const brandA = (a.brandName ?? '').trim();
+  const brandB = (b.brandName ?? '').trim();
+  if (normalizeForDedup(a.name, brandA) === normalizeForDedup(b.name, brandB)) return true;
+
+  // Fuzzy match only when brands are compatible.
+  if (brandA && brandB && normalizeForDedup('', brandA) !== normalizeForDedup('', brandB)) {
+    return false;
+  }
+
+  const nameA = normalizeNameForSimilarity(a.name);
+  const nameB = normalizeNameForSimilarity(b.name);
+  const sim = tokenJaccard(nameA, nameB);
+  if (sim < 0.9) return false;
+
+  const pA = per100g(a);
+  const pB = per100g(b);
+  if (!pA || !pB) {
+    // Without comparable units, be conservative.
+    return sim >= 0.95;
+  }
+
+  const close = (x: number, y: number, abs: number, pct: number) => {
+    const diff = Math.abs(x - y);
+    if (diff <= abs) return true;
+    const denom = Math.max(1, (Math.abs(x) + Math.abs(y)) / 2);
+    return diff / denom <= pct;
+  };
+
+  return (
+    close(pA.calories, pB.calories, 20, 0.08) &&
+    close(pA.protein, pB.protein, 3, 0.12) &&
+    close(pA.carbs, pB.carbs, 3, 0.12) &&
+    close(pA.fat, pB.fat, 3, 0.12)
+  );
 }
 
 function priority(source: NutritionSourceFood['source']): number {
@@ -73,6 +152,7 @@ async function searchDatabase(query: string): Promise<NutritionSourceFood[]> {
     source: normalizeDbSource(row.source),
     name: row.name,
     brandName: row.brandName ?? null,
+    isCustom: row.isCustom ?? false,
     servingQty: asNumber(row.servingQty),
     servingUnit: row.servingUnit ?? 'serving',
     servingWeightGrams: row.servingWeightGrams ? asNumber(row.servingWeightGrams) : undefined,
@@ -257,14 +337,30 @@ function getSources(): NutritionSource[] {
   return [usdaSource, openFoodFactsSource, fatSecretSource];
 }
 
-export async function searchAllSources(query: string): Promise<SearchAggregatorResult> {
+export async function searchAllSources(query: string, options?: SearchOptions): Promise<SearchAggregatorResult> {
+  const page = options?.page ?? 0;
+  const pageSize = options?.pageSize ?? 25;
+
+  const safePage = Number.isFinite(page) && page >= 0 ? page : 0;
+  const safePageSize = Number.isFinite(pageSize) && pageSize > 0 ? Math.min(pageSize, 50) : 25;
+
+  const requiredLimit = Math.min((safePage + 1) * safePageSize, 100);
+
   const cacheKey = `search:${query.toLowerCase().trim()}`;
   const cached = searchCache.get(cacheKey);
-  if (cached) {
+  if (cached && cached.fetchedLimit >= requiredLimit) {
+    const sliceStart = safePage * safePageSize;
+    const slice = cached.foods.slice(sliceStart, sliceStart + safePageSize);
+    const sliceEnd = sliceStart + slice.length;
+    const moreCached = cached.foods.length > sliceEnd;
+    const maybeMoreRemote = cached.foods.length === cached.fetchedLimit && cached.fetchedLimit < 100;
     return {
-      foods: cached,
-      sources: [{ name: 'cache', status: 'success', count: cached.length }],
+      foods: slice,
+      sources: [{ name: 'cache', status: 'success', count: slice.length }],
       fromCache: true,
+      page: safePage,
+      pageSize: safePageSize,
+      hasMore: moreCached || maybeMoreRemote,
     };
   }
 
@@ -286,8 +382,10 @@ export async function searchAllSources(query: string): Promise<SearchAggregatorR
 
     const start = Date.now();
     try {
-      const result = await withTimeout(withRetry(() => adapter.search(query), 1), 3000);
-      console.log(`Source ${adapter.name} returned ${JSON.stringify(result.foods)} results for query "${query}"`);
+      const result = await withTimeout(
+        withRetry(() => adapter.search(query, { page: 0, pageSize: requiredLimit }), 1),
+        3000,
+      );
       return {
         adapter,
         status: {
@@ -323,25 +421,37 @@ export async function searchAllSources(query: string): Promise<SearchAggregatorR
   const externalFoods = settled.flatMap((item) => item.foods);
   const combined = [...dbFoods, ...externalFoods];
 
-  // Sort by priority, then dedupe.
+  // Prefer higher-quality sources first.
   combined.sort((a, b) => priority(a.source) - priority(b.source));
-  const dedupedMap = new Map<string, NutritionSourceFood>();
+
+  const deduped: NutritionSourceFood[] = [];
   for (const food of combined) {
-    const key = normalizeForDedup(food.name, food.brandName);
-    if (!dedupedMap.has(key)) {
-      dedupedMap.set(key, food);
-    }
+    if (deduped.some((existing) => isDuplicateFood(existing, food))) continue;
+    deduped.push(food);
+    if (deduped.length >= requiredLimit) break;
   }
 
-  const foodsOut = Array.from(dedupedMap.values()).slice(0, 25);
-  searchCache.set(cacheKey, foodsOut);
+  // Cache in-memory for subsequent pages.
+  searchCache.set(cacheKey, { foods: deduped, fetchedLimit: requiredLimit });
 
-  return { foods: foodsOut, sources, fromCache: false };
+  const sliceStart = safePage * safePageSize;
+  const slice = deduped.slice(sliceStart, sliceStart + safePageSize);
+  const sliceEnd = sliceStart + slice.length;
+  const moreInMemory = deduped.length > sliceEnd;
+  const maybeMoreRemote = deduped.length === requiredLimit && requiredLimit < 100;
+  return {
+    foods: slice,
+    sources,
+    fromCache: false,
+    page: safePage,
+    pageSize: safePageSize,
+    hasMore: moreInMemory || maybeMoreRemote,
+  };
 }
 
 export async function searchByBarcode(barcode: string): Promise<SearchAggregatorResult> {
   const cacheKey = `barcode:${barcode}`;
-  const cached = searchCache.get(cacheKey);
+  const cached = barcodeCache.get(cacheKey);
   if (cached && cached.length > 0) {
     return {
       foods: cached,
@@ -382,7 +492,7 @@ export async function searchByBarcode(barcode: string): Promise<SearchAggregator
     };
 
     sources.push({ name: 'database', status: 'success', count: 1, durationMs: Date.now() - dbStart });
-    searchCache.set(cacheKey, [food]);
+    barcodeCache.set(cacheKey, [food]);
     return { foods: [food], sources, fromCache: false };
   }
 
@@ -412,7 +522,7 @@ export async function searchByBarcode(barcode: string): Promise<SearchAggregator
       }
 
       sources.push({ name: adapter.name, status: 'success', count: 1, durationMs: Date.now() - start });
-      searchCache.set(cacheKey, [result]);
+      barcodeCache.set(cacheKey, [result]);
       return { foods: [result], sources, fromCache: false };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';

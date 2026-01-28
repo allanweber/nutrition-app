@@ -30,7 +30,7 @@ export const dateSchema = z
 // Search query validation
 export const searchQuerySchema = z
   .string()
-  .min(2, 'Search query must be at least 2 characters long')
+  .min(3, 'Search query must be at least 3 characters long')
   .max(100, 'Search query must be at most 100 characters long')
   .transform(sanitizeString);
 

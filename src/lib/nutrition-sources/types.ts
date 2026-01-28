@@ -7,6 +7,8 @@ export interface NutritionSourceFood {
   source: NutritionSourceName;
   name: string;
   brandName?: string | null;
+  /** True for user-created/custom foods stored in the database. */
+  isCustom?: boolean;
   servingQty: number;
   servingUnit: string;
   servingWeightGrams?: number;
@@ -29,9 +31,14 @@ export interface NutritionSourceSearchResult {
   cached: boolean;
 }
 
+export interface NutritionSourceSearchOptions {
+  page: number;
+  pageSize: number;
+}
+
 export interface NutritionSource {
   readonly name: NutritionSourceName;
-  search(query: string): Promise<NutritionSourceSearchResult>;
+  search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult>;
   getByBarcode?(barcode: string): Promise<NutritionSourceFood | null>;
   isConfigured(): boolean;
 }
@@ -48,4 +55,7 @@ export interface SearchAggregatorResult {
   foods: NutritionSourceFood[];
   sources: SourceStatus[];
   fromCache: boolean;
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
 }

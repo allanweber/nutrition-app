@@ -1,4 +1,4 @@
-import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchResult } from './types';
+import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
 
 type USDAFoodNutrient = {
   nutrientName?: string;
@@ -59,16 +59,20 @@ export class USDAFoodDataCentralSource implements NutritionSource {
     return !!process.env.USDA_API_KEY;
   }
 
-  async search(query: string): Promise<NutritionSourceSearchResult> {
+  async search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult> {
     if (!this.isConfigured()) {
       return { foods: [], source: this.name, cached: false };
     }
 
+    const page = options?.page ?? 0;
+    const pageSize = options?.pageSize ?? 25;
+
     const url = new URL('https://api.nal.usda.gov/fdc/v1/foods/search');
     url.searchParams.set('api_key', process.env.USDA_API_KEY!);
     url.searchParams.set('query', query);
-    url.searchParams.set('pageSize', '25');
-    url.searchParams.set('dataType', 'Foundation,SR Legacy,Branded');
+    url.searchParams.set('pageSize', String(pageSize));
+    url.searchParams.set('pageNumber', String(page + 1));
+    url.searchParams.set('dataType', 'Foundation');
 
     const response = await fetch(url.toString(), {
       // Keep request server-side only.

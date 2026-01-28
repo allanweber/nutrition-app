@@ -1,0 +1,216 @@
+{
+  "info": {
+    "_postman_id": "f7d8b706-7d47-4a18-a2a9-2f0f6a114a6a",
+    "name": "Nutrition App - Nutrition Sources",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseProtocol", "value": "http" },
+    { "key": "baseHost", "value": "localhost" },
+    { "key": "basePort", "value": "3000" },
+    { "key": "query", "value": "apple" },
+    { "key": "page", "value": "0" },
+    { "key": "pageSize", "value": "25" },
+    { "key": "upc", "value": "0016000275123" },
+    { "key": "usdaApiKey", "value": "YOUR_USDA_API_KEY" },
+    { "key": "fatsecretClientId", "value": "YOUR_FATSECRET_CLIENT_ID" },
+    { "key": "fatsecretClientSecret", "value": "YOUR_FATSECRET_CLIENT_SECRET" },
+    { "key": "fatsecretToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "App API",
+      "item": [
+        {
+          "name": "Foods Search (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseProtocol}}://{{baseHost}}:{{basePort}}/api/foods/search?q={{query}}&page={{page}}&pageSize={{pageSize}}",
+              "protocol": "{{baseProtocol}}",
+              "host": ["{{baseHost}}"],
+              "port": "{{basePort}}",
+              "path": ["api", "foods", "search"],
+              "query": [
+                { "key": "q", "value": "{{query}}" },
+                { "key": "page", "value": "{{page}}" },
+                { "key": "pageSize", "value": "{{pageSize}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Foods UPC Lookup",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseProtocol}}://{{baseHost}}:{{basePort}}/api/foods/upc?upc={{upc}}",
+              "protocol": "{{baseProtocol}}",
+              "host": ["{{baseHost}}"],
+              "port": "{{basePort}}",
+              "path": ["api", "foods", "upc"],
+              "query": [{ "key": "upc", "value": "{{upc}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Foods Nutrients (by query)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{{query}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseProtocol}}://{{baseHost}}:{{basePort}}/api/foods/nutrients",
+              "protocol": "{{baseProtocol}}",
+              "host": ["{{baseHost}}"],
+              "port": "{{basePort}}",
+              "path": ["api", "foods", "nutrients"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "External Sources (direct)",
+      "item": [
+        {
+          "name": "USDA FoodData Central - Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://api.nal.usda.gov/fdc/v1/foods/search?api_key={{usdaApiKey}}&query={{query}}&pageSize={{pageSize}}&pageNumber=1&dataType=Foundation,SR%20Legacy,Branded",
+              "protocol": "https",
+              "host": ["api", "nal", "usda", "gov"],
+              "path": ["fdc", "v1", "foods", "search"],
+              "query": [
+                { "key": "api_key", "value": "{{usdaApiKey}}" },
+                { "key": "query", "value": "{{query}}" },
+                { "key": "pageSize", "value": "{{pageSize}}" },
+                { "key": "pageNumber", "value": "1" },
+                { "key": "dataType", "value": "Foundation,SR Legacy,Branded" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OpenFoodFacts - Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://world.openfoodfacts.org/cgi/search.pl?search_terms={{query}}&search_simple=1&action=process&json=1&page_size={{pageSize}}&page=1",
+              "protocol": "https",
+              "host": ["world", "openfoodfacts", "org"],
+              "path": ["cgi", "search.pl"],
+              "query": [
+                { "key": "search_terms", "value": "{{query}}" },
+                { "key": "search_simple", "value": "1" },
+                { "key": "action", "value": "process" },
+                { "key": "json", "value": "1" },
+                { "key": "page_size", "value": "{{pageSize}}" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OpenFoodFacts - Product by Barcode",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "https://world.openfoodfacts.org/api/v0/product/{{upc}}.json",
+              "protocol": "https",
+              "host": ["world", "openfoodfacts", "org"],
+              "path": ["api", "v0", "product", "{{upc}}.json"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FatSecret - Get OAuth Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic {{fatsecretBasic}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" },
+                { "key": "scope", "value": "basic" }
+              ]
+            },
+            "url": {
+              "raw": "https://oauth.fatsecret.com/connect/token",
+              "protocol": "https",
+              "host": ["oauth", "fatsecret", "com"],
+              "path": ["connect", "token"]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Postman can't compute base64 easily without a script.\n// Set fatsecretBasic in your environment to base64(clientId:clientSecret).\n// Example (bash): echo -n 'id:secret' | base64",
+                  "pm.variables.set('fatsecretBasic', pm.variables.get('fatsecretBasic') || 'BASE64_CLIENTID_COLON_SECRET');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.access_token) pm.collectionVariables.set('fatsecretToken', json.access_token);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "FatSecret - foods.search",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{fatsecretToken}}" }],
+            "url": {
+              "raw": "https://platform.fatsecret.com/rest/server.api?format=json&method=foods.search&search_expression={{query}}&max_results={{pageSize}}&page_number={{page}}",
+              "protocol": "https",
+              "host": ["platform", "fatsecret", "com"],
+              "path": ["rest", "server.api"],
+              "query": [
+                { "key": "format", "value": "json" },
+                { "key": "method", "value": "foods.search" },
+                { "key": "search_expression", "value": "{{query}}" },
+                { "key": "max_results", "value": "{{pageSize}}" },
+                { "key": "page_number", "value": "{{page}}" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

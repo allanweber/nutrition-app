@@ -1,4 +1,4 @@
-import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchResult } from './types';
+import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
 
 type FatSecretTokenResponse = {
   access_token: string;
@@ -190,16 +190,19 @@ export class FatSecretSource implements NutritionSource {
     return !!(process.env.FATSECRET_CLIENT_ID && process.env.FATSECRET_CLIENT_SECRET);
   }
 
-  async search(query: string): Promise<NutritionSourceSearchResult> {
+  async search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult> {
     if (!this.isConfigured()) {
       return { foods: [], source: this.name, cached: false };
     }
 
+    const page = options?.page ?? 0;
+    const pageSize = options?.pageSize ?? 25;
+
     const data = (await fatSecretApiCall({
       method: 'foods.search',
       search_expression: query,
-      max_results: '25',
-      page_number: '0',
+      max_results: String(pageSize),
+      page_number: String(page),
     })) as FatSecretFoodsSearchResponse;
 
     const list = data?.foods?.food;

@@ -2,13 +2,23 @@ import { useQuery } from '@tanstack/react-query'
 
 import type { SearchAggregatorResult } from '@/lib/nutrition-sources/types'
 
-const FOOD_SEARCH_QUERY_KEY = (query: string) => ['foods', 'search', query]
+const FOOD_SEARCH_QUERY_KEY = (query: string, page: number, pageSize: number) => [
+  'foods',
+  'search',
+  query,
+  page,
+  pageSize,
+]
 
-export function useFoodSearchQuery(searchQuery: string) {
+export function useFoodSearchQuery(searchQuery: string, page = 0, pageSize = 25) {
   return useQuery({
-    queryKey: FOOD_SEARCH_QUERY_KEY(searchQuery),
+    queryKey: FOOD_SEARCH_QUERY_KEY(searchQuery, page, pageSize),
     queryFn: async (): Promise<SearchAggregatorResult> => {
-      const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}`)
+      const response = await fetch(
+        `/api/foods/search?q=${encodeURIComponent(searchQuery)}&page=${encodeURIComponent(
+          String(page),
+        )}&pageSize=${encodeURIComponent(String(pageSize))}`,
+      )
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to search foods')
@@ -16,7 +26,7 @@ export function useFoodSearchQuery(searchQuery: string) {
       const data = await response.json()
       return data.results
     },
-    enabled: searchQuery.length >= 2,
+    enabled: searchQuery.trim().length >= 3,
   })
 }
 

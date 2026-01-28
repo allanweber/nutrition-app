@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import FoodSearch from '@/components/food-search';
 import FoodLogClient from '@/components/food-log-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,14 +14,64 @@ export default function FoodLogPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [barcode, setBarcode] = useState('');
+  const [searchPage, setSearchPage] = useState(0);
+  const [mergedSearchFoods, setMergedSearchFoods] = useState<NutritionSourceFood[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+
+  const pageSize = 25;
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   const logsQuery = useFoodLogsQuery(dateStr);
   const createMutation = useCreateFoodLogMutation();
   const deleteMutation = useDeleteFoodLogMutation();
-  const searchQueryHook = useFoodSearchQuery(searchQuery);
+  const searchQueryHook = useFoodSearchQuery(searchQuery, searchPage, pageSize);
   const barcodeQueryHook = useBarcodeQuery(barcode);
+
+  const normalizeKey = (food: NutritionSourceFood) =>
+    `${food.source}:${food.sourceId}:${(food.name ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')}:${(food.brandName ?? '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')}`;
+
+  useEffect(() => {
+    // Reset paging when query changes (or is cleared).
+    setSearchPage(0);
+    setMergedSearchFoods([]);
+    setHasMore(false);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const data = searchQueryHook.data;
+    if (!data) return;
+
+    setHasMore(Boolean(data.hasMore));
+
+    setMergedSearchFoods((prev) => {
+      if (searchPage === 0) return data.foods;
+
+      const seen = new Set(prev.map(normalizeKey));
+      const next = [...prev];
+      for (const food of data.foods) {
+        const key = normalizeKey(food);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        next.push(food);
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQueryHook.data, searchPage]);
+
+  const mergedSearchResults = useMemo(() => {
+    if (!searchQueryHook.data) return undefined;
+    return {
+      ...searchQueryHook.data,
+      foods: mergedSearchFoods,
+      hasMore,
+      page: searchPage,
+      pageSize,
+    };
+  }, [searchQueryHook.data, mergedSearchFoods, hasMore, searchPage]);
 
   const handleFoodAdded = async (food: NutritionSourceFood, quantity: string, mealType: string) => {
     await createMutation.mutateAsync({
@@ -56,13 +107,19 @@ export default function FoodLogPage() {
           </CardHeader>
            <CardContent>
              <FoodSearch
-               searchResults={searchQueryHook.data}
-               isSearching={searchQueryHook.isLoading}
+               searchResults={mergedSearchResults}
+               isSearching={searchQueryHook.isFetching && searchPage === 0}
+               isLoadingMore={searchQueryHook.isFetching && searchPage > 0}
                onSearch={setSearchQuery}
                barcodeResults={barcodeQueryHook.data}
                isBarcodeSearching={barcodeQueryHook.isLoading}
                onLookupUpc={setBarcode}
                onAddFood={handleFoodAdded}
+               onLoadMore={() => {
+                 if (!hasMore) return;
+                 if (searchQueryHook.isFetching) return;
+                 setSearchPage((p) => p + 1);
+               }}
              />
            </CardContent>
         </Card>

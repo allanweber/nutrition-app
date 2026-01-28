@@ -1,5 +1,11 @@
 import type { NutritionSourceFood } from './types';
 
+export type SearchCacheEntry = {
+  foods: NutritionSourceFood[];
+  /** Maximum number of merged/deduped results currently cached for this query. */
+  fetchedLimit: number;
+};
+
 export class LRUCache<K, V> {
   private cache = new Map<K, { value: V; expiresAt: number }>();
 
@@ -57,5 +63,8 @@ export class LRUCache<K, V> {
 }
 
 // Shared cache instance used by the aggregator.
-// Key format: `search:<query>` or `barcode:<upc>`
-export const searchCache = new LRUCache<string, NutritionSourceFood[]>(1000);
+// Key format: `search:<query>`
+export const searchCache = new LRUCache<string, SearchCacheEntry>(1000);
+
+// Key format: `barcode:<upc>`
+export const barcodeCache = new LRUCache<string, NutritionSourceFood[]>(1000);

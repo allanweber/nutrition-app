@@ -1,4 +1,4 @@
-import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchResult } from './types';
+import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
 
 const FOODS: NutritionSourceFood[] = [
   {
@@ -70,9 +70,15 @@ class MockSource implements NutritionSource {
     return true;
   }
 
-  async search(query: string): Promise<NutritionSourceSearchResult> {
+  async search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult> {
+    const page = options?.page ?? 0;
+    const pageSize = options?.pageSize ?? 25;
+
+    const all = searchFoods(query, this.name);
+    const start = page * pageSize;
+
     return {
-      foods: searchFoods(query, this.name),
+      foods: all.slice(start, start + pageSize),
       source: this.name,
       cached: false,
     };

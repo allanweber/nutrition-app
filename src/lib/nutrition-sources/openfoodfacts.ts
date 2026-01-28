@@ -1,4 +1,4 @@
-import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchResult } from './types';
+import type { NutritionSource, NutritionSourceFood, NutritionSourceSearchOptions, NutritionSourceSearchResult } from './types';
 
 type OFFProduct = {
   product_name?: string;
@@ -82,13 +82,17 @@ export class OpenFoodFactsSource implements NutritionSource {
     return true;
   }
 
-  async search(query: string): Promise<NutritionSourceSearchResult> {
+  async search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult> {
+    const page = options?.page ?? 0;
+    const pageSize = options?.pageSize ?? 25;
+
     const url = new URL('https://world.openfoodfacts.org/cgi/search.pl');
     url.searchParams.set('search_terms', query);
     url.searchParams.set('search_simple', '1');
     url.searchParams.set('action', 'process');
     url.searchParams.set('json', '1');
-    url.searchParams.set('page_size', '25');
+    url.searchParams.set('page_size', String(pageSize));
+    url.searchParams.set('page', String(page + 1));
 
     const response = await fetch(url.toString(), { cache: 'no-store' });
     if (!response.ok) {
