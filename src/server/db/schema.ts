@@ -86,7 +86,7 @@ export const professionalVerification = pgTable(
 
 // Foods table (consolidated - includes custom foods)
 // CHANGES:
-// - Removed: upc, metadata, photoUrl
+// - Removed: legacy fields, metadata, photoUrl
 // - Added: isRaw, isCustom, userId (for custom foods ownership)
 export const foods = pgTable(
   'foods',

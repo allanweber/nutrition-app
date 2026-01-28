@@ -17,11 +17,11 @@
 
 ## Requirement Clarity
 
-- [x] CHK006 Is it clear which credentials can be exposed client-side (USDA API key only)? [Clarity, Spec §FR-001]
+- [x] CHK006 Is it clear that credentials remain server-side only (USDA + FatSecret)? [Clarity]
 - [x] CHK007 Is it clear which credentials must remain server-side only (FatSecret OAuth)? [Clarity, Spec §Technical Notes]
-- [x] CHK008 Is the USDA client-side API key exposure justified (free, unlimited, per USDA terms)? [Clarity - Documented in plan]
+- [x] CHK008 Is the server-side handling of USDA keys documented? [Clarity]
 - [x] CHK009 Are input validation requirements defined for search queries? [Clarity]
-- [x] CHK010 Are input validation requirements defined for barcode formats? [Clarity]
+- [x] CHK010 Are input validation requirements defined for food_url (URL format + host allowlist)? [Clarity]
 
 ## Requirement Consistency
 
@@ -55,16 +55,16 @@
 
 ## API Credential Security
 
-- [x] CHK026 Is USDA API key acceptable for client-side exposure? [Security - Yes, free/public key per USDA terms]
+- [x] CHK026 Is USDA API key stored server-side only (not shipped to clients)? [Security]
 - [x] CHK027 Is FatSecret OAuth restricted to server-side only? [Security, Spec §Technical Notes]
-- [x] CHK028 Is OpenFoodFacts correctly identified as no-auth required? [Security, Spec §Technical Notes]
+- [x] CHK028 Is SSRF risk addressed for `food_url` image scraping (host allowlist + validation)? [Security]
 - [x] CHK029 Are API keys stored in environment variables (not hardcoded)? [Security]
 - [x] CHK030 Are server-side credentials excluded from client bundle? [Security]
 
 ## Data Validation
 
 - [x] CHK031 Is search query input validated/sanitized before external API calls? [Validation]
-- [x] CHK032 Is barcode input validated (numeric, length) before external API calls? [Validation]
+- [x] CHK032 Is food_url input validated (URL + allowlist) before scraping? [Validation]
 - [x] CHK033 Are external API responses validated before database insertion? [Validation, Spec §FR-015]
 - [x] CHK034 Are nutrition values validated as reasonable numbers (not negative, not extreme)? [Validation]
 
@@ -76,5 +76,5 @@
 
 ## Ambiguities & Conflicts
 
-- [x] CHK038 Is client-side USDA API key exposure a security concern? [Resolved - No, per USDA terms]
+- [x] CHK038 Is `food_url` image scraping constrained to trusted hosts? [Resolved - Yes]
 - [x] CHK039 Is rate limiting per-source or global? [Resolved - Per-source with graceful degradation]

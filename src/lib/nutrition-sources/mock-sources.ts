@@ -19,8 +19,8 @@ const FOODS: NutritionSourceFood[] = [
     isRaw: true,
   },
   {
-    sourceId: 'off_cheerios_1',
-    source: 'openfoodfacts',
+    sourceId: 'fs_cheerios_1',
+    source: 'fatsecret',
     name: 'Cheerios',
     brandName: 'General Mills',
     servingQty: 100,
@@ -33,7 +33,6 @@ const FOODS: NutritionSourceFood[] = [
     fiber: 10,
     sugar: 7,
     sodium: 700,
-    barcode: '0016000275123',
   },
   {
     sourceId: 'fs_chicken_1',
@@ -59,10 +58,6 @@ function searchFoods(query: string, source: NutritionSourceFood['source']): Nutr
   );
 }
 
-function getByBarcode(barcode: string): NutritionSourceFood | null {
-  return FOODS.find((f) => f.barcode === barcode) ?? null;
-}
-
 class MockSource implements NutritionSource {
   constructor(readonly name: NutritionSourceFood['source']) {}
 
@@ -83,20 +78,11 @@ class MockSource implements NutritionSource {
       cached: false,
     };
   }
-
-  async getByBarcode(barcode: string): Promise<NutritionSourceFood | null> {
-    return getByBarcode(barcode);
-  }
 }
 
 export function createMockSources(): NutritionSource[] {
   return [
-    new MockSource('usda'),
-    new MockSource('openfoodfacts'),
     new MockSource('fatsecret'),
+    new MockSource('usda'),
   ];
 }
-
-export const MOCK_BARCODES = {
-  cheerios: '0016000275123',
-};

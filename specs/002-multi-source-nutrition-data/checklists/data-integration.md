@@ -16,7 +16,7 @@
 
 ## Source Priority & Deduplication
 
-- [x] CHK006 Is source priority order clearly defined (USDA > OpenFoodFacts > FatSecret)? [Clarity, Spec §FR-013]
+- [x] CHK006 Is source priority order clearly defined (FatSecret > USDA; no other external sources)? [Clarity]
 - [x] CHK007 Is the deduplication algorithm defined (name + brand matching)? [Clarity, Spec §FR-012]
 - [x] CHK008 Is the merge strategy defined when same food found in multiple sources? [Clarity, Spec §FR-013]
 - [x] CHK009 Are tie-breaking rules defined for equal-priority matches? [Clarity]
@@ -31,18 +31,18 @@
 - [x] CHK015 Is database cache expiration defined (30 days suggested)? [Completeness, Spec §FR-024]
 - [x] CHK016 Is immediate database persistence on API retrieval defined? [Completeness, Spec §FR-019]
 
-## Parallel Execution
+## Execution Model
 
-- [x] CHK017 Is parallel API query execution defined? [Completeness, Spec §FR-009]
+- [x] CHK017 Is the fallback-only execution model defined (USDA queried only when FatSecret fails/empty)? [Completeness]
 - [x] CHK018 Is timeout handling per-source defined (3 seconds)? [Completeness, Spec §FR-011]
 - [x] CHK019 Is graceful degradation defined (show available results on partial failure)? [Completeness, Spec §FR-028]
-- [x] CHK020 Is result merging from parallel sources defined? [Completeness]
-- [x] CHK021 Is client-side + server-side result merging defined? [Completeness - In plan]
+- [x] CHK020 Is result merging/deduplication defined across DB + external fallback sources? [Completeness]
+- [x] CHK021 Is the details-on-selection persistence model defined (search vs details separation)? [Completeness]
 
 ## Database Schema
 
 - [x] CHK022 Is the foods table schema compatible with multi-source data? [Consistency]
-- [x] CHK023 Is the source field updated for new sources (usda, openfoodfacts, fatsecret)? [Consistency, Spec §Key Entities]
+- [x] CHK023 Is the source field updated for new sources (usda, fatsecret)? [Consistency]
 - [x] CHK024 Is the sourceId field used consistently across sources? [Consistency, Spec §FR-018]
 - [x] CHK025 Are indexes defined for common query patterns (sourceId, name search)? [Performance]
 
@@ -54,12 +54,12 @@
 - [x] CHK029 Are data validation rules defined for nutrition values? [Quality, Spec §FR-015]
 - [x] CHK030 Is handling of incomplete data defined (partial nutrition info)? [Quality, Spec §Edge Cases]
 
-## Barcode Integration
+## Image Integration
 
-- [x] CHK031 Is barcode lookup priority defined (DB → OpenFoodFacts → FatSecret)? [Completeness, Spec §FR-025, Spec §FR-026]
-- [x] CHK032 Is barcode format validation defined (UPC/EAN)? [Completeness]
-- [x] CHK033 Is barcode-to-food mapping stored in database? [Completeness]
-- [x] CHK034 Is barcode not-found handling defined? [Completeness, Spec §FR-027]
+- [x] CHK031 Is the image scraping flow defined (food_url → imageUrl)? [Completeness]
+- [x] CHK032 Is food_url input validation defined (URL + allowlist)? [Completeness]
+- [x] CHK033 Is the food image mapping stored in the database? [Completeness]
+- [x] CHK034 Is image not-found handling defined? [Completeness]
 
 ## Performance Requirements
 

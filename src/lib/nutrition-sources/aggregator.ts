@@ -1,8 +1,8 @@
 import { db } from '@/server/db';
-import { foodPhotos, foods } from '@/server/db/schema';
+import { foodAltMeasures, foodPhotos, foods } from '@/server/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
 
-import { barcodeCache, searchCache } from './cache';
+import { searchCache } from './cache';
 import type {
   NutritionSource,
   NutritionSourceFood,
@@ -10,15 +10,15 @@ import type {
   SearchAggregatorResult,
   SourceStatus,
 } from './types';
-import { fatSecretSource } from './fatsecret';
-import { openFoodFactsSource } from './openfoodfacts';
+import { fetchFatSecretFoodDetails, fatSecretSource } from './fatsecret';
+import { getFoodImageUrlForFoodUrl } from './food-image';
 import { usdaSource } from './usda';
 import { createMockSources } from './mock-sources';
 
 type SearchOptions = NutritionSourceSearchOptions;
 
 function normalizeDbSource(source: string): NutritionSourceFood['source'] {
-  if (source === 'usda' || source === 'openfoodfacts' || source === 'fatsecret') {
+  if (source === 'usda' || source === 'fatsecret') {
     return source;
   }
   return 'database';
@@ -119,15 +119,13 @@ function isDuplicateFood(a: NutritionSourceFood, b: NutritionSourceFood): boolea
 function priority(source: NutritionSourceFood['source']): number {
   // Lower = higher priority.
   switch (source) {
-    case 'usda':
-      return 1;
-    case 'openfoodfacts':
-      return 2;
     case 'fatsecret':
-      return 3;
+      return 1;
+    case 'usda':
+      return 2;
     case 'database':
     default:
-      return 4;
+      return 3;
   }
 }
 
@@ -174,8 +172,38 @@ async function searchDatabase(query: string): Promise<NutritionSourceFood[]> {
 }
 
 export async function persistFood(food: NutritionSourceFood): Promise<NutritionSourceFood> {
+  const usingMockSources = process.env.USE_MOCK_NUTRITION_SOURCES === 'true';
+
+  let foodToPersist = food;
+  let altMeasuresToInsert: Array<{ servingWeight: number; measure: string; qty: number; seq: number }> = [];
+  let imageUrlPromise: Promise<string | null> | null = null;
+
+  if (food.source === 'fatsecret' && !usingMockSources && fatSecretSource.isConfigured()) {
+    try {
+      const details = await fetchFatSecretFoodDetails(food.sourceId);
+
+      // Always prefer the details endpoint values on selection.
+      foodToPersist = {
+        ...food,
+        ...details.food,
+        source: 'fatsecret',
+        sourceId: food.sourceId,
+      };
+
+      altMeasuresToInsert = details.altMeasures;
+
+      const foodUrl = details.food.foodUrl ?? food.foodUrl;
+      if (foodUrl) {
+        imageUrlPromise = getFoodImageUrlForFoodUrl(foodUrl).catch(() => null);
+      }
+    } catch (error) {
+      // Graceful degradation: persist what we have.
+      console.error('Failed to enrich FatSecret food details:', error);
+    }
+  }
+
   const existingBySource = await db.query.foods.findFirst({
-    where: and(eq(foods.sourceId, food.sourceId), eq(foods.source, food.source)),
+    where: and(eq(foods.sourceId, foodToPersist.sourceId), eq(foods.source, foodToPersist.source)),
     with: { photo: true },
   });
 
@@ -210,8 +238,8 @@ export async function persistFood(food: NutritionSourceFood): Promise<NutritionS
 
   const existingByName = await db.query.foods.findFirst({
     where: and(
-      sql`lower(${foods.name}) = ${food.name.toLowerCase()}`,
-      sql`lower(coalesce(${foods.brandName}, '')) = ${(food.brandName ?? '').toLowerCase()}`,
+      sql`lower(${foods.name}) = ${foodToPersist.name.toLowerCase()}`,
+      sql`lower(coalesce(${foods.brandName}, '')) = ${(foodToPersist.brandName ?? '').toLowerCase()}`,
     ),
     with: { photo: true },
   });
@@ -249,27 +277,51 @@ export async function persistFood(food: NutritionSourceFood): Promise<NutritionS
   const [inserted] = await db
     .insert(foods)
     .values({
-      sourceId: food.sourceId,
-      source: food.source,
-      name: food.name,
-      brandName: food.brandName ?? null,
-      servingQty: String(food.servingQty),
-      servingUnit: food.servingUnit,
-      servingWeightGrams: food.servingWeightGrams ? String(food.servingWeightGrams) : null,
-      calories: String(food.calories),
-      protein: String(food.protein),
-      carbs: String(food.carbs),
-      fat: String(food.fat),
-      fiber: food.fiber !== undefined ? String(food.fiber) : null,
-      sugar: food.sugar !== undefined ? String(food.sugar) : null,
-      sodium: food.sodium !== undefined ? String(food.sodium) : null,
-      fullNutrients: food.fullNutrients ?? null,
-      isRaw: food.isRaw ?? false,
+      sourceId: foodToPersist.sourceId,
+      source: foodToPersist.source,
+      name: foodToPersist.name,
+      brandName: foodToPersist.brandName ?? null,
+      servingQty: String(foodToPersist.servingQty),
+      servingUnit: foodToPersist.servingUnit,
+      servingWeightGrams: foodToPersist.servingWeightGrams ? String(foodToPersist.servingWeightGrams) : null,
+      calories: String(foodToPersist.calories),
+      protein: String(foodToPersist.protein),
+      carbs: String(foodToPersist.carbs),
+      fat: String(foodToPersist.fat),
+      fiber: foodToPersist.fiber !== undefined ? String(foodToPersist.fiber) : null,
+      sugar: foodToPersist.sugar !== undefined ? String(foodToPersist.sugar) : null,
+      sodium: foodToPersist.sodium !== undefined ? String(foodToPersist.sodium) : null,
+      fullNutrients: foodToPersist.fullNutrients ?? null,
+      isRaw: foodToPersist.isRaw ?? false,
       isCustom: false,
     })
     .returning();
 
-  if (food.photo && (food.photo.thumb || food.photo.highres)) {
+  if (altMeasuresToInsert.length > 0) {
+    await db.insert(foodAltMeasures).values(
+      altMeasuresToInsert.map((m) => ({
+        foodId: inserted.id,
+        servingWeight: String(m.servingWeight),
+        measure: m.measure,
+        seq: m.seq,
+        qty: String(m.qty),
+      })),
+    );
+  }
+
+  let scrapedImageUrl: string | null = null;
+  if (imageUrlPromise) {
+    try {
+      scrapedImageUrl = await withTimeout(imageUrlPromise, 1500);
+    } catch {
+      scrapedImageUrl = null;
+    }
+  }
+
+  const desiredThumb = foodToPersist.photo?.thumb ?? scrapedImageUrl ?? null;
+  const desiredHighres = foodToPersist.photo?.highres ?? scrapedImageUrl ?? null;
+
+  if (desiredThumb || desiredHighres) {
     const existingPhoto = await db.query.foodPhotos.findFirst({
       where: eq(foodPhotos.foodId, inserted.id),
     });
@@ -277,15 +329,15 @@ export async function persistFood(food: NutritionSourceFood): Promise<NutritionS
     if (!existingPhoto) {
       await db.insert(foodPhotos).values({
         foodId: inserted.id,
-        thumb: food.photo.thumb ?? null,
-        highres: food.photo.highres ?? null,
+        thumb: desiredThumb,
+        highres: desiredHighres,
       });
     } else {
       await db
         .update(foodPhotos)
         .set({
-          thumb: existingPhoto.thumb ?? food.photo.thumb ?? null,
-          highres: existingPhoto.highres ?? food.photo.highres ?? null,
+          thumb: existingPhoto.thumb ?? desiredThumb,
+          highres: existingPhoto.highres ?? desiredHighres,
         })
         .where(eq(foodPhotos.foodId, inserted.id));
     }
@@ -293,8 +345,8 @@ export async function persistFood(food: NutritionSourceFood): Promise<NutritionS
 
   return {
     id: inserted.id,
-    ...food,
-    sourceId: inserted.sourceId ?? food.sourceId,
+    ...foodToPersist,
+    sourceId: inserted.sourceId ?? foodToPersist.sourceId,
   };
 }
 
@@ -334,7 +386,7 @@ function getSources(): NutritionSource[] {
     return createMockSources();
   }
 
-  return [usdaSource, openFoodFactsSource, fatSecretSource];
+  return [fatSecretSource, usdaSource];
 }
 
 export async function searchAllSources(query: string, options?: SearchOptions): Promise<SearchAggregatorResult> {
@@ -371,12 +423,23 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
 
   const adapters = getSources();
 
-  const tasks = adapters.map(async (adapter) => {
+  const fatSecretAdapter = adapters.find((a) => a.name === 'fatsecret');
+  const usdaAdapter = adapters.find((a) => a.name === 'usda');
+
+  const runAdapter = async (
+    adapter: NutritionSource | undefined,
+  ): Promise<{ foods: NutritionSourceFood[]; status: SourceStatus }> => {
+    if (!adapter) {
+      return {
+        foods: [],
+        status: { name: 'cache', status: 'skipped', count: 0, error: 'adapter missing' },
+      };
+    }
+
     if (!adapter.isConfigured()) {
       return {
-        adapter,
-        status: { name: adapter.name, status: 'skipped', count: 0, error: 'not configured' } as SourceStatus,
-        foods: [] as NutritionSourceFood[],
+        foods: [],
+        status: { name: adapter.name, status: 'skipped', count: 0, error: 'not configured' },
       };
     }
 
@@ -387,38 +450,42 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
         3000,
       );
       return {
-        adapter,
+        foods: result.foods,
         status: {
           name: adapter.name,
           status: 'success',
           count: result.foods.length,
           durationMs: Date.now() - start,
-        } as SourceStatus,
-        foods: result.foods,
+        },
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown error';
       return {
-        adapter,
+        foods: [],
         status: {
           name: adapter.name,
           status: message === 'timeout' ? 'timeout' : 'error',
           count: 0,
           error: message,
           durationMs: Date.now() - start,
-        } as SourceStatus,
-        foods: [] as NutritionSourceFood[],
+        },
       };
     }
-  });
+  };
 
-  const settled = await Promise.all(tasks);
+  const fatSecretResult = await runAdapter(fatSecretAdapter);
+  sources.push(fatSecretResult.status);
 
-  for (const item of settled) {
-    sources.push(item.status);
+  let externalFoods = fatSecretResult.foods;
+
+  if (fatSecretResult.status.status !== 'success' || fatSecretResult.foods.length === 0) {
+    const usdaResult = await runAdapter(usdaAdapter);
+    sources.push(usdaResult.status);
+    externalFoods = [...externalFoods, ...usdaResult.foods];
+  } else if (usdaAdapter) {
+    sources.push({ name: 'usda', status: 'skipped', count: 0, error: 'fatsecret had results' });
   }
 
-  const externalFoods = settled.flatMap((item) => item.foods);
   const combined = [...dbFoods, ...externalFoods];
 
   // Prefer higher-quality sources first.
@@ -449,86 +516,3 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
   };
 }
 
-export async function searchByBarcode(barcode: string): Promise<SearchAggregatorResult> {
-  const cacheKey = `barcode:${barcode}`;
-  const cached = barcodeCache.get(cacheKey);
-  if (cached && cached.length > 0) {
-    return {
-      foods: cached,
-      sources: [{ name: 'cache', status: 'success', count: cached.length }],
-      fromCache: true,
-    };
-  }
-
-  const sources: SourceStatus[] = [];
-
-  // DB first (best-effort: only works when sourceId is UPC)
-  const dbStart = Date.now();
-  const dbMatch = await db.query.foods.findFirst({
-    where: eq(foods.sourceId, barcode),
-    with: { photo: true },
-  });
-
-  if (dbMatch) {
-    const food: NutritionSourceFood = {
-      id: dbMatch.id,
-      sourceId: dbMatch.sourceId ?? String(dbMatch.id),
-      source: normalizeDbSource(dbMatch.source),
-      name: dbMatch.name,
-      brandName: dbMatch.brandName ?? null,
-      servingQty: asNumber(dbMatch.servingQty),
-      servingUnit: dbMatch.servingUnit ?? 'serving',
-      servingWeightGrams: dbMatch.servingWeightGrams ? asNumber(dbMatch.servingWeightGrams) : undefined,
-      calories: asNumber(dbMatch.calories),
-      protein: asNumber(dbMatch.protein),
-      carbs: asNumber(dbMatch.carbs),
-      fat: asNumber(dbMatch.fat),
-      fiber: dbMatch.fiber ? asNumber(dbMatch.fiber) : undefined,
-      sugar: dbMatch.sugar ? asNumber(dbMatch.sugar) : undefined,
-      sodium: dbMatch.sodium ? asNumber(dbMatch.sodium) : undefined,
-      photo: dbMatch.photo
-        ? { thumb: dbMatch.photo.thumb ?? undefined, highres: dbMatch.photo.highres ?? undefined }
-        : null,
-    };
-
-    sources.push({ name: 'database', status: 'success', count: 1, durationMs: Date.now() - dbStart });
-    barcodeCache.set(cacheKey, [food]);
-    return { foods: [food], sources, fromCache: false };
-  }
-
-  sources.push({ name: 'database', status: 'success', count: 0, durationMs: Date.now() - dbStart });
-
-  const adapters = getSources();
-
-  // Barcode priority: OpenFoodFacts first, then FatSecret.
-  const ordered = adapters.sort((a, b) => {
-    const p = (s: NutritionSource['name']) => (s === 'openfoodfacts' ? 1 : s === 'fatsecret' ? 2 : 3);
-    return p(a.name) - p(b.name);
-  });
-
-  for (const adapter of ordered) {
-    if (!adapter.getByBarcode) continue;
-    if (!adapter.isConfigured()) {
-      sources.push({ name: adapter.name, status: 'skipped', count: 0, error: 'not configured' });
-      continue;
-    }
-
-    const start = Date.now();
-    try {
-      const result = await withTimeout(withRetry(() => adapter.getByBarcode!(barcode), 1), 3000);
-      if (!result) {
-        sources.push({ name: adapter.name, status: 'success', count: 0, durationMs: Date.now() - start });
-        continue;
-      }
-
-      sources.push({ name: adapter.name, status: 'success', count: 1, durationMs: Date.now() - start });
-      barcodeCache.set(cacheKey, [result]);
-      return { foods: [result], sources, fromCache: false };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'unknown error';
-      sources.push({ name: adapter.name, status: message === 'timeout' ? 'timeout' : 'error', count: 0, error: message, durationMs: Date.now() - start });
-    }
-  }
-
-  return { foods: [], sources, fromCache: false };
-}

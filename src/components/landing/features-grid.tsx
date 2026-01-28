@@ -15,7 +15,7 @@ const features = [
     icon: Search,
     title: 'Smart Food Search',
     description:
-      'Search foods across multiple nutrition data sources and quickly look up products by barcode.',
+      'Search foods across multiple nutrition data sources and find what you need fast.',
     color: 'bg-primary',
   },
   {

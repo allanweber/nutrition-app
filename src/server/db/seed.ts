@@ -20,7 +20,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
 import * as schema from './schema';
-import { subDays, startOfDay, setHours } from 'date-fns';
+import { parseISO, subDays, startOfDay, setHours } from 'date-fns';
 
 const connectionString = process.env.DATABASE_URL;
 const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
@@ -438,6 +438,46 @@ function generateFoodLogs(
   }> = [];
 
   const today = startOfDay(new Date());
+  // The food log UI and API default date use `new Date().toISOString().split('T')[0]`.
+  // That date string is UTC-derived but then parsed as a local date in the API.
+  // To keep E2E stable across timezones (and avoid random skips), always seed
+  // deterministic logs for both the local "today" and the API-default day.
+  const apiDefaultDay = startOfDay(
+    parseISO(new Date().toISOString().split('T')[0]),
+  );
+
+  function addDeterministicLogsForDate(date: Date) {
+    const picks = [
+      {
+        mealType: 'breakfast' as const,
+        foodIndex: pattern.breakfast[0],
+        hour: 8,
+      },
+      {
+        mealType: 'lunch' as const,
+        foodIndex: pattern.lunch[0],
+        hour: 12,
+      },
+      {
+        mealType: 'dinner' as const,
+        foodIndex: pattern.dinner[0],
+        hour: 18,
+      },
+    ];
+
+    for (const pick of picks) {
+      const foodId = foodIds[pick.foodIndex];
+      if (!foodId) continue;
+      logs.push({
+        userId,
+        foodId,
+        quantity: '1',
+        servingUnit: null,
+        mealType: pick.mealType,
+        consumedAt: setHours(date, pick.hour),
+      });
+    }
+  }
 
   // Food indices reference:
   // 0: Apple, 1: Banana, 2: Chicken Breast, 3: Brown Rice, 4: Eggs
@@ -510,7 +550,7 @@ function generateFoodLogs(
     const date = subDays(today, dayOffset);
 
     // Skip some days randomly for realism (about 10% skip rate)
-    if (Math.random() < 0.1) continue;
+    if (dayOffset !== 0 && Math.random() < 0.1) continue;
 
     // Breakfast (7-9 AM)
     const breakfastHour = 7 + Math.floor(Math.random() * 2);
@@ -572,6 +612,12 @@ function generateFoodLogs(
         });
       }
     }
+  }
+
+  // Ensure E2E always has visible data for "Today".
+  addDeterministicLogsForDate(today);
+  if (apiDefaultDay.getTime() !== today.getTime()) {
+    addDeterministicLogsForDate(apiDefaultDay);
   }
 
   return logs;
@@ -676,7 +722,7 @@ async function seed() {
       // Update role if needed
       await db
         .update(schema.users)
-        .set({ role: userDef.role })
+        .set({ role: userDef.role, emailVerified: true })
         .where(eq(schema.users.id, userId));
 
       // Insert nutrition goal
@@ -726,7 +772,7 @@ async function seed() {
       // Update role to professional
       await db
         .update(schema.users)
-        .set({ role: userDef.role })
+        .set({ role: userDef.role, emailVerified: true })
         .where(eq(schema.users.id, userId));
 
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);

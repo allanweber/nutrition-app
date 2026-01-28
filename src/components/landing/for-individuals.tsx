@@ -22,7 +22,7 @@ const features = [
   {
     icon: Utensils,
     title: 'Log Effortlessly',
-    description: 'Search 1M+ foods, scan barcodes, or simply type "chicken salad for lunch".',
+    description: 'Search 1M+ foods or simply type "chicken salad for lunch".',
   },
   {
     icon: TrendingUp,

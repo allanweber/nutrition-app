@@ -12,16 +12,18 @@ type FatSecretFoodItem = {
   brand_name?: string;
   food_type?: string;
   food_description?: string;
+  food_url?: string;
 };
 
-type FatSecretFoodsSearchResponse = {
-  foods?: {
-    food?: FatSecretFoodItem | FatSecretFoodItem[];
+type FatSecretFoodsSearchV1Response = {
+  foods_search?: {
+    results?: {
+      food?: FatSecretFoodItem | FatSecretFoodItem[];
+      page_number?: string | number;
+      max_results?: string | number;
+      total_results?: string | number;
+    };
   };
-};
-
-type FatSecretBarcodeLookupResponse = {
-  food_id?: string | number;
 };
 
 type FatSecretServing = {
@@ -31,12 +33,15 @@ type FatSecretServing = {
   protein?: string | number;
   measurement_description?: string;
   metric_serving_amount?: string | number;
+  metric_serving_unit?: string;
+  number_of_units?: string | number;
 };
 
 type FatSecretFoodGetResponse = {
   food?: {
     food_name?: string;
     brand_name?: string;
+    food_url?: string;
     servings?: {
       serving?: FatSecretServing | FatSecretServing[];
     };
@@ -122,10 +127,10 @@ async function getAccessToken(): Promise<string> {
   }
 }
 
-async function fatSecretApiCall(params: Record<string, string>): Promise<unknown> {
+async function fatSecretRestGet(path: string, params: Record<string, string>): Promise<unknown> {
   const token = await getAccessToken();
 
-  const url = new URL('https://platform.fatsecret.com/rest/server.api');
+  const url = new URL(`https://platform.fatsecret.com/rest/${path}`);
   for (const [key, value] of Object.entries({ format: 'json', ...params })) {
     url.searchParams.set(key, value);
   }
@@ -138,7 +143,6 @@ async function fatSecretApiCall(params: Record<string, string>): Promise<unknown
   });
 
   if (response.status === 401) {
-    // Refresh token once.
     tokenCache = null;
     const retryToken = await getAccessToken();
     const retryResponse = await fetch(url.toString(), {
@@ -173,6 +177,7 @@ function toFood(item: FatSecretFoodItem): NutritionSourceFood | null {
     source: 'fatsecret',
     name,
     brandName: typeof brand === 'string' ? brand : null,
+    foodUrl: item?.food_url,
     servingQty: 100,
     servingUnit: 'g',
     servingWeightGrams: 100,
@@ -181,6 +186,98 @@ function toFood(item: FatSecretFoodItem): NutritionSourceFood | null {
     carbs: parsed.carbs ?? 0,
     fat: parsed.fat ?? 0,
   };
+}
+
+export type FatSecretAltMeasure = {
+  servingWeight: number;
+  measure: string;
+  qty: number;
+  seq: number;
+};
+
+function asServingArray(serving: FatSecretServing | FatSecretServing[] | undefined): FatSecretServing[] {
+  if (!serving) return [];
+  return Array.isArray(serving) ? serving : [serving];
+}
+
+function servingWeightGrams(serving: FatSecretServing): number | undefined {
+  const amount = num(serving.metric_serving_amount);
+  if (amount === undefined) return undefined;
+
+  const unit = (serving.metric_serving_unit ?? 'g').toLowerCase();
+  if (unit === 'g') return amount;
+  // FatSecret docs generally use grams; if not, we can't safely convert.
+  return amount;
+}
+
+function looksLike100gServing(serving: FatSecretServing): boolean {
+  const grams = servingWeightGrams(serving);
+  if (!grams) return false;
+  if (Math.abs(grams - 100) > 0.001) return false;
+  const unit = (serving.metric_serving_unit ?? 'g').toLowerCase();
+  const measure = (serving.measurement_description ?? '').toLowerCase();
+  return unit === 'g' || measure === 'g' || measure.includes('gram');
+}
+
+export async function fetchFatSecretFoodDetails(foodId: string): Promise<{
+  food: NutritionSourceFood;
+  altMeasures: FatSecretAltMeasure[];
+}> {
+  const data = (await fatSecretRestGet('food/v5', {
+    food_id: foodId,
+  })) as FatSecretFoodGetResponse;
+
+  const item = data.food;
+  const name = item?.food_name;
+  if (!name) {
+    throw new Error('FatSecret details missing food_name');
+  }
+
+  const servings = asServingArray(item?.servings?.serving);
+  const chosen = servings.find(looksLike100gServing) ?? servings[0];
+  if (!chosen) {
+    throw new Error('FatSecret details missing servings');
+  }
+
+  const chosenGrams = servingWeightGrams(chosen);
+  const servingUnit = chosen.measurement_description ?? 'serving';
+
+  const calories = num(chosen.calories) ?? 0;
+  const fat = num(chosen.fat) ?? 0;
+  const carbs = num(chosen.carbohydrate) ?? 0;
+  const protein = num(chosen.protein) ?? 0;
+
+  const food: NutritionSourceFood = {
+    sourceId: foodId,
+    source: 'fatsecret',
+    name,
+    brandName: item?.brand_name ?? null,
+    foodUrl: item?.food_url,
+    servingQty: looksLike100gServing(chosen) ? 100 : num(chosen.number_of_units) ?? 1,
+    servingUnit: looksLike100gServing(chosen) ? 'g' : servingUnit,
+    servingWeightGrams: looksLike100gServing(chosen) ? 100 : chosenGrams,
+    calories,
+    protein,
+    carbs,
+    fat,
+  };
+
+  const altMeasures: FatSecretAltMeasure[] = [];
+  let seq = 1;
+  for (const s of servings) {
+    if (s === chosen) continue;
+    const grams = servingWeightGrams(s);
+    if (!grams || grams <= 0) continue;
+    altMeasures.push({
+      servingWeight: grams,
+      measure: s.measurement_description ?? 'serving',
+      qty: num(s.number_of_units) ?? 1,
+      seq,
+    });
+    seq += 1;
+  }
+
+  return { food, altMeasures };
 }
 
 export class FatSecretSource implements NutritionSource {
@@ -198,14 +295,13 @@ export class FatSecretSource implements NutritionSource {
     const page = options?.page ?? 0;
     const pageSize = options?.pageSize ?? 25;
 
-    const data = (await fatSecretApiCall({
-      method: 'foods.search',
+    const data = (await fatSecretRestGet('foods/search/v1', {
       search_expression: query,
       max_results: String(pageSize),
       page_number: String(page),
-    })) as FatSecretFoodsSearchResponse;
+    })) as FatSecretFoodsSearchV1Response;
 
-    const list = data?.foods?.food;
+    const list = data?.foods_search?.results?.food;
     const items: FatSecretFoodItem[] = Array.isArray(list) ? list : list ? [list] : [];
 
     const foods = items
@@ -213,54 +309,6 @@ export class FatSecretSource implements NutritionSource {
       .filter((f): f is NutritionSourceFood => Boolean(f));
 
     return { foods, source: this.name, cached: false };
-  }
-
-  async getByBarcode(barcode: string): Promise<NutritionSourceFood | null> {
-    if (!this.isConfigured()) return null;
-
-    const lookup = (await fatSecretApiCall({
-      method: 'food.find_id_for_barcode',
-      barcode,
-    })) as FatSecretBarcodeLookupResponse;
-
-    const foodId = lookup?.food_id ? String(lookup.food_id) : undefined;
-    if (!foodId) return null;
-
-    const foodData = (await fatSecretApiCall({
-      method: 'food.get',
-      food_id: foodId,
-    })) as FatSecretFoodGetResponse;
-
-    const item = foodData.food;
-
-    const name = item?.food_name;
-    if (!name) return null;
-
-    // Prefer parsed macros if available, else fall back to zeros.
-    const serving = item?.servings?.serving;
-    const servingObj: FatSecretServing | undefined = Array.isArray(serving)
-      ? serving[0]
-      : serving;
-
-    const calories = num(servingObj?.calories) ?? 0;
-    const fat = num(servingObj?.fat) ?? 0;
-    const carbs = num(servingObj?.carbohydrate) ?? 0;
-    const protein = num(servingObj?.protein) ?? 0;
-
-    return {
-      sourceId: foodId,
-      source: 'fatsecret',
-      name,
-      brandName: item?.brand_name ?? null,
-      servingQty: 1,
-      servingUnit: servingObj?.measurement_description ?? 'serving',
-      servingWeightGrams: num(servingObj?.metric_serving_amount),
-      calories,
-      protein,
-      carbs,
-      fat,
-      barcode,
-    };
   }
 }
 

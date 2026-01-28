@@ -21,29 +21,22 @@ import type {
 
 interface FoodSearchProps {
   searchResults?: SearchAggregatorResult;
-  barcodeResults?: SearchAggregatorResult;
   isSearching?: boolean;
   isLoadingMore?: boolean;
-  isBarcodeSearching?: boolean;
   onSearch: (query: string) => void;
-  onLookupUpc: (upc: string) => void;
   onAddFood: (food: NutritionSourceFood, quantity: string, mealType: string) => void;
   onLoadMore?: () => void;
 }
 
 export default function FoodSearch({
   searchResults,
-  barcodeResults,
   isSearching = false,
   isLoadingMore = false,
-  isBarcodeSearching = false,
   onSearch,
-  onLookupUpc,
   onAddFood,
   onLoadMore,
 }: FoodSearchProps) {
   const [query, setQuery] = useState('');
-  const [upc, setUpc] = useState('');
   const [selectedFood, setSelectedFood] = useState<NutritionSourceFood | null>(null);
   const [quantity, setQuantity] = useState('1');
   const [mealType, setMealType] = useState<string>('breakfast');
@@ -55,8 +48,7 @@ export default function FoodSearch({
   const debouncedQueryKey = query.trim();
 
   const foods = searchResults?.foods ?? [];
-  const barcodeFoods = barcodeResults?.foods ?? [];
-  const hasResults = foods.length > 0 || barcodeFoods.length > 0;
+  const hasResults = foods.length > 0;
   const hasMore = Boolean(searchResults?.hasMore);
 
   const hasPhoto = (food: NutritionSourceFood) => Boolean(food.photo?.thumb || food.photo?.highres);
@@ -147,35 +139,6 @@ export default function FoodSearch({
 
   return (
     <div className="space-y-4">
-      {/* UPC Lookup */}
-      <div className="flex gap-2">
-        <Input
-          placeholder="Enter UPC/barcode"
-          value={upc}
-          onChange={(e) => setUpc(e.target.value)}
-          data-testid="upc-input"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            setError(null);
-            onLookupUpc(upc);
-          }}
-          disabled={isBarcodeSearching || upc.trim().length < 6}
-          data-testid="upc-lookup-button"
-        >
-          {isBarcodeSearching ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Looking up...
-            </>
-          ) : (
-            'Lookup by UPC'
-          )}
-        </Button>
-      </div>
-
       {/* Name Search */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -306,41 +269,6 @@ export default function FoodSearch({
       {/* Results (only when no food selected) */}
       {!selectedFood && hasResults && (
         <div className="space-y-4" data-testid="search-results">
-          {barcodeFoods.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-foreground mb-2">Barcode Result</h3>
-              <div className="space-y-2">
-                {barcodeFoods.slice(0, 3).map((food, index) => (
-                  <Card
-                    key={`barcode-${food.source}-${food.sourceId}`}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => selectFood(food)}
-                    data-testid={`barcode-result-${index}`}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center space-x-3">
-                        {food.photo?.thumb && (
-                          <img
-                            src={food.photo.thumb}
-                            alt={food.name}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <div className="font-medium">{food.name}</div>
-                          {food.brandName && (
-                            <div className="text-sm text-muted-foreground">{food.brandName}</div>
-                          )}
-                        </div>
-                        <Plus className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
           {foods.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">

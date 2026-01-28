@@ -1,7 +1,7 @@
 import { DashboardNav } from '@/components/dashboard-nav';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
-import { emailVerificationChallenges } from '@/server/db/schema';
+import { users } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
@@ -20,12 +20,17 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // New-signup gating only: users are gated iff an email_verification_challenge exists.
-  const challenge = await db.query.emailVerificationChallenges.findFirst({
-    where: eq(emailVerificationChallenges.userId, user.id),
+  // Gate dashboard access until email verification is complete.
+  // Note: BetterAuth's cookieCache can temporarily serve stale session claims, so we read
+  // the source-of-truth from the database.
+  const userRecord = await db.query.users.findFirst({
+    where: eq(users.id, user.id),
+    columns: {
+      emailVerified: true,
+    },
   });
 
-  if (challenge) {
+  if (!userRecord?.emailVerified) {
     redirect('/verify-email');
   }
 

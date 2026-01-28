@@ -14,7 +14,6 @@ type USDAFoodSearchItem = {
   servingSizeUnit?: string;
   foodNutrients?: USDAFoodNutrient[];
   dataType?: string;
-  gtinUpc?: string;
 };
 
 type USDAFoodSearchResponse = {
@@ -119,7 +118,6 @@ export class USDAFoodDataCentralSource implements NutritionSource {
         fiber,
         sugar,
         sodium,
-        barcode: item.gtinUpc || undefined,
         isRaw: (item.dataType ?? '').toLowerCase().includes('foundation'),
       };
     });

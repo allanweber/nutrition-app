@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import type { SearchAggregatorResult } from '@/lib/nutrition-sources/types'
 
@@ -30,22 +30,39 @@ export function useFoodSearchQuery(searchQuery: string, page = 0, pageSize = 25)
   })
 }
 
-const BARCODE_QUERY_KEY = (upc: string) => ['foods', 'barcode', upc]
+const INFINITE_FOOD_SEARCH_QUERY_KEY = (query: string, pageSize: number) => [
+  'foods',
+  'search',
+  'infinite',
+  query,
+  pageSize,
+]
 
-export function useBarcodeQuery(upc: string) {
-  return useQuery({
-    queryKey: BARCODE_QUERY_KEY(upc),
-    queryFn: async (): Promise<SearchAggregatorResult> => {
-      const response = await fetch(`/api/foods/upc?upc=${encodeURIComponent(upc)}`)
+export function useInfiniteFoodSearchQuery(searchQuery: string, pageSize = 25) {
+  return useInfiniteQuery({
+    queryKey: INFINITE_FOOD_SEARCH_QUERY_KEY(searchQuery, pageSize),
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }): Promise<SearchAggregatorResult> => {
+      const page = typeof pageParam === 'number' ? pageParam : Number(pageParam)
+
+      const response = await fetch(
+        `/api/foods/search?q=${encodeURIComponent(searchQuery)}&page=${encodeURIComponent(
+          String(page),
+        )}&pageSize=${encodeURIComponent(String(pageSize))}`,
+      )
+
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to lookup barcode')
+        throw new Error(data.error || 'Failed to search foods')
       }
 
       return data.results
     },
-    enabled: upc.length >= 6,
-    retry: 0,
+    enabled: searchQuery.trim().length >= 3,
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.page ?? 0
+      return lastPage.hasMore ? currentPage + 1 : undefined
+    },
   })
 }

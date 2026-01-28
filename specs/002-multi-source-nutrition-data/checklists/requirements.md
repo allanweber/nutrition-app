@@ -33,6 +33,6 @@
 
 - Spec is ready for implementation. Key decisions documented:
   - Zestful, Edamam, Spoonacular discarded from scope
-  - USDA client-side execution for per-IP rate limits
-  - Source priority: USDA > OpenFoodFacts > FatSecret
+  - FatSecret-first search
+  - USDA fallback-only
   - $0 budget constraint (free APIs only)

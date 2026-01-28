@@ -31,9 +31,35 @@ export class FoodLogPage {
   }
 
   async searchFood(query: string) {
+    const trimmed = query.trim();
+    const shouldWaitForSearch = trimmed.length >= 3;
+
+    const searchResponsePromise = shouldWaitForSearch
+      ? this.page
+          .waitForResponse(
+            (response) => {
+              try {
+                const url = new URL(response.url());
+                return (
+                  url.pathname.endsWith('/api/foods/search') &&
+                  (url.searchParams.get('q') ?? '').toLowerCase() === trimmed.toLowerCase()
+                );
+              } catch {
+                return false;
+              }
+            },
+            { timeout: 15000 },
+          )
+          .catch(() => null)
+      : Promise.resolve(null);
+
     await this.searchInput.fill(query);
     // Wait for debounced search to trigger (300ms delay)
-    await this.page.waitForTimeout(400);
+    await this.page.waitForTimeout(450);
+    await searchResponsePromise;
+
+    // Give the UI a moment to render results/empty state after the response.
+    await this.page.waitForTimeout(150);
   }
 
   async selectFirstResult() {

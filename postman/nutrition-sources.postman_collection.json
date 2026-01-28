@@ -11,7 +11,8 @@
     { "key": "query", "value": "apple" },
     { "key": "page", "value": "0" },
     { "key": "pageSize", "value": "25" },
-    { "key": "upc", "value": "0016000275123" },
+    { "key": "foodUrl", "value": "https://www.fatsecret.com/calories-nutrition/" },
+    { "key": "fatsecretFoodId", "value": "0" },
     { "key": "usdaApiKey", "value": "YOUR_USDA_API_KEY" },
     { "key": "fatsecretClientId", "value": "YOUR_FATSECRET_CLIENT_ID" },
     { "key": "fatsecretClientSecret", "value": "YOUR_FATSECRET_CLIENT_SECRET" },
@@ -41,16 +42,16 @@
           "response": []
         },
         {
-          "name": "Foods UPC Lookup",
+          "name": "Foods Image (by food_url)",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseProtocol}}://{{baseHost}}:{{basePort}}/api/foods/upc?upc={{upc}}",
+              "raw": "{{baseProtocol}}://{{baseHost}}:{{basePort}}/api/foods/image?food_url={{foodUrl}}",
               "protocol": "{{baseProtocol}}",
               "host": ["{{baseHost}}"],
               "port": "{{basePort}}",
-              "path": ["api", "foods", "upc"],
-              "query": [{ "key": "upc", "value": "{{upc}}" }]
+              "path": ["api", "foods", "image"],
+              "query": [{ "key": "food_url", "value": "{{foodUrl}}" }]
             }
           },
           "response": []
@@ -95,40 +96,6 @@
                 { "key": "pageNumber", "value": "1" },
                 { "key": "dataType", "value": "Foundation,SR Legacy,Branded" }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "OpenFoodFacts - Search",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "https://world.openfoodfacts.org/cgi/search.pl?search_terms={{query}}&search_simple=1&action=process&json=1&page_size={{pageSize}}&page=1",
-              "protocol": "https",
-              "host": ["world", "openfoodfacts", "org"],
-              "path": ["cgi", "search.pl"],
-              "query": [
-                { "key": "search_terms", "value": "{{query}}" },
-                { "key": "search_simple", "value": "1" },
-                { "key": "action", "value": "process" },
-                { "key": "json", "value": "1" },
-                { "key": "page_size", "value": "{{pageSize}}" },
-                { "key": "page", "value": "1" }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "OpenFoodFacts - Product by Barcode",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "https://world.openfoodfacts.org/api/v0/product/{{upc}}.json",
-              "protocol": "https",
-              "host": ["world", "openfoodfacts", "org"],
-              "path": ["api", "v0", "product", "{{upc}}.json"]
             }
           },
           "response": []
@@ -190,21 +157,38 @@
           "response": []
         },
         {
-          "name": "FatSecret - foods.search",
+          "name": "FatSecret REST - foods search v1",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{fatsecretToken}}" }],
             "url": {
-              "raw": "https://platform.fatsecret.com/rest/server.api?format=json&method=foods.search&search_expression={{query}}&max_results={{pageSize}}&page_number={{page}}",
+              "raw": "https://platform.fatsecret.com/rest/foods/search/v1?format=json&search_expression={{query}}&max_results={{pageSize}}&page_number={{page}}",
               "protocol": "https",
               "host": ["platform", "fatsecret", "com"],
-              "path": ["rest", "server.api"],
+              "path": ["rest", "foods", "search", "v1"],
               "query": [
                 { "key": "format", "value": "json" },
-                { "key": "method", "value": "foods.search" },
                 { "key": "search_expression", "value": "{{query}}" },
                 { "key": "max_results", "value": "{{pageSize}}" },
                 { "key": "page_number", "value": "{{page}}" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FatSecret REST - food v5 (details)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{fatsecretToken}}" }],
+            "url": {
+              "raw": "https://platform.fatsecret.com/rest/food/v5?format=json&food_id={{fatsecretFoodId}}",
+              "protocol": "https",
+              "host": ["platform", "fatsecret", "com"],
+              "path": ["rest", "food", "v5"],
+              "query": [
+                { "key": "format", "value": "json" },
+                { "key": "food_id", "value": "{{fatsecretFoodId}}" }
               ]
             }
           },

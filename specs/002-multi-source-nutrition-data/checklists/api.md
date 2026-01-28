@@ -8,25 +8,25 @@
 
 ## Requirement Completeness
 
-- [x] CHK001 Are all API endpoints implied by the requirements explicitly enumerated (search, barcode lookup, nutrients)? [Completeness, Spec §FR-006]
+- [x] CHK001 Are all API endpoints implied by the requirements explicitly enumerated (search, image, logs)? [Completeness]
 - [x] CHK002 Are authentication requirements specified per endpoint (search is authenticated, requires user session)? [Completeness]
-- [x] CHK003 Are input payloads specified for each endpoint (query string, barcode format)? [Completeness]
+- [x] CHK003 Are input payloads specified for each endpoint (query string, pagination, food_url)? [Completeness]
 - [x] CHK004 Are response shapes specified for both success and error paths? [Completeness, Spec §FR-028]
 - [x] CHK005 Are timeout behaviors specified (3-second hard timeout)? [Completeness, Spec §FR-011]
 - [x] CHK006 Are rate-limit handling requirements specified for external APIs? [Completeness, Spec §FR-030]
 
 ## Requirement Clarity
 
-- [x] CHK007 Is the search hierarchy clearly defined (cache → DB → APIs in parallel)? [Clarity, Spec §FR-006]
-- [x] CHK008 Is the source priority order explicitly defined (USDA > OpenFoodFacts > FatSecret)? [Clarity, Spec §FR-013]
+- [x] CHK007 Is the search hierarchy clearly defined (cache → DB → FatSecret → USDA fallback)? [Clarity]
+- [x] CHK008 Is the source priority order explicitly defined (FatSecret > USDA; no other external sources)? [Clarity]
 - [x] CHK009 Is the deduplication strategy defined (name + brand matching)? [Clarity, Spec §FR-012]
 - [x] CHK010 Is the response format normalized across all sources? [Clarity, Spec §FR-015]
 - [x] CHK011 Is the caching behavior for search results defined (save immediately on retrieval)? [Clarity, Spec §FR-019]
 
 ## Requirement Consistency
 
-- [x] CHK012 Does client-side USDA execution align with the tiered search hierarchy? [Consistency, Spec §FR-001, Spec §FR-006]
-- [x] CHK013 Are barcode lookup sources consistent with text search sources? [Consistency, Spec §FR-025, Spec §FR-026]
+- [x] CHK012 Is USDA clearly described as server-side fallback-only? [Consistency]
+- [x] CHK013 Is fallback behavior consistent with the source model (FatSecret primary, USDA fallback-only)? [Consistency]
 - [x] CHK014 Is the FoodSource enum consistent across types and database schema? [Consistency]
 - [x] CHK015 Are error responses consistent across all endpoints? [Consistency, Spec §FR-028]
 
@@ -40,7 +40,7 @@
 
 - [x] CHK019 Are requirements defined for partial source failures (one source fails, others succeed)? [Coverage, Spec §FR-028]
 - [x] CHK020 Are requirements defined for all sources failing (show cached data only)? [Coverage, Spec §User Story 6]
-- [x] CHK021 Are requirements defined for barcode not found in any source? [Coverage, Spec §FR-027]
+- [x] CHK021 Are requirements defined for "no results" scenarios? [Coverage]
 
 ## Edge Case Coverage
 
@@ -57,11 +57,11 @@
 
 ## Dependencies & Assumptions
 
-- [x] CHK029 Are external API dependencies documented (USDA, OpenFoodFacts, FatSecret)? [Dependencies, Spec §Data Source Summary]
+- [x] CHK029 Are external API dependencies documented (FatSecret primary, USDA fallback)? [Dependencies]
 - [x] CHK030 Are API key requirements documented per source? [Dependencies, Spec §Technical Notes]
 - [x] CHK031 Are rate limit assumptions documented per source? [Assumptions, Spec §Data Source Summary]
 
 ## Ambiguities & Conflicts
 
 - [x] CHK032 Is client-side vs server-side execution clearly specified per source? [Ambiguity - Resolved in clarifications]
-- [x] CHK033 Is it clear how client-side USDA results merge with server-side results? [Ambiguity - Addressed in plan]
+- [x] CHK033 Is it clear how fallback behavior works when FatSecret fails/returns empty? [Ambiguity - Resolved]

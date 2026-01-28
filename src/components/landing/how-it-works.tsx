@@ -30,7 +30,7 @@ const individualSteps = [
     icon: UtensilsCrossed,
     title: 'Track Daily',
     description:
-      'Log meals with our smart search. Scan barcodes or use natural language input.',
+      'Log meals with our smart search or use natural language input.',
   },
   {
     icon: TrendingUp,

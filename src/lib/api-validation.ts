@@ -49,13 +49,17 @@ export const createFoodLogSchema = z.object({
     .object({
       id: z.number().int().positive().optional(),
       sourceId: z.string().min(1).max(128).transform(sanitizeString),
-      source: z.enum(['usda', 'openfoodfacts', 'fatsecret', 'database']),
+      source: z.enum(['usda', 'fatsecret', 'database']),
       name: z.string().min(1).max(200).transform(sanitizeString),
       brandName: z
         .string()
         .nullable()
         .optional()
         .transform((val) => (val ? sanitizeString(val) : undefined)),
+      foodUrl: z
+        .string()
+        .url()
+        .optional(),
       servingQty: z.number().finite().nonnegative(),
       servingUnit: z.string().min(1).max(50).transform(sanitizeString),
       servingWeightGrams: z.number().finite().nonnegative().optional(),
@@ -66,11 +70,6 @@ export const createFoodLogSchema = z.object({
       fiber: z.number().finite().nonnegative().optional(),
       sugar: z.number().finite().nonnegative().optional(),
       sodium: z.number().finite().nonnegative().optional(),
-      barcode: z
-        .string()
-        .nullable()
-        .optional()
-        .transform((val) => (val ? sanitizeString(val) : undefined)),
       isRaw: z.boolean().optional(),
       fullNutrients: z
         .array(z.object({ attr_id: z.number().int(), value: z.number().finite() }))

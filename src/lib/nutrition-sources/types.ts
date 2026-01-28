@@ -1,4 +1,4 @@
-export type NutritionSourceName = 'usda' | 'openfoodfacts' | 'fatsecret' | 'database';
+export type NutritionSourceName = 'usda' | 'fatsecret' | 'database';
 
 export interface NutritionSourceFood {
   /** Local database id when the food has been persisted */
@@ -7,6 +7,8 @@ export interface NutritionSourceFood {
   source: NutritionSourceName;
   name: string;
   brandName?: string | null;
+  /** FatSecret provides a canonical URL that can be used for image scraping. */
+  foodUrl?: string;
   /** True for user-created/custom foods stored in the database. */
   isCustom?: boolean;
   servingQty: number;
@@ -20,7 +22,6 @@ export interface NutritionSourceFood {
   sugar?: number;
   sodium?: number;
   photo?: { thumb?: string; highres?: string } | null;
-  barcode?: string;
   isRaw?: boolean;
   fullNutrients?: Array<{ attr_id: number; value: number }>;
 }
@@ -39,7 +40,6 @@ export interface NutritionSourceSearchOptions {
 export interface NutritionSource {
   readonly name: NutritionSourceName;
   search(query: string, options?: NutritionSourceSearchOptions): Promise<NutritionSourceSearchResult>;
-  getByBarcode?(barcode: string): Promise<NutritionSourceFood | null>;
   isConfigured(): boolean;
 }
 

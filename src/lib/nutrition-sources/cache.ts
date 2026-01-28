@@ -65,6 +65,3 @@ export class LRUCache<K, V> {
 // Shared cache instance used by the aggregator.
 // Key format: `search:<query>`
 export const searchCache = new LRUCache<string, SearchCacheEntry>(1000);
-
-// Key format: `barcode:<upc>`
-export const barcodeCache = new LRUCache<string, NutritionSourceFood[]>(1000);

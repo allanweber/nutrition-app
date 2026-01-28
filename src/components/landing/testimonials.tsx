@@ -25,7 +25,7 @@ const testimonials = [
     role: 'Fitness Enthusiast',
     type: 'individual',
     image: null,
-    content: "The barcode scanner is a game-changer. What used to take me 5 minutes now takes 5 seconds. I've been able to stay consistent with my macros for the first time ever.",
+    content: "The food search is a game-changer. What used to take me 5 minutes now takes 5 seconds. I've been able to stay consistent with my macros for the first time ever.",
     rating: 5,
   },
   {

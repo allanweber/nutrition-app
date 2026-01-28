@@ -34,22 +34,11 @@ test.describe('Phase 2: Food Logging', () => {
       // Search for a common food
       await foodLogPage.searchFood('apple');
 
-      // Wait for search to complete (either results appear or no results message)
-      await Promise.race([
-        foodLogPage.searchResults.isVisible(),
-        page.getByText('No foods found').isVisible(),
-        // Also check for loading spinner to disappear
-        page.getByText('Searching...').isHidden(),
-      ]);
-
-      // Wait a bit for UI to settle
-      await page.waitForTimeout(300);
-
       // Check if search results are displayed
       const hasResults = await foodLogPage.searchResults
         .isVisible()
         .catch(() => false);
-      const noResultsMessage = page.getByText('No foods found');
+      const noResultsMessage = page.getByText(/No foods found/i);
       const hasNoResults = await noResultsMessage
         .isVisible()
         .catch(() => false);
@@ -293,37 +282,6 @@ test.describe('Phase 2: Food Logging', () => {
       // Food count should increase
       const newCount = await foodLogPage.getFoodLogCount();
       expect(newCount).toBeGreaterThan(initialCount);
-    });
-
-    test('user can lookup barcode and add food to log (mock mode)', async ({ page }) => {
-      await loginAsFreshUser(page);
-
-      const foodLogPage = new FoodLogPage(page);
-      await foodLogPage.goto();
-
-      const logsLocator = page.locator('[data-testid^="food-log-"]');
-      const initialCount = await foodLogPage.getFoodLogCount();
-
-      // Mock barcode from src/lib/nutrition-sources/mock-sources.ts
-      await page.getByTestId('upc-input').fill('0016000275123');
-      await page.getByTestId('upc-lookup-button').click();
-
-      const barcodeResult = page.getByTestId('barcode-result-0');
-      await expect(barcodeResult).toBeVisible({ timeout: 10000 });
-      await barcodeResult.click();
-
-      await expect(foodLogPage.quantityInput).toBeVisible();
-      await foodLogPage.quantityInput.fill('1');
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /breakfast/i }).click();
-
-      await foodLogPage.addFoodButton.click();
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({
-        timeout: 10000,
-      });
-
-      // Wait for the log list to update. This also makes the test safe under retries.
-      await expect(logsLocator).toHaveCount(initialCount + 1, { timeout: 10000 });
     });
 
     test('user can delete food from log', async ({ page }) => {

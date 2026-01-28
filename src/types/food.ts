@@ -2,7 +2,6 @@
 
 export type FoodSource =
   | 'usda'
-  | 'openfoodfacts'
   | 'fatsecret'
   | 'user_custom'
   | 'database';

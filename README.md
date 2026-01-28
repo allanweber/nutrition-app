@@ -142,10 +142,7 @@ Tests use the seeded accounts listed above for predictable test data.
 ## Databases and apis that contain nutrition information
 
 USDA FoodData Central - Free government database and api for nutrition information on a variety of branded and basic foods.
-OpenFoodFacts - Free crowdsourced database of food products.
-FatSecret - Nutrition database and API.
-
-Edamam - Nutrition database and API.
+FatSecret - Nutrition database and API (primary source).
 
 ## Speckit flow
 

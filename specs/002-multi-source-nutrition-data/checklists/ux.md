@@ -1,6 +1,6 @@
 # UX Checklist: Multi-Source Nutrition Data Aggregation
 
-**Purpose**: Validate UX requirements for food search, progressive loading, and barcode scanning flows
+**Purpose**: Validate UX requirements for food search, logging, and food image flows
 **Created**: 2026-01-26
 **Feature**: `/specs/002-multi-source-nutrition-data/spec.md`
 
@@ -8,11 +8,11 @@
 
 ## Requirement Completeness
 
-- [x] CHK001 Are all user-facing screens/flows explicitly listed (search, barcode scan, browse USDA)? [Completeness, Spec §User Stories]
+- [x] CHK001 Are all user-facing screens/flows explicitly listed (search, log food, dashboard)? [Completeness]
 - [x] CHK002 Are progressive loading behaviors defined (show cached first, stream API results)? [Completeness, Spec §FR-010]
 - [x] CHK003 Are loading/empty/error states specified for search? [Completeness, Spec §User Story 6]
 - [x] CHK004 Are refresh/retry affordances specified for stale or failed data? [Completeness, Spec §FR-023]
-- [x] CHK005 Are barcode scanning UI requirements defined (scan button, camera access, result display)? [Completeness, Spec §User Story 3]
+- [x] CHK005 Are food image UI requirements defined (when to show images, placeholders)? [Completeness]
 
 ## Requirement Clarity
 
@@ -25,7 +25,7 @@
 ## Requirement Consistency
 
 - [x] CHK011 Do user stories, requirements, and plan agree on search result display (no source labels)? [Consistency, Spec §FR-014]
-- [x] CHK012 Is the barcode "not found" behavior consistent with text search "no results"? [Consistency, Spec §FR-027]
+- [x] CHK012 Is the "no results" behavior consistent across search and logging flows? [Consistency]
 - [x] CHK013 Is the refresh behavior consistent across cached and fresh results? [Consistency, Spec §FR-023]
 
 ## Acceptance Criteria Quality
@@ -45,16 +45,16 @@
 - [x] CHK020 Are requirements specified for foods with missing nutrition fields (display "N/A")? [Edge Case, Spec §Edge Cases]
 - [x] CHK021 Are requirements specified for very long food names (truncation)? [Edge Case, Spec §Edge Cases]
 - [x] CHK022 Are requirements specified for search with no results? [Edge Case, Spec §Edge Cases]
-- [x] CHK023 Are requirements specified for barcode returning multiple products (regional variants)? [Edge Case, Spec §Edge Cases]
+- [x] CHK023 Are requirements specified for duplicate/near-duplicate foods across sources? [Edge Case]
 
 ## Non-Functional Requirements
 
 - [x] CHK024 Are accessibility requirements defined for search input and results? [NFR - Follow existing patterns]
-- [x] CHK025 Are requirements defined for mobile barcode scanning experience? [NFR, Spec §User Story 3]
+- [x] CHK025 Are requirements defined for mobile search and logging experience? [NFR]
 
 ## Dependencies & Assumptions
 
-- [x] CHK026 Are assumptions about camera access for barcode scanning documented? [Assumption]
+- [x] CHK026 Are assumptions about device capabilities (offline, slow network) documented? [Assumption]
 - [x] CHK027 Are assumptions about network connectivity documented? [Assumption, Spec §Assumptions]
 
 ## Ambiguities & Conflicts
