@@ -25,7 +25,6 @@ function redactUrl(rawUrl: string): string {
 }
 
 function logLine(line: unknown) {
-  // eslint-disable-next-line no-console
   console.log(line);
 }
 

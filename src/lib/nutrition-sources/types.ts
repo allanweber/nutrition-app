@@ -1,5 +1,12 @@
 export type NutritionSourceName = 'usda' | 'fatsecret' | 'database';
 
+export interface NutritionAltMeasure {
+  servingWeight: number;
+  measure: string;
+  qty: number;
+  seq?: number;
+}
+
 export interface NutritionSourceFood {
   /** Local database id when the food has been persisted */
   id?: number;
@@ -22,6 +29,8 @@ export interface NutritionSourceFood {
   sugar?: number;
   sodium?: number;
   photo?: { thumb?: string; highres?: string } | null;
+  /** Alternative serving sizes (present for persisted foods). */
+  altMeasures?: NutritionAltMeasure[];
   isRaw?: boolean;
   fullNutrients?: Array<{ attr_id: number; value: number }>;
 }

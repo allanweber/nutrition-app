@@ -10,11 +10,18 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Loader2, Check, Flame, Beef, Wheat, Droplets } from 'lucide-react';
+import { Loader2, Flame, Beef, Wheat, Droplets } from 'lucide-react';
+
+import NutritionFacts, { type NutritionFactsSelection } from '@/components/nutrition-facts';
+import {
+  FOOD_IMAGE_QUERY_KEY,
+  fetchFoodImageUrl,
+  useInfiniteFoodSearchQuery,
+  usePersistSelectedFoodMutation,
+} from '@/queries/foods';
 
 import type { NutritionSourceFood, SearchAggregatorResult } from '@/lib/nutrition-sources/types';
 
@@ -257,7 +264,7 @@ function SearchInputWithBadge({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={onFocus}
           onKeyDown={onKeyDown}
-          className="h-16 w-full rounded-[11px] border-0 bg-background pl-[180px] pr-6 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:shadow-none"
+          className="h-16 w-full rounded-[11px] border-0 bg-background pl-[160px] pr-6 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:shadow-none"
           data-testid="food-search-input"
           role="combobox"
           aria-expanded={showDropdown}
@@ -272,32 +279,34 @@ function SearchInputWithBadge({
 }
 
 interface FoodSearchProps {
-  searchResults?: SearchAggregatorResult;
-  isSearching?: boolean;
-  isLoadingMore?: boolean;
-  onSearch: (query: string) => void;
-  onAddFood: (food: NutritionSourceFood, quantity: string, mealType: string) => void;
-  onLoadMore?: () => void;
+  onAddFood: (payload: {
+    food: NutritionSourceFood;
+    quantity: string;
+    servingUnit: string;
+    grams: number;
+    macros: NutritionFactsSelection['macros'];
+  }) => void | Promise<void>;
+  onAdded?: () => void;
+  actionLabel?: string;
+  pageSize?: number;
 }
 
 export default function FoodSearch({
-  searchResults,
-  isSearching = false,
-  isLoadingMore = false,
-  onSearch,
   onAddFood,
-  onLoadMore,
+  onAdded,
+  actionLabel = 'Add to Log',
+  pageSize = 25,
 }: FoodSearchProps) {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState<NutritionSourceFood | null>(null);
-  const [quantity, setQuantity] = useState('1');
-  const [mealType, setMealType] = useState<string>('breakfast');
   const [adding, setAdding] = useState(false);
-  const [addSuccess, setAddSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FoodSearchTab>('common');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  const [factsSelection, setFactsSelection] = useState<NutritionFactsSelection | null>(null);
+  const [isServingSelectOpen, setIsServingSelectOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -305,8 +314,136 @@ export default function FoodSearch({
   const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
   const requestedLoadMoreRef = useRef(false);
 
-  const foods = searchResults?.foods ?? EMPTY_FOODS;
-  const hasMore = Boolean(searchResults?.hasMore);
+  const persistMutation = usePersistSelectedFoodMutation();
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    setHighlightIndex(0);
+    setError(null);
+
+    if (trimmed.length < 3) {
+      setDebouncedQuery('');
+      requestedLoadMoreRef.current = false;
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setDebouncedQuery(trimmed);
+      setIsOpen(true);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const searchQueryHook = useInfiniteFoodSearchQuery(debouncedQuery, pageSize);
+
+  const mergedSearchResults = useMemo((): SearchAggregatorResult | undefined => {
+    const pages = searchQueryHook.data?.pages ?? [];
+    if (pages.length === 0) return undefined;
+
+    const normalizeKey = (food: NutritionSourceFood) =>
+      `${food.source}:${food.sourceId}:${(food.name ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')}:${(
+        food.brandName ?? ''
+      )
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')}`;
+
+    const seen = new Set<string>();
+    const mergedFoods: NutritionSourceFood[] = [];
+
+    for (const p of pages) {
+      for (const food of p.foods) {
+        const key = normalizeKey(food);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        mergedFoods.push(food);
+      }
+    }
+
+    const last = pages[pages.length - 1];
+
+    return {
+      ...last,
+      foods: mergedFoods,
+      hasMore: Boolean(searchQueryHook.hasNextPage),
+      pageSize,
+    };
+  }, [pageSize, searchQueryHook.data, searchQueryHook.hasNextPage]);
+
+  const foodUrlsNeedingImages = useMemo(() => {
+    const foods = mergedSearchResults?.foods ?? [];
+    const urls: string[] = [];
+    const seen = new Set<string>();
+
+    for (const food of foods) {
+      const url = (food.foodUrl ?? '').trim();
+      if (!url) continue;
+      if (food.photo?.thumb || food.photo?.highres) continue;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      urls.push(url);
+      if (urls.length >= 20) break;
+    }
+
+    return urls;
+  }, [mergedSearchResults?.foods]);
+
+  const foodImageQueries = useQueries({
+    queries: foodUrlsNeedingImages.map((foodUrl) => ({
+      queryKey: FOOD_IMAGE_QUERY_KEY(foodUrl),
+      queryFn: () => fetchFoodImageUrl(foodUrl),
+      enabled: debouncedQuery.trim().length >= 3,
+      staleTime: 30 * 24 * 60 * 60 * 1000,
+      gcTime: 30 * 24 * 60 * 60 * 1000,
+      retry: 1,
+    })),
+  });
+
+  const enrichedSearchResults = useMemo(() => {
+    if (!mergedSearchResults) return undefined;
+    if (foodUrlsNeedingImages.length === 0) return mergedSearchResults;
+
+    const urlToImage = new Map<string, string>();
+    for (let i = 0; i < foodUrlsNeedingImages.length; i += 1) {
+      const url = foodUrlsNeedingImages[i];
+      const imageUrl = foodImageQueries[i]?.data;
+      if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+        urlToImage.set(url, imageUrl);
+      }
+    }
+
+    if (urlToImage.size === 0) return mergedSearchResults;
+
+    return {
+      ...mergedSearchResults,
+      foods: mergedSearchResults.foods.map((food) => {
+        if (food.photo?.thumb || food.photo?.highres) return food;
+        const url = (food.foodUrl ?? '').trim();
+        const imageUrl = url ? urlToImage.get(url) : undefined;
+        if (!imageUrl) return food;
+        return {
+          ...food,
+          photo: {
+            thumb: imageUrl,
+            highres: imageUrl,
+          },
+        };
+      }),
+    };
+  }, [foodImageQueries, foodUrlsNeedingImages, mergedSearchResults]);
+
+  const isSearching = searchQueryHook.isFetching && !searchQueryHook.isFetchingNextPage && !searchQueryHook.data;
+  const isLoadingMore = searchQueryHook.isFetchingNextPage;
+
+  useEffect(() => {
+    if (debouncedQuery.trim().length < 3) return;
+    if (!searchQueryHook.isError) return;
+    const message = searchQueryHook.error instanceof Error ? searchQueryHook.error.message : 'Food search failed.';
+    setError(message);
+  }, [debouncedQuery, searchQueryHook.error, searchQueryHook.isError]);
+
+  const foods = enrichedSearchResults?.foods ?? EMPTY_FOODS;
+  const hasMore = Boolean(searchQueryHook.hasNextPage);
 
   const commonFoods = useMemo(
     () => foods.filter((food) => !food.isCustom && food.source !== 'database' && !food.brandName?.trim()),
@@ -355,13 +492,8 @@ export default function FoodSearch({
     }
   }, [activeTab, brandedFoods.length, commonFoods.length, customFoods.length, foodsForTab.length]);
 
-  const showDropdown = isOpen && !selectedFood && query.trim().length >= 3;
-
-  useEffect(() => {
-    if (!addSuccess) return;
-    const timeout = setTimeout(() => setAddSuccess(false), 2000);
-    return () => clearTimeout(timeout);
-  }, [addSuccess]);
+  const showPanel = isOpen && (selectedFood !== null || query.trim().length >= 3);
+  const showDropdown = showPanel && !selectedFood && query.trim().length >= 3;
 
   useEffect(() => {
     setHighlightIndex((prev) => {
@@ -393,16 +525,26 @@ export default function FoodSearch({
 
   const selectFood = (food: NutritionSourceFood) => {
     setSelectedFood(food);
+    setFactsSelection(null);
     setError(null);
-    setAddSuccess(false);
-    setIsOpen(false);
+    setIsOpen(true);
     setHighlightIndex(0);
+
+    persistMutation.mutate(food, {
+      onSuccess: (persisted) => {
+        setSelectedFood(persisted);
+      },
+      onError: (err) => {
+        console.error('Error persisting food:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load food details.');
+      },
+    });
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!showDropdown) return;
+    if (!showPanel) return;
 
-    if (e.key === 'ArrowDown') {
+    if (!selectedFood && e.key === 'ArrowDown') {
       e.preventDefault();
       setHighlightIndex((prev) => {
         const next = Math.min(prev + 1, Math.max(foodsForTab.length - 1, 0));
@@ -417,7 +559,7 @@ export default function FoodSearch({
       return;
     }
 
-    if (e.key === 'ArrowUp') {
+    if (!selectedFood && e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightIndex((prev) => {
         const next = Math.max(prev - 1, 0);
@@ -432,7 +574,7 @@ export default function FoodSearch({
       return;
     }
 
-    if (e.key === 'Enter') {
+    if (!selectedFood && e.key === 'Enter') {
       if (foodsForTab.length === 0) return;
       e.preventDefault();
       const picked = foodsForTab[highlightIndex];
@@ -442,6 +584,13 @@ export default function FoodSearch({
 
     if (e.key === 'Escape') {
       e.preventDefault();
+      if (selectedFood) {
+        setSelectedFood(null);
+        setHighlightIndex(0);
+        if (query.trim().length < 3) setIsOpen(false);
+        return;
+      }
+
       setQuery('');
       setIsOpen(false);
       setHighlightIndex(0);
@@ -450,23 +599,28 @@ export default function FoodSearch({
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
+    if (!factsSelection) {
+      setError('Please confirm serving size.');
+      return;
+    }
 
     setAdding(true);
     setError(null);
-    setAddSuccess(false);
 
     try {
-      const parsedQuantity = Number(quantity);
-      if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
-        setError('Please enter a valid quantity.');
-        return;
-      }
+      await Promise.resolve(
+        onAddFood({
+          food: selectedFood,
+          quantity: factsSelection.quantity,
+          servingUnit: factsSelection.servingUnit,
+          grams: factsSelection.grams,
+          macros: factsSelection.macros,
+        }),
+      );
 
-      await Promise.resolve(onAddFood(selectedFood, String(parsedQuantity), mealType));
-
-      setAddSuccess(true);
+      onAdded?.();
       setSelectedFood(null);
-      setQuantity('1');
+      setFactsSelection(null);
     } catch (err) {
       console.error('Error adding food:', err);
       setError('Failed to add food. Please try again.');
@@ -476,26 +630,36 @@ export default function FoodSearch({
   };
 
   useEffect(() => {
-    const trimmed = query.trim();
-    setHighlightIndex(0);
-
-    if (trimmed.length < 3) {
-      requestedLoadMoreRef.current = false;
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      onSearch(trimmed);
-      setIsOpen(true);
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [onSearch, query]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
+
+      const isRadixSelectInteraction = (el: Element) => {
+        if (
+          el.closest('[data-radix-popper-content-wrapper]') ||
+          el.closest('[data-radix-select-content]') ||
+          el.closest('[data-radix-select-viewport]') ||
+          el.closest('[data-radix-collection-item]')
+        ) {
+          return true;
+        }
+
+        const inPortal = el.closest('[data-radix-portal]');
+        if (!inPortal) return false;
+        return Boolean(el.closest('[role="listbox"]') || el.closest('[role="option"]'));
+      };
+
+      // Radix `Select` (shadcn/ui) renders its menu in a Portal.
+      // Clicking it would otherwise look like an "outside" click and close our panel.
+      const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+      for (const node of path) {
+        if (node instanceof Element && isRadixSelectInteraction(node)) return;
+      }
+
+      if (target instanceof Element && isRadixSelectInteraction(target)) return;
+
+      if (isServingSelectOpen) return;
+
       if (!containerRef.current) return;
       if (!containerRef.current.contains(target)) {
         setIsOpen(false);
@@ -504,7 +668,7 @@ export default function FoodSearch({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isServingSelectOpen]);
 
   useEffect(() => {
     requestedLoadMoreRef.current = false;
@@ -512,7 +676,7 @@ export default function FoodSearch({
 
   useEffect(() => {
     if (!showDropdown) return;
-    if (!onLoadMore || !hasMore) return;
+    if (!hasMore) return;
     if (isLoadingMore || isSearching) return;
 
     const root = listRef.current;
@@ -526,14 +690,14 @@ export default function FoodSearch({
         if (requestedLoadMoreRef.current) return;
 
         requestedLoadMoreRef.current = true;
-        onLoadMore();
+        void searchQueryHook.fetchNextPage();
       },
       { root, threshold: 0.1 },
     );
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, isSearching, onLoadMore, showDropdown]);
+  }, [hasMore, isLoadingMore, isSearching, searchQueryHook, showDropdown]);
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -548,81 +712,103 @@ export default function FoodSearch({
           onKeyDown={handleKeyDown}
           activeOptionId={activeOptionId}
         >
-          {showDropdown && (
+          {showPanel && (
             <div
               className="absolute left-0 top-full z-50 mt-3 w-full overflow-hidden rounded-xl border bg-background shadow-lg"
               data-testid="search-results"
             >
-              <SearchTabs
-                activeTab={activeTab}
-                onTabChange={(tab) => {
-                  setActiveTab(tab);
-                  setHighlightIndex(0);
-                }}
-                commonCount={commonFoods.length}
-                brandedCount={brandedFoods.length}
-                customCount={customFoods.length}
-              />
+              {selectedFood ? (
+                <NutritionFacts
+                  food={selectedFood}
+                  isBusy={adding || persistMutation.isPending}
+                  actionLabel={actionLabel}
+                  onCancel={() => {
+                    setSelectedFood(null);
+                    setFactsSelection(null);
+                    setHighlightIndex(0);
+                    if (query.trim().length < 3) setIsOpen(false);
+                  }}
+                  onConfirm={handleAddFood}
+                  onChange={(next) => setFactsSelection(next)}
+                  onServingSelectOpenChange={setIsServingSelectOpen}
+                />
+              ) : (
+                <>
+                  <SearchTabs
+                    activeTab={activeTab}
+                    onTabChange={(tab) => {
+                      setActiveTab(tab);
+                      setHighlightIndex(0);
+                    }}
+                    commonCount={commonFoods.length}
+                    brandedCount={brandedFoods.length}
+                    customCount={customFoods.length}
+                  />
 
-              <div
-                ref={listRef}
-                id="food-search-listbox"
-                role="listbox"
-                aria-label="Food search results"
-                className="max-h-[440px] overflow-y-auto p-3"
-              >
-                {isSearching && (
-                  <div className="flex items-center justify-center py-6 text-muted-foreground">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
+                  <div
+                    ref={listRef}
+                    id="food-search-listbox"
+                    role="listbox"
+                    aria-label="Food search results"
+                    className="max-h-[440px] overflow-y-auto p-3"
+                  >
+                    {isSearching && (
+                      <div className="flex items-center justify-center py-6 text-muted-foreground">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Searching...
+                      </div>
+                    )}
+
+                    {!isSearching && foodsForTab.length === 0 && (
+                      <div
+                        className="px-3 py-8 text-center text-sm text-muted-foreground"
+                        data-testid="empty-state"
+                      >
+                        No foods found. Try different search terms.
+                      </div>
+                    )}
+
+                    {!isSearching &&
+                      foodsForTab.map((food, index) => (
+                        <FoodResultOption
+                          key={`${food.source}-${food.sourceId}`}
+                          food={food}
+                          index={index}
+                          highlightIndex={highlightIndex}
+                          setHighlightIndex={setHighlightIndex}
+                          selectFood={selectFood}
+                          toPer100g={toPer100g}
+                        />
+                      ))}
+
+                    {/* Infinite scroll sentinel */}
+                    <div ref={loadMoreSentinelRef} className="h-1" />
+
+                    {hasMore && (
+                      <div className="pt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => void searchQueryHook.fetchNextPage()}
+                          disabled={isLoadingMore || isSearching}
+                          className="w-full"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Loading more...
+                            </>
+                          ) : (
+                            'Load more'
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    <KeyboardHints />
                   </div>
-                )}
-
-                {!isSearching && foodsForTab.length === 0 && (
-                  <div className="px-3 py-8 text-center text-sm text-muted-foreground" data-testid="empty-state">
-                    No foods found. Try different search terms.
-                  </div>
-                )}
-
-                {!isSearching &&
-                  foodsForTab.map((food, index) => (
-                    <FoodResultOption
-                      key={`${food.source}-${food.sourceId}`}
-                      food={food}
-                      index={index}
-                      highlightIndex={highlightIndex}
-                      setHighlightIndex={setHighlightIndex}
-                      selectFood={selectFood}
-                      toPer100g={toPer100g}
-                    />
-                  ))}
-
-                {/* Infinite scroll sentinel */}
-                <div ref={loadMoreSentinelRef} className="h-1" />
-
-                {onLoadMore && hasMore && (
-                  <div className="pt-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={onLoadMore}
-                      disabled={isLoadingMore || isSearching}
-                      className="w-full"
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading more...
-                        </>
-                      ) : (
-                        'Load more'
-                      )}
-                    </Button>
-                  </div>
-                )}
-
-                <KeyboardHints />
-              </div>
+                </>
+              )}
             </div>
           )}
         </SearchInputWithBadge>
@@ -631,14 +817,6 @@ export default function FoodSearch({
           <div className="mt-1 text-xs text-muted-foreground">Type at least 3 characters to search</div>
         )}
       </div>
-
-      {/* Success Message */}
-      {addSuccess && (
-        <div className="flex items-center space-x-2 rounded-lg bg-green-50 p-3 text-green-600 dark:bg-green-950/30 dark:text-green-400">
-          <Check className="h-4 w-4" />
-          <span>Food added successfully!</span>
-        </div>
-      )}
 
       {/* Error Message */}
       {error && (
@@ -656,84 +834,6 @@ export default function FoodSearch({
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Searching...
         </div>
-      )}
-
-      {/* Selected Food Form */}
-      {selectedFood && (
-        <Card className="border-2 border-primary bg-primary/10">
-          <CardContent className="p-4">
-            <div className="flex items-start space-x-4">
-              {selectedFood.photo?.thumb && (
-                <img
-                  src={selectedFood.photo.thumb}
-                  alt={selectedFood.name}
-                  className="h-16 w-16 rounded object-cover"
-                />
-              )}
-              <div className="flex-1 space-y-3">
-                <div>
-                  <div className="text-lg font-medium">{selectedFood.name}</div>
-                  {selectedFood.brandName && (
-                    <div className="text-sm text-muted-foreground">{selectedFood.brandName}</div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Quantity</label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      data-testid="quantity-input"
-                    />
-                    <div className="mt-1 text-xs text-muted-foreground">{selectedFood.servingUnit}</div>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-foreground">Meal</label>
-                    <Select value={mealType} onValueChange={setMealType}>
-                      <SelectTrigger data-testid="meal-type-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="breakfast">Breakfast</SelectItem>
-                        <SelectItem value="lunch">Lunch</SelectItem>
-                        <SelectItem value="dinner">Dinner</SelectItem>
-                        <SelectItem value="snack">Snack</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={handleAddFood}
-                    disabled={adding}
-                    className="flex-1"
-                    data-testid="add-food-button"
-                  >
-                    {adding ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add to Log
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => setSelectedFood(null)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Empty results message (only when dropdown is closed) */}

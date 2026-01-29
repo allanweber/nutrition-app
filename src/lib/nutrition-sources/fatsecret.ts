@@ -66,6 +66,7 @@ type FatSecretServing = {
   trans_fat?: string | number;
   vitamin_a?: string | number;
   vitamin_c?: string | number;
+  vitamin_d?: string | number;
   calcium?: string | number;
   iron?: string | number;
 };
@@ -369,6 +370,7 @@ const FATSECRET_FULL_NUTRIENT_ATTR_IDS: Record<string, number> = {
   trans_fat: 605,
   vitamin_a: 318,
   vitamin_c: 401,
+  vitamin_d: 328,
   calcium: 301,
   iron: 303,
 };

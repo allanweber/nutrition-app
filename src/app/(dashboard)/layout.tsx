@@ -48,6 +48,14 @@ export default async function DashboardLayout({
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
+      <a href="https://www.fatsecret.com">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret.png"
+          srcSet="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_2x.png 2x, https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_3x.png 3x"
+          alt="Powered by FatSecret"
+        />
+      </a>
     </div>
   );
 }

@@ -5,8 +5,7 @@ export class FoodLogPage {
   readonly heading: Locator;
   readonly searchInput: Locator;
   readonly searchResults: Locator;
-  readonly quantityInput: Locator;
-  readonly mealTypeSelect: Locator;
+  readonly servingGramsInput: Locator;
   readonly addFoodButton: Locator;
   readonly errorMessage: Locator;
   readonly emptyState: Locator;
@@ -17,8 +16,7 @@ export class FoodLogPage {
     this.heading = page.getByRole('heading', { name: 'Food Log' });
     this.searchInput = page.getByTestId('food-search-input');
     this.searchResults = page.getByTestId('search-results');
-    this.quantityInput = page.getByTestId('quantity-input');
-    this.mealTypeSelect = page.getByTestId('meal-type-select');
+    this.servingGramsInput = page.getByTestId('serving-grams-input');
     this.addFoodButton = page.getByTestId('add-food-button');
     this.errorMessage = page.getByTestId('error-message');
     this.emptyState = page.getByTestId('empty-state');
@@ -67,13 +65,8 @@ export class FoodLogPage {
     await firstResult.click();
   }
 
-  async setQuantity(quantity: string) {
-    await this.quantityInput.fill(quantity);
-  }
-
-  async selectMealType(mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack') {
-    await this.mealTypeSelect.click();
-    await this.page.getByRole('option', { name: new RegExp(mealType, 'i') }).click();
+  async setServingGrams(grams: string) {
+    await this.servingGramsInput.fill(grams);
   }
 
   async addFood() {
@@ -82,11 +75,10 @@ export class FoodLogPage {
     await this.page.waitForTimeout(500);
   }
 
-  async addFoodToLog(query: string, quantity: string, mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack') {
+  async addFoodToLog(query: string, grams: string) {
     await this.searchFood(query);
     await this.selectFirstResult();
-    await this.setQuantity(quantity);
-    await this.selectMealType(mealType);
+    await this.setServingGrams(grams);
     await this.addFood();
   }
 

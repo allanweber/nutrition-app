@@ -186,3 +186,22 @@
 - [x] Infinite scroll triggers load-more automatically when near bottom
 - [x] Full-width "Load more" button remains as a fallback at the bottom
 - [x] Result rows show a compact single-row macro summary with icons
+
+---
+
+### Task 3.5: Food Search Self-Contained + Nutrition Facts Panel
+
+**Status**: [x] Completed
+
+**Files**:
+- `src/components/food-search.tsx`
+- `src/components/nutrition-facts.tsx`
+- `src/app/(dashboard)/food-log/page.tsx`
+- `src/app/api/foods/persist/route.ts`
+- `src/queries/foods.ts`
+
+**Acceptance Criteria**:
+- [x] FoodSearch owns query/loading/infinite scroll and image enrichment
+- [x] Selecting a food persists it and loads alt measures
+- [x] Nutrition Facts rendered via dedicated component with serving select, grams input, slider, computed macros
+- [x] Meal selection removed; food log defaults to breakfast

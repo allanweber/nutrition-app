@@ -258,15 +258,10 @@ test.describe('Phase 2: Food Logging', () => {
       await firstResult.click();
 
       // Verify selected food form appears
-      await expect(foodLogPage.quantityInput).toBeVisible();
-      await expect(foodLogPage.mealTypeSelect).toBeVisible();
+      await expect(foodLogPage.servingGramsInput).toBeVisible();
 
-      // Set quantity
-      await foodLogPage.quantityInput.fill('1');
-
-      // Select meal type
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /breakfast/i }).click();
+      // Optionally set serving grams (defaults are fine, but explicit keeps test stable)
+      await foodLogPage.servingGramsInput.fill('100');
 
       // Click add button
       await foodLogPage.addFoodButton.click();
@@ -335,9 +330,7 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(firstResult).toBeVisible({ timeout: 5000 });
       await firstResult.click();
 
-      await foodLogPage.quantityInput.fill('1');
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /lunch/i }).click();
+      await foodLogPage.servingGramsInput.fill('100');
       await foodLogPage.addFoodButton.click();
 
       await expect(page.getByText(/food added successfully/i)).toBeVisible({
@@ -360,14 +353,12 @@ test.describe('Phase 2: Food Logging', () => {
 
       const initialLogCount = await foodLogPage.getFoodLogCount();
 
-      // Add apple to breakfast
+      // Add apple (defaults to breakfast)
       await foodLogPage.searchInput.fill('apple');
       await page.waitForTimeout(400);
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
       await page.getByTestId('food-result-0').click();
-      await foodLogPage.quantityInput.fill('1');
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /breakfast/i }).click();
+      await foodLogPage.servingGramsInput.fill('100');
       await foodLogPage.addFoodButton.click();
 
       // Wait for success message to appear and disappear
@@ -383,14 +374,12 @@ test.describe('Phase 2: Food Logging', () => {
         .poll(async () => foodLogPage.getFoodLogCount(), { timeout: 10000 })
         .toBe(initialLogCount + 1);
 
-      // Add rice to lunch
+      // Add rice (also defaults to breakfast)
       await foodLogPage.searchInput.fill('rice');
       await page.waitForTimeout(400);
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
       await page.getByTestId('food-result-0').click();
-      await foodLogPage.quantityInput.fill('1');
-      await foodLogPage.mealTypeSelect.click();
-      await page.getByRole('option', { name: /lunch/i }).click();
+      await foodLogPage.servingGramsInput.fill('100');
       await foodLogPage.addFoodButton.click();
 
       // Wait for success message to appear
@@ -405,13 +394,8 @@ test.describe('Phase 2: Food Logging', () => {
       // Wait for the log to refresh and show both meals
       await page.waitForTimeout(1000);
 
-      // Verify both meals are shown (case insensitive match)
-      await expect(
-        page.locator('text=Breakfast').or(page.locator('text=breakfast')),
-      ).toBeVisible();
-      await expect(
-        page.locator('text=Lunch').or(page.locator('text=lunch')),
-      ).toBeVisible();
+      // Verify breakfast is shown (case insensitive match)
+      await expect(page.locator('text=Breakfast').or(page.locator('text=breakfast'))).toBeVisible();
 
       // Verify we added exactly 2 foods (relative to initial state)
       const logCount = await foodLogPage.getFoodLogCount();

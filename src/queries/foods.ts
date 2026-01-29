@@ -1,6 +1,6 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
 
-import type { SearchAggregatorResult } from '@/lib/nutrition-sources/types'
+import type { NutritionSourceFood, SearchAggregatorResult } from '@/lib/nutrition-sources/types'
 
 const FOOD_SEARCH_QUERY_KEY = (query: string, page: number, pageSize: number) => [
   'foods',
@@ -88,4 +88,35 @@ export async function fetchFoodImageUrl(foodUrl: string): Promise<string | null>
 
   const imageUrl = typeof data?.imageUrl === 'string' ? data.imageUrl : null
   return imageUrl
+}
+
+export async function persistSelectedFood(food: NutritionSourceFood): Promise<NutritionSourceFood> {
+  const response = await fetch('/api/foods/persist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ food }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof data?.error === 'string' && data.error.trim().length > 0
+        ? data.error
+        : 'Failed to persist food'
+    throw new Error(errorMessage)
+  }
+
+  const persisted = data?.food as NutritionSourceFood | undefined
+  if (!persisted || typeof persisted.sourceId !== 'string') {
+    throw new Error('Failed to persist food')
+  }
+
+  return persisted
+}
+
+export function usePersistSelectedFoodMutation() {
+  return useMutation({
+    mutationFn: persistSelectedFood,
+  })
 }

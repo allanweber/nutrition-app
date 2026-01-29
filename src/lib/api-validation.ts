@@ -43,46 +43,45 @@ export const daysSchema = z
 
 // Food log creation validation - based on client input format
 // Note: Uses subset of mealTypeEnum values (client only sends basic meal types)
+const nutritionSourceFoodSchema = z.object({
+  id: z.number().int().positive().optional(),
+  sourceId: z.string().min(1).max(128).transform(sanitizeString),
+  source: z.enum(['usda', 'fatsecret', 'database']),
+  name: z.string().min(1).max(200).transform(sanitizeString),
+  brandName: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? sanitizeString(val) : undefined)),
+  foodUrl: z.string().url().optional(),
+  servingQty: z.number().finite().nonnegative(),
+  servingUnit: z.string().min(1).max(50).transform(sanitizeString),
+  servingWeightGrams: z.number().finite().nonnegative().optional(),
+  calories: z.number().finite().nonnegative(),
+  protein: z.number().finite().nonnegative(),
+  carbs: z.number().finite().nonnegative(),
+  fat: z.number().finite().nonnegative(),
+  fiber: z.number().finite().nonnegative().optional(),
+  sugar: z.number().finite().nonnegative().optional(),
+  sodium: z.number().finite().nonnegative().optional(),
+  isRaw: z.boolean().optional(),
+  fullNutrients: z.array(z.object({ attr_id: z.number().int(), value: z.number().finite() })).optional(),
+  photo: z
+    .object({
+      thumb: z.string().optional(),
+      highres: z.string().optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export const persistFoodSchema = z.object({
+  food: nutritionSourceFoodSchema,
+});
+
 export const createFoodLogSchema = z.object({
   foodId: z.number().int().positive().optional(),
-  food: z
-    .object({
-      id: z.number().int().positive().optional(),
-      sourceId: z.string().min(1).max(128).transform(sanitizeString),
-      source: z.enum(['usda', 'fatsecret', 'database']),
-      name: z.string().min(1).max(200).transform(sanitizeString),
-      brandName: z
-        .string()
-        .nullable()
-        .optional()
-        .transform((val) => (val ? sanitizeString(val) : undefined)),
-      foodUrl: z
-        .string()
-        .url()
-        .optional(),
-      servingQty: z.number().finite().nonnegative(),
-      servingUnit: z.string().min(1).max(50).transform(sanitizeString),
-      servingWeightGrams: z.number().finite().nonnegative().optional(),
-      calories: z.number().finite().nonnegative(),
-      protein: z.number().finite().nonnegative(),
-      carbs: z.number().finite().nonnegative(),
-      fat: z.number().finite().nonnegative(),
-      fiber: z.number().finite().nonnegative().optional(),
-      sugar: z.number().finite().nonnegative().optional(),
-      sodium: z.number().finite().nonnegative().optional(),
-      isRaw: z.boolean().optional(),
-      fullNutrients: z
-        .array(z.object({ attr_id: z.number().int(), value: z.number().finite() }))
-        .optional(),
-      photo: z
-        .object({
-          thumb: z.string().optional(),
-          highres: z.string().optional(),
-        })
-        .nullable()
-        .optional(),
-    })
-    .optional(),
+  food: nutritionSourceFoodSchema.optional(),
   foodName: z
     .string()
     .min(1, 'Food name is required')
