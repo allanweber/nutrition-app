@@ -169,3 +169,20 @@
 - [x] Search a branded food and confirm results
 - [x] Log a FatSecret food and confirm alt measures + photo
 - [x] Call `/api/foods/image` with a valid FatSecret `food_url`
+
+---
+
+### Task 3.4: Food Search Floating Results UX
+
+**Status**: [x] Completed
+
+**Files**:
+- `src/components/food-search.tsx`
+
+**Acceptance Criteria**:
+- [x] Search results appear in a floating dropdown under the input
+- [x] Keyboard navigation supported (↑/↓ to navigate, Enter to select, Esc to clear)
+- [x] Tabs remain available for Common/Branded/Custom
+- [x] Infinite scroll triggers load-more automatically when near bottom
+- [x] Full-width "Load more" button remains as a fallback at the bottom
+- [x] Result rows show a compact single-row macro summary with icons

@@ -1,23 +1,275 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Search, Plus, Loader2, Check, Flame, Beef, Wheat, Droplets } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Loader2, Check, Flame, Beef, Wheat, Droplets } from 'lucide-react';
 
-import type {
-  NutritionSourceFood,
-  SearchAggregatorResult,
-} from '@/lib/nutrition-sources/types';
+import type { NutritionSourceFood, SearchAggregatorResult } from '@/lib/nutrition-sources/types';
+
+const EMPTY_FOODS: NutritionSourceFood[] = [];
+
+type FoodSearchTab = 'common' | 'branded' | 'custom';
+
+type Per100g = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  sodium?: number;
+};
+
+function SearchTabs({
+  activeTab,
+  onTabChange,
+  commonCount,
+  brandedCount,
+  customCount,
+}: {
+  activeTab: FoodSearchTab;
+  onTabChange: (tab: FoodSearchTab) => void;
+  commonCount: number;
+  brandedCount: number;
+  customCount: number;
+}) {
+  return (
+    <div className="border-b bg-muted/40 p-3">
+      <div className="flex w-full gap-1 rounded-lg bg-muted p-1">
+        <button
+          type="button"
+          className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'common'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => onTabChange('common')}
+        >
+          <span>Common</span>
+          <span
+            className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+              activeTab === 'common'
+                ? 'bg-muted text-foreground'
+                : 'bg-background/70 text-muted-foreground'
+            }`}
+          >
+            {commonCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'branded'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => onTabChange('branded')}
+        >
+          <span>Branded</span>
+          <span
+            className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+              activeTab === 'branded'
+                ? 'bg-muted text-foreground'
+                : 'bg-background/70 text-muted-foreground'
+            }`}
+          >
+            {brandedCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            activeTab === 'custom'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          onClick={() => onTabChange('custom')}
+        >
+          <span>Custom</span>
+          <span
+            className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+              activeTab === 'custom'
+                ? 'bg-muted text-foreground'
+                : 'bg-background/70 text-muted-foreground'
+            }`}
+          >
+            {customCount}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function KeyboardHints() {
+  return (
+    <div className="mt-3 flex items-center justify-center gap-6 border-t pt-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">↑</kbd>
+        <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">↓</kbd>
+        <span>to navigate</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">↵</kbd>
+        <span>to select</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+        <span>to clear</span>
+      </div>
+    </div>
+  );
+}
+
+function FoodResultOption({
+  food,
+  index,
+  highlightIndex,
+  setHighlightIndex,
+  selectFood,
+  toPer100g,
+}: {
+  food: NutritionSourceFood;
+  index: number;
+  highlightIndex: number;
+  setHighlightIndex: (index: number) => void;
+  selectFood: (food: NutritionSourceFood) => void;
+  toPer100g: (food: NutritionSourceFood) => Per100g | null;
+}) {
+  const p100 = toPer100g(food);
+  const isActive = index === highlightIndex;
+
+  const caloriesValue = p100 ? Math.round(p100.calories) : Math.round(food.calories);
+  const proteinValue = (p100 ? p100.protein : Number(food.protein)).toFixed(2);
+  const carbsValue = (p100 ? p100.carbs : Number(food.carbs)).toFixed(2);
+  const fatValue = (p100 ? p100.fat : Number(food.fat)).toFixed(2);
+
+  const subtitle = (() => {
+    const brandName = food.brandName?.trim();
+    const servingLabel = p100
+      ? '100 g'
+      : `${food.servingQty ?? 1}${food.servingUnit ? ` ${food.servingUnit}` : ''}`;
+
+    if (brandName) return `${brandName} · ${servingLabel}`;
+    if (p100) return servingLabel;
+    return `per serving · ${servingLabel}`;
+  })();
+
+  return (
+    <button
+      id={`food-option-${food.source}-${food.sourceId}`}
+      type="button"
+      role="option"
+      aria-selected={isActive}
+      onMouseEnter={() => setHighlightIndex(index)}
+      onClick={() => selectFood(food)}
+      data-testid={`food-result-${index}`}
+      className={`w-full rounded-lg p-3 text-left transition-colors ${
+        isActive ? 'bg-muted' : 'hover:bg-muted/60'
+      }`}
+    >
+      <div className="grid grid-cols-[44px_1fr] gap-4">
+        <div className="flex items-center justify-center">
+          {food.photo?.thumb ? (
+            <img
+              src={food.photo.thumb}
+              alt={food.name}
+              className="h-11 w-11 rounded object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-11 w-11 rounded bg-muted" />
+          )}
+        </div>
+
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-foreground">{food.name}</div>
+          <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1.5 text-xs font-medium text-orange-600">
+              <Flame className="h-3 w-3" />
+              {caloriesValue}kcal
+            </div>
+            <div className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2.5 py-1.5 text-xs font-medium text-red-600">
+              <Beef className="h-3 w-3" />
+              {proteinValue}g
+            </div>
+            <div className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2.5 py-1.5 text-xs font-medium text-amber-700">
+              <Wheat className="h-3 w-3" />
+              {carbsValue}g
+            </div>
+            <div className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2.5 py-1.5 text-xs font-medium text-rose-700">
+              <Droplets className="h-3 w-3" />
+              {fatValue}g
+            </div>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function SearchInputWithBadge({
+  inputRef,
+  query,
+  setQuery,
+  showDropdown,
+  onFocus,
+  onKeyDown,
+  activeOptionId,
+  children,
+}: {
+  inputRef: RefObject<HTMLInputElement | null>;
+  query: string;
+  setQuery: (value: string) => void;
+  showDropdown: boolean;
+  onFocus: () => void;
+  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
+  activeOptionId?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="relative rounded-xl bg-border/60 p-[1px] transition-colors focus-within:bg-gradient-to-r focus-within:from-green-500/35 focus-within:via-emerald-500/25 focus-within:to-green-500/35">
+      <div className="relative">
+        <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
+          <span className="inline-flex h-10 items-center rounded-full bg-green-600 px-5 text-sm font-semibold text-white shadow-sm">
+            Search Foods
+          </span>
+        </div>
+
+        <Input
+          ref={inputRef}
+          placeholder="Search for your favorite food or meal"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={onFocus}
+          onKeyDown={onKeyDown}
+          className="h-16 w-full rounded-[11px] border-0 bg-background pl-[180px] pr-6 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:shadow-none"
+          data-testid="food-search-input"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls={showDropdown ? 'food-search-listbox' : undefined}
+          aria-activedescendant={activeOptionId}
+        />
+
+        {children}
+      </div>
+    </div>
+  );
+}
 
 interface FoodSearchProps {
   searchResults?: SearchAggregatorResult;
@@ -43,64 +295,158 @@ export default function FoodSearch({
   const [adding, setAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'common' | 'branded' | 'custom'>('common');
+  const [activeTab, setActiveTab] = useState<FoodSearchTab>('common');
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(0);
 
-  const debouncedQueryKey = query.trim();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+  const requestedLoadMoreRef = useRef(false);
 
-  const foods = searchResults?.foods ?? [];
-  const hasResults = foods.length > 0;
+  const foods = searchResults?.foods ?? EMPTY_FOODS;
   const hasMore = Boolean(searchResults?.hasMore);
 
-  const hasPhoto = (food: NutritionSourceFood) => Boolean(food.photo?.thumb || food.photo?.highres);
+  const commonFoods = useMemo(
+    () => foods.filter((food) => !food.isCustom && food.source !== 'database' && !food.brandName?.trim()),
+    [foods],
+  );
+  const brandedFoods = useMemo(
+    () => foods.filter((food) => !food.isCustom && food.source !== 'database' && Boolean(food.brandName?.trim())),
+    [foods],
+  );
+  const customFoods = useMemo(
+    () => foods.filter((food) => food.isCustom || food.source === 'database'),
+    [foods],
+  );
 
-  const toPer100g = (food: NutritionSourceFood) => {
+  const foodsForTab = useMemo(() => {
+    switch (activeTab) {
+      case 'common':
+        return commonFoods;
+      case 'branded':
+        return brandedFoods;
+      case 'custom':
+        return customFoods;
+      default:
+        return commonFoods;
+    }
+  }, [activeTab, commonFoods, brandedFoods, customFoods]);
+
+  useEffect(() => {
+    // If the currently selected tab has no results, automatically switch to the
+    // first tab that does. This keeps the default UX (and E2E flows) working
+    // when results are returned from DB/custom sources.
+    if (foodsForTab.length > 0) return;
+
+    const nextTab: FoodSearchTab | null =
+      commonFoods.length > 0
+        ? 'common'
+        : brandedFoods.length > 0
+          ? 'branded'
+          : customFoods.length > 0
+            ? 'custom'
+            : null;
+
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+      setHighlightIndex(0);
+    }
+  }, [activeTab, brandedFoods.length, commonFoods.length, customFoods.length, foodsForTab.length]);
+
+  const showDropdown = isOpen && !selectedFood && query.trim().length >= 3;
+
+  useEffect(() => {
+    if (!addSuccess) return;
+    const timeout = setTimeout(() => setAddSuccess(false), 2000);
+    return () => clearTimeout(timeout);
+  }, [addSuccess]);
+
+  useEffect(() => {
+    setHighlightIndex((prev) => {
+      if (foodsForTab.length === 0) return 0;
+      return Math.min(prev, foodsForTab.length - 1);
+    });
+  }, [foodsForTab.length]);
+
+  const activeOptionId = useMemo(() => {
+    if (!showDropdown) return undefined;
+    const activeFood = foodsForTab[highlightIndex];
+    if (!activeFood) return undefined;
+    return `food-option-${activeFood.source}-${activeFood.sourceId}`;
+  }, [foodsForTab, highlightIndex, showDropdown]);
+
+  const toPer100g = (food: NutritionSourceFood): Per100g | null => {
     const grams = food.servingWeightGrams;
     if (!grams || grams <= 0) return null;
     const factor = 100 / grams;
+
     return {
-      calories: food.calories * factor,
-      protein: food.protein * factor,
-      carbs: food.carbs * factor,
-      fat: food.fat * factor,
-      sodium: food.sodium !== undefined ? food.sodium * factor : undefined,
+      calories: Number(food.calories) * factor,
+      protein: Number(food.protein) * factor,
+      carbs: Number(food.carbs) * factor,
+      fat: Number(food.fat) * factor,
+      sodium: food.sodium != null ? Number(food.sodium) * factor : undefined,
     };
   };
 
-  const isCustomFood = (food: NutritionSourceFood) => Boolean(food.isCustom);
-  const isBrandedFood = (food: NutritionSourceFood) => !isCustomFood(food) && Boolean((food.brandName ?? '').trim());
-  const isCommonFood = (food: NutritionSourceFood) => !isCustomFood(food) && !isBrandedFood(food);
+  const selectFood = (food: NutritionSourceFood) => {
+    setSelectedFood(food);
+    setError(null);
+    setAddSuccess(false);
+    setIsOpen(false);
+    setHighlightIndex(0);
+  };
 
-  const commonFoods = foods
-    .filter(isCommonFood)
-    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
-  const brandedFoods = foods
-    .filter(isBrandedFood)
-    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
-  const customFoods = foods
-    .filter(isCustomFood)
-    .sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)));
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!showDropdown) return;
 
-  const foodsForTab =
-    activeTab === 'common'
-      ? commonFoods
-      : activeTab === 'branded'
-        ? brandedFoods
-        : customFoods;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightIndex((prev) => {
+        const next = Math.min(prev + 1, Math.max(foodsForTab.length - 1, 0));
+        const nextFood = foodsForTab[next];
+        if (nextFood) {
+          document.getElementById(`food-option-${nextFood.source}-${nextFood.sourceId}`)?.scrollIntoView({
+            block: 'nearest',
+          });
+        }
+        return next;
+      });
+      return;
+    }
 
-  // Debounce search calls (500ms) and require 3+ chars.
-  // Keeps parent/query logic simple and avoids spam.
-  useEffect(() => {
-    const trimmed = debouncedQueryKey;
-    const timer = setTimeout(() => {
-      if (trimmed.length >= 3) {
-        onSearch(trimmed);
-      } else {
-        onSearch('');
-      }
-    }, 500);
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightIndex((prev) => {
+        const next = Math.max(prev - 1, 0);
+        const nextFood = foodsForTab[next];
+        if (nextFood) {
+          document.getElementById(`food-option-${nextFood.source}-${nextFood.sourceId}`)?.scrollIntoView({
+            block: 'nearest',
+          });
+        }
+        return next;
+      });
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [debouncedQueryKey, onSearch]);
+    if (e.key === 'Enter') {
+      if (foodsForTab.length === 0) return;
+      e.preventDefault();
+      const picked = foodsForTab[highlightIndex];
+      if (picked) selectFood(picked);
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setQuery('');
+      setIsOpen(false);
+      setHighlightIndex(0);
+    }
+  };
 
   const handleAddFood = async () => {
     if (!selectedFood) return;
@@ -110,15 +456,17 @@ export default function FoodSearch({
     setAddSuccess(false);
 
     try {
-      await onAddFood(selectedFood, quantity, mealType);
+      const parsedQuantity = Number(quantity);
+      if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+        setError('Please enter a valid quantity.');
+        return;
+      }
+
+      await Promise.resolve(onAddFood(selectedFood, String(parsedQuantity), mealType));
 
       setAddSuccess(true);
       setSelectedFood(null);
       setQuantity('1');
-      setQuery('');
-
-      // Reset success state after 2 seconds
-      setTimeout(() => setAddSuccess(false), 2000);
     } catch (err) {
       console.error('Error adding food:', err);
       setError('Failed to add food. Please try again.');
@@ -127,30 +475,158 @@ export default function FoodSearch({
     }
   };
 
-  const selectFood = (food: NutritionSourceFood) => {
-    if (selectedFood?.sourceId === food.sourceId && selectedFood?.source === food.source) {
-      setSelectedFood(null);
+  useEffect(() => {
+    const trimmed = query.trim();
+    setHighlightIndex(0);
+
+    if (trimmed.length < 3) {
+      requestedLoadMoreRef.current = false;
       return;
     }
 
-    setSelectedFood(food);
-    setQuantity(String(food.servingQty || 1));
-  };
+    const timeout = setTimeout(() => {
+      onSearch(trimmed);
+      setIsOpen(true);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [onSearch, query]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    requestedLoadMoreRef.current = false;
+  }, [activeTab, foods.length, isLoadingMore]);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    if (!onLoadMore || !hasMore) return;
+    if (isLoadingMore || isSearching) return;
+
+    const root = listRef.current;
+    const target = loadMoreSentinelRef.current;
+    if (!root || !target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (!first?.isIntersecting) return;
+        if (requestedLoadMoreRef.current) return;
+
+        requestedLoadMoreRef.current = true;
+        onLoadMore();
+      },
+      { root, threshold: 0.1 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, isSearching, onLoadMore, showDropdown]);
 
   return (
-    <div className="space-y-4">
-      {/* Name Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-          }}
-          className="pl-10"
-          data-testid="food-search-input"
-        />
+    <div ref={containerRef} className="space-y-6">
+      {/* Search Input */}
+      <div className="space-y-1">
+        <SearchInputWithBadge
+          inputRef={inputRef}
+          query={query}
+          setQuery={setQuery}
+          showDropdown={showDropdown}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          activeOptionId={activeOptionId}
+        >
+          {showDropdown && (
+            <div
+              className="absolute left-0 top-full z-50 mt-3 w-full overflow-hidden rounded-xl border bg-background shadow-lg"
+              data-testid="search-results"
+            >
+              <SearchTabs
+                activeTab={activeTab}
+                onTabChange={(tab) => {
+                  setActiveTab(tab);
+                  setHighlightIndex(0);
+                }}
+                commonCount={commonFoods.length}
+                brandedCount={brandedFoods.length}
+                customCount={customFoods.length}
+              />
+
+              <div
+                ref={listRef}
+                id="food-search-listbox"
+                role="listbox"
+                aria-label="Food search results"
+                className="max-h-[440px] overflow-y-auto p-3"
+              >
+                {isSearching && (
+                  <div className="flex items-center justify-center py-6 text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Searching...
+                  </div>
+                )}
+
+                {!isSearching && foodsForTab.length === 0 && (
+                  <div className="px-3 py-8 text-center text-sm text-muted-foreground" data-testid="empty-state">
+                    No foods found. Try different search terms.
+                  </div>
+                )}
+
+                {!isSearching &&
+                  foodsForTab.map((food, index) => (
+                    <FoodResultOption
+                      key={`${food.source}-${food.sourceId}`}
+                      food={food}
+                      index={index}
+                      highlightIndex={highlightIndex}
+                      setHighlightIndex={setHighlightIndex}
+                      selectFood={selectFood}
+                      toPer100g={toPer100g}
+                    />
+                  ))}
+
+                {/* Infinite scroll sentinel */}
+                <div ref={loadMoreSentinelRef} className="h-1" />
+
+                {onLoadMore && hasMore && (
+                  <div className="pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onLoadMore}
+                      disabled={isLoadingMore || isSearching}
+                      className="w-full"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading more...
+                        </>
+                      ) : (
+                        'Load more'
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                <KeyboardHints />
+              </div>
+            </div>
+          )}
+        </SearchInputWithBadge>
+
         {query.trim().length > 0 && query.trim().length < 3 && (
           <div className="mt-1 text-xs text-muted-foreground">Type at least 3 characters to search</div>
         )}
@@ -158,7 +634,7 @@ export default function FoodSearch({
 
       {/* Success Message */}
       {addSuccess && (
-        <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg">
+        <div className="flex items-center space-x-2 rounded-lg bg-green-50 p-3 text-green-600 dark:bg-green-950/30 dark:text-green-400">
           <Check className="h-4 w-4" />
           <span>Food added successfully!</span>
         </div>
@@ -167,17 +643,17 @@ export default function FoodSearch({
       {/* Error Message */}
       {error && (
         <div
-          className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg"
+          className="rounded-lg bg-red-50 p-3 text-red-600 dark:bg-red-950/30 dark:text-red-400"
           data-testid="error-message"
         >
           {error}
         </div>
       )}
 
-      {/* Loading State */}
-      {isSearching && (
+      {/* Loading State (only when dropdown is not shown) */}
+      {isSearching && !showDropdown && (
         <div className="flex items-center justify-center py-4 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Searching...
         </div>
       )}
@@ -191,12 +667,12 @@ export default function FoodSearch({
                 <img
                   src={selectedFood.photo.thumb}
                   alt={selectedFood.name}
-                  className="w-16 h-16 rounded object-cover"
+                  className="h-16 w-16 rounded object-cover"
                 />
               )}
               <div className="flex-1 space-y-3">
                 <div>
-                  <div className="font-medium text-lg">{selectedFood.name}</div>
+                  <div className="text-lg font-medium">{selectedFood.name}</div>
                   {selectedFood.brandName && (
                     <div className="text-sm text-muted-foreground">{selectedFood.brandName}</div>
                   )}
@@ -204,9 +680,7 @@ export default function FoodSearch({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Quantity
-                    </label>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Quantity</label>
                     <Input
                       type="number"
                       step="0.1"
@@ -215,14 +689,10 @@ export default function FoodSearch({
                       onChange={(e) => setQuantity(e.target.value)}
                       data-testid="quantity-input"
                     />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {selectedFood.servingUnit}
-                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">{selectedFood.servingUnit}</div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Meal
-                    </label>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Meal</label>
                     <Select value={mealType} onValueChange={setMealType}>
                       <SelectTrigger data-testid="meal-type-select">
                         <SelectValue />
@@ -246,12 +716,12 @@ export default function FoodSearch({
                   >
                     {adding ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Adding...
                       </>
                     ) : (
                       <>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         Add to Log
                       </>
                     )}
@@ -266,196 +736,9 @@ export default function FoodSearch({
         </Card>
       )}
 
-      {/* Results (only when no food selected) */}
-      {!selectedFood && hasResults && (
-        <div className="space-y-4" data-testid="search-results">
-          {foods.length > 0 && (
-            <div>
-              <div className="mb-2">
-                <div className="flex w-full gap-1 rounded-lg bg-muted p-1">
-                  <button
-                    type="button"
-                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      activeTab === 'common'
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                    onClick={() => setActiveTab('common')}
-                  >
-                    <span>Common</span>
-                    <span
-                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
-                        activeTab === 'common'
-                          ? 'bg-muted text-foreground'
-                          : 'bg-background/70 text-muted-foreground'
-                      }`}
-                    >
-                      {commonFoods.length}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      activeTab === 'branded'
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                    onClick={() => setActiveTab('branded')}
-                  >
-                    <span>Branded</span>
-                    <span
-                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
-                        activeTab === 'branded'
-                          ? 'bg-muted text-foreground'
-                          : 'bg-background/70 text-muted-foreground'
-                      }`}
-                    >
-                      {brandedFoods.length}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      activeTab === 'custom'
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                    onClick={() => setActiveTab('custom')}
-                  >
-                    <span>Custom</span>
-                    <span
-                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
-                        activeTab === 'custom'
-                          ? 'bg-muted text-foreground'
-                          : 'bg-background/70 text-muted-foreground'
-                      }`}
-                    >
-                      {customFoods.length}
-                    </span>
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {foodsForTab.map((food, index) => {
-                  const p100 = toPer100g(food);
-                  return (
-                  <Card
-                    key={`${food.source}-${food.sourceId}`}
-                    className="cursor-pointer transition-colors transition-shadow transition-transform hover:bg-muted hover:shadow-md hover:border-muted-foreground/30 hover:-translate-y-px"
-                    onClick={() => selectFood(food)}
-                    data-testid={`food-result-${index}`}
-                  >
-                    <CardContent className="p-2">
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2">
-                          <div className="flex items-center justify-center">
-                            {food.photo?.thumb ? (
-                              <img
-                                src={food.photo.thumb}
-                                alt={food.name}
-                                className="h-12 w-12 rounded object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 rounded bg-muted" />
-                            )}
-                          </div>
-
-                          <div className="min-w-0 text-center">
-                            <div className="truncate font-medium text-foreground">{food.name}</div>
-                            {food.brandName && (
-                              <div className="truncate text-sm text-muted-foreground">{food.brandName}</div>
-                            )}
-                          </div>
-
-                          <div aria-hidden="true" />
-                        </div>
-
-                        <div>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-orange-100">
-                                  <Flame className="h-4 w-4 text-orange-500" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">Calories</span>
-                              </div>
-                              <div className="flex flex-col items-end leading-none">
-                                <span className="text-sm text-muted-foreground tabular-nums">
-                                  {p100 ? '/100g' : 'per serving'}
-                                </span>
-                                <span className="text-sm font-semibold tabular-nums text-foreground">
-                                  {p100 ? Math.round(p100.calories) : Math.round(food.calories)}kcal
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-red-100">
-                                  <Beef className="h-4 w-4 text-red-500" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">Protein</span>
-                              </div>
-                              <span className="text-sm font-semibold tabular-nums text-foreground">
-                                {(p100 ? p100.protein : Number(food.protein)).toFixed(2)}g
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100">
-                                  <Wheat className="h-4 w-4 text-amber-500" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">Carbs</span>
-                              </div>
-                              <span className="text-sm font-semibold tabular-nums text-foreground">
-                                {(p100 ? p100.carbs : Number(food.carbs)).toFixed(2)}g
-                              </span>
-                            </div>
-
-                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-rose-100">
-                                  <Droplets className="h-4 w-4 text-rose-500" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">Fat</span>
-                              </div>
-                              <span className="text-sm font-semibold tabular-nums text-foreground">
-                                {(p100 ? p100.fat : Number(food.fat)).toFixed(2)}g
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  );
-                })}
-              </div>
-
-              {onLoadMore && hasMore && (
-                <div className="mt-3 flex justify-center">
-                  <Button type="button" variant="outline" onClick={onLoadMore} disabled={isLoadingMore || isSearching}>
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Loading...
-                      </>
-                    ) : (
-                      'Load more'
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Empty results message (name search only) */}
-      {!selectedFood && query.trim().length >= 3 && !isSearching && foods.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
+      {/* Empty results message (only when dropdown is closed) */}
+      {!selectedFood && !showDropdown && query.trim().length >= 3 && !isSearching && foods.length === 0 && (
+        <div className="py-8 text-center text-muted-foreground" data-testid="empty-state">
           No foods found. Try different search terms.
         </div>
       )}

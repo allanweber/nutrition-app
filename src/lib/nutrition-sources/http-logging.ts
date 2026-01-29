@@ -29,6 +29,35 @@ function logLine(line: unknown) {
   console.log(line);
 }
 
+function serializeError(error: unknown, depth = 0): unknown {
+  if (depth > 2) return undefined;
+
+  if (error instanceof Error) {
+    const err = error as Error & { code?: unknown; cause?: unknown };
+    const stack = typeof err.stack === 'string'
+      ? err.stack.split('\n').slice(0, 8).join('\n')
+      : undefined;
+
+    return {
+      name: err.name,
+      message: redactString(err.message),
+      code: typeof err.code === 'string' ? err.code : undefined,
+      cause: err.cause ? serializeError(err.cause, depth + 1) : undefined,
+      stack: stack ? redactString(stack) : undefined,
+    };
+  }
+
+  if (typeof error === 'string') return redactString(error);
+  if (typeof error === 'number' || typeof error === 'boolean' || error === null) return error;
+
+  // Best-effort: stringify non-Error objects.
+  try {
+    return JSON.parse(JSON.stringify(error));
+  } catch {
+    return redactString(String(error));
+  }
+}
+
 function stringifyBody(body: unknown): unknown {
   if (body === undefined) return undefined;
   if (typeof body === 'string') return body;
@@ -90,7 +119,7 @@ export function logSourceError(source: NutritionSourceHttpLogSource, requestId: 
 }) {
   if (!isEnabled()) return;
 
-  const message = info.error instanceof Error ? info.error.message : String(info.error);
+  const serialized = serializeError(info.error);
 
   logLine({
     at: new Date().toISOString(),
@@ -100,7 +129,7 @@ export function logSourceError(source: NutritionSourceHttpLogSource, requestId: 
     method: info.method,
     url: redactUrl(info.url),
     durationMs: info.durationMs,
-    error: redactString(message),
+    error: stringifyBody(serialized),
   });
 }
 

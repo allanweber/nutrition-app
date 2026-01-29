@@ -80,11 +80,34 @@ export class USDAFoodDataCentralSource implements NutritionSource {
 
     let response: Response;
     try {
-      response = await fetch(url.toString(), {
-        // Keep request server-side only.
-        cache: 'no-store',
-      });
+      const controller = new AbortController();
+      // The aggregator wraps source calls with a 3000ms timeout; keep this slightly lower
+      // so we can abort the in-flight fetch instead of letting it continue in the background.
+      const timeoutMs = 2500;
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        response = await fetch(url.toString(), {
+          // Keep request server-side only.
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
     } catch (error) {
+      // Normalize AbortError to the shared aggregator timeout signal.
+      if (error instanceof Error && error.name === 'AbortError') {
+        const timeoutError = new Error('timeout');
+        logSourceError('usda', requestId, {
+          method: 'GET',
+          url: url.toString(),
+          durationMs: Date.now() - start,
+          error: timeoutError,
+        });
+        throw timeoutError;
+      }
+
       logSourceError('usda', requestId, {
         method: 'GET',
         url: url.toString(),
