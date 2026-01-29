@@ -165,7 +165,7 @@
 **Status**: [ ] Not Started
 
 **Checklist**:
-- [ ] Search a common food and confirm results
-- [ ] Search a branded food and confirm results
-- [ ] Log a FatSecret food and confirm alt measures + photo
-- [ ] Call `/api/foods/image` with a valid FatSecret `food_url`
+- [x] Search a common food and confirm results
+- [x] Search a branded food and confirm results
+- [x] Log a FatSecret food and confirm alt measures + photo
+- [x] Call `/api/foods/image` with a valid FatSecret `food_url`

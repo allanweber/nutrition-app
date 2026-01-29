@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Loader2, Check } from 'lucide-react';
+import { Search, Plus, Loader2, Check, Flame, Beef, Wheat, Droplets } from 'lucide-react';
 
 import type {
   NutritionSourceFood,
@@ -271,77 +271,162 @@ export default function FoodSearch({
         <div className="space-y-4" data-testid="search-results">
           {foods.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-foreground">Results</h3>
-                <div className="flex gap-2">
-                  <Button
+              <div className="mb-2">
+                <div className="flex w-full gap-1 rounded-lg bg-muted p-1">
+                  <button
                     type="button"
-                    size="sm"
-                    variant={activeTab === 'common' ? 'default' : 'outline'}
+                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      activeTab === 'common'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                     onClick={() => setActiveTab('common')}
                   >
-                    Common ({commonFoods.length})
-                  </Button>
-                  <Button
+                    <span>Common</span>
+                    <span
+                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+                        activeTab === 'common'
+                          ? 'bg-muted text-foreground'
+                          : 'bg-background/70 text-muted-foreground'
+                      }`}
+                    >
+                      {commonFoods.length}
+                    </span>
+                  </button>
+                  <button
                     type="button"
-                    size="sm"
-                    variant={activeTab === 'branded' ? 'default' : 'outline'}
+                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      activeTab === 'branded'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                     onClick={() => setActiveTab('branded')}
                   >
-                    Branded ({brandedFoods.length})
-                  </Button>
-                  <Button
+                    <span>Branded</span>
+                    <span
+                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+                        activeTab === 'branded'
+                          ? 'bg-muted text-foreground'
+                          : 'bg-background/70 text-muted-foreground'
+                      }`}
+                    >
+                      {brandedFoods.length}
+                    </span>
+                  </button>
+                  <button
                     type="button"
-                    size="sm"
-                    variant={activeTab === 'custom' ? 'default' : 'outline'}
+                    className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      activeTab === 'custom'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                     onClick={() => setActiveTab('custom')}
                   >
-                    Custom ({customFoods.length})
-                  </Button>
+                    <span>Custom</span>
+                    <span
+                      className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs ${
+                        activeTab === 'custom'
+                          ? 'bg-muted text-foreground'
+                          : 'bg-background/70 text-muted-foreground'
+                      }`}
+                    >
+                      {customFoods.length}
+                    </span>
+                  </button>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {foodsForTab.map((food, index) => {
                   const p100 = toPer100g(food);
                   return (
                   <Card
                     key={`${food.source}-${food.sourceId}`}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="cursor-pointer transition-colors transition-shadow transition-transform hover:bg-muted hover:shadow-md hover:border-muted-foreground/30 hover:-translate-y-px"
                     onClick={() => selectFood(food)}
                     data-testid={`food-result-${index}`}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex items-center space-x-3">
-                        {food.photo?.thumb ? (
-                          <img
-                            src={food.photo.thumb}
-                            alt={food.name}
-                            className="w-12 h-12 rounded object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded bg-muted" />
-                        )}
-                        <div className="flex-1">
-                          <div className="font-medium">{food.name}</div>
-                          {food.brandName && (
-                            <div className="text-sm text-muted-foreground">{food.brandName}</div>
-                          )}
-                          <div className="text-xs text-muted-foreground">
-                            {p100 ? (
-                              <span>
-                                {Math.round(p100.calories)} kcal · P {p100.protein.toFixed(1)}g · C {p100.carbs.toFixed(1)}g · F {p100.fat.toFixed(1)}g
-                                {p100.sodium !== undefined ? ` · Na ${Math.round(p100.sodium)}mg` : ''} · /100g
-                              </span>
+                    <CardContent className="p-2">
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2">
+                          <div className="flex items-center justify-center">
+                            {food.photo?.thumb ? (
+                              <img
+                                src={food.photo.thumb}
+                                alt={food.name}
+                                className="h-12 w-12 rounded object-cover"
+                                loading="lazy"
+                              />
                             ) : (
-                              <span>
-                                {food.calories} kcal · P {food.protein}g · C {food.carbs}g · F {food.fat}g
-                                {food.sodium !== undefined ? ` · Na ${food.sodium}mg` : ''}
-                              </span>
+                              <div className="h-12 w-12 rounded bg-muted" />
                             )}
                           </div>
+
+                          <div className="min-w-0 text-center">
+                            <div className="truncate font-medium text-foreground">{food.name}</div>
+                            {food.brandName && (
+                              <div className="truncate text-sm text-muted-foreground">{food.brandName}</div>
+                            )}
+                          </div>
+
+                          <div aria-hidden="true" />
                         </div>
-                        <Plus className="h-5 w-5 text-muted-foreground" />
+
+                        <div>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-orange-100">
+                                  <Flame className="h-4 w-4 text-orange-500" />
+                                </div>
+                                <span className="text-sm text-muted-foreground">Calories</span>
+                              </div>
+                              <div className="flex flex-col items-end leading-none">
+                                <span className="text-sm text-muted-foreground tabular-nums">
+                                  {p100 ? '/100g' : 'per serving'}
+                                </span>
+                                <span className="text-sm font-semibold tabular-nums text-foreground">
+                                  {p100 ? Math.round(p100.calories) : Math.round(food.calories)}kcal
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-red-100">
+                                  <Beef className="h-4 w-4 text-red-500" />
+                                </div>
+                                <span className="text-sm text-muted-foreground">Protein</span>
+                              </div>
+                              <span className="text-sm font-semibold tabular-nums text-foreground">
+                                {(p100 ? p100.protein : Number(food.protein)).toFixed(2)}g
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-100">
+                                  <Wheat className="h-4 w-4 text-amber-500" />
+                                </div>
+                                <span className="text-sm text-muted-foreground">Carbs</span>
+                              </div>
+                              <span className="text-sm font-semibold tabular-nums text-foreground">
+                                {(p100 ? p100.carbs : Number(food.carbs)).toFixed(2)}g
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-muted/60">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-rose-100">
+                                  <Droplets className="h-4 w-4 text-rose-500" />
+                                </div>
+                                <span className="text-sm text-muted-foreground">Fat</span>
+                              </div>
+                              <span className="text-sm font-semibold tabular-nums text-foreground">
+                                {(p100 ? p100.fat : Number(food.fat)).toFixed(2)}g
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
