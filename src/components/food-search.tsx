@@ -13,9 +13,8 @@ import {
 import { useQueries } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Flame, Beef, Wheat, Droplets } from 'lucide-react';
-
-import NutritionFacts, { type NutritionFactsSelection } from '@/components/nutrition-facts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Flame, Beef, Wheat, Droplets, Plus } from 'lucide-react';
 import {
   FOOD_IMAGE_QUERY_KEY,
   fetchFoodImageUrl,
@@ -37,6 +36,113 @@ type Per100g = {
   sodium?: number;
 };
 
+type MacroSummary = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+};
+
+type FoodSelection = {
+  grams: number;
+  servingUnit: string;
+  quantity: string;
+  macros: MacroSummary;
+  servingLabel: string;
+};
+
+type ServingOption = {
+  id: string;
+  label: string;
+  qty: number;
+  measure: string;
+  grams: number;
+};
+
+function asNumber(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  return 0;
+}
+
+function roundTo(value: number, decimals = 2): number {
+  if (!Number.isFinite(value)) return 0;
+  const p = 10 ** decimals;
+  return Math.round(value * p) / p;
+}
+
+function safeGrams(value: unknown) {
+  const num = asNumber(value);
+  if (!Number.isFinite(num) || num <= 0) return 100;
+  return Math.max(1, Math.round(num));
+}
+
+function computeQuantityFromGrams(input: { grams: number; servingWeightGrams: number; servingQty: number }) {
+  const { grams, servingWeightGrams, servingQty } = input;
+  if (!Number.isFinite(grams) || grams <= 0) return servingQty;
+  if (!Number.isFinite(servingWeightGrams) || servingWeightGrams <= 0) return servingQty;
+  if (!Number.isFinite(servingQty) || servingQty <= 0) return 1;
+
+  const multiplier = grams / servingWeightGrams;
+  return servingQty * multiplier;
+}
+
+function buildServingOptions(food: NutritionSourceFood): { options: ServingOption[]; defaultId: string } {
+  const baseServingQty = Number.isFinite(food.servingQty) && food.servingQty > 0 ? food.servingQty : 1;
+  const baseServingGrams =
+    Number.isFinite(food.servingWeightGrams) && (food.servingWeightGrams ?? 0) > 0 ? food.servingWeightGrams! : 100;
+
+  const base: ServingOption = {
+    id: 'base',
+    label: `${baseServingQty} ${food.servingUnit}`,
+    qty: baseServingQty,
+    measure: food.servingUnit,
+    grams: baseServingGrams,
+  };
+
+  const alt = (food.altMeasures ?? [])
+    .map((m, idx) => {
+      const qty = asNumber(m.qty);
+      const grams = asNumber(m.servingWeight);
+      const measure = typeof m.measure === 'string' ? m.measure : 'serving';
+      return {
+        id: `alt-${m.seq ?? idx + 1}-${idx}`,
+        label: `${qty || 1} ${measure}`,
+        qty: qty || 1,
+        measure,
+        grams: grams || baseServingGrams,
+      } satisfies ServingOption;
+    })
+    .sort((a, b) => {
+      const aSeq = Number(a.id.split('-')[1]) || 0;
+      const bSeq = Number(b.id.split('-')[1]) || 0;
+      return aSeq - bSeq;
+    });
+
+  const options = (() => {
+    const seen = new Set<string>();
+    const unique: ServingOption[] = [];
+
+    for (const option of [base, ...alt]) {
+      const key = `${option.qty}-${option.measure}-${Math.round(option.grams)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(option);
+    }
+
+    return unique;
+  })();
+
+  const defaultId = alt.length > 0 ? alt[0].id : base.id;
+
+  return { options, defaultId };
+}
+
 function SearchTabs({
   activeTab,
   onTabChange,
@@ -52,7 +158,20 @@ function SearchTabs({
 }) {
   return (
     <div className="border-b bg-muted/40 p-3">
-      <div className="flex w-full gap-1 rounded-lg bg-muted p-1">
+      <div className="sm:hidden">
+        <Select value={activeTab} onValueChange={(value) => onTabChange(value as FoodSearchTab)}>
+          <SelectTrigger className="h-10 w-full">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="common">Common ({commonCount})</SelectItem>
+            <SelectItem value="branded">Branded ({brandedCount})</SelectItem>
+            <SelectItem value="custom">Custom ({customCount})</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="hidden w-full gap-1 rounded-lg bg-muted p-1 sm:flex">
         <button
           type="button"
           className={`flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -140,6 +259,110 @@ function KeyboardHints() {
   );
 }
 
+type MacroRow = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+function MacroBadges({ macros }: { macros: MacroRow }) {
+  return (
+    <div className="mt-2.5 flex flex-col items-center gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
+      <div className="inline-flex w-full max-w-[220px] items-center justify-between gap-2 rounded-md bg-orange-100 px-2.5 py-1.5 text-xs font-medium text-orange-600 tabular-nums">
+      <span className="inline-flex items-center gap-1">
+        <Flame className="h-3 w-3" />
+        Calories
+      </span>
+      <span>{Math.round(macros.calories)} kcal</span>
+      </div>
+      <div className="inline-flex w-full max-w-[220px] items-center justify-between gap-2 rounded-md bg-red-100 px-2.5 py-1.5 text-xs font-medium text-red-600 tabular-nums">
+      <span className="inline-flex items-center gap-1">
+        <Beef className="h-3 w-3" />
+        Protein
+      </span>
+      <span>{roundTo(macros.protein, 2)}g</span>
+      </div>
+      <div className="inline-flex w-full max-w-[220px] items-center justify-between gap-2 rounded-md bg-amber-100 px-2.5 py-1.5 text-xs font-medium text-amber-700 tabular-nums">
+      <span className="inline-flex items-center gap-1">
+        <Wheat className="h-3 w-3" />
+        Carbs
+      </span>
+      <span>{roundTo(macros.carbs, 2)}g</span>
+      </div>
+      <div className="inline-flex w-full max-w-[220px] items-center justify-between gap-2 rounded-md bg-rose-100 px-2.5 py-1.5 text-xs font-medium text-rose-700 tabular-nums">
+      <span className="inline-flex items-center gap-1">
+        <Droplets className="h-3 w-3" />
+        Fat
+      </span>
+      <span>{roundTo(macros.fat, 2)}g</span>
+      </div>
+    </div>
+  );
+}
+
+function FoodThumbAndMacros({
+  food,
+  macros,
+  variant = 'row',
+  belowImage,
+  children,
+}: {
+  food: NutritionSourceFood;
+  macros: MacroRow;
+  variant?: 'row' | 'stacked';
+  belowImage?: ReactNode;
+  children?: ReactNode;
+}) {
+  if (variant === 'stacked') {
+    const imageUrl = food.photo?.highres || food.photo?.thumb;
+
+    return (
+      <div className="space-y-3">
+        <div className="flex w-full flex-col items-center">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={food.name}
+              className="aspect-square w-full max-w-[260px] rounded-md bg-muted object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="aspect-square w-full max-w-[260px] rounded-md bg-muted" />
+          )}
+          {belowImage ? <div className="mt-2 w-full text-center">{belowImage}</div> : null}
+        </div>
+
+        {children ? <div className="min-w-0">{children}</div> : null}
+        <MacroBadges macros={macros} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-[44px_1fr] gap-4">
+      <div className="flex flex-col items-center justify-center">
+        {food.photo?.thumb ? (
+          <img
+            src={food.photo.thumb}
+            alt={food.name}
+            className="h-11 w-11 rounded object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="h-11 w-11 rounded bg-muted" />
+        )}
+        {belowImage ? <div className="mt-2 text-center">{belowImage}</div> : null}
+      </div>
+
+      <div className="min-w-0">
+        {children}
+        <MacroBadges macros={macros} />
+      </div>
+    </div>
+  );
+}
+
 function FoodResultOption({
   food,
   index,
@@ -158,10 +381,12 @@ function FoodResultOption({
   const p100 = toPer100g(food);
   const isActive = index === highlightIndex;
 
-  const caloriesValue = p100 ? Math.round(p100.calories) : Math.round(food.calories);
-  const proteinValue = (p100 ? p100.protein : Number(food.protein)).toFixed(2);
-  const carbsValue = (p100 ? p100.carbs : Number(food.carbs)).toFixed(2);
-  const fatValue = (p100 ? p100.fat : Number(food.fat)).toFixed(2);
+  const macroRow: MacroRow = {
+    calories: p100 ? p100.calories : Number(food.calories),
+    protein: p100 ? p100.protein : Number(food.protein),
+    carbs: p100 ? p100.carbs : Number(food.carbs),
+    fat: p100 ? p100.fat : Number(food.fat),
+  };
 
   const subtitle = (() => {
     const brandName = food.brandName?.trim();
@@ -175,6 +400,7 @@ function FoodResultOption({
   })();
 
   return (
+   <>
     <button
       id={`food-option-${food.source}-${food.sourceId}`}
       type="button"
@@ -183,49 +409,243 @@ function FoodResultOption({
       onMouseEnter={() => setHighlightIndex(index)}
       onClick={() => selectFood(food)}
       data-testid={`food-result-${index}`}
-      className={`w-full rounded-lg p-3 text-left transition-colors ${
+      className={`w-full mb-1 rounded-lg p-3 text-left transition-colors ${
         isActive ? 'bg-muted' : 'hover:bg-muted/60'
       }`}
     >
-      <div className="grid grid-cols-[44px_1fr] gap-4">
-        <div className="flex items-center justify-center">
-          {food.photo?.thumb ? (
-            <img
-              src={food.photo.thumb}
-              alt={food.name}
-              className="h-11 w-11 rounded object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="h-11 w-11 rounded bg-muted" />
-          )}
+      <FoodThumbAndMacros
+        food={food}
+        macros={macroRow}
+      >
+        <div className="truncate text-sm font-semibold text-foreground">{food.name}</div>
+        <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+      </FoodThumbAndMacros>
+    </button>
+   </>
+  );
+}
+
+function  SelectedFoodPanel(props: {
+  food: NutritionSourceFood;
+  isBusy?: boolean;
+  actionLabel?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  onChange?: (selection: FoodSelection) => void;
+  onServingSelectOpenChange?: (open: boolean) => void;
+}) {
+  const {
+    food,
+    isBusy = false,
+    actionLabel = 'Add to Log',
+    onCancel,
+    onConfirm,
+    onChange,
+    onServingSelectOpenChange,
+  } = props;
+
+  const { options, defaultId } = useMemo(() => buildServingOptions(food), [food]);
+
+  const [selectedOptionId, setSelectedOptionId] = useState<string>(defaultId);
+  const selectedOption = useMemo(
+    () => options.find((o) => o.id === selectedOptionId) ?? options[0],
+    [options, selectedOptionId],
+  );
+
+  const [grams, setGrams] = useState<number>(() => safeGrams(selectedOption?.grams));
+
+  useEffect(() => {
+    setSelectedOptionId(defaultId);
+  }, [defaultId]);
+
+  useEffect(() => {
+    setGrams(safeGrams(selectedOption?.grams));
+  }, [selectedOptionId, selectedOption?.grams]);
+
+  const baseServingGrams =
+    Number.isFinite(food.servingWeightGrams) && (food.servingWeightGrams ?? 0) > 0 ? food.servingWeightGrams! : 100;
+
+  const selectedUnitGrams = selectedOption?.grams ?? baseServingGrams;
+  const maxUnits = Math.max(1, Math.floor(500 / Math.max(1, selectedUnitGrams)) || 1);
+  const unitCount = Math.max(1, Math.min(maxUnits, Math.round(grams / Math.max(1, selectedUnitGrams))));
+
+  const multiplier = baseServingGrams > 0 ? grams / baseServingGrams : 1;
+
+  const macros: MacroSummary = useMemo(
+    () => ({
+      calories: Math.round(asNumber(food.calories) * multiplier),
+      fat: roundTo(asNumber(food.fat) * multiplier, 1),
+      carbs: roundTo(asNumber(food.carbs) * multiplier, 1),
+      protein: roundTo(asNumber(food.protein) * multiplier, 1),
+      fiber: food.fiber != null ? roundTo(asNumber(food.fiber) * multiplier, 1) : undefined,
+      sugar: food.sugar != null ? roundTo(asNumber(food.sugar) * multiplier, 1) : undefined,
+      sodium: food.sodium != null ? Math.round(asNumber(food.sodium) * multiplier) : undefined,
+    }),
+    [food.calories, food.carbs, food.fat, food.fiber, food.protein, food.sodium, food.sugar, multiplier],
+  );
+
+  const quantityValue = computeQuantityFromGrams({
+    grams,
+    servingWeightGrams: selectedOption?.grams ?? baseServingGrams,
+    servingQty: selectedOption?.qty ?? 1,
+  });
+
+  const selection: FoodSelection = useMemo(
+    () => ({
+      grams,
+      servingUnit: selectedOption?.measure ?? food.servingUnit,
+      quantity: String(roundTo(quantityValue, 2)),
+      macros,
+      servingLabel: selectedOption?.label ?? `${food.servingQty} ${food.servingUnit}`,
+    }),
+    [food.servingQty, food.servingUnit, grams, macros, quantityValue, selectedOption?.label, selectedOption?.measure],
+  );
+
+  useEffect(() => {
+    onChange?.(selection);
+  }, [onChange, selection]);
+
+  const canSeeFood =
+    (food.source === 'fatsecret' && food.sourceId.trim().length > 0) ||
+    (typeof food.id === 'number' && Number.isFinite(food.id));
+
+  const foodDetailsHref = (() => {
+    if (food.source === 'fatsecret' && food.sourceId.trim().length > 0) {
+      return `/food/${encodeURIComponent(food.sourceId)}`;
+    }
+    if (typeof food.id === 'number' && Number.isFinite(food.id)) {
+      return `/food/${encodeURIComponent(`db-${food.id}`)}`;
+    }
+    return null;
+  })();
+
+  const brandName = food.brandName?.trim();
+
+  return (
+    <div className="p-3">
+      <div className="min-w-0">
+        <div className="truncate text-2xl font-semibold text-foreground">{food.name}</div>
+        {brandName ? <div className="truncate text-xs text-muted-foreground">{brandName}</div> : null}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-[340px_1fr]">
+        <div className="p-3">
+          <FoodThumbAndMacros
+            food={food}
+            macros={{
+              calories: macros.calories,
+              protein: macros.protein,
+              carbs: macros.carbs,
+              fat: macros.fat,
+            }}
+            variant="stacked"
+            belowImage={
+              canSeeFood && foodDetailsHref ? (
+                <a
+                  href={foodDetailsHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-medium text-primary underline underline-offset-2 whitespace-nowrap"
+                >
+                  see more details...
+                </a>
+              ) : null
+            }
+          />
         </div>
 
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-foreground">{food.name}</div>
-          <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+        <div className="space-y-4">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-foreground">Serving</label>
+          <Select
+            value={selectedOptionId}
+            onValueChange={(value) => setSelectedOptionId(value)}
+            onOpenChange={onServingSelectOpenChange}
+          >
+            <SelectTrigger className="h-9 w-full text-sm">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((o) => (
+                <SelectItem key={o.id} value={o.id}>
+                  {o.label} ({Math.round(o.grams)}g)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2.5 py-1.5 text-xs font-medium text-orange-600">
-              <Flame className="h-3 w-3" />
-              {caloriesValue}kcal
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2.5 py-1.5 text-xs font-medium text-red-600">
-              <Beef className="h-3 w-3" />
-              {proteinValue}g
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2.5 py-1.5 text-xs font-medium text-amber-700">
-              <Wheat className="h-3 w-3" />
-              {carbsValue}g
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2.5 py-1.5 text-xs font-medium text-rose-700">
-              <Droplets className="h-3 w-3" />
-              {fatValue}g
-            </div>
+        <div className="space-y-1">
+          <div className="flex flex-nowrap items-center gap-2 text-xs">
+            <span className="font-medium text-foreground">Serving size</span>
+            <Input
+              type="number"
+              min={1}
+              step={1}
+              value={String(grams)}
+              onChange={(e) => setGrams(safeGrams(e.target.value))}
+              className="h-8 w-[72px] text-sm"
+              aria-label="Serving size in grams"
+              data-testid="serving-grams-input"
+            />
+            <span className="text-muted-foreground">g</span>
+            <span className="min-w-0 truncate text-muted-foreground">
+              ({Math.round(selectedOption?.grams ?? baseServingGrams)}g = {selectedOption?.label})
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="w-7">1x</span>
+            <input
+              type="range"
+              min={1}
+              max={maxUnits}
+              step={1}
+              value={String(unitCount)}
+              onChange={(e) => {
+                const nextUnits = Math.max(1, Math.min(maxUnits, Math.round(asNumber(e.target.value))));
+                setGrams(safeGrams(nextUnits * selectedUnitGrams));
+              }}
+              className="w-full flex-1"
+              aria-label="Serving size slider"
+            />
+            <span className="w-10 text-right">{maxUnits}x</span>
+          </div>
+        </div>
+
+          <div className="text-xs text-muted-foreground">
+            Will log {selection.quantity} × {selection.servingUnit}
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onCancel} disabled={isBusy}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={onConfirm}
+              disabled={isBusy}
+              className="flex-1"
+              data-testid="add-food-button"
+            >
+              {isBusy ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Working...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {actionLabel}
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -251,7 +671,7 @@ function SearchInputWithBadge({
   return (
     <div className="relative rounded-xl bg-border/60 p-[1px] transition-colors focus-within:bg-gradient-to-r focus-within:from-green-500/35 focus-within:via-emerald-500/25 focus-within:to-green-500/35">
       <div className="relative">
-        <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
+        <div className="pointer-events-none absolute left-3 top-1/2 z-10 hidden -translate-y-1/2 sm:block">
           <span className="inline-flex h-10 items-center rounded-full bg-green-600 px-5 text-sm font-semibold text-white shadow-sm">
             Search Foods
           </span>
@@ -264,7 +684,7 @@ function SearchInputWithBadge({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={onFocus}
           onKeyDown={onKeyDown}
-          className="h-16 w-full rounded-[11px] border-0 bg-background pl-[160px] pr-6 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:shadow-none"
+          className="h-16 w-full rounded-[11px] border-0 bg-background pl-4 pr-6 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:shadow-none sm:pl-[160px]"
           data-testid="food-search-input"
           role="combobox"
           aria-expanded={showDropdown}
@@ -284,7 +704,7 @@ interface FoodSearchProps {
     quantity: string;
     servingUnit: string;
     grams: number;
-    macros: NutritionFactsSelection['macros'];
+    macros: MacroSummary;
   }) => void | Promise<void>;
   onAdded?: () => void;
   actionLabel?: string;
@@ -305,7 +725,7 @@ export default function FoodSearch({
   const [activeTab, setActiveTab] = useState<FoodSearchTab>('common');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
-  const [factsSelection, setFactsSelection] = useState<NutritionFactsSelection | null>(null);
+  const [factsSelection, setFactsSelection] = useState<FoodSelection | null>(null);
   const [isServingSelectOpen, setIsServingSelectOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -718,7 +1138,7 @@ export default function FoodSearch({
               data-testid="search-results"
             >
               {selectedFood ? (
-                <NutritionFacts
+                <SelectedFoodPanel
                   food={selectedFood}
                   isBusy={adding || persistMutation.isPending}
                   actionLabel={actionLabel}
@@ -804,7 +1224,9 @@ export default function FoodSearch({
                         </Button>
                       </div>
                     )}
+                  </div>
 
+                  <div className="hidden bg-background px-3 pb-3 sm:block">
                     <KeyboardHints />
                   </div>
                 </>

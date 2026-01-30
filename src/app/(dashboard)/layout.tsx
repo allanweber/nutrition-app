@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -45,17 +46,27 @@ export default async function DashboardLayout({
       />
 
       {/* Main content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 [&+footer]:inset-x-auto [&+footer]:left-auto [&+footer]:right-4 [&+footer]:bottom-4 [&+footer]:w-auto [&+footer]:justify-end [&+footer]:bg-transparent [&+footer]:p-0">
         {children}
       </main>
-      <a href="https://www.fatsecret.com">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret.png"
-          srcSet="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_2x.png 2x, https://platform.fatsecret.com/api/static/images/powered_by_fatsecret_3x.png 3x"
-          alt="Powered by FatSecret"
-        />
-      </a>
+      <footer className="fixed inset-x-0 !bottom-0 z-50 flex !justify-end bg-muted/30 !p-0 !m-0 !left-0 !right-0 !inset-x-0 !inset-y-auto !top-auto !right-auto !left-auto !right-0">
+        <a
+          className="!p-0 !m-0"
+          href="https://www.fatsecret.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Powered by FatSecret"
+        >
+          <Image
+            className="block !m-0"
+            src="https://platform.fatsecret.com/api/static/images/powered_by_fatsecret.png"
+            alt="Powered by FatSecret"
+            width={170}
+            height={32}
+            unoptimized
+          />
+        </a>
+      </footer>
     </div>
   );
 }
