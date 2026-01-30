@@ -120,3 +120,33 @@ export function usePersistSelectedFoodMutation() {
     mutationFn: persistSelectedFood,
   })
 }
+
+export const FOOD_BY_ID_QUERY_KEY = (id: string) => ['foods', 'by-id', id]
+
+export async function fetchFoodById(id: string): Promise<NutritionSourceFood> {
+  const response = await fetch(`/api/foods/${encodeURIComponent(id)}`)
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof data?.error === 'string' && data.error.trim().length > 0
+        ? data.error
+        : 'Failed to fetch food'
+    throw new Error(errorMessage)
+  }
+
+  const food = data?.food as NutritionSourceFood | undefined
+  if (!food || typeof food.sourceId !== 'string') {
+    throw new Error('Failed to fetch food')
+  }
+
+  return food
+}
+
+export function useFoodByIdQuery(id: string) {
+  return useQuery({
+    queryKey: FOOD_BY_ID_QUERY_KEY(id),
+    queryFn: () => fetchFoodById(id),
+    enabled: typeof id === 'string' && id.trim().length > 0,
+  })
+}

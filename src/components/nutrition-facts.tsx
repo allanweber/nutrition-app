@@ -167,6 +167,8 @@ export default function NutritionFacts(props: {
   food: NutritionSourceFood;
   isBusy?: boolean;
   actionLabel?: string;
+  showActionButton?: boolean;
+  showCancelButton?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   onChange?: (selection: NutritionFactsSelection) => void;
@@ -176,6 +178,8 @@ export default function NutritionFacts(props: {
     food,
     isBusy = false,
     actionLabel = 'Add to Log',
+    showActionButton = true,
+    showCancelButton = true,
     onCancel,
     onConfirm,
     onChange,
@@ -338,9 +342,11 @@ export default function NutritionFacts(props: {
             <div className="truncate text-xs text-muted-foreground">{food.brandName}</div>
           ) : null}
         </div>
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="shrink-0">
-          Cancel
-        </Button>
+        {showCancelButton ? (
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="shrink-0">
+            Cancel
+          </Button>
+        ) : null}
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-[132px_1fr]">
@@ -571,29 +577,31 @@ export default function NutritionFacts(props: {
               </div>
             </div>
 
-            <div>
-              <Button
-                onClick={onConfirm}
-                disabled={isBusy}
-                className="w-full"
-                data-testid="add-food-button"
-              >
-                {isBusy ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Working...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {actionLabel}
-                  </>
-                )}
-              </Button>
-              <div className="mt-2 text-xs text-muted-foreground">
-                Will log {selection.quantity} × {selection.servingUnit}
+            {showActionButton ? (
+              <div>
+                <Button
+                  onClick={onConfirm}
+                  disabled={isBusy}
+                  className="w-full"
+                  data-testid="add-food-button"
+                >
+                  {isBusy ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Working...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      {actionLabel}
+                    </>
+                  )}
+                </Button>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Will log {selection.quantity} × {selection.servingUnit}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
