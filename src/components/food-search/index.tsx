@@ -195,7 +195,6 @@ export default function FoodSearch({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FoodSearchTab>('common');
   const [isOpen, setIsOpen] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -205,8 +204,7 @@ export default function FoodSearch({
 
   const setQueryValue = (value: string) => {
     setQuery(value);
-    setHighlightIndex(0);
-    setError(null);
+      setError(null);
   };
 
   useEffect(() => {
@@ -442,18 +440,10 @@ export default function FoodSearch({
     isOpen && (selectedFood !== null || query.trim().length >= 3);
   const showDropdown = showPanel && !selectedFood && query.trim().length >= 3;
 
-  const activeOptionId = useMemo(() => {
-    if (!showDropdown) return undefined;
-    const activeFood = foodsForTab[highlightIndex];
-    if (!activeFood) return undefined;
-    return `food-option-${activeFood.source}-${activeFood.sourceId}`;
-  }, [foodsForTab, highlightIndex, showDropdown]);
-
   const selectFood = (food: NutritionSourceFood) => {
     setSelectedFood(food);
     setError(null);
     setIsOpen(true);
-    setHighlightIndex(0);
 
     persistMutation.mutate(food, {
       onSuccess: (persisted) => {
@@ -476,8 +466,7 @@ export default function FoodSearch({
       setSelectedFood(null);
       setQueryValue('');
       setIsOpen(false);
-      setHighlightIndex(0);
-    }
+   }
   };
 
   return (
@@ -491,7 +480,6 @@ export default function FoodSearch({
           showDropdown={showDropdown}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          activeOptionId={activeOptionId}
         >
           {showPanel && (
             <div
@@ -503,7 +491,6 @@ export default function FoodSearch({
                     activeTab={activeTab}
                     onTabChange={(tab) => {
                       setActiveTab(tab);
-                      setHighlightIndex(0);
                       listRef.current?.scrollTo({ top: 0 });
                     }}
                     commonCount={commonFoods.length}
@@ -525,8 +512,6 @@ export default function FoodSearch({
                           key={`${food.source}-${food.sourceId}`}
                           food={food}
                           index={index}
-                          highlightIndex={highlightIndex}
-                          setHighlightIndex={setHighlightIndex}
                           selectFood={selectFood}
                         />
                       ))}

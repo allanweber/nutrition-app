@@ -276,22 +276,17 @@ const toPer100g = (food: NutritionSourceFood): Per100g | null => {
       sodium: food.sodium != null ? Number(food.sodium) * factor : undefined,
     };
   };
-  
+
 export function FoodOption({
   food,
   index,
-  highlightIndex,
-  setHighlightIndex,
   selectFood,
 }: {
   food: NutritionSourceFood;
   index: number;
-  highlightIndex: number;
-  setHighlightIndex: (index: number) => void;
   selectFood: (food: NutritionSourceFood) => void;
 }) {
-  const p100 = toPer100g(food);  
-  const isActive = index === highlightIndex;
+  const p100 = toPer100g(food);
 
   const macros: MacroRow = {
     calories: p100 ? p100.calories : Number(food.calories),
@@ -317,11 +312,8 @@ export function FoodOption({
         id={`food-option-${food.source}-${food.sourceId}`}
         type="button"
         role="option"
-        aria-selected={isActive}
-        onMouseEnter={() => setHighlightIndex(index)}
-        onClick={() => selectFood(food)}
         data-testid={`food-result-${index}`}
-        className={`w-full mb-1 rounded-lg p-3 text-left transition-colors ${isActive ? 'bg-muted/60' : 'hover:bg-muted/80'}`}
+        className="w-full mb-1 rounded-lg p-3 text-left transition-colors hover:bg-muted/80"
       >
         <div className="grid grid-cols-[44px_1fr] gap-4">
           <div className="flex flex-col items-center justify-center">
