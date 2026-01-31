@@ -39,6 +39,8 @@ export interface NutritionSourceSearchResult {
   foods: NutritionSourceFood[];
   source: NutritionSourceName;
   cached: boolean;
+  /** When available (e.g. FatSecret), the total number of matching results on the source. */
+  totalResults?: number;
 }
 
 export interface NutritionSourceSearchOptions {
@@ -67,4 +69,6 @@ export interface SearchAggregatorResult {
   page?: number;
   pageSize?: number;
   hasMore?: boolean;
+  /** Total external results when available (e.g. FatSecret total_results). */
+  totalResults?: number;
 }

@@ -396,7 +396,8 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
   const safePage = Number.isFinite(page) && page >= 0 ? page : 0;
   const safePageSize = Number.isFinite(pageSize) && pageSize > 0 ? Math.min(pageSize, 50) : 25;
 
-  const requiredLimit = Math.min((safePage + 1) * safePageSize, 100);
+  const MAX_FETCH_LIMIT = 250;
+  const requiredLimit = Math.min((safePage + 1) * safePageSize, MAX_FETCH_LIMIT);
 
   const cacheKey = `search:${query.toLowerCase().trim()}`;
   const cached = searchCache.get(cacheKey);
@@ -405,7 +406,10 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
     const slice = cached.foods.slice(sliceStart, sliceStart + safePageSize);
     const sliceEnd = sliceStart + slice.length;
     const moreCached = cached.foods.length > sliceEnd;
-    const maybeMoreRemote = cached.foods.length === cached.fetchedLimit && cached.fetchedLimit < 100;
+    const maybeMoreRemote =
+      typeof cached.totalResults === 'number'
+        ? cached.totalResults > cached.fetchedLimit
+        : cached.foods.length === cached.fetchedLimit && cached.fetchedLimit < MAX_FETCH_LIMIT;
     return {
       foods: slice,
       sources: [{ name: 'cache', status: 'success', count: slice.length }],
@@ -413,6 +417,7 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
       page: safePage,
       pageSize: safePageSize,
       hasMore: moreCached || maybeMoreRemote,
+      totalResults: cached.totalResults,
     };
   }
 
@@ -440,7 +445,7 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
 
   const runAdapter = async (
     adapter: NutritionSource | undefined,
-  ): Promise<{ foods: NutritionSourceFood[]; status: SourceStatus }> => {
+  ): Promise<{ foods: NutritionSourceFood[]; status: SourceStatus; totalResults?: number }> => {
     if (!adapter) {
       return {
         foods: [],
@@ -463,6 +468,7 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
       );
       return {
         foods: result.foods,
+        totalResults: result.totalResults,
         status: {
           name: adapter.name,
           status: 'success',
@@ -489,6 +495,7 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
   sources.push(fatSecretResult.status);
 
   let externalFoods = fatSecretResult.foods;
+  const fatSecretTotalResults = fatSecretResult.totalResults;
 
   // USDA is only queried if FatSecret fails (error/timeout/not configured/etc).
   // If FatSecret succeeds but returns 0 items, we do NOT fall back.
@@ -513,13 +520,16 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
   }
 
   // Cache in-memory for subsequent pages.
-  searchCache.set(cacheKey, { foods: deduped, fetchedLimit: requiredLimit });
+  searchCache.set(cacheKey, { foods: deduped, fetchedLimit: requiredLimit, totalResults: fatSecretTotalResults });
 
   const sliceStart = safePage * safePageSize;
   const slice = deduped.slice(sliceStart, sliceStart + safePageSize);
   const sliceEnd = sliceStart + slice.length;
   const moreInMemory = deduped.length > sliceEnd;
-  const maybeMoreRemote = deduped.length === requiredLimit && requiredLimit < 100;
+  const maybeMoreRemote =
+    typeof fatSecretTotalResults === 'number'
+      ? fatSecretTotalResults > requiredLimit
+      : deduped.length === requiredLimit && requiredLimit < MAX_FETCH_LIMIT;
   return {
     foods: slice,
     sources,
@@ -527,6 +537,7 @@ export async function searchAllSources(query: string, options?: SearchOptions): 
     page: safePage,
     pageSize: safePageSize,
     hasMore: moreInMemory || maybeMoreRemote,
+    totalResults: fatSecretTotalResults,
   };
 }
 

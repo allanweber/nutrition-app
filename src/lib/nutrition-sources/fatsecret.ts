@@ -490,6 +490,12 @@ export class FatSecretSource implements NutritionSource {
       page_number: String(page),
     })) as FatSecretFoodsSearchV1Response;
 
+    const totalResults = num(
+      data?.foods_search?.results?.total_results ??
+        data?.foods?.total_results ??
+        data?.foods?.max_results,
+    );
+
     const list =
       data?.foods_search?.results?.food ??
       data?.foods?.results?.food ??
@@ -501,7 +507,7 @@ export class FatSecretSource implements NutritionSource {
       .map(toFood)
       .filter((f): f is NutritionSourceFood => Boolean(f));
 
-    return { foods, source: this.name, cached: false };
+    return { foods, source: this.name, cached: false, totalResults };
   }
 }
 

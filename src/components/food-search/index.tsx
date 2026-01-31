@@ -200,8 +200,6 @@ export default function FoodSearch({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
-  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
-  const requestedLoadMoreRef = useRef(false);
 
   const persistMutation = usePersistSelectedFoodMutation();
 
@@ -217,13 +215,11 @@ export default function FoodSearch({
     if (!trimmed) {
       setHasSearched(false);
       setDebouncedQuery('');
-      requestedLoadMoreRef.current = false;
     }
 
     if (trimmed.length < 3) {
       setHasSearched(false);
       setDebouncedQuery('');
-      requestedLoadMoreRef.current = false;
       return;
     }
 
@@ -481,52 +477,8 @@ export default function FoodSearch({
       setQueryValue('');
       setIsOpen(false);
       setHighlightIndex(0);
-      requestedLoadMoreRef.current = false;
     }
   };
-
-  useEffect(() => {
-    requestedLoadMoreRef.current = false;
-  }, [activeTab, foods.length, isLoadingMore]);
-
-  useEffect(() => {
-    if (!showDropdown) return;
-    if (foodsForTab.length === 0) return;
-    if (!hasMore) return;
-    if (isLoadingMore || isSearching) return;
-
-    const root = listRef.current;
-    const target = loadMoreSentinelRef.current;
-    if (!root || !target) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (!first?.isIntersecting) return;
-        if (foodsForTab.length === 0) return;
-        // Prevent immediate auto-fetches on short lists and tab switches.
-        // Only allow auto-load after the list is scrollable and the user has
-        // actually scrolled within it.
-        if (root.scrollHeight <= root.clientHeight + 8) return;
-        if (root.scrollTop <= 0) return;
-        if (requestedLoadMoreRef.current) return;
-
-        requestedLoadMoreRef.current = true;
-        void searchQueryHook.fetchNextPage();
-      },
-      { root, threshold: 0.1 },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [
-    foodsForTab.length,
-    hasMore,
-    isLoadingMore,
-    isSearching,
-    searchQueryHook,
-    showDropdown,
-  ]);
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -543,7 +495,7 @@ export default function FoodSearch({
         >
           {showPanel && (
             <div
-              className="absolute top-full left-0 right-0 mt-2 bg-white border shadow-lg rounded-3xl overflow-hidden z-50"
+              className="absolute top-full left-0 right-0 mt-2 overflow-hidden rounded-3xl border bg-search-results shadow-lg z-50"
               data-testid="search-results"
             >
                 <>
@@ -552,7 +504,6 @@ export default function FoodSearch({
                     onTabChange={(tab) => {
                       setActiveTab(tab);
                       setHighlightIndex(0);
-                      requestedLoadMoreRef.current = false;
                       listRef.current?.scrollTo({ top: 0 });
                     }}
                     commonCount={commonFoods.length}
@@ -580,14 +531,11 @@ export default function FoodSearch({
                         />
                       ))}
 
-                    {/* Infinite scroll sentinel */}
-                    <div ref={loadMoreSentinelRef} className="h-1" />
-
                     {hasMore && foodsForTab.length > 0 && (
                       <div className="pt-3">
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="link"
                           onClick={() => void searchQueryHook.fetchNextPage()}
                           disabled={isLoadingMore || isSearching}
                           className="w-full"
