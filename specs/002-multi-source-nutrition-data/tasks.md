@@ -177,11 +177,11 @@
 **Status**: [x] Completed
 
 **Files**:
-- `src/components/food-search.tsx`
+- `src/components/food-search/**`
 
 **Acceptance Criteria**:
 - [x] Search results appear in a floating dropdown under the input
-- [x] Keyboard navigation supported (↑/↓ to navigate, Enter to select, Esc to clear)
+- [x] Keyboard shortcut supported: Esc clears search/closes panel
 - [x] Tabs remain available for Common/Branded/Custom
 - [x] Infinite scroll triggers load-more automatically when near bottom
 - [x] Full-width "Load more" button remains as a fallback at the bottom
@@ -205,3 +205,21 @@
 - [x] Selecting a food persists it and loads alt measures
 - [x] Nutrition Facts rendered via dedicated component with serving select, grams input, slider, computed macros
 - [x] Meal selection removed; food log defaults to breakfast
+
+---
+
+### Task 3.6: Food Selection Dialog UX (shadcn Dialog)
+
+**Status**: [x] Completed
+
+**Files**:
+- `src/components/food-search.tsx`
+- `src/components/nutrition-facts.tsx`
+- `src/components/ui/dialog.tsx`
+
+**Acceptance Criteria**:
+- [x] Clicking a search result opens a Dialog with food details
+- [x] Dialog contains a Card header with image + title + brand (if any)
+- [x] Dialog body contains the Nutrition Facts table and controls
+- [x] Dialog footer contains Cancel and Add buttons
+- [x] Removed custom click-outside/Radix attribute heuristics from the dropdown flow

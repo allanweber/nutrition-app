@@ -1,7 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'm.ftscrt.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform.fatsecret.com',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
