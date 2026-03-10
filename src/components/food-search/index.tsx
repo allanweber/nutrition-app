@@ -21,6 +21,7 @@ import { FOOD_IMAGE_QUERY_KEY,  fetchFoodImageUrl,  useInfiniteFoodSearchQuery, 
 import type { NutritionSourceFood, SearchAggregatorResult } from '@/lib/nutrition-sources/types';
 import { FoodSearchTab, MacroSummary } from './types';
 import { FoodOption } from './food-option';
+import SelectedFoodCard from './selected-food-card';
 
 const EMPTY_FOODS: NutritionSourceFood[] = [];
 
@@ -180,6 +181,7 @@ interface FoodSearchProps {
     grams: number;
     macros: MacroSummary;
   }) => void | Promise<void>;
+  actionLabel?: string;
   onAdded?: () => void;
   pageSize?: number;
 }
@@ -187,12 +189,13 @@ interface FoodSearchProps {
 export default function FoodSearch({
   ...props
 }: FoodSearchProps) {
-  const { pageSize = 25 } = props;
+  const { pageSize = 25, actionLabel = 'Add to Log' } = props;
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedFood, setSelectedFood] = useState<NutritionSourceFood | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState<FoodSearchTab>('common');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -458,6 +461,44 @@ export default function FoodSearch({
     });
   };
 
+  const handleCancelSelectedFood = () => {
+    setSelectedFood(null);
+    setIsAdding(false);
+    setIsOpen(true);
+    inputRef.current?.focus();
+  };
+
+  const handleConfirmSelectedFood = async (selection: {
+    grams: number;
+    servingUnit: string;
+    quantity: string;
+    macros: MacroSummary;
+  }) => {
+    if (!selectedFood) return;
+    setIsAdding(true);
+    setError(null);
+
+    try {
+      await props.onAddFood({
+        food: selectedFood,
+        quantity: selection.quantity,
+        servingUnit: selection.servingUnit,
+        grams: selection.grams,
+        macros: selection.macros,
+      });
+      props.onAdded?.();
+
+      setSelectedFood(null);
+      setQueryValue('');
+      setIsOpen(false);
+    } catch (err) {
+      console.error('Error adding food:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add food to log.');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!showPanel) return;
 
@@ -505,36 +546,48 @@ export default function FoodSearch({
                     aria-label="Food search results"
                     className="max-h-[440px] overflow-y-auto p-3"
                   >
-                    {emptyContent}
-                    {!isSearching &&
-                      foodsForTab.map((food, index) => (
-                        <FoodOption
-                          key={`${food.source}-${food.sourceId}`}
-                          food={food}
-                          index={index}
-                          selectFood={selectFood}
-                        />
-                      ))}
+                    {selectedFood ? (
+                      <SelectedFoodCard
+                        food={selectedFood}
+                        isBusy={isAdding}
+                        actionLabel={actionLabel}
+                        onCancel={handleCancelSelectedFood}
+                        onConfirm={handleConfirmSelectedFood}
+                      />
+                    ) : (
+                      <>
+                        {emptyContent}
+                        {!isSearching &&
+                          foodsForTab.map((food, index) => (
+                            <FoodOption
+                              key={`${food.source}-${food.sourceId}`}
+                              food={food}
+                              index={index}
+                              selectFood={selectFood}
+                            />
+                          ))}
 
-                    {hasMore && foodsForTab.length > 0 && (
-                      <div className="pt-3">
-                        <Button
-                          type="button"
-                          variant="link"
-                          onClick={() => void searchQueryHook.fetchNextPage()}
-                          disabled={isLoadingMore || isSearching}
-                          className="w-full"
-                        >
-                          {isLoadingMore ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Loading more...
-                            </>
-                          ) : (
-                            'Load more'
-                          )}
-                        </Button>
-                      </div>
+                        {hasMore && foodsForTab.length > 0 && (
+                          <div className="pt-3">
+                            <Button
+                              type="button"
+                              variant="link"
+                              onClick={() => void searchQueryHook.fetchNextPage()}
+                              disabled={isLoadingMore || isSearching}
+                              className="w-full"
+                            >
+                              {isLoadingMore ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Loading more...
+                                </>
+                              ) : (
+                                'Load more'
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </>

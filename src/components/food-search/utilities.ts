@@ -51,7 +51,7 @@ export function buildServingOptions(food: NutritionSourceFood): { options: Servi
       const measure = typeof m.measure === 'string' ? m.measure : 'serving';
       return {
         id: `alt-${m.seq ?? idx + 1}-${idx}`,
-        label: measure,
+        label: `${measure}`,
         qty: qty || 1,
         measure,
         grams: grams || baseServingGrams,
@@ -68,7 +68,7 @@ export function buildServingOptions(food: NutritionSourceFood): { options: Servi
     const unique: ServingOption[] = [];
 
     for (const option of [base, ...alt]) {
-      const key = `${option.qty}-${option.measure}-${Math.round(option.grams)}`;
+      const key = `${option.qty}-${option.measure}-${roundTo(option.grams, 3)}`;
       if (seen.has(key)) continue;
       seen.add(key);
       unique.push(option);
@@ -77,7 +77,9 @@ export function buildServingOptions(food: NutritionSourceFood): { options: Servi
     return unique;
   })();
 
-  const defaultId = alt.length > 0 ? alt[0].id : base.id;
+  // Find the 100g option from the API data
+  const hundredGramOption = options.find((o) => Math.abs(o.grams - 100) < 0.1);
+  const defaultId = hundredGramOption?.id ?? (options.length > 0 ? options[0].id : base.id);
 
   return { options, defaultId };
 }
