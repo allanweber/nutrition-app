@@ -3,11 +3,12 @@ import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import {
   foodAltMeasures,
-  foodLogs,
+  foodLogItems,
+  foodLogMeals,
   foodPhotos,
   foods,
 } from '@/server/db/schema';
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
@@ -17,6 +18,19 @@ import {
   validateRequestBody,
 } from '@/lib/api-validation';
 import { NutritionixFood, nutritionixToBaseFood } from '@/types/food';
+
+function toNumber(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function roundToMealMinute(date: Date) {
+  const value = new Date(date);
+  value.setSeconds(0, 0);
+  return value;
+}
 
 // Helper to get or create food in cache
 async function getOrCreateFood(nutritionixData: NutritionixFood) {
@@ -141,18 +155,52 @@ export async function POST(request: NextRequest) {
     // Get or create food in our cache
     const cachedFood = await getOrCreateFood(nutritionInfo);
 
-    // Create food log entry
+    // Create food log entry in grouped meal model
     const logDate = consumedAt ? new Date(consumedAt) : new Date();
+    const normalizedConsumedAt = roundToMealMinute(logDate);
 
-    const [newLog] = await db
-      .insert(foodLogs)
+    const existingMeal = await db.query.foodLogMeals.findFirst({
+      where: and(
+        eq(foodLogMeals.userId, user.id),
+        eq(foodLogMeals.mealType, mealType),
+        eq(foodLogMeals.consumedAt, normalizedConsumedAt),
+      ),
+    });
+
+    let mealId = existingMeal?.id;
+
+    if (!mealId) {
+      const [newMeal] = await db
+        .insert(foodLogMeals)
+        .values({
+          userId: user.id,
+          mealType,
+          consumedAt: normalizedConsumedAt,
+        })
+        .returning();
+
+      mealId = newMeal.id;
+    }
+
+    const [newLogItem] = await db
+      .insert(foodLogItems)
       .values({
-        userId: user.id,
+        mealId,
         foodId: cachedFood.id,
         quantity: quantity.toString(),
         servingUnit: nutritionInfo.serving_unit,
-        mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
-        consumedAt: logDate,
+        foodName: cachedFood.name,
+        brandName: cachedFood.brandName || null,
+        calories: cachedFood.calories,
+        protein: cachedFood.protein,
+        carbs: cachedFood.carbs,
+        fat: cachedFood.fat,
+        fiber: cachedFood.fiber,
+        sugar: cachedFood.sugar,
+        sodium: cachedFood.sodium,
+        servingQty: cachedFood.servingQty,
+        servingUnitSnapshot: cachedFood.servingUnit,
+        servingWeightGrams: cachedFood.servingWeightGrams,
       })
       .returning();
 
@@ -165,11 +213,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       log: {
-        id: newLog.id,
-        quantity: newLog.quantity,
-        servingUnit: newLog.servingUnit,
-        mealType: newLog.mealType,
-        consumedAt: newLog.consumedAt,
+        id: newLogItem.id,
+        quantity: newLogItem.quantity,
+        servingUnit: newLogItem.servingUnit,
+        mealType,
+        consumedAt: normalizedConsumedAt,
         food: {
           id: cachedFood.id,
           name: cachedFood.name,
@@ -224,99 +272,77 @@ export async function GET(request: NextRequest) {
 
     const date = dateValidation.data;
 
-    // Query food logs with related food data and photos
-    const logs = await db
+    const mealItemLogs = await db
       .select({
-        id: foodLogs.id,
-        quantity: foodLogs.quantity,
-        servingUnit: foodLogs.servingUnit,
-        mealType: foodLogs.mealType,
-        consumedAt: foodLogs.consumedAt,
+        id: foodLogItems.id,
+        quantity: foodLogItems.quantity,
+        servingUnit: foodLogItems.servingUnit,
+        mealType: foodLogMeals.mealType,
+        consumedAt: foodLogMeals.consumedAt,
         food: {
-          id: foods.id,
-          name: foods.name,
-          brandName: foods.brandName,
-          calories: foods.calories,
-          protein: foods.protein,
-          carbs: foods.carbs,
-          fat: foods.fat,
-          fiber: foods.fiber,
-          sugar: foods.sugar,
-          sodium: foods.sodium,
-          servingQty: foods.servingQty,
-          servingUnit: foods.servingUnit,
+          id: foodLogItems.foodId,
+          name: foodLogItems.foodName,
+          brandName: foodLogItems.brandName,
+          calories: foodLogItems.calories,
+          protein: foodLogItems.protein,
+          carbs: foodLogItems.carbs,
+          fat: foodLogItems.fat,
+          fiber: foodLogItems.fiber,
+          sugar: foodLogItems.sugar,
+          sodium: foodLogItems.sodium,
+          servingQty: foodLogItems.servingQty,
+          servingUnit: foodLogItems.servingUnitSnapshot,
         },
         photoThumb: foodPhotos.thumb,
       })
-      .from(foodLogs)
-      .leftJoin(foods, eq(foodLogs.foodId, foods.id))
-      .leftJoin(foodPhotos, eq(foods.id, foodPhotos.foodId))
+      .from(foodLogItems)
+      .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+      .leftJoin(foodPhotos, eq(foodLogItems.foodId, foodPhotos.foodId))
       .where(
         and(
-          eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, new Date(date)),
-          lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z')),
+          eq(foodLogMeals.userId, user.id),
+          gte(foodLogMeals.consumedAt, new Date(date)),
+          lt(foodLogMeals.consumedAt, new Date(date + 'T23:59:59.999Z')),
         ),
       )
-      .orderBy(desc(foodLogs.consumedAt))
-      .limit(50);
-
-    // Transform logs to include photoUrl in food object
-    const transformedLogs = logs.map((log) => ({
+      .orderBy(desc(foodLogMeals.consumedAt), desc(foodLogItems.createdAt))
+      .limit(200);
+    const transformedLogs = mealItemLogs.map((log) => ({
       id: log.id,
-      quantity: log.quantity,
+      quantity: toNumber(log.quantity),
       servingUnit: log.servingUnit,
       mealType: log.mealType,
       consumedAt: log.consumedAt,
       food: {
         ...log.food,
-        photoUrl: log.photoThumb,
+        id: log.food.id || 0,
+        calories: toNumber(log.food.calories),
+        protein: toNumber(log.food.protein),
+        carbs: toNumber(log.food.carbs),
+        fat: toNumber(log.food.fat),
+        fiber: toNumber(log.food.fiber),
+        sugar: toNumber(log.food.sugar),
+        sodium: toNumber(log.food.sodium),
+        servingQty: toNumber(log.food.servingQty),
+        photoUrl: log.photoThumb || null,
       },
     }));
 
-    // Calculate daily totals
-    const totals = await db
-      .select({
-        calories:
-          sql<number>`SUM(CAST(${foods.calories} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        protein:
-          sql<number>`SUM(CAST(${foods.protein} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        carbs:
-          sql<number>`SUM(CAST(${foods.carbs} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        fat: sql<number>`SUM(CAST(${foods.fat} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-          Number,
-        ),
-        fiber:
-          sql<number>`SUM(CAST(${foods.fiber} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        sugar:
-          sql<number>`SUM(CAST(${foods.sugar} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        sodium:
-          sql<number>`SUM(CAST(${foods.sodium} AS NUMERIC) * ${foodLogs.quantity})`.mapWith(
-            Number,
-          ),
-        foodCount: sql<number>`COUNT(${foodLogs.id})`.mapWith(Number),
-      })
-      .from(foodLogs)
-      .leftJoin(foods, eq(foodLogs.foodId, foods.id))
-      .where(
-        and(
-          eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, new Date(date)),
-          lt(foodLogs.consumedAt, new Date(date + 'T23:59:59.999Z')),
-        ),
-      );
-
-    const totalsData = totals[0] || {
+    const totalsData = transformedLogs.reduce(
+      (acc, log) => {
+        const quantity = toNumber(log.quantity);
+        return {
+          calories: acc.calories + toNumber(log.food.calories) * quantity,
+          protein: acc.protein + toNumber(log.food.protein) * quantity,
+          carbs: acc.carbs + toNumber(log.food.carbs) * quantity,
+          fat: acc.fat + toNumber(log.food.fat) * quantity,
+          fiber: acc.fiber + toNumber(log.food.fiber) * quantity,
+          sugar: acc.sugar + toNumber(log.food.sugar) * quantity,
+          sodium: acc.sodium + toNumber(log.food.sodium) * quantity,
+          foodCount: acc.foodCount + 1,
+        };
+      },
+      {
       calories: 0,
       protein: 0,
       carbs: 0,
@@ -325,7 +351,8 @@ export async function GET(request: NextRequest) {
       sugar: 0,
       sodium: 0,
       foodCount: 0,
-    };
+      },
+    );
 
     // Group logs by meal type
     const logsByMeal: Record<string, typeof transformedLogs> = {};

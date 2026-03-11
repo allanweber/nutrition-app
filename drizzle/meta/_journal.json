@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769063385372,
-      "tag": "0000_cooing_maximus",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1769156762557,
-      "tag": "0001_greedy_captain_universe",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1769194185575,
-      "tag": "0002_email_verification_and_security_events",
+      "when": 1773253112888,
+      "tag": "0000_dapper_mordo",
       "breakpoints": true
     }
   ]

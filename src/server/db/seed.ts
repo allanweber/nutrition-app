@@ -18,7 +18,7 @@ config({ path: '.env.local' });
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import * as schema from './schema';
 import { subDays, startOfDay, setHours } from 'date-fns';
 
@@ -577,6 +577,86 @@ function generateFoodLogs(
   return logs;
 }
 
+function toStringOrNull(value: string | number | null | undefined) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  return String(value);
+}
+
+async function insertGroupedFoodLogs(
+  userId: string,
+  logs: Array<{
+    userId: string;
+    foodId: number;
+    quantity: string;
+    servingUnit: string | null;
+    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    consumedAt: Date;
+  }>,
+) {
+  if (logs.length === 0) {
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    for (const log of logs) {
+      const existingMeal = await tx.query.foodLogMeals.findFirst({
+        where: and(
+          eq(schema.foodLogMeals.userId, userId),
+          eq(schema.foodLogMeals.mealType, log.mealType),
+          eq(schema.foodLogMeals.consumedAt, log.consumedAt),
+        ),
+      });
+
+      let mealId = existingMeal?.id;
+      if (!mealId) {
+        const [newMeal] = await tx
+          .insert(schema.foodLogMeals)
+          .values({
+            userId,
+            mealType: log.mealType,
+            consumedAt: log.consumedAt,
+          })
+          .returning();
+        mealId = newMeal.id;
+      }
+
+      const food = await tx.query.foods.findFirst({
+        where: eq(schema.foods.id, log.foodId),
+      });
+
+      if (!food) {
+        continue;
+      }
+
+      const photo = await tx.query.foodPhotos.findFirst({
+        where: eq(schema.foodPhotos.foodId, log.foodId),
+      });
+
+      await tx.insert(schema.foodLogItems).values({
+        mealId,
+        foodId: log.foodId,
+        quantity: log.quantity,
+        servingUnit: log.servingUnit,
+        foodName: food.name,
+        brandName: food.brandName,
+        calories: toStringOrNull(food.calories),
+        protein: toStringOrNull(food.protein),
+        carbs: toStringOrNull(food.carbs),
+        fat: toStringOrNull(food.fat),
+        fiber: toStringOrNull(food.fiber),
+        sugar: toStringOrNull(food.sugar),
+        sodium: toStringOrNull(food.sodium),
+        servingQty: toStringOrNull(food.servingQty),
+        servingUnitSnapshot: food.servingUnit,
+        servingWeightGrams: toStringOrNull(food.servingWeightGrams),
+        photoThumbSnapshot: photo?.thumb || null,
+      });
+    }
+  });
+}
+
 // Create user via Better Auth API
 async function createUserViaApi(
   name: string,
@@ -701,9 +781,7 @@ async function seed() {
         userDef.goal.goalType
       );
 
-      if (foodLogs.length > 0) {
-        await db.insert(schema.foodLogs).values(foodLogs);
-      }
+      await insertGroupedFoodLogs(userId, foodLogs);
 
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);
       console.log(`    - Role: ${userDef.role}`);

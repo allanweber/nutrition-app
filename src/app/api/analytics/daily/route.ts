@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { foodLogs, foods } from '@/server/db/schema';
+import { foodLogItems, foodLogMeals } from '@/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 import { dateSchema, validateApiInput } from '@/lib/api-validation';
@@ -44,35 +44,35 @@ export async function GET(request: NextRequest) {
     const targetDate = new Date(dateValidation.data);
     const { start, end } = getDayRange(targetDate);
 
-    // Get food logs for the day with food data
+    // Get food logs for the day with snapshot food data
     const dayLogs = await db
       .select({
-        id: foodLogs.id,
-        quantity: foodLogs.quantity,
-        mealType: foodLogs.mealType,
-        consumedAt: foodLogs.consumedAt,
+        id: foodLogItems.id,
+        quantity: foodLogItems.quantity,
+        mealType: foodLogMeals.mealType,
+        consumedAt: foodLogMeals.consumedAt,
         food: {
-          id: foods.id,
-          name: foods.name,
-          calories: foods.calories,
-          protein: foods.protein,
-          carbs: foods.carbs,
-          fat: foods.fat,
-          fiber: foods.fiber,
-          sugar: foods.sugar,
-          sodium: foods.sodium,
+          id: foodLogItems.foodId,
+          name: foodLogItems.foodName,
+          calories: foodLogItems.calories,
+          protein: foodLogItems.protein,
+          carbs: foodLogItems.carbs,
+          fat: foodLogItems.fat,
+          fiber: foodLogItems.fiber,
+          sugar: foodLogItems.sugar,
+          sodium: foodLogItems.sodium,
         }
       })
-      .from(foodLogs)
-      .leftJoin(foods, eq(foodLogs.foodId, foods.id))
+      .from(foodLogItems)
+      .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
       .where(
         and(
-          eq(foodLogs.userId, user.id),
-          gte(foodLogs.consumedAt, start),
-          lte(foodLogs.consumedAt, end)
+          eq(foodLogMeals.userId, user.id),
+          gte(foodLogMeals.consumedAt, start),
+          lte(foodLogMeals.consumedAt, end)
         )
       )
-      .orderBy(desc(foodLogs.consumedAt));
+      .orderBy(desc(foodLogMeals.consumedAt));
 
     // Calculate totals
     const totals = dayLogs.reduce(

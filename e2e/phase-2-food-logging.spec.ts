@@ -288,12 +288,12 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(deleteButton).toBeVisible({ timeout: 5000 });
       await deleteButton.click();
 
-      // Wait for the food log entry to be removed from DOM or count to decrease
-      await page.waitForTimeout(1000);
-
-      // Count should decrease
-      const newCount = await foodLogPage.getFoodLogCount();
-      expect(newCount).toBeLessThan(initialCount);
+      // Count should decrease after query invalidation/refetch completes.
+      await expect
+        .poll(async () => await foodLogPage.getFoodLogCount(), {
+          timeout: 10000,
+        })
+        .toBeLessThan(initialCount);
     });
 
     test('daily totals update correctly after adding food', async ({
