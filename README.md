@@ -153,10 +153,15 @@ TheMealDB - Small meal and recipe database and API.
 
 ## Speckit flow
 
-1. specify
-2. clarify
-3. plan
-4. checklist
-5. tasks
-6. analyze
-7. implement
+Before running `/speckit.specify`, save your feature description to `.specify/prompts/<id>-<slug>.md`
+(e.g. `.specify/prompts/003-diet-plan-management.md`). This is your permanent record of the original
+intent and lets you reproduce or audit the SpecKit run later.
+
+1. Write prompt → `.specify/prompts/<id>-<slug>.md`
+2. specify
+3. clarify
+4. plan
+5. checklist
+6. tasks
+7. analyze
+8. implement

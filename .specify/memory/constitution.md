@@ -24,6 +24,11 @@ It is intended to prevent quality regressions, UX inconsistency, and architectur
 
 All tech stack and project summary can be found in [AGENTS.md](../AGENTS.md).
 
+### 0a) SpecKit Prompt Archive
+
+Before running `/speckit.specify`, the author saves the input prompt to `.specify/prompts/<id>-<slug>.md`.
+This is the authoritative record of the original intent for each feature and enables auditing or re-running the SpecKit flow later.
+
 ### 1) Code Quality & Maintainability
 
 Code MUST be readable, type-safe, and easy to change.
