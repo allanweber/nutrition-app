@@ -2,7 +2,7 @@
 
 **Purpose**: Unit tests for the *requirements quality* (completeness, clarity, consistency, measurability) of the security-sensitive auth code flows.
 **Created**: 2026-01-23
-**Feature**: `/specs/001-email-verification-reset/spec.md`
+**Feature**: `/specs/002-email-verification-reset/spec.md`
 
 **Assumed audience/timing**: PR reviewer using this as a requirements-quality gate.
 **Depth**: Standard.

@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning  
 **Created**: 2026-01-23  
-**Feature**: [specs/001-email-verification-reset/spec.md](../spec.md)
+**Feature**: [specs/002-email-verification-reset/spec.md](../spec.md)
 
 ## Content Quality
 

@@ -2,7 +2,7 @@
 
 **Purpose**: Unit tests for requirements quality of the API surface and its alignment with the OpenAPI contract (contract is normative).
 **Created**: 2026-01-23
-**Feature**: `/specs/001-email-verification-reset/spec.md`
+**Feature**: `/specs/002-email-verification-reset/spec.md`
 
 **Scope note**: This checks whether the *requirements* fully and unambiguously specify the API behavior and whether the OpenAPI contract matches those requirements.
 

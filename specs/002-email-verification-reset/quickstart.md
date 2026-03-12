@@ -18,9 +18,9 @@
 
 Docs:
 
-- Spec: `specs/001-email-verification-reset/spec.md`
-- Plan: `specs/001-email-verification-reset/plan.md`
-- OpenAPI contract: `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- Spec: `specs/002-email-verification-reset/spec.md`
+- Plan: `specs/002-email-verification-reset/plan.md`
+- OpenAPI contract: `specs/002-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
 
 Pages:
 
