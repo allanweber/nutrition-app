@@ -1,6 +1,6 @@
 # Feature Specification: Email Verification & Password Reset Codes
 
-**Feature Branch**: `001-email-verification-reset`  
+**Feature Branch**: `002-email-verification-reset`  
 **Created**: 2026-01-23  
 **Status**: Draft  
 **Input**: User description: "Implement forgot password and email verification on email signup, both using code verification; email delivery via provider (Resend available)"

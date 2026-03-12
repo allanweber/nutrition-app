@@ -6,7 +6,7 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 # Tasks: Email Verification & Password Reset Codes
 
-**Input**: Design documents from `/specs/001-email-verification-reset/`
+**Input**: Design documents from `/specs/002-email-verification-reset/`
 **Prerequisites**: `plan.md` (required), `spec.md` (required), `research.md`, `data-model.md`, `contracts/auth-code-flows.openapi.yaml`, `quickstart.md`
 
 **Tests**: Included (spec marks “User Scenarios & Testing” as mandatory and this is a critical auth flow; repo uses Playwright).
@@ -24,7 +24,7 @@ description: "Task list for Email Verification & Password Reset Codes"
 **Purpose**: Ensure repo has the minimal configuration and scaffolding needed to implement and validate the feature.
 
 - [x] T001 Confirm required env vars are documented in `.env.example` (RESEND_API_KEY, EMAIL_FROM) and `README.md` (if present)
-- [x] T002 [P] Add feature doc cross-links in `specs/001-email-verification-reset/quickstart.md` (link endpoints + pages)
+- [x] T002 [P] Add feature doc cross-links in `specs/002-email-verification-reset/quickstart.md` (link endpoints + pages)
 
 ---
 
@@ -32,8 +32,8 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 **Purpose**: Core infrastructure that MUST be complete before any user story work can ship.
 
-- [x] T003 Resolve spec/contract mismatch for reset input (`email` required in OpenAPI but not stated in FR-009) by updating `specs/001-email-verification-reset/spec.md` and `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
-- [x] T004 Resolve spec/contract mismatch for `callbackURL` (present in OpenAPI but not required in spec) by updating `specs/001-email-verification-reset/spec.md` and/or `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T003 Resolve spec/contract mismatch for reset input (`email` required in OpenAPI but not stated in FR-009) by updating `specs/002-email-verification-reset/spec.md` and `specs/002-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T004 Resolve spec/contract mismatch for `callbackURL` (present in OpenAPI but not required in spec) by updating `specs/002-email-verification-reset/spec.md` and/or `specs/002-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
 - [x] T005 Add Resend email utility and templates in `src/server/email/resend.ts` and `src/server/email/templates.ts`
 - [x] T006 Add DB tables for `email_verification_challenge` and `security_event` in `src/server/db/schema.ts`
 - [x] T007 Generate a Drizzle migration SQL for new tables under `drizzle/` (e.g., `drizzle/0002_email_verification_and_security_events.sql`)
@@ -133,9 +133,9 @@ description: "Task list for Email Verification & Password Reset Codes"
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [x] T041 [P] Add doc note about “new signups only” gating mechanism in `specs/001-email-verification-reset/research.md`
-- [x] T042 Normalize structured error `field` values across endpoints and document them in `specs/001-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
-- [x] T043 Run `specs/001-email-verification-reset/quickstart.md` end-to-end and update it with any missing steps
+- [x] T041 [P] Add doc note about “new signups only” gating mechanism in `specs/002-email-verification-reset/research.md`
+- [x] T042 Normalize structured error `field` values across endpoints and document them in `specs/002-email-verification-reset/contracts/auth-code-flows.openapi.yaml`
+- [x] T043 Run `specs/002-email-verification-reset/quickstart.md` end-to-end and update it with any missing steps
 
 ---
 

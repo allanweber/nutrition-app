@@ -2,7 +2,7 @@
 
 **Purpose**: Unit tests for requirements quality of user-facing flows (gating, messaging, accessibility, and recovery) for code-based verification and password reset.
 **Created**: 2026-01-23
-**Feature**: `/specs/001-email-verification-reset/spec.md`
+**Feature**: `/specs/002-email-verification-reset/spec.md`
 
 **Audience/timing**: PR review checklist.
 

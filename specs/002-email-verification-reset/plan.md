@@ -1,6 +1,6 @@
 # Implementation Plan: Email Verification & Password Reset Codes
 
-**Branch**: `001-email-verification-reset` | **Date**: 2026-01-23 | **Spec**: `/specs/001-email-verification-reset/spec.md`
+**Branch**: `002-email-verification-reset` | **Date**: 2026-01-23 | **Spec**: `/specs/002-email-verification-reset/spec.md`
 **Input**: Feature specification from `spec.md`
 
 ## Summary
@@ -43,7 +43,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 ### Documentation (this feature)
 
 ```text
-specs/001-email-verification-reset/
+specs/002-email-verification-reset/
 ├── spec.md
 ├── plan.md
 ├── research.md
