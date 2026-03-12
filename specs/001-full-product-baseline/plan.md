@@ -99,8 +99,8 @@ Out of scope:
 ## Data Flow (Baseline)
 
 1. Auth and session flow:
-  - Client forms submit via BetterAuth endpoints and auth access routes under `src/app/api/auth/**`.
-  - Server validates input with Zod utilities and manages session/authenticated access boundaries.
+  - Client forms submit via BetterAuth endpoints and custom auth-code endpoints under `src/app/api/auth/**`.
+  - Server validates input with Zod utilities, manages session/authenticated access boundaries, and writes challenge/security records via Drizzle.
   - Protected dashboard routes rely on server-side session checks and redirect unauthenticated users.
 
   Note: verification/reset code lifecycle behavior is documented in `specs/002-email-verification-reset/`.
@@ -126,9 +126,10 @@ Out of scope:
 - Client error parsing:
   - UI flows parse response errors via `src/lib/api-error.ts` to display field-level and form-level messages.
 
-- Auth access behavior:
+- Auth security behavior:
   - Authenticated routes remain protected and redirect unauthenticated users.
-  - Verification/reset code behavior remains owned by `specs/002-email-verification-reset/`.
+  - Verification/reset code flows preserve cooldowns, lockouts, and non-enumerating reset responses.
+  - Security-significant events remain auditable through `security_event` records.
 
 - Parity fix rule:
   - If behavior and spec disagree, prefer minimal targeted fix plus regression test.
