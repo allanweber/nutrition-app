@@ -1,16 +1,20 @@
 <!--
 Sync Impact Report
 
-- Version change: 1.0.0 → 1.1.0
-- Modified principles: Expanded to incorporate repo conventions from AGENTS.md (Next.js, Query/Form, validation contract, DB, UI, workflow)
-
+- Version change: 1.1.0 → 1.2.0
+- Modified principles: None renamed or removed.
+- Added sections:
+  - Repository Rules: "External API Integration" (new, driven by 003-fatsecret-food-retrieval feature)
+  - Development Workflow: Conventional Commits convention added
+  - Next.js rules: Server Actions guidance added
+- Removed sections: None
 - Templates requiring updates:
-
-  - ✅ .specify/templates/plan-template.md (Constitution Check gates)
+  - ✅ .specify/templates/plan-template.md (Constitution Check gates — External API gate added implicitly via rule text; no structural change needed)
   - ✅ .specify/templates/spec-template.md (no changes required)
   - ✅ .specify/templates/tasks-template.md (no changes required)
   - ✅ .specify/templates/checklist-template.md (no changes required)
-  - ⚠️ TODO: If you later require tests for *all* changes (TDD-only), update tasks-template.md wording
+- Follow-up TODOs:
+  - AGENTS.md still references Nutritionix API in the project summary and env vars; update it once migration to FatSecret is confirmed complete.
 -->
 
 # Nutrition App Constitution
@@ -33,7 +37,7 @@ This is the authoritative record of the original intent for each feature and ena
 
 Code MUST be readable, type-safe, and easy to change.
 
-- Prefer small, composable modules and components; avoid “god files”.
+- Prefer small, composable modules and components; avoid "god files".
 - Keep types accurate and close to the data. Avoid `any` and unclear implicit types.
 - Avoid duplication; introduce shared utilities when patterns repeat.
 - Changes MUST be focused to the task scope; do not mix unrelated refactors.
@@ -55,7 +59,7 @@ UI MUST be consistent, accessible, and predictable.
 
 - Use the existing design system and patterns (Tailwind + shadcn/ui) rather than introducing
   new UI kits.
-- Forms MUST follow the repo’s form/validation/error-display patterns.
+- Forms MUST follow the repo's form/validation/error-display patterns.
 - Loading, empty, and error states MUST be handled for user-facing routes.
 - Accessibility SHOULD be preserved (labels, focus management, keyboard navigation) when using
   interactive components.
@@ -85,6 +89,7 @@ These rules are derived from repository conventions and are required for new wor
 
 - Default to React Server Components; add `'use client'` only when required (forms, interactive charts, client state).
 - Route handlers live under `src/app/api/**` and MUST validate input server-side.
+- Use Server Actions where appropriate; inputs MUST still be validated server-side.
 - Be explicit about dynamic requirements for authenticated/user-specific pages to avoid accidental static/cross-user caching.
 - Keep DB/auth/session logic server-side under `src/server/**` and `src/lib/**`.
 - Do not use `page.js` or `layout.js` (use `.tsx`).
@@ -112,6 +117,22 @@ These rules are derived from repository conventions and are required for new wor
   - `{ success: false, error: string, field?: string }`
 - Client code MUST parse/display these via `src/lib/api-error.ts`.
 
+### External API Integration
+
+Features that integrate external data providers MUST follow these rules:
+
+- External provider persistence MUST be performed asynchronously in the background so the user
+  experience is never blocked by write operations.
+- Frequently accessed external data MUST be cached locally to reduce repeated outbound calls
+  and improve response times.
+- All external provider interactions (successful queries, errors, rate-limit events) MUST be
+  logged to support operational monitoring and troubleshooting.
+- External provider errors (connectivity failures, rate limits, timeouts) MUST be handled
+  gracefully: surface user-friendly messages only; never expose raw error codes or provider
+  internals to the user.
+- Duplicate records from external providers MUST be prevented; concurrent save conflicts are
+  silently discarded (last writer wins) with no error surfaced to the user.
+
 ### UI System
 
 - Prefer existing components under `src/components/ui/**` and existing styling patterns.
@@ -120,7 +141,7 @@ These rules are derived from repository conventions and are required for new wor
 ### Database (Drizzle + Postgres)
 
 - Schema changes belong in `src/server/db/schema.ts`.
-- Generate migrations via the repo’s Drizzle flow and keep migrations focused.
+- Generate migrations via the repo's Drizzle flow and keep migrations focused.
 - Prefer Drizzle ORM over raw SQL unless there is a clear reason.
 
 ### Dependencies & Boundaries
@@ -141,7 +162,10 @@ These rules are derived from repository conventions and are required for new wor
 
 - Start with a short plan and acceptance criteria, then create a task checklist.
 - Track work in GitHub issues; implement one issue per branch.
-- Follow the repo workflow: do work locally, wait for Allan’s review before committing, then commit/push and open a PR referencing the issue (e.g., `Closes #123`).
+- Follow the repo workflow: do work locally, wait for Allan's review before committing, then commit/push and open a PR referencing the issue (e.g., `Closes #123`).
+- Commit messages MUST follow [Conventional Commits](https://www.conventionalcommits.org/):
+  `<type>[optional scope]: <description>` — valid types: `feat`, `fix`, `docs`, `style`,
+  `refactor`, `perf`, `test`, `chore`.
 
 ## Governance
 
@@ -155,4 +179,4 @@ This constitution supersedes all other development guidance.
   - PATCH for clarifications/wording that do not change meaning.
 - Reviews SHOULD explicitly check changes against these principles.
 
-**Version**: 1.1.0 | **Ratified**: 2026-01-23 | **Last Amended**: 2026-01-23
+**Version**: 1.2.0 | **Ratified**: 2026-01-23 | **Last Amended**: 2026-03-16
