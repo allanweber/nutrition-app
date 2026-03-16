@@ -62,26 +62,27 @@ When the external food data provider is temporarily unavailable or rate-limited,
 - ~~How does the system handle a food that was previously saved but whose nutritional data has since changed in the external database?~~ Resolved: local food data is permanent once saved; no automatic refresh occurs.
 - ~~What happens when a food item exists in the external database but has no 100g serving size defined?~~ Resolved: the first available serving is used as the base reference instead.
 - ~~What happens if a food search keyword returns duplicate entries (same food ID appearing more than once in results)?~~ Resolved: duplicate saves are silently discarded; last writer wins with no user-visible error.
-- How does the system behave when a food has no images available?
-- What happens when pagination is requested beyond the total available results?
+- ~~How does the system behave when a food has no images available?~~ Resolved: omit the image section entirely — no placeholder rendered.
+- ~~What happens when pagination is requested beyond the total available results?~~ Resolved: return an empty results list with HTTP 200 and the same pagination envelope (`total` unchanged, `items: []`); no error is surfaced.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST allow users to search for foods by entering one or more keywords, returning a paginated list of matching food items.
+- **FR-001**: System MUST allow users to search for foods by entering one or more keywords (minimum 3 characters), returning a paginated list of matching food items. Queries shorter than 3 characters MUST be rejected with a validation error.
 - **FR-002**: System MUST retrieve food data from local storage first; the external food provider is only queried when the food is not found locally.
 - **FR-003**: System MUST store each food item's nutritional data normalized to a 100g base serving (identified by a metric serving amount of 100.000 or serving description of "100 g"). When no 100g serving is present, the first available serving in the response is used as the base reference. All other serving sizes are stored separately linked to the base food record.
 - **FR-004**: System MUST prevent duplicate food records by verifying whether a food (identified by its external provider ID) already exists before storing it. If a concurrent save results in a duplicate, the conflict is silently discarded with no error surfaced to the user.
 - **FR-005**: System MUST store all available serving sizes for each food item, including their description, weight, and full nutritional values calculated from the 100g base.
 - **FR-006**: System MUST store all three food image sizes provided by the external source: high-resolution (1024×1024), medium (400×400), and thumbnail (72×72). The food image data model must be extended to accommodate all three sizes, as the existing schema only stores two.
-- **FR-007**: System MUST save new food data asynchronously in the background so that the user experience is not blocked while data is being persisted.
+- **FR-007**: System MUST save new food data asynchronously in the background (fire-and-forget) so that the user experience is not blocked while data is being persisted. Save failures MUST be logged (FR-013) but no retry is performed; the next search for the same food will re-trigger the save attempt.
 - **FR-008**: System MUST display paginated search results as a unified list, with locally stored matches appearing first followed by external provider results, allowing users to browse through the combined set page by page.
-- **FR-009**: System MUST implement caching for frequently accessed food data to reduce repeated external lookups and improve response times.
+- **FR-009**: System MUST cache search result pages (keyed by keyword + page number) with a short TTL (5–15 minutes) to reduce repeated identical queries from reaching the FatSecret API. Individual food record persistence via local DB (FR-002) is separate and not governed by this requirement.
 - **FR-010**: System MUST securely authenticate with the external food data provider to access its database.
 - **FR-011**: System MUST handle external provider errors (connectivity issues, rate limits, timeouts) gracefully, displaying user-friendly messages and avoiding application crashes.
 - **FR-012**: System MUST store the complete nutritional profile for each food item, including: calories, carbohydrates, protein, fat, saturated fat, fiber, sugar, sodium, potassium, vitamins, and minerals as provided by the external source.
 - **FR-013**: System MUST log all external food provider interactions, including successful queries, errors, and rate limit events, to support operational monitoring and troubleshooting.
+- **FR-014**: System MUST expose a boolean environment variable `FATSECRET_ENABLED` (default: `true`) that controls whether the FatSecret integration is active. When set to `false`, the system MUST disable all outbound FatSecret API calls and return only locally stored matches for any search query (no error surfaced to the user when no local results exist).
 
 ### Key Entities
 
@@ -106,6 +107,14 @@ When the external food data provider is temporarily unavailable or rate-limited,
 
 ### Session 2026-03-16
 
+- Q: Should all references to Nutritionix be removed and FatSecret be the sole named external food data provider? → A: Yes — FatSecret is the sole external food data provider; Nutritionix removed from all artifacts.
+- Q: Should the FatSecret integration be behind a boolean feature flag? → A: Yes — env var `FATSECRET_ENABLED` (default: `true`); when `false`, all outbound FatSecret API calls are disabled (FR-014 added).
+- Q: What is the minimum search query length? → A: 3 characters (FR-001 updated; was 2).
+- Q: When `FATSECRET_ENABLED=false` and a searched food is not in local storage, what should the system return? → A: Return only locally stored matches with no error; search degrades to local-only silently.
+- Q: When pagination is requested beyond the total available results, what should the API return? → A: HTTP 200 with empty results list, `total` unchanged, `items: []`; no error.
+- Q: When a food has no images available, how should the UI behave? → A: Omit the image section entirely — no placeholder rendered.
+- Q: What is the async background save mechanism for FR-007? → A: Fire-and-forget; log failures (FR-013), no retry — next search re-triggers the save.
+- Q: What should FR-009 caching cover — food records, search result pages, or both? → A: Search result pages only (keyword + page → results, 5–15 min TTL); food record persistence is already handled by FR-002.
 - Q: When food data is found locally, should the system ever refresh it from the external provider? → A: Store once, never refresh — local data is permanent once saved.
 - Q: Should API usage monitoring and error logging be included as formal functional requirements? → A: Yes — log external API calls, errors, and rate limit events as a formal requirement.
 - Q: If the external provider returns a food with no 100g serving, what should the system do? → A: Store the food using the first available serving as the base reference. A 100g serving is identified by a metric serving amount of 100.000 or a serving description of "100 g".

@@ -14,7 +14,7 @@ Core product areas:
 
 - Authentication (email + Google OAuth)
 - Daily calorie + macro tracking
-- Food logging via Nutritionix API integration
+- Food logging via FatSecret API integration
 - Nutrition goals
 - Weekly trends + analytics charts
 - Professional verification
@@ -234,15 +234,16 @@ Copy `.env.example` to `.env.local` and fill in the values:
 | Variable                   | Description                                              |
 | -------------------------- | -------------------------------------------------------- |
 | `DATABASE_URL`             | PostgreSQL connection string                             |
-| `NUTRITIONIX_APP_ID`       | Nutritionix API app ID                                   |
-| `NUTRITIONIX_API_KEY`      | Nutritionix API key                                      |
+| `FATSECRET_CONSUMER_KEY`   | FatSecret API OAuth consumer key                         |
+| `FATSECRET_CONSUMER_SECRET`| FatSecret API OAuth consumer secret                      |
+| `FATSECRET_ENABLED`        | Set to `false` to disable FatSecret integration (default: `true`) |
 | `BETTER_AUTH_SECRET`       | Secret for BetterAuth (use strong random string in prod) |
 | `BETTER_AUTH_URL`          | Base URL for auth (e.g., `http://localhost:3000`)        |
 | `GOOGLE_CLIENT_ID`         | Google OAuth client ID                                   |
 | `GOOGLE_CLIENT_SECRET`     | Google OAuth client secret                               |
 | `NODE_ENV`                 | `development` or `production`                            |
 | `PLAYWRIGHT_TEST_BASE_URL` | Base URL for E2E tests                                   |
-| `USE_MOCK_NUTRITIONIX`     | Set to `true` to use mock API in tests                   |
+| `USE_MOCK_FATSECRET`       | Set to `true` to use mock FatSecret API in tests         |
 
 ## Error Handling
 
