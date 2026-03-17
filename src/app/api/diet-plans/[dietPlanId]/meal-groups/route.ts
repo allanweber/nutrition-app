@@ -67,7 +67,7 @@ export async function GET(
     }
 
     const plan = await db.query.dietPlans.findFirst({
-      where: and(eq(dietPlans.id, dietPlanId), eq(dietPlans.userId, user.id)),
+      where: and(eq(dietPlans.id, dietPlanId), eq(dietPlans.clientId, user.id)),
     });
 
     if (!plan) {
@@ -196,7 +196,7 @@ export async function POST(
     }
 
     const plan = await db.query.dietPlans.findFirst({
-      where: and(eq(dietPlans.id, dietPlanId), eq(dietPlans.userId, user.id)),
+      where: and(eq(dietPlans.id, dietPlanId), eq(dietPlans.clientId, user.id)),
     });
 
     if (!plan) {

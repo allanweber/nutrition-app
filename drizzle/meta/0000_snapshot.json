@@ -1,5 +1,5 @@
 {
-  "id": "05d66b0b-4b67-42f9-8ca2-e7a1a2ec9fb2",
+  "id": "d0afe05e-b9fc-4fe3-ade3-f543492777bb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -746,17 +746,11 @@
           "primaryKey": true,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "client_id": {
           "name": "client_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -829,21 +823,6 @@
         }
       },
       "indexes": {
-        "diet_plans_user_id_idx": {
-          "name": "diet_plans_user_id_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "diet_plans_client_id_idx": {
           "name": "diet_plans_client_id_idx",
           "columns": [
@@ -861,19 +840,6 @@
         }
       },
       "foreignKeys": {
-        "diet_plans_user_id_user_id_fk": {
-          "name": "diet_plans_user_id_user_id_fk",
-          "tableFrom": "diet_plans",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "diet_plans_client_id_user_id_fk": {
           "name": "diet_plans_client_id_user_id_fk",
           "tableFrom": "diet_plans",
@@ -1633,6 +1599,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "medium": {
+          "name": "medium",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "highres": {
           "name": "highres",
           "type": "varchar(500)",
@@ -1785,6 +1757,12 @@
         "sodium": {
           "name": "sodium",
           "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "food_type": {
+          "name": "food_type",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },

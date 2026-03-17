@@ -158,10 +158,10 @@ Before running `/speckit.specify`, save your feature description to `.specify/pr
 intent and lets you reproduce or audit the SpecKit run later.
 
 1. Write prompt → `.specify/prompts/<id>-<slug>.md`
-2. specify
-3. clarify
-4. plan
-5. checklist
-6. tasks
-7. analyze
-8. implement
+2. /speckit.specify
+3. /speckit.clarify
+4. /speckit.plan
+5. /speckit.checklist
+6. /speckit.tasks
+7. /speckit.analyze
+8. /speckit.implement

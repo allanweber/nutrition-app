@@ -1,0 +1,155 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { and, eq, isNotNull } from 'drizzle-orm';
+import { getSession } from '@/lib/session';
+import db from '@/server/db';
+import { foodAltMeasures, foodPhotos, foods } from '@/server/db/schema';
+import type { FoodDetailResponse } from '@/queries/food-detail';
+
+export async function GET(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required.', field: null },
+      { status: 401 },
+    );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const rawId = searchParams.get('id');
+  const fatSecretId = searchParams.get('fatSecretId');
+
+  if ((!rawId || rawId.trim() === '') && (!fatSecretId || fatSecretId.trim() === '')) {
+    return NextResponse.json(
+      { success: false, error: 'id or fatSecretId is required.', field: 'id' },
+      { status: 400 },
+    );
+  }
+
+  // Build the where condition: prefer local DB id, fall back to source_id lookup
+  let whereCondition;
+  if (rawId && rawId.trim() !== '') {
+    const id = parseInt(rawId, 10);
+    if (isNaN(id) || id <= 0) {
+      return NextResponse.json(
+        { success: false, error: 'id must be a positive integer.', field: 'id' },
+        { status: 400 },
+      );
+    }
+    whereCondition = and(eq(foods.id, id), isNotNull(foods.calories));
+  } else {
+    whereCondition = and(
+      eq(foods.source, 'fatsecret'),
+      eq(foods.sourceId, fatSecretId!),
+      isNotNull(foods.calories),
+    );
+  }
+
+  try {
+    const rows = await db
+      .select({ food: foods, photo: foodPhotos, altMeasure: foodAltMeasures })
+      .from(foods)
+      .leftJoin(foodPhotos, eq(foodPhotos.foodId, foods.id))
+      .leftJoin(foodAltMeasures, eq(foodAltMeasures.foodId, foods.id))
+      .where(whereCondition);
+
+    if (rows.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Food not found.',
+          field: null,
+        },
+        { status: 404 },
+      );
+    }
+
+    const food = rows[0].food;
+    const photo = rows[0].photo ?? null;
+    const altMeasures = rows
+      .map((r) => r.altMeasure)
+      .filter((m): m is NonNullable<typeof m> => m !== null);
+
+    const baseCalories = parseFloat(food.calories!);
+    const baseProtein = parseFloat(food.protein ?? '0');
+    const baseCarbs = parseFloat(food.carbs ?? '0');
+    const baseFat = parseFloat(food.fat ?? '0');
+    const baseFiber = food.fiber ? parseFloat(food.fiber) : null;
+    const baseSugar = food.sugar ? parseFloat(food.sugar) : null;
+    const baseSodium = food.sodium ? parseFloat(food.sodium) : null;
+
+    function round(value: number, decimals = 2): number {
+      return parseFloat(value.toFixed(decimals));
+    }
+
+    function calcPer(baseValue: number | null, weightGrams: number): number | null {
+      if (baseValue === null) return null;
+      return round(baseValue * (weightGrams / 100));
+    }
+
+    const fullNutrients = (food.fullNutrients as Record<string, unknown>) ?? {};
+
+    const getNum = (key: string): number | null => {
+      const v = fullNutrients[key];
+      return typeof v === 'number' ? v : null;
+    };
+
+    const response: FoodDetailResponse = {
+      id: food.id,
+      name: food.name,
+      brandName: food.brandName ?? null,
+      foodType: ((fullNutrients['foodType'] as string) === 'Brand'
+        ? 'Brand'
+        : 'Generic') as 'Generic' | 'Brand',
+      foodUrl: (fullNutrients['foodUrl'] as string) ?? null,
+      baseServing: {
+        calories: baseCalories,
+        protein: baseProtein,
+        carbs: baseCarbs,
+        fat: baseFat,
+        saturatedFat: getNum('saturatedFat'),
+        fiber: baseFiber,
+        sugar: baseSugar,
+        sodium: baseSodium,
+        potassium: getNum('potassium'),
+        vitaminA: getNum('vitaminA'),
+        vitaminC: getNum('vitaminC'),
+        calcium: getNum('calcium'),
+        iron: getNum('iron'),
+      },
+      servings: altMeasures.map((m) => {
+        const w = parseFloat(m.servingWeight);
+        return {
+          id: m.id,
+          description: m.measure,
+          weightGrams: w,
+          calories: round(baseCalories * (w / 100)),
+          protein: round(baseProtein * (w / 100)),
+          carbs: round(baseCarbs * (w / 100)),
+          fat: round(baseFat * (w / 100)),
+          fiber: calcPer(baseFiber, w),
+          sugar: calcPer(baseSugar, w),
+          sodium: calcPer(baseSodium, w),
+        };
+      }),
+      images:
+        photo && (photo.thumb || photo.medium || photo.highres)
+          ? {
+              thumb: photo.thumb ?? null,
+              medium: photo.medium ?? null,
+              highres: photo.highres ?? null,
+            }
+          : null,
+    };
+
+    return NextResponse.json({ food: response });
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+        field: null,
+      },
+      { status: 500 },
+    );
+  }
+}

@@ -200,9 +200,10 @@ export const foods = pgTable(
     fiber: decimal('fiber', { precision: 10, scale: 2 }),
     sugar: decimal('sugar', { precision: 10, scale: 2 }),
     sodium: decimal('sodium', { precision: 10, scale: 2 }),
+    foodType: varchar('food_type', { length: 50 }),
     fullNutrients: jsonb('full_nutrients'),
-    isRaw: boolean('is_raw').default(false), 
-    isCustom: boolean('is_custom').default(false), 
+    isRaw: boolean('is_raw').default(false),
+    isCustom: boolean('is_custom').default(false),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -224,8 +225,9 @@ export const foodPhotos = pgTable(
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' })
       .unique(),
-    thumb: varchar('thumb', { length: 500 }), // Thumbnail URL
-    highres: varchar('highres', { length: 500 }), // High-resolution URL
+    thumb: varchar('thumb', { length: 500 }), // Thumbnail URL (72×72)
+    medium: varchar('medium', { length: 500 }), // Medium URL (400×400)
+    highres: varchar('highres', { length: 500 }), // High-resolution URL (1024×1024)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [index('food_photos_food_id_idx').on(table.foodId)],
@@ -442,12 +444,9 @@ export const dietPlans = pgTable(
   'diet_plans',
   {
     id: serial('id').primaryKey(),
-    userId: text('user_id')
+    clientId: text('client_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    clientId: text('client_id').references(() => users.id, {
-      onDelete: 'cascade',
-    }),
     name: varchar('name', { length: 255 }).notNull(),
     description: text('description'),
     targetCalories: decimal('target_calories', { precision: 10, scale: 2 }),
@@ -461,7 +460,6 @@ export const dietPlans = pgTable(
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
-    index('diet_plans_user_id_idx').on(table.userId),
     index('diet_plans_client_id_idx').on(table.clientId),
   ],
 );
@@ -634,10 +632,6 @@ export const bodyCheckinsRelations = relations(bodyCheckins, ({ one }) => ({
 }));
 
 export const dietPlansRelations = relations(dietPlans, ({ one, many }) => ({
-  user: one(users, {
-    fields: [dietPlans.userId],
-    references: [users.id],
-  }),
   client: one(users, {
     fields: [dietPlans.clientId],
     references: [users.id],

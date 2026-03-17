@@ -78,8 +78,7 @@ CREATE TABLE "diet_plan_meals" (
 --> statement-breakpoint
 CREATE TABLE "diet_plans" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
-	"client_id" text,
+	"client_id" text NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" text,
 	"target_calories" numeric(10, 2),
@@ -168,6 +167,7 @@ CREATE TABLE "food_photos" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"food_id" integer NOT NULL,
 	"thumb" varchar(500),
+	"medium" varchar(500),
 	"highres" varchar(500),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "food_photos_food_id_unique" UNIQUE("food_id")
@@ -189,6 +189,7 @@ CREATE TABLE "foods" (
 	"fiber" numeric(10, 2),
 	"sugar" numeric(10, 2),
 	"sodium" numeric(10, 2),
+	"food_type" varchar(50),
 	"full_nutrients" jsonb,
 	"is_raw" boolean DEFAULT false,
 	"is_custom" boolean DEFAULT false,
@@ -281,7 +282,6 @@ ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_group_id
 ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_diet_plan_id_diet_plans_id_fk" FOREIGN KEY ("diet_plan_id") REFERENCES "public"."diet_plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "diet_plans" ADD CONSTRAINT "diet_plans_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plans" ADD CONSTRAINT "diet_plans_client_id_user_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "email_verification_challenge" ADD CONSTRAINT "email_verification_challenge_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_alt_measures" ADD CONSTRAINT "food_alt_measures_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -307,7 +307,6 @@ CREATE INDEX "diet_plan_meal_items_group_id_idx" ON "diet_plan_meal_items" USING
 CREATE INDEX "diet_plan_meal_items_food_id_idx" ON "diet_plan_meal_items" USING btree ("food_id");--> statement-breakpoint
 CREATE INDEX "diet_plan_meals_diet_plan_id_idx" ON "diet_plan_meals" USING btree ("diet_plan_id");--> statement-breakpoint
 CREATE INDEX "diet_plan_meals_food_id_idx" ON "diet_plan_meals" USING btree ("food_id");--> statement-breakpoint
-CREATE INDEX "diet_plans_user_id_idx" ON "diet_plans" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "diet_plans_client_id_idx" ON "diet_plans" USING btree ("client_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_user_id_idx" ON "email_verification_challenge" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_email_idx" ON "email_verification_challenge" USING btree ("email");--> statement-breakpoint

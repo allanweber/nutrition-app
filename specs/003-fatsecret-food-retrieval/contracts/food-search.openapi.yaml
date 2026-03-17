@@ -1,0 +1,312 @@
+openapi: 3.0.3
+info:
+  title: Nutrition App — Food Search & Detail
+  version: 0.1.0
+  description: |
+    FatSecret-backed food search with local DB priority, unified pagination, and
+    food detail endpoint. Implemented as Next.js App Router route handlers.
+
+servers:
+  - url: http://localhost:3000
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+
+  schemas:
+    StandardError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+        field:
+          type: string
+          nullable: true
+      required: [success, error]
+
+    FoodSearchResultItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          nullable: true
+          description: Local DB id; null if food not yet persisted.
+        fatSecretId:
+          type: string
+          description: FatSecret food_id (stable external identifier).
+        name:
+          type: string
+        brandName:
+          type: string
+          nullable: true
+        foodType:
+          type: string
+          enum: [Generic, Brand]
+        thumbnail:
+          type: string
+          nullable: true
+          description: Thumbnail image URL (72×72). Null if no image.
+        calories:
+          type: number
+          nullable: true
+          description: Calories per 100g. Null for search-list-only results.
+        isLocal:
+          type: boolean
+          description: true = sourced from local DB; false = from FatSecret API.
+      required: [id, fatSecretId, name, brandName, foodType, thumbnail, calories, isLocal]
+
+    SearchPagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page (1-based).
+          minimum: 1
+        totalResults:
+          type: integer
+          description: Total matching results from FatSecret. 0 when flag is off.
+        maxResults:
+          type: integer
+          description: Results per page (always 10).
+          enum: [10]
+      required: [page, totalResults, maxResults]
+
+    FoodServing:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Local DB id (food_alt_measures.id).
+        description:
+          type: string
+          description: Serving description from FatSecret (e.g., "1 cup (245g)").
+        weightGrams:
+          type: number
+          description: Weight of this serving in grams.
+        calories:
+          type: number
+          description: Calculated from 100g base proportionally.
+        protein:
+          type: number
+        carbs:
+          type: number
+        fat:
+          type: number
+        fiber:
+          type: number
+          nullable: true
+        sugar:
+          type: number
+          nullable: true
+        sodium:
+          type: number
+          nullable: true
+      required: [id, description, weightGrams, calories, protein, carbs, fat]
+
+    FoodImages:
+      type: object
+      nullable: true
+      properties:
+        thumb:
+          type: string
+          nullable: true
+          description: Thumbnail URL (72×72).
+        medium:
+          type: string
+          nullable: true
+          description: Medium URL (400×400).
+        highres:
+          type: string
+          nullable: true
+          description: High-resolution URL (1024×1024).
+
+    FoodDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Local DB id.
+        name:
+          type: string
+        brandName:
+          type: string
+          nullable: true
+        foodType:
+          type: string
+          enum: [Generic, Brand]
+        foodUrl:
+          type: string
+          nullable: true
+          description: FatSecret canonical URL for this food.
+        baseServing:
+          type: object
+          description: Nutritional values for 100g base serving.
+          properties:
+            calories: { type: number }
+            protein: { type: number }
+            carbs: { type: number }
+            fat: { type: number }
+            saturatedFat: { type: number, nullable: true }
+            polyunsaturatedFat: { type: number, nullable: true }
+            monounsaturatedFat: { type: number, nullable: true }
+            cholesterol: { type: number, nullable: true }
+            fiber: { type: number, nullable: true }
+            sugar: { type: number, nullable: true }
+            sodium: { type: number, nullable: true }
+            potassium: { type: number, nullable: true }
+            vitaminA: { type: number, nullable: true }
+            vitaminC: { type: number, nullable: true }
+            calcium: { type: number, nullable: true }
+            iron: { type: number, nullable: true }
+          required: [calories, protein, carbs, fat]
+        servings:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoodServing'
+          description: All alternate servings (excluding the 100g base).
+        images:
+          $ref: '#/components/schemas/FoodImages'
+      required: [id, name, brandName, foodType, baseServing, servings]
+
+paths:
+  /api/foods/search:
+    get:
+      summary: Search foods (local DB first, then FatSecret)
+      description: |
+        Returns a unified paginated list of foods. Local DB matches appear first
+        on page 1. FatSecret results follow. When FATSECRET_ENABLED=false, returns
+        local-only results silently (no error).
+
+        New FatSecret foods are saved to local DB asynchronously (fire-and-forget)
+        in the background — the response is not blocked by the save.
+
+        Search results are cached per (keyword, page) for 10 minutes.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 100
+          description: Search keyword. Minimum 3 characters.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number (1-based).
+      responses:
+        '200':
+          description: |
+            Search results. Returns empty `results` array (not an error) when:
+            - No matches found locally or in FatSecret.
+            - Page number exceeds total results.
+            - FATSECRET_ENABLED=false and no local matches.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FoodSearchResultItem'
+                  pagination:
+                    $ref: '#/components/schemas/SearchPagination'
+                required: [results, pagination]
+        '400':
+          description: Invalid query parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Unexpected server error or FatSecret API failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
+  /api/foods/detail:
+    get:
+      summary: Get full food nutritional detail
+      description: |
+        Returns the complete nutritional profile of a food from the local DB.
+
+        Accepts either `id` (local DB primary key) or `fatSecretId` (FatSecret `food_id`).
+        Exactly one must be provided. When `fatSecretId` is given the lookup is
+        `WHERE source='fatsecret' AND source_id={fatSecretId}`.
+
+        This covers the case where search results return `id: null` because the
+        async background save (`saveFatSecretFoodsAsync`) has completed by the time
+        the user taps a result but the search response was already cached with a null id.
+        The food will be in the DB; it just needs to be found by its FatSecret id.
+
+        Returns 404 if no matching food exists or its nutrition data is incomplete.
+
+        Nutritional values for alternate servings are calculated proportionally
+        from the stored 100g base values (not stored separately).
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Local DB food id (foods.id). Mutually exclusive with fatSecretId.
+        - name: fatSecretId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: |
+            FatSecret food_id. Used when the local DB id is not yet known (e.g. the
+            search result was cached before the async save completed). Looks up by
+            `source='fatsecret' AND source_id=fatSecretId`. Mutually exclusive with id.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  food:
+                    $ref: '#/components/schemas/FoodDetail'
+                required: [food]
+        '400':
+          description: Neither id nor fatSecretId provided, or id is not a positive integer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '404':
+          description: Food not found in local DB (or found without complete nutrition data).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
