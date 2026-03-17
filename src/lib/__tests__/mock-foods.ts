@@ -97,13 +97,13 @@ export const mockFoods: BaseFood[] = [
     updatedAt: new Date('2024-02-01T00:00:00.000Z')
   },
 
-  // Nutritionix foods (still can coexist)
+  // FatSecret foods
   {
     id: 5,
-    sourceId: 'nix_item_001',
-    sourceType: 'nutritionix',
+    sourceId: '2210',
+    sourceType: 'fatsecret',
     name: 'Chicken Breast',
-    brandName: 'Generic',
+    brandName: null,
     servingQty: 100,
     servingUnit: 'g',
     servingWeightGrams: 100,
@@ -114,7 +114,7 @@ export const mockFoods: BaseFood[] = [
     fiber: 0,
     sugar: 0,
     sodium: 74,
-    photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_123.jpg',
+    photoUrl: null,
     isRaw: false,
     isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -122,8 +122,8 @@ export const mockFoods: BaseFood[] = [
   },
   {
     id: 6,
-    sourceId: 'nix_item_002',
-    sourceType: 'nutritionix',
+    sourceId: '35718',
+    sourceType: 'fatsecret',
     name: 'Brown Rice',
     brandName: null,
     servingQty: 1,
@@ -136,7 +136,7 @@ export const mockFoods: BaseFood[] = [
     fiber: 3.5,
     sugar: 0.7,
     sodium: 5,
-    photoUrl: 'https://nix-tag-images.s3.amazonaws.com/common_456.jpg',
+    photoUrl: null,
     isRaw: false,
     isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -144,54 +144,20 @@ export const mockFoods: BaseFood[] = [
   }
 ];
 
-// Search mock that returns different sources
+// FatSecret search mock
 export const mockFoodSearch = {
-  // Common foods (USDA + user custom)
-  common: [
+  foods: [
     {
+      food_id: '2210',
       food_name: 'Raw Spinach',
-      tag_id: 10162,
-      serving_unit: '100g',
-      photo: {
-        thumb: 'https://nix-tag-images.s3.amazonaws.com/common_10162.jpg'
-      }
+      food_type: 'Generic' as const,
+      food_url: 'https://www.fatsecret.com/calories-nutrition/usda/raw-spinach',
     },
     {
-      food_name: 'Greek Salad', 
-      tag_id: 'custom_001',
-      serving_unit: 'bowl',
-      photo: {
-        thumb: null
-      }
-    }
-  ],
-  // Branded products
-  branded: [
-    {
-      food_name: 'Energy Bar',
-      brand_name: 'Custom Brand',
-      nix_brand_id: 'brand_001',
-      nix_item_id: 'manual_001',
-      nix_item_name: 'Energy Bar',
-      serving_qty: 1,
-      serving_unit: 'bar',
-      tag_id: 'custom_001',
-      photo: {
-        thumb: null
-      }
-    },
-    {
+      food_id: '35718',
       food_name: 'Chicken Breast',
-      brand_name: 'Generic',
-      nix_brand_id: 'brand_002',
-      nix_item_id: 'nix_item_001',
-      nix_item_name: 'Chicken Breast',
-      serving_qty: 100,
-      serving_unit: 'g',
-      tag_id: 123,
-      photo: {
-        thumb: 'https://nix-tag-images.s3.amazonaws.com/common_123.jpg'
-      }
-    }
-  ]
+      food_type: 'Generic' as const,
+      food_url: 'https://www.fatsecret.com/calories-nutrition/usda/chicken-breast',
+    },
+  ],
 };

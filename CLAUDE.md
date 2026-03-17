@@ -28,7 +28,7 @@ TypeScript 5.x, Node.js 20: Follow standard conventions
 <!-- MANUAL ADDITIONS START -->
 ## Feature 003: FatSecret Food Retrieval (active branch)
 
-- New dependency: `oauth-1.0a` for FatSecret OAuth 1.0a signing
+- FatSecret auth: OAuth 2.0 Client Credentials (token POST to `oauth.fatsecret.com/connect/token`, no extra packages)
 - FatSecret client: `src/lib/fatsecret.ts` (replaces `src/lib/nutritionix.ts`)
 - FatSecret types: `src/types/fatsecret.ts` (replaces `src/types/nutritionix.ts`)
 - Orchestration service: `src/server/services/food-search.service.ts`

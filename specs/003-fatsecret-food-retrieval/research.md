@@ -2,92 +2,73 @@
 
 **Branch**: `003-fatsecret-food-retrieval` | **Date**: 2026-03-16
 
-## 1. FatSecret REST API v4
+## 1. FatSecret REST API v5
 
 ### Decision
-Use FatSecret REST API v4 (`https://platform.fatsecret.com/rest/server.api`) with
-OAuth 1.0a server-side authentication.
+Use FatSecret REST API v5 search endpoint (`https://platform.fatsecret.com/rest/foods/search/v5`)
+with OAuth 2.0 Client Credentials server-side authentication.
 
 ### Rationale
-FatSecret does not support OAuth 2.0 for the server-side REST API. OAuth 1.0a
-consumer key + secret is the required authentication flow. No user tokens needed
-for public food search.
+FatSecret uses OAuth 2.0 (Client Credentials grant) for server-side REST API access.
+A short-lived Bearer token is obtained from `https://oauth.fatsecret.com/connect/token`
+and included in each API request. No user tokens needed for public food search.
+Tokens are valid for 24 hours (`expires_in: 86400`) and cached in-process.
 
-### Key API Methods
+The v5 search endpoint returns `food_attributes.macros` (per-serving nutrition) and
+`food_images` directly in the search result when `include_food_images=true`. This
+eliminates the need for a separate food detail API call.
 
-| Method | Purpose | Params |
+### Key API Endpoint
+
+| Endpoint | Purpose | Params |
 |---|---|---|
-| `foods.search` | Keyword search, paginated | `search_expression`, `page_number` (0-based), `max_results` (≤50), `format=json` |
-| `food.get.v4` | Full food detail, servings, images | `food_id`, `format=json` |
+| `GET /rest/foods/search/v5` | Keyword search with nutrition + images | `search_expression`, `include_food_images=true`, `page_number` (0-based), `max_results` (≤50), `format=json` |
 
-### Search Response Shape
+### Search Response Shape (v5)
 
 ```json
 {
-  "foods": {
-    "food": [
-      {
-        "food_id": "2210",
-        "food_name": "Apple",
-        "food_type": "Generic",
-        "food_url": "https://www.fatsecret.com/..."
-      }
-    ],
-    "max_results": "20",
+  "foods_search": {
+    "max_results": "10",
+    "total_results": "2003",
     "page_number": "0",
-    "total_results": "9"
-  }
-}
-```
-
-Note: when there is only one result, `food` is a single object, not an array.
-Always `Array.isArray()` or force to array.
-
-### Food Detail Response Shape (food.get.v4)
-
-```json
-{
-  "food": {
-    "food_id": "2210",
-    "food_name": "Apple",
-    "food_type": "Generic",
-    "food_url": "...",
-    "servings": {
-      "serving": [
+    "results": {
+      "food": [
         {
-          "serving_id": "...",
-          "serving_description": "1 medium (2-3/4\" dia) (approx 3 per lb)",
-          "serving_url": "...",
-          "metric_serving_amount": "138.000",
-          "metric_serving_unit": "g",
-          "number_of_units": "1.000",
-          "measurement_description": "medium (2-3/4\" dia) (approx 3 per lb)",
-          "calories": "72",
-          "carbohydrate": "19.06",
-          "protein": "0.36",
-          "fat": "0.23",
-          "saturated_fat": "0.039",
-          "polyunsaturated_fat": "0.070",
-          "monounsaturated_fat": "0.010",
-          "cholesterol": "0",
-          "sodium": "1",
-          "potassium": "148",
-          "fiber": "3.3",
-          "sugar": "14.34",
-          "vitamin_a": "1",
-          "vitamin_c": "10",
-          "calcium": "1",
-          "iron": "1"
-        }
-      ]
-    },
-    "images": {
-      "image": [
-        {
-          "image_id": "...",
-          "image_url": "https://m.ftscrt.com/static/recipe/..._200.jpg",
-          "image_type": "...",
-          "caption": "Apple"
+          "food_id": "35718",
+          "food_name": "Apples",
+          "food_type": "Generic",
+          "food_url": "https://foods.fatsecret.com/calories-nutrition/usda/apples",
+          "food_images": {
+            "food_image": [
+              { "image_url": "https://www.foodimagedb.com/food-images/abc_1024x1024.png", "image_type": "0" },
+              { "image_url": "https://www.foodimagedb.com/food-images/abc_400x400.png", "image_type": "0" },
+              { "image_url": "https://www.foodimagedb.com/food-images/abc_72x72.png", "image_type": "0" }
+            ]
+          },
+          "servings": {
+            "serving": [
+              {
+                "serving_id": "58449",
+                "serving_description": "100 g",
+                "metric_serving_amount": "100.000",
+                "metric_serving_unit": "g",
+                "calories": "52",
+                "carbohydrate": "13.81",
+                "protein": "0.26",
+                "fat": "0.17",
+                "saturated_fat": "0.028",
+                "sodium": "1",
+                "potassium": "107",
+                "fiber": "2.4",
+                "sugar": "10.39",
+                "vitamin_a": "3",
+                "vitamin_c": "4.6",
+                "calcium": "6",
+                "iron": "0.12"
+              }
+            ]
+          }
         }
       ]
     }
@@ -95,116 +76,66 @@ Always `Array.isArray()` or force to array.
 }
 ```
 
-Note: `servings.serving` may be an object when only one serving exists; always
-normalize to array. Same for `images.image`.
+Key structural notes:
+- Root key is `foods_search` (not `foods`)
+- Pagination fields (`max_results`, `total_results`, `page_number`) are at the `foods_search` level
+- Foods are under `foods_search.results.food`
+- Each food includes full `servings.serving[]` with complete nutrition — **no separate detail API call needed**
+- When there is only one result, `food` or `serving` is a plain object, not an array — always normalize
+- `food_images` is optional; `food_image` may be a single object or array — always normalize
 
 ### Image URLs
 
-FatSecret returns image URLs where the filename encodes the resolution. The three
-required sizes come from separate `image` entries in the response:
+FatSecret returns image URLs where the filename encodes the resolution using `_WxH` suffixes.
+Three sizes are returned per food (when images are available):
 
-- **Thumbnail** (72×72): URL contains `_tb` or `_72` suffix
-- **Medium** (400×400): URL contains `_200` or `_400` suffix
-- **High-res** (1024×1024): URL without size suffix or `_1024`
+- **Thumbnail** (72×72): URL contains `_72x72`
+- **Medium** (400×400): URL contains `_400x400`
+- **High-res** (1024×1024): URL contains `_1024x1024`
 
-Map all three from the `images.image[]` array by inspecting `image_url` patterns.
+Map all three from `food_images.food_image[]` by checking `image_url` for these substrings.
 Fall back gracefully when fewer than three are returned.
 
 ---
 
-## 2. OAuth 1.0a Signature Generation
+## 2. OAuth 2.0 Token Acquisition
 
 ### Decision
-Implement OAuth 1.0a signing inline using Node.js built-in `crypto` module.
-No external package required.
+Fetch a Bearer token via a single POST to `https://oauth.fatsecret.com/connect/token`,
+passing `client_id` and `client_secret` in the request body. Cache the token
+in-process until 60 seconds before expiry.
 
 ### Rationale
-OAuth 1.0a for FatSecret requires exactly:
-1. Percent-encode parameters (RFC 3986)
-2. Sort all parameters alphabetically
-3. Build base string: `METHOD&encoded_url&encoded_sorted_params`
-4. Sign with `HMAC-SHA1` using `consumerSecret&` as key (no token secret needed for app-level calls)
-5. Base64-encode the signature
-
-All of this is straightforward with Node.js `crypto.createHmac`. No external
-dependency needed. The signing helper is ~40 lines of TypeScript.
+FatSecret's token endpoint accepts credentials directly in the form body — no
+Basic auth header or signature generation is needed. The response includes
+`expires_in` (seconds), enabling simple in-process caching.
 
 ### Implementation Sketch
 
 ```typescript
-import crypto from 'node:crypto';
-
-function percentEncode(str: string): string {
-  return encodeURIComponent(str)
-    .replace(/!/g, '%21').replace(/'/g, '%27')
-    .replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\*/g, '%2A');
-}
-
-function buildOAuthHeader(method: string, url: string, params: Record<string, string>): string {
-  const consumerKey = process.env.FATSECRET_CONSUMER_KEY!;
-  const consumerSecret = process.env.FATSECRET_CONSUMER_SECRET!;
-  const nonce = crypto.randomBytes(16).toString('hex');
-  const timestamp = String(Math.floor(Date.now() / 1000));
-
-  const oauthParams: Record<string, string> = {
-    oauth_consumer_key: consumerKey,
-    oauth_nonce: nonce,
-    oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp: timestamp,
-    oauth_version: '1.0',
-  };
-
-  const allParams = { ...params, ...oauthParams };
-  const sortedPairs = Object.entries(allParams)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${percentEncode(k)}=${percentEncode(v)}`)
-    .join('&');
-
-  const baseString = [method, percentEncode(url), percentEncode(sortedPairs)].join('&');
-  const signingKey = `${percentEncode(consumerSecret)}&`;
-  const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-
-  const headerParams = { ...oauthParams, oauth_signature: signature };
-  const headerValue = 'OAuth ' + Object.entries(headerParams)
-    .map(([k, v]) => `${k}="${percentEncode(v)}"`)
-    .join(', ');
-
-  return headerValue;
-}
+const response = await fetch('https://oauth.fatsecret.com/connect/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'client_credentials',
+    scope: 'basic',
+    client_id: process.env.FATSECRET_CONSUMER_KEY!,
+    client_secret: process.env.FATSECRET_CONSUMER_SECRET!,
+  }),
+  cache: 'no-store',
+});
+// Response: { access_token: string, token_type: "Bearer", expires_in: 86400 }
 ```
 
+API calls then use `Authorization: Bearer <token>` with no additional signing.
+
 ### Alternatives Considered
-- `oauth-1.0a` npm package: unnecessary dependency for ~40 lines of code already
-  covered by Node.js built-ins; removed from plan per user feedback.
+- Basic auth header (`Authorization: Basic base64(id:secret)`): not required by
+  FatSecret — body credentials are sufficient and simpler.
 
 ---
 
-## 3. Search Result Caching
-
-### Decision
-Use Next.js `unstable_cache` to cache FatSecret search API responses, keyed by
-`['fatsecret', 'search', keyword, String(page)]`, with a 600-second (10 min) TTL.
-
-### Rationale
-- `unstable_cache` is idiomatic in Next.js App Router and requires no external
-  infrastructure.
-- Works for both long-running dev server and Vercel Data Cache in production.
-- Fulfils FR-009 (search result page caching) without adding Redis/BullMQ.
-
-### Cache Key Strategy
-```
-fatsecret:search:{normalizedKeyword}:{pageNumber}
-```
-Keywords are lowercased and trimmed before use as cache keys.
-
-### Alternatives Considered
-- Redis + BullMQ: too much infrastructure for this scale
-- `React.cache()`: per-request only; does not persist across requests
-- Simple in-memory Map with TTL: breaks in serverless/multiple workers
-
----
-
-## 4. 100g Base Serving Identification
+## 3. 100g Base Serving Identification
 
 ### Decision
 Identify the 100g base serving by checking (in order):

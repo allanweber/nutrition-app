@@ -35,7 +35,7 @@ To get FatSecret credentials:
 
 ## 2. Run Database Migration
 
-> **No new npm packages required.** OAuth 1.0a signing uses Node.js built-in `crypto` only.
+> **No new npm packages required.** OAuth 2.0 token fetch uses native `fetch` only.
 
 Add the `medium` column to `food_photos`:
 

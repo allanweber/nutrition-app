@@ -15,13 +15,12 @@ feature flag. Remove all Nutritionix references from the codebase.
 
 **Language/Version**: TypeScript 5.x, Node.js 20
 **Primary Dependencies**: Next.js 16 (App Router), Drizzle ORM, TanStack Query
-  (no new packages — OAuth 1.0a implemented with Node.js built-in `crypto`)
+  (no new packages — OAuth 2.0 Client Credentials uses native `fetch` only)
 **Storage**: PostgreSQL via Drizzle ORM
 **Testing**: Playwright E2E (no unit tests explicitly requested in spec)
 **Target Platform**: Next.js web server (App Router, server components + API routes)
-**Performance Goals**: Search results ≤2s for cached/local foods (SC-001),
-  ≤5s for uncached FatSecret queries (SC-002)
-**Constraints**: No new UI frameworks; FatSecret OAuth 1.0a; no Redis/queue
+**Performance Goals**: Search results ≤2s for local-only results; ≤5s for FatSecret queries (SC-002)
+**Constraints**: No new UI frameworks; FatSecret OAuth 2.0 Client Credentials; no Redis/queue
 **Scale/Scope**: Single-instance Next.js dev server; Vercel for production
 
 ## Constitution Check
@@ -33,13 +32,13 @@ feature flag. Remove all Nutritionix references from the codebase.
 | **1) Code Quality** | ✅ Pass | New files follow kebab-case; small composable modules; no god files |
 | **2) Testing** | ✅ Pass | E2E coverage planned for all P1/P2 user stories; tests optional per spec |
 | **3) UX Consistency** | ✅ Pass | shadcn/ui patterns preserved; loading/error/empty states required |
-| **4) Performance** | ✅ Pass | Search result caching (FR-009 via `unstable_cache`); async save (FR-007) |
-| **5) Correctness/Safety** | ✅ Pass | OAuth secrets server-side only; Zod validation on all endpoints; FATSECRET_ENABLED env var |
+| **4) Performance** | ✅ Pass | Async background save (FR-007); no search result caching |
+| **5) Correctness/Safety** | ✅ Pass | OAuth 2.0 token fetched server-side only; Zod validation on all endpoints; FATSECRET_ENABLED env var |
 | **Next.js rules** | ✅ Pass | Route handlers under `src/app/api/**`; server-side auth/DB logic; `'use client'` only where needed |
 | **TanStack Query** | ✅ Pass | `useFoodSearchQuery` updated; mutations invalidate cache |
-| **External API rules** | ✅ Pass | Async background save; search result cache; error logging; no raw errors to client; duplicate suppression |
+| **External API rules** | ✅ Pass | Async background save; error logging; no raw errors to client; duplicate suppression |
 | **DB rules** | ✅ Pass | Schema change via Drizzle migration; Drizzle ORM used throughout |
-| **Dependencies** | ✅ Pass | No new packages — OAuth 1.0a signing implemented inline with Node.js built-in `crypto` (~40 lines). See research.md §2. |
+| **Dependencies** | ✅ Pass | No new packages — OAuth 2.0 token fetch uses native `fetch`. See research.md §2. |
 
 ## Project Structure
 
@@ -102,7 +101,7 @@ src/server/db/
 
 **Structure Decision**: Single Next.js project (existing structure). New service
 layer added at `src/server/services/` following existing server-side conventions.
-No new project layers or packages beyond `oauth-1.0a`.
+No new project layers or packages.
 
 ## Complexity Tracking
 
@@ -116,11 +115,11 @@ Full research in [research.md](research.md). Key decisions:
 
 | Decision | Chosen | Rationale |
 |---|---|---|
-| FatSecret auth | OAuth 1.0a | Only supported method for server-side REST API |
-| OAuth implementation | Node.js built-in `crypto` | ~40 lines; no external package needed |
-| Search caching | `unstable_cache` (Next.js built-in) | No Redis needed; works in dev + Vercel Data Cache |
-| Async save | Fire-and-forget | Zero infrastructure; app scale justifies this |
-| 100g identification | `metric_serving_amount === "100.000"` AND `metric_serving_unit === "g"` | Spec FR-003 + clarification |
+| FatSecret auth | OAuth 2.0 Client Credentials | Token endpoint at `oauth.fatsecret.com/connect/token`; credentials in POST body |
+| Token implementation | Native `fetch` | No package needed; token cached in-process for 24h |
+| Search API version | `GET /rest/foods/search/v5` with `include_food_images=true`, `max_results=10` | v5 returns `food_attributes.macros` and `food_images` in search results — no separate detail API call needed |
+| Async save | Fire-and-forget using v5 search data | All nutrition (`food_attributes.macros`) and images (`food_images`) come from search result; `getFoodById` is not called |
+| Search caching | None | No caching of search results; every request hits FatSecret API directly |
 | Local search | Drizzle `ilike` on `foods.name` where `source = 'fatsecret'` | Existing index; sufficient for scale |
 | Feature flag | `process.env.FATSECRET_ENABLED !== 'false'` | Simple, no DB config needed |
 
@@ -137,69 +136,79 @@ User request → GET /api/foods/search?q=...&page=N
                 ├─ Authenticate session
                 │
                 ├─ foodSearchService.search(keyword, page)
-                │   ├─ searchLocalFoods(keyword)        → DB ILIKE query
+                │   ├─ searchLocalFoods(keyword)        → DB ILIKE query with LEFT JOIN food_photos (thumb)
                 │   ├─ isFatSecretEnabled() ?
-                │   │   ├─ getCachedFatSecretSearch()   → unstable_cache → FatSecret API
+                │   │   ├─ fatSecretClient.searchFoods() → FatSecret API (no caching)
                 │   │   ├─ deduplicateAgainstLocal()
-                │   │   └─ saveFatSecretFoodsAsync()    → fire-and-forget
+                │   │   └─ saveFatSecretFoodsAsync()    → fire-and-forget (uses search result macros + images; no getFoodById call)
                 │   └─ mergeResults(local, external)
                 │
                 └─ Return { results, pagination }
 
 
-User request → GET /api/foods/detail?fatSecretId=...
+User request → GET /api/foods/detail?id=...
                 │
-                ├─ Validate input (Zod)
+                ├─ Validate input (id must be a positive integer)
                 ├─ Authenticate session
                 │
-                ├─ foodSearchService.getDetail(fatSecretId)
-                │   ├─ findLocalBySourceId(fatSecretId) → DB lookup
-                │   ├─ found? → return local data + compute serving nutrition
-                │   └─ not found? →
-                │       ├─ fatSecretClient.getFoodById()  → FatSecret food.get.v4
-                │       ├─ saveFoodAsync()               → fire-and-forget
-                │       └─ return FatSecret data
+                ├─ DB lookup: WHERE id=$1 AND calories IS NOT NULL
+                │   ├─ found? → load alt measures + compute serving nutrition + load photos
+                │   └─ not found (or incomplete)? → return 404
+                │       NOTE: FatSecret is NEVER called from this endpoint.
+                │       Foods must be saved via search path first.
                 │
-                └─ Return { food }
+                └─ Return { food } on 200, 404 if not found
 ```
 
 ### New Files Summary
 
 | File | Purpose |
 |---|---|
-| `src/lib/fatsecret.ts` | OAuth 1.0a client; `searchFoods(keyword, page)`, `getFoodById(id)`; mock support via `USE_MOCK_FATSECRET` |
-| `src/types/fatsecret.ts` | TypeScript types for FatSecret API responses (`FatSecretSearchResponse`, `FatSecretFoodDetail`, etc.) |
+| `src/lib/fatsecret.ts` | OAuth 2.0 client; `searchFoods(keyword, page)` calling `https://platform.fatsecret.com/rest/foods/search/v5` with `include_food_images=true`, `max_results=10`; token cached in-process; mock support via `USE_MOCK_FATSECRET` |
+| `src/types/fatsecret.ts` | TypeScript types for FatSecret API v5 responses (`FatSecretSearchResponse`, `FatSecretSearchFood` with `food_attributes.macros` and `food_images`, `FatSecretImage`) |
 | `src/server/services/food-search.service.ts` | Orchestration; local-first logic; merge; async save; feature flag check |
 | `src/lib/__tests__/mock-fatsecret.ts` | Mock search + detail responses for E2E tests |
 | `src/app/api/foods/detail/route.ts` | GET detail endpoint |
 
 ### Key Implementation Notes
 
-1. **FatSecret single-result quirk**: When the API returns exactly one food in a
-   search, `foods.food` is a plain object, not an array. Always normalize with:
-   `const foods = Array.isArray(raw.food) ? raw.food : [raw.food]`
+1. **FatSecret single-result quirk**: When the API returns exactly one food or serving,
+   the value is a plain object, not an array. Always normalize:
+   `foods_search.results.food` and `servings.serving` and `food_images.food_image`
+   may each be a single object or an array — use `normalizeFoods`, `normalizeServings`,
+   `normalizeImages` helpers from `@/types/fatsecret` respectively.
 
-2. **Image URL pattern matching**: FatSecret image URLs use size-based suffixes.
-   Sort by URL patterns: `_tb`/`72` → thumb, `_200`/`_400` → medium, rest → highres.
+2. **v5 search provides all save data**: `GET /rest/foods/search/v5` returns
+   `servings.serving[]` with full nutrition for each food in the search result.
+   `saveFatSecretFoodsAsync` finds the 100g base serving, saves nutrition + micronutrients,
+   alt measures, and photos — `getFoodById` is never called.
 
-3. **Concurrent save deduplication**: Use Drizzle's `onConflictDoNothing()` on
-   a unique index over `(source, source_id)` to silently discard race conditions.
+3. **Image URL pattern matching**: FatSecret v5 image URLs use `_WxH` dimension suffixes.
+   Match by substring: `_72x72` → thumb, `_400x400` → medium, `_1024x1024` → highres.
+   Thumbnails and calories are now available in search result items (`FoodSearchResultItem`).
 
-4. **Pagination on page 1 vs page 2+**:
+4. **Save deduplication (two layers)**:
+   - **Pre-insert check** (primary): `saveFatSecretFoodsAsync` queries the DB for `source = 'fatsecret' AND source_id = <food_id>` before each insert. If a record is found the food is skipped entirely.
+   - **Conflict guard** (secondary): Drizzle's `onConflictDoNothing()` on the unique index over `(source, source_id)` silently discards any concurrent-race duplicates that slip past the pre-insert check.
+
+5. **Pagination on page 1 vs page 2+**:
    - Page 1: `[localMatches, ...deduplicatedFatSecretPage0]`
    - Page 2+: FatSecret page N only (local already shown on page 1)
+   - `maxResults` is `10` (matches `max_results` param sent to FatSecret v5).
    - `totalResults` always reflects FatSecret's `total_results` value.
    - When FatSecret disabled: `totalResults = localMatches.length`, single page.
 
-5. **Serving nutrition calculation** (detail endpoint):
+6. **Serving nutrition calculation** (detail endpoint):
    ```
    servingCalories = baseCalories × (servingWeightGrams / 100)
    ```
    Applied to all macros and available micros.
 
-6. **`fullNutrients` JSONB**: Stores FatSecret micronutrients (saturatedFat,
-   cholesterol, potassium, vitamins, minerals) plus `foodType` and `foodUrl` metadata.
-   See data-model.md for full schema.
+7. **`foods.food_type` column**: Stores `food_type` (`'Generic'` or `'Brand'`) as a dedicated
+   `varchar(50)` column — not in JSONB. Populated from `FatSecretSearchFood.food_type` during
+   `saveFatSecretFoodsAsync`. `searchLocalFoods` selects it directly so `mergeResults` can
+   populate `FoodSearchResultItem.foodType` without JSONB parsing.
+   `fullNutrients` JSONB retains `foodUrl` and micronutrients only.
 
 ### Constitution Check (Post-Design)
 

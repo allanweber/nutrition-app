@@ -1,40 +1,29 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
+import type {
+  FoodSearchResultItem,
+  SearchPagination,
+} from '@/server/services/food-search.service';
 
-interface FoodSearchResult {
-  common?: Array<{
-    food_name: string
-    brand_name?: string
-    serving_unit: string
-    serving_qty: number
-    photo?: { thumb: string }
-    tag_id?: number
-    nix_item_id?: string
-  }>
-  branded?: Array<{
-    food_name: string
-    brand_name?: string
-    serving_unit: string
-    serving_qty: number
-    photo?: { thumb: string }
-    tag_id?: number
-    nix_item_id?: string
-  }>
+export type { FoodSearchResultItem, SearchPagination };
+
+interface FoodSearchResponse {
+  results: FoodSearchResultItem[];
+  pagination: SearchPagination;
 }
 
-const FOOD_SEARCH_QUERY_KEY = (query: string) => ['foods', 'search', query]
-
-export function useFoodSearchQuery(searchQuery: string) {
+export function useFoodSearchQuery(keyword: string, page = 1) {
   return useQuery({
-    queryKey: FOOD_SEARCH_QUERY_KEY(searchQuery),
-    queryFn: async (): Promise<FoodSearchResult> => {
-      const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}`)
+    queryKey: ['foods', 'search', keyword, page],
+    queryFn: async (): Promise<FoodSearchResponse> => {
+      const response = await fetch(
+        `/api/foods/search?q=${encodeURIComponent(keyword)}&page=${page}`,
+      );
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to search foods')
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to search foods');
       }
-      const data = await response.json()
-      return data.results || {}
+      return response.json();
     },
-    enabled: searchQuery.length >= 2,
-  })
+    enabled: keyword.length >= 3,
+  });
 }
