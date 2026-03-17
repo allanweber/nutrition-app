@@ -44,6 +44,7 @@ export default function FoodSearch({
   const [mealType, setMealType] = useState<string>('breakfast');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [addSuccess, setAddSuccess] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -67,6 +68,8 @@ export default function FoodSearch({
       onCloseDetail();
       setQuery('');
       onSearch('');
+      setAddSuccess(true);
+      setTimeout(() => setAddSuccess(false), 3000);
     } catch {
       setAddError('Failed to add food. Please try again.');
     } finally {
@@ -247,6 +250,13 @@ export default function FoodSearch({
           data-testid="food-search-input"
         />
       </div>
+
+      {/* Success Message */}
+      {addSuccess && (
+        <div className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg" data-testid="add-success-message">
+          Food added successfully!
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (

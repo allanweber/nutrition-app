@@ -76,38 +76,3 @@ export interface DailyNutritionSummary {
   sodium: number;
   foodCount: number;
 }
-
-export function customFoodToBaseFood(customFood: {
-  name: string;
-  brandName?: string;
-  servingQty: number;
-  servingUnit: string;
-  servingWeightGrams?: number;
-  calories: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-  fiber?: number;
-  sugar?: number;
-  sodium?: number;
-}): ConvertedFood {
-  return {
-    sourceId: null,
-    source: 'user_custom',
-    name: customFood.name,
-    brandName: customFood.brandName || null,
-    servingQty: customFood.servingQty,
-    servingUnit: customFood.servingUnit,
-    servingWeightGrams: customFood.servingWeightGrams || 0,
-    calories: customFood.calories,
-    protein: customFood.protein || 0,
-    carbs: customFood.carbs || 0,
-    fat: customFood.fat || 0,
-    fiber: customFood.fiber || 0,
-    sugar: customFood.sugar || 0,
-    sodium: customFood.sodium || 0,
-    fullNutrients: [],
-    isRaw: false,
-    isCustom: true,
-  };
-}
