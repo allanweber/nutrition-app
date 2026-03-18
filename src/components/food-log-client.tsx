@@ -8,15 +8,12 @@ import { useState } from 'react';
 
 import { addDays, format, isToday, subDays } from 'date-fns';
 import {
-  Beef,
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Droplets,
-  Flame,
   Loader2,
   Trash2,
-  Wheat,
+  UtensilsCrossed,
 } from 'lucide-react';
 
 import { FoodLogEntry } from '@/types/food';
@@ -151,43 +148,30 @@ export default function FoodLogClient({
       </Card>
 
       {/* Daily Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-              <Flame className="h-6 w-6 text-orange-500 dark:text-orange-400 mx-auto mb-2" aria-hidden="true" />
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 tabular-nums">
-                {totals.calories}
-              </div>
-              <div className="text-sm text-muted-foreground">Calories</div>
-            </div>
-            <div className="text-center p-4 bg-rose-50 dark:bg-rose-950/30 rounded-lg">
-              <Beef className="h-6 w-6 text-rose-500 dark:text-rose-400 mx-auto mb-2" aria-hidden="true" />
-              <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-                {totals.protein}g
-              </div>
-              <div className="text-sm text-muted-foreground">Protein</div>
-            </div>
-            <div className="text-center p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg">
-              <Wheat className="h-6 w-6 text-amber-500 dark:text-amber-400 mx-auto mb-2" aria-hidden="true" />
-              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">
-                {totals.carbs}g
-              </div>
-              <div className="text-sm text-muted-foreground">Carbs</div>
-            </div>
-            <div className="text-center p-4 bg-sky-50 dark:bg-sky-950/30 rounded-lg">
-              <Droplets className="h-6 w-6 text-sky-500 dark:text-sky-400 mx-auto mb-2" aria-hidden="true" />
-              <div className="text-2xl font-bold text-sky-600 dark:text-sky-400 tabular-nums">
-                {totals.fat}g
-              </div>
-              <div className="text-sm text-muted-foreground">Fat</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Calories</p>
+          <p className="text-3xl font-bold tabular-nums text-foreground leading-none">{totals.calories}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Protein</p>
+          <p className="text-3xl font-bold tabular-nums text-rose-500 leading-none">
+            {totals.protein}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Carbs</p>
+          <p className="text-3xl font-bold tabular-nums text-amber-500 leading-none">
+            {totals.carbs}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Fat</p>
+          <p className="text-3xl font-bold tabular-nums text-sky-500 leading-none">
+            {totals.fat}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+      </div>
 
       {/* Inline delete error */}
       {deleteError && (
@@ -214,15 +198,18 @@ export default function FoodLogClient({
         </Card>
       ) : logs.length === 0 ? (
         <Card>
-          <CardContent className="py-10">
+          <CardContent className="py-12">
             <div
-              className="text-center space-y-1.5"
+              className="text-center space-y-3"
               data-testid="empty-state"
             >
-              <p className="font-medium text-foreground">Nothing logged yet</p>
-              <p className="text-sm text-muted-foreground">
-                Search for a food above — calories and macros update as you log.
-              </p>
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30 mx-auto" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-foreground">No meals logged yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Search for a food above — calories and macros update as you log.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

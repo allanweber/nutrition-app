@@ -6,16 +6,17 @@ import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MealTypeLabel } from '@/components/meal-type-label';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
-import { Clock, TrendingUp } from 'lucide-react';
+import { Clock, TrendingUp, UtensilsCrossed } from 'lucide-react';
 import Link from 'next/link';
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ function MacroRow({
           <span className="text-muted-foreground/60"> / {goal}{unit}</span>
         </span>
       </div>
-      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
         <div
           className={`h-full ${color} rounded-full transition-all duration-500`}
           style={{ width: `${percentage}%` }}
@@ -175,8 +176,13 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold text-foreground">
+            {(() => {
+              const h = new Date().getHours();
+              return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+            })()}
+          </h1>
+          <p className="text-muted-foreground mt-0.5">
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
@@ -186,9 +192,9 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/food-log"
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
         >
-          + Log Food
+          Log Food
         </Link>
       </div>
 
@@ -196,10 +202,10 @@ export default function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
 
         {/* Calories — primary metric */}
-        <div className="rounded-xl border border-border bg-card p-6 flex flex-col justify-between">
+        <div className="flex flex-col justify-between py-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-              Calories Today
+              Calories
             </p>
             <p className="text-5xl font-bold tabular-nums text-foreground leading-none">
               {Math.round(todayNutrition.calories).toLocaleString()}
@@ -209,7 +215,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="mt-8">
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
                 style={{ width: `${caloriePercent}%` }}
@@ -227,7 +233,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Macros — secondary metrics */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6">
+        <div className="lg:col-span-2 py-2 lg:border-l lg:border-border lg:pl-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-5">
             Macros
           </p>
@@ -270,48 +276,46 @@ export default function DashboardPage() {
               </div>
               <span className="text-sm text-muted-foreground">This week</span>
             </div>
-            <div className="h-48">
+            <div className="h-48" style={{ overflow: 'visible' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="calorieGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis
                     dataKey="day"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                     tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
                   />
                   <Tooltip
+                    cursor={{ fill: 'var(--primary)', fillOpacity: 0.08 }}
+                    wrapperStyle={{ zIndex: 10 }}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'var(--card)',
+                      border: '1px solid var(--border)',
                       borderRadius: '8px',
                       fontSize: '12px',
-                      color: 'hsl(var(--card-foreground))',
+                      color: 'var(--card-foreground)',
                     }}
                     formatter={(value) => [`${value} cal`, 'Calories']}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="calories"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    fill="url(#calorieGradient)"
-                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, fill: 'hsl(var(--primary))' }}
+                  <ReferenceLine
+                    y={effectiveGoals.calories}
+                    stroke="var(--muted-foreground)"
+                    strokeDasharray="4 4"
+                    strokeOpacity={0.5}
                   />
-                </AreaChart>
+                  <Bar
+                    dataKey="calories"
+                    fill="var(--primary)"
+                    radius={[3, 3, 0, 0]}
+                  />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -374,15 +378,18 @@ export default function DashboardPage() {
         <CardContent>
           {recentLogs.length === 0 ? (
             <div className="py-10 text-center space-y-3">
-              <p className="text-sm font-medium text-foreground">No foods logged today</p>
-              <p className="text-sm text-muted-foreground">
-                Log your first meal to see macros and daily progress.
-              </p>
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+              <div>
+                <p className="font-semibold text-foreground">Start logging your meals</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your macros and daily progress will appear here as you log.
+                </p>
+              </div>
               <Link
                 href="/food-log"
-                className="inline-block text-sm text-primary font-medium hover:underline"
+                className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
               >
-                Log a meal &rarr;
+                Log your first meal
               </Link>
             </div>
           ) : (
