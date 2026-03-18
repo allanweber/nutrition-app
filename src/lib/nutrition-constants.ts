@@ -22,6 +22,13 @@ export const MACRO_COLORS = {
   fat: 'bg-sky-500',
 } as const;
 
+/** Tailwind text classes for macro values and labels */
+export const MACRO_TEXT_COLORS = {
+  protein: 'text-rose-500',
+  carbs: 'text-amber-500',
+  fat: 'text-sky-500',
+} as const;
+
 /** Hex values for charts that cannot use Tailwind utility classes */
 export const MACRO_HEX_COLORS = {
   protein: '#f43f5e', // rose-500

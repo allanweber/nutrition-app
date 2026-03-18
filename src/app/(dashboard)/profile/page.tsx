@@ -36,7 +36,7 @@ export default async function ProfilePage() {
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={user.image || undefined} alt={user.name} />
-                <AvatarFallback className="bg-blue-600 text-white text-xl">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
                   {getInitials(user.name)}
                 </AvatarFallback>
               </Avatar>
@@ -46,20 +46,20 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <dl className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Name</label>
-                <p className="text-foreground">{user.name}</p>
+                <dt className="text-sm font-medium text-muted-foreground">Name</dt>
+                <dd className="text-foreground">{user.name}</dd>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Email</label>
-                <p className="text-foreground">{user.email}</p>
+                <dt className="text-sm font-medium text-muted-foreground">Email</dt>
+                <dd className="text-foreground">{user.email}</dd>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Email Verified</label>
-                <p className="text-foreground">{user.emailVerified ? 'Yes' : 'No'}</p>
+                <dt className="text-sm font-medium text-muted-foreground">Email Verified</dt>
+                <dd className="text-foreground">{user.emailVerified ? 'Yes' : 'No'}</dd>
               </div>
-            </div>
+            </dl>
           </CardContent>
         </Card>
 

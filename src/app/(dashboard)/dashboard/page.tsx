@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useDailyNutrition } from '@/hooks/use-daily-nutrition';
 import { useWeeklyNutrition } from '@/hooks/use-weekly-nutrition';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
@@ -111,24 +112,23 @@ export default function DashboardPage() {
     foodCount: 0,
   };
 
-  const chartData = (weeklyData || []).map(day => ({
-    day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
-    calories: Math.round(day.calories),
-  }));
-
-  const avgCalories = weeklyData && weeklyData.length > 0
-    ? Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length)
-    : 0;
-
-  const avgProtein = weeklyData && weeklyData.length > 0
-    ? Math.round(weeklyData.reduce((sum, d) => sum + d.protein, 0) / weeklyData.length)
-    : 0;
-
-  const proteinGoalPercent = effectiveGoals.protein > 0
-    ? Math.round((avgProtein / effectiveGoals.protein) * 100)
-    : 0;
-
-  const streak = weeklyData?.filter(d => d.calories > 0).length || 0;
+  const { chartData, avgCalories, proteinGoalPercent, streak } = useMemo(() => {
+    const chartData = (weeklyData || []).map(day => ({
+      day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+      calories: Math.round(day.calories),
+    }));
+    const avgCalories = weeklyData && weeklyData.length > 0
+      ? Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length)
+      : 0;
+    const avgProtein = weeklyData && weeklyData.length > 0
+      ? Math.round(weeklyData.reduce((sum, d) => sum + d.protein, 0) / weeklyData.length)
+      : 0;
+    const proteinGoalPercent = effectiveGoals.protein > 0
+      ? Math.round((avgProtein / effectiveGoals.protein) * 100)
+      : 0;
+    const streak = weeklyData?.filter(d => d.calories > 0).length || 0;
+    return { chartData, avgCalories, proteinGoalPercent, streak };
+  }, [weeklyData, effectiveGoals.protein]);
 
   const caloriePercent = effectiveGoals.calories > 0
     ? Math.min(Math.round((todayNutrition.calories / effectiveGoals.calories) * 100), 100)
@@ -167,6 +167,9 @@ export default function DashboardPage() {
   }
 
   const recentLogs = logs.slice(0, 5);
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening';
+  const todayLabel = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -176,19 +179,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {(() => {
-              const h = new Date().getHours();
-              return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-            })()}
-          </h1>
-          <p className="text-muted-foreground mt-0.5">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">{greeting}</h1>
+          <p className="text-muted-foreground mt-0.5">{todayLabel}</p>
         </div>
         <Link
           href="/food-log"

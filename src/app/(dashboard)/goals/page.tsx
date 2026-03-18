@@ -14,7 +14,7 @@ import {
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import type { ActivityLevel, GoalType } from '@/types/goals';
 import { useForm } from '@tanstack/react-form';
-import { Activity, Loader2, Target, TrendingUp } from 'lucide-react';
+import { Loader2, Target } from 'lucide-react';
 import { useState } from 'react';
 
 type GoalsFormValues = {
@@ -110,6 +110,7 @@ export default function GoalsPage() {
                           }
                         >
                           <SelectTrigger
+                            id="goalType"
                             className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
                           >
                             <SelectValue placeholder="Select your goal" />
@@ -156,6 +157,7 @@ export default function GoalsPage() {
                           }
                         >
                           <SelectTrigger
+                            id="activityLevel"
                             className={`w-full ${field.state.meta.errors.length > 0 ? 'border-red-500' : ''}`}
                           >
                             <SelectValue placeholder="Select activity level" />
@@ -417,7 +419,7 @@ export default function GoalsPage() {
                 </div>
 
                 {saveSuccess && (
-                  <div className="text-sm text-green-600 bg-green-50 p-3 rounded-md">
+                  <div role="status" aria-live="polite" className="text-sm text-green-600 bg-green-50 dark:bg-green-950/30 dark:text-green-400 p-3 rounded-md">
                     Goals saved successfully!
                   </div>
                 )}
@@ -461,7 +463,7 @@ export default function GoalsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div className="text-center">
-                  <Target className="h-12 w-12 text-blue-500 mx-auto mb-2" />
+                  <Target className="h-12 w-12 text-primary mx-auto mb-2" />
                   <div className="text-sm text-muted-foreground">
                     Use our calculator to get personalized recommendations based
                     on your age, gender, weight, and activity level.
@@ -470,36 +472,6 @@ export default function GoalsPage() {
                 <Button className="w-full" variant="outline">
                   Open Calculator
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Progress Tracking</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Current Streak</span>
-                  </div>
-                  <span className="font-semibold">0 days</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Activity className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">Goals Met This Week</span>
-                  </div>
-                  <span className="font-semibold">0/7</span>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">0%</div>
-                  <div className="text-sm text-muted-foreground">
-                    Goals achieved this month
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

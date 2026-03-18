@@ -252,7 +252,7 @@ test.describe('Phase 2: Food Logging', () => {
       await foodLogPage.addFoodButton.click();
 
       // Check for success message
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({
+      await expect(page.getByText(/added to your log/i)).toBeVisible({
         timeout: 10000,
       });
 
@@ -278,15 +278,15 @@ test.describe('Phase 2: Food Logging', () => {
       const initialCount = await foodLogPage.getFoodLogCount();
       expect(initialCount).toBeGreaterThan(0);
 
-      // Set up dialog handler to accept confirmation BEFORE clicking
-      page.on('dialog', async (dialog) => {
-        await dialog.accept();
-      });
-
       // Find and click delete button on first log entry
       const deleteButton = page.locator('[data-testid^="delete-log-"]').first();
       await expect(deleteButton).toBeVisible({ timeout: 5000 });
       await deleteButton.click();
+
+      // Inline confirmation UI: click the "Remove" confirm button
+      const confirmButton = page.locator('[data-testid^="delete-confirm-"]').first();
+      await expect(confirmButton).toBeVisible({ timeout: 5000 });
+      await confirmButton.click();
 
       // Count should decrease after query invalidation/refetch completes.
       await expect
@@ -322,7 +322,7 @@ test.describe('Phase 2: Food Logging', () => {
       await page.getByRole('option', { name: /lunch/i }).click();
       await foodLogPage.addFoodButton.click();
 
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({
+      await expect(page.getByText(/added to your log/i)).toBeVisible({
         timeout: 10000,
       });
 
@@ -351,10 +351,10 @@ test.describe('Phase 2: Food Logging', () => {
       await foodLogPage.addFoodButton.click();
 
       // Wait for success message to appear and disappear
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({
+      await expect(page.getByText(/added to your log/i)).toBeVisible({
         timeout: 10000,
       });
-      await page.waitForSelector('text=/food added successfully/i', {
+      await page.waitForSelector('text=/added to your log/i', {
         state: 'hidden',
         timeout: 5000,
       });
@@ -370,7 +370,7 @@ test.describe('Phase 2: Food Logging', () => {
       await foodLogPage.addFoodButton.click();
 
       // Wait for success message to appear
-      await expect(page.getByText(/food added successfully/i)).toBeVisible({
+      await expect(page.getByText(/added to your log/i)).toBeVisible({
         timeout: 10000,
       });
 

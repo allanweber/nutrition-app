@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,6 +46,13 @@ export default function FoodSearch({
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    };
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -68,8 +76,9 @@ export default function FoodSearch({
       onCloseDetail();
       setQuery('');
       onSearch('');
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
       setAddSuccess(true);
-      setTimeout(() => setAddSuccess(false), 3000);
+      successTimerRef.current = setTimeout(() => setAddSuccess(false), 3000);
     } catch {
       setAddError('Couldn\'t save this food entry. Check your connection and try again.');
     } finally {
@@ -122,52 +131,49 @@ export default function FoodSearch({
             </div>
 
             {/* Base nutrition (per 100g) */}
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Nutrition per 100g</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>Calories: <span className="font-medium">{foodDetail.baseServing.calories.toFixed(1)} kcal</span></div>
-                  <div>Protein: <span className="font-medium">{foodDetail.baseServing.protein.toFixed(1)}g</span></div>
-                  <div>Carbs: <span className="font-medium">{foodDetail.baseServing.carbs.toFixed(1)}g</span></div>
-                  <div>Fat: <span className="font-medium">{foodDetail.baseServing.fat.toFixed(1)}g</span></div>
-                  {foodDetail.baseServing.fiber !== null && (
-                    <div>Fiber: <span className="font-medium">{foodDetail.baseServing.fiber.toFixed(1)}g</span></div>
-                  )}
-                  {foodDetail.baseServing.sugar !== null && (
-                    <div>Sugar: <span className="font-medium">{foodDetail.baseServing.sugar.toFixed(1)}g</span></div>
-                  )}
-                  {foodDetail.baseServing.sodium !== null && (
-                    <div>Sodium: <span className="font-medium">{foodDetail.baseServing.sodium.toFixed(0)}mg</span></div>
-                  )}
-                  {foodDetail.baseServing.potassium !== null && (
-                    <div>Potassium: <span className="font-medium">{foodDetail.baseServing.potassium.toFixed(0)}mg</span></div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                Nutrition per 100g
+              </p>
+              <dl className="divide-y divide-border">
+                {[
+                  { label: 'Calories', value: `${foodDetail.baseServing.calories.toFixed(0)} kcal` },
+                  { label: 'Protein', value: `${foodDetail.baseServing.protein.toFixed(1)}g` },
+                  { label: 'Carbs', value: `${foodDetail.baseServing.carbs.toFixed(1)}g` },
+                  { label: 'Fat', value: `${foodDetail.baseServing.fat.toFixed(1)}g` },
+                  ...(foodDetail.baseServing.fiber !== null ? [{ label: 'Fiber', value: `${foodDetail.baseServing.fiber.toFixed(1)}g` }] : []),
+                  ...(foodDetail.baseServing.sugar !== null ? [{ label: 'Sugar', value: `${foodDetail.baseServing.sugar.toFixed(1)}g` }] : []),
+                  ...(foodDetail.baseServing.sodium !== null ? [{ label: 'Sodium', value: `${foodDetail.baseServing.sodium.toFixed(0)}mg` }] : []),
+                  ...(foodDetail.baseServing.potassium !== null ? [{ label: 'Potassium', value: `${foodDetail.baseServing.potassium.toFixed(0)}mg` }] : []),
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-baseline py-2">
+                    <dt className="text-sm text-muted-foreground">{label}</dt>
+                    <dd className="text-sm font-semibold text-foreground tabular-nums">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
 
             {/* Alternate servings */}
             {foodDetail.servings.length > 0 && (
               <div>
-                <h3 className="font-medium mb-2">Serving Sizes</h3>
-                <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                  Serving Sizes
+                </p>
+                <div className="divide-y divide-border">
                   {foodDetail.servings.map((serving) => (
-                    <Card key={serving.id}>
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-sm">{serving.description}</p>
-                            <p className="text-xs text-muted-foreground">{serving.weightGrams}g</p>
-                          </div>
-                          <div className="text-right text-sm">
-                            <p>{serving.calories.toFixed(0)} kcal</p>
-                            <p className="text-xs text-muted-foreground">
-                              P: {serving.protein.toFixed(1)}g C: {serving.carbs.toFixed(1)}g F: {serving.fat.toFixed(1)}g
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <div key={serving.id} className="flex justify-between items-baseline py-2.5">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{serving.description}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">{serving.weightGrams}g</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground tabular-nums">{serving.calories.toFixed(0)} kcal</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          P: {serving.protein.toFixed(1)}g · C: {serving.carbs.toFixed(1)}g · F: {serving.fat.toFixed(1)}g
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -191,9 +197,10 @@ export default function FoodSearch({
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Quantity (g)</label>
+              <div className="space-y-1.5">
+                <Label htmlFor="detail-quantity">Quantity (g)</Label>
                 <Input
+                  id="detail-quantity"
                   type="number"
                   step="1"
                   min="1"
@@ -202,10 +209,10 @@ export default function FoodSearch({
                   data-testid="quantity-input"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Meal</label>
+              <div className="space-y-1.5">
+                <Label htmlFor="detail-meal-type">Meal</Label>
                 <Select value={mealType} onValueChange={setMealType}>
-                  <SelectTrigger data-testid="meal-type-select">
+                  <SelectTrigger id="detail-meal-type" data-testid="meal-type-select">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,7 +262,7 @@ export default function FoodSearch({
 
       {/* Success Message */}
       {addSuccess && (
-        <div className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg" data-testid="add-success-message">
+        <div role="status" aria-live="polite" className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg" data-testid="add-success-message">
           Added to your log.
         </div>
       )}
@@ -338,7 +345,7 @@ export default function FoodSearch({
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {food.isLocal && (
-                      <span className="text-xs bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded">saved</span>
+                      <span className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded font-medium">saved</span>
                     )}
                     <Plus className="h-5 w-5 text-muted-foreground" />
                   </div>

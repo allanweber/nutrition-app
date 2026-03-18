@@ -109,12 +109,12 @@ export default function Hero() {
               {/* Calorie Ring */}
               <div className="flex items-center justify-center mb-6">
                 <div className="relative w-40 h-40">
-                  <svg className="w-full h-full transform -rotate-90">
+                  <svg className="w-full h-full transform -rotate-90" aria-hidden="true">
                     <circle
                       cx="80"
                       cy="80"
                       r="70"
-                      stroke="hsl(var(--border))"
+                      stroke="var(--border)"
                       strokeWidth="12"
                       fill="none"
                     />
@@ -122,7 +122,7 @@ export default function Hero() {
                       cx="80"
                       cy="80"
                       r="70"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--primary)"
                       strokeWidth="12"
                       fill="none"
                       strokeLinecap="round"

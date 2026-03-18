@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { addDays, format, isToday, subDays } from 'date-fns';
 import {
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 import { FoodLogEntry } from '@/types/food';
-import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
 interface Totals {
   calories: number;
@@ -35,7 +35,7 @@ interface FoodLogClientProps {
   totals: Totals;
   isLoading?: boolean;
   onDateChange: (date: Date) => void;
-  onDeleteLog: (logId: number) => void;
+  onDeleteLog: (logId: number) => Promise<void>;
 }
 
 
@@ -92,7 +92,7 @@ export default function FoodLogClient({
     setConfirmingDelete(null);
   };
 
-  const calculateLogNutrients = (log: FoodLogEntry) => {
+  const calculateLogNutrients = useCallback((log: FoodLogEntry) => {
     const qty = log.quantity || 1;
     const servingQty = log.food?.servingQty || 1;
     const multiplier = qty / servingQty;
@@ -103,7 +103,7 @@ export default function FoodLogClient({
       carbs: Math.round((log.food?.carbs || 0) * multiplier * 10) / 10,
       fat: Math.round((log.food?.fat || 0) * multiplier * 10) / 10,
     };
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -148,26 +148,26 @@ export default function FoodLogClient({
       </Card>
 
       {/* Daily Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-2" data-testid="daily-summary">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Calories</p>
-          <p className="text-3xl font-bold tabular-nums text-foreground leading-none">{totals.calories}</p>
+          <p className="text-3xl font-bold tabular-nums text-foreground leading-none" data-testid="calories-total">{totals.calories}</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Protein</p>
-          <p className="text-3xl font-bold tabular-nums text-rose-500 leading-none">
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.protein} leading-none`}>
             {totals.protein}<span className="text-base font-medium ml-0.5">g</span>
           </p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Carbs</p>
-          <p className="text-3xl font-bold tabular-nums text-amber-500 leading-none">
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.carbs} leading-none`}>
             {totals.carbs}<span className="text-base font-medium ml-0.5">g</span>
           </p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Fat</p>
-          <p className="text-3xl font-bold tabular-nums text-sky-500 leading-none">
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.fat} leading-none`}>
             {totals.fat}<span className="text-base font-medium ml-0.5">g</span>
           </p>
         </div>

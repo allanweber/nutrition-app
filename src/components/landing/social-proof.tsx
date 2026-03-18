@@ -28,11 +28,7 @@ function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
   const isInView = useInView(ref, { once: true });
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setCount(value);
-      return;
-    }
-    if (!isInView) return;
+    if (prefersReducedMotion || !isInView) return;
 
     const duration = 2000;
     const steps = 60;
