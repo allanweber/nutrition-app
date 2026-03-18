@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { FoodLogEntry } from '@/types/food';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS } from '@/lib/nutrition-constants';
 
 interface Totals {
   calories: number;
@@ -40,14 +41,6 @@ interface FoodLogClientProps {
   onDeleteLog: (logId: number) => void;
 }
 
-const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
-
-const mealTypeLabels: Record<string, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  snack: 'Snack',
-};
 
 export default function FoodLogClient({
   logs,
@@ -235,7 +228,7 @@ export default function FoodLogClient({
         </Card>
       ) : (
         <div className="space-y-4">
-          {mealTypeOrder.map((mealType) => {
+          {MEAL_TYPE_ORDER.map((mealType) => {
             const mealLogs = logsByMeal[mealType] || [];
             if (mealLogs.length === 0) return null;
 
@@ -257,7 +250,7 @@ export default function FoodLogClient({
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">
-                      {mealTypeLabels[mealType]}
+                      {MEAL_TYPE_LABELS[mealType]}
                     </CardTitle>
                     <Badge variant="secondary">{mealTotals.calories} cal</Badge>
                   </div>

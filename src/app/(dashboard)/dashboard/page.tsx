@@ -4,7 +4,8 @@ import { useDailyNutrition } from '@/hooks/use-daily-nutrition';
 import { useWeeklyNutrition } from '@/hooks/use-weekly-nutrition';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { MealTypeLabel } from '@/components/meal-type-label';
+import { MACRO_COLORS } from '@/lib/nutrition-constants';
 import { Clock, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -69,20 +70,6 @@ function StatRow({
         {sub && <span className="font-normal text-muted-foreground ml-1">{sub}</span>}
       </span>
     </div>
-  );
-}
-
-function MealTypeLabel({ mealType }: { mealType: string }) {
-  const colors: Record<string, string> = {
-    breakfast: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    lunch: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
-    dinner: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
-    snack: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  };
-  return (
-    <Badge variant="secondary" className={colors[mealType] || 'bg-muted text-muted-foreground'}>
-      {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-    </Badge>
   );
 }
 
@@ -250,21 +237,21 @@ export default function DashboardPage() {
               current={todayNutrition.protein}
               goal={effectiveGoals.protein}
               unit="g"
-              color="bg-rose-500"
+              color={MACRO_COLORS.protein}
             />
             <MacroRow
               label="Carbohydrates"
               current={todayNutrition.carbs}
               goal={effectiveGoals.carbs}
               unit="g"
-              color="bg-amber-500"
+              color={MACRO_COLORS.carbs}
             />
             <MacroRow
               label="Fat"
               current={todayNutrition.fat}
               goal={effectiveGoals.fat}
               unit="g"
-              color="bg-sky-500"
+              color={MACRO_COLORS.fat}
             />
           </div>
         </div>
