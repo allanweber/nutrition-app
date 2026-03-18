@@ -69,8 +69,8 @@ export default function FoodLogPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Food Log</h1>
-        <p className="text-muted-foreground">Track your daily food intake</p>
+        <h1 className="text-3xl font-bold text-foreground">Food Log</h1>
+        <p className="text-muted-foreground mt-0.5">Search and log your meals for the day</p>
       </div>
 
       {/* Add Food Section */}

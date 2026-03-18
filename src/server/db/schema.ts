@@ -318,30 +318,6 @@ export const foodLogItems = pgTable(
   ],
 );
 
-// Food logs table
-export const foodLogs = pgTable(
-  'food_logs',
-  {
-    id: serial('id').primaryKey(),
-    userId: text('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    foodId: integer('food_id')
-      .notNull()
-      .references(() => foods.id, { onDelete: 'cascade' }),
-    quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
-    servingUnit: varchar('serving_unit', { length: 100 }),
-    mealType: mealTypeEnum('meal_type').notNull(),
-    consumedAt: timestamp('consumed_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('food_logs_user_id_idx').on(table.userId),
-    index('food_logs_food_id_idx').on(table.foodId),
-    index('food_logs_consumed_at_idx').on(table.consumedAt),
-  ],
-);
-
 // Nutrition goals table
 export const nutritionGoals = pgTable(
   'nutrition_goals',
@@ -538,7 +514,6 @@ export const dietPlanMealItems = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
-  foodLogs: many(foodLogs),
   foodLogMeals: many(foodLogMeals),
   nutritionGoals: many(nutritionGoals),
   bodyCheckins: many(bodyCheckins),
@@ -552,7 +527,6 @@ export const foodsRelations = relations(foods, ({ one, many }) => ({
     references: [foodPhotos.foodId],
   }),
   altMeasures: many(foodAltMeasures),
-  foodLogs: many(foodLogs),
   foodLogItems: many(foodLogItems),
   dietPlanMeals: many(dietPlanMeals),
   dietPlanMealItems: many(dietPlanMealItems),
@@ -601,17 +575,6 @@ export const foodAltMeasuresRelations = relations(
     }),
   }),
 );
-
-export const foodLogsRelations = relations(foodLogs, ({ one }) => ({
-  user: one(users, {
-    fields: [foodLogs.userId],
-    references: [users.id],
-  }),
-  food: one(foods, {
-    fields: [foodLogs.foodId],
-    references: [foods.id],
-  }),
-}));
 
 export const nutritionGoalsRelations = relations(nutritionGoals, ({ one }) => ({
   user: one(users, {
@@ -700,8 +663,6 @@ export const insertFoodPhotoSchema = createInsertSchema(foodPhotos);
 export const selectFoodPhotoSchema = createSelectSchema(foodPhotos);
 export const insertFoodAltMeasureSchema = createInsertSchema(foodAltMeasures);
 export const selectFoodAltMeasureSchema = createSelectSchema(foodAltMeasures);
-export const insertFoodLogSchema = createInsertSchema(foodLogs);
-export const selectFoodLogSchema = createSelectSchema(foodLogs);
 export const insertFoodLogMealSchema = createInsertSchema(foodLogMeals);
 export const selectFoodLogMealSchema = createSelectSchema(foodLogMeals);
 export const insertFoodLogItemSchema = createInsertSchema(foodLogItems);
@@ -731,8 +692,6 @@ export type FoodPhoto = typeof foodPhotos.$inferSelect;
 export type NewFoodPhoto = typeof foodPhotos.$inferInsert;
 export type FoodAltMeasure = typeof foodAltMeasures.$inferSelect;
 export type NewFoodAltMeasure = typeof foodAltMeasures.$inferInsert;
-export type FoodLog = typeof foodLogs.$inferSelect;
-export type NewFoodLog = typeof foodLogs.$inferInsert;
 export type FoodLogMeal = typeof foodLogMeals.$inferSelect;
 export type NewFoodLogMeal = typeof foodLogMeals.$inferInsert;
 export type FoodLogItem = typeof foodLogItems.$inferSelect;

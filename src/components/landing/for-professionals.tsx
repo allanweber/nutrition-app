@@ -213,7 +213,7 @@ export default function ForProfessionals() {
             viewport={{ once: true }}
             className="order-1 lg:order-2"
           >
-            <div className="inline-flex items-center px-3 py-1 bg-primary/20 text-accent rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               For Professionals
             </div>
 

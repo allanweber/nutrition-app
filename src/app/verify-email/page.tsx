@@ -172,7 +172,7 @@ export default function VerifyEmailPage({
                   : 'Resend code'}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Didn’t get it? Check spam, then resend (60s cooldown, ~5/hour).
+              Didn&apos;t receive it? Check your spam folder. You can request a new code every 60 seconds.
             </p>
           </div>
         </form>

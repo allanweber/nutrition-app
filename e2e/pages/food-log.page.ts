@@ -22,7 +22,7 @@ export class FoodLogPage {
     this.addFoodButton = page.getByTestId('add-food-button');
     this.errorMessage = page.getByTestId('error-message');
     this.emptyState = page.getByTestId('empty-state');
-    this.dailySummary = page.getByText('Daily Summary');
+    this.dailySummary = page.getByTestId('daily-summary');
   }
 
   async goto() {
@@ -76,7 +76,7 @@ export class FoodLogPage {
 
   async getCaloriesTotal() {
     // Get the calories value from the daily summary
-    const caloriesText = await this.page.locator('.text-orange-600').first().textContent();
+    const caloriesText = await this.page.getByTestId('calories-total').textContent();
     return parseInt(caloriesText || '0', 10);
   }
 

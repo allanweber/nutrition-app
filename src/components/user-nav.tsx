@@ -57,10 +57,10 @@ export function UserNav({ user }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <button className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src={user.image || undefined} alt={user.name} />
-            <AvatarFallback className="bg-blue-600 text-white text-sm">
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>

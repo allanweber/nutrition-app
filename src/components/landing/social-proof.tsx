@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { Users, Utensils, Star, Award } from 'lucide-react';
 
 interface StatProps {
@@ -12,31 +12,41 @@ interface StatProps {
   delay: number;
 }
 
+const isDecimal = (n: number) => n % 1 !== 0;
+
+function formatCount(n: number, target: number): string {
+  if (isDecimal(target)) {
+    return n.toFixed(1);
+  }
+  return Math.floor(n).toLocaleString();
+}
+
 function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
-  const [count, setCount] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const [count, setCount] = useState(prefersReducedMotion ? value : 0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
   useEffect(() => {
-    if (isInView) {
-      const duration = 2000;
-      const steps = 60;
-      const stepValue = value / steps;
-      let current = 0;
+    if (prefersReducedMotion || !isInView) return;
 
-      const timer = setInterval(() => {
-        current += stepValue;
-        if (current >= value) {
-          setCount(value);
-          clearInterval(timer);
-        } else {
-          setCount(Math.floor(current));
-        }
-      }, duration / steps);
+    const duration = 2000;
+    const steps = 60;
+    const stepValue = value / steps;
+    let current = 0;
 
-      return () => clearInterval(timer);
-    }
-  }, [isInView, value]);
+    const timer = setInterval(() => {
+      current += stepValue;
+      if (current >= value) {
+        setCount(value);
+        clearInterval(timer);
+      } else {
+        setCount(current);
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [isInView, value, prefersReducedMotion]);
 
   return (
     <motion.div
@@ -48,12 +58,12 @@ function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
       className="flex flex-col items-center"
     >
       <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
-        <Icon className="h-6 w-6 text-primary" />
+        <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
       </div>
-        <div className="text-3xl md:text-4xl font-bold text-foreground mb-1">
-          {count.toLocaleString()}{suffix}
-        </div>
-        <div className="text-muted-foreground text-sm">{label}</div>
+      <div className="text-3xl md:text-4xl font-bold text-foreground mb-1" aria-label={`${value}${suffix} ${label}`}>
+        {formatCount(count, value)}{suffix}
+      </div>
+      <div className="text-muted-foreground text-sm" aria-hidden="true">{label}</div>
     </motion.div>
   );
 }

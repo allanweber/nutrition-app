@@ -3,41 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play, Check, Flame, Beef, Wheat } from 'lucide-react';
+import { ArrowRight, Play, Check, Droplets, Beef, Wheat } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-background via-muted to-primary/5">
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 30, 0],
-            y: [0, -20, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            x: [0, -20, 0],
-            y: [0, 30, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/2 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            x: [0, 10, 0],
-            y: [0, -10, 0],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-20 right-1/3 w-72 h-72 bg-primary/5 rounded-full blur-3xl"
-        />
-      </div>
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-muted/40">
 
       <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -90,7 +60,7 @@ export default function Hero() {
               <Button
                 size="lg"
                 variant="outline"
-                className="text-lg px-8 py-6 h-auto border-2"
+                className="text-lg px-8 py-6 h-auto"
                 asChild
               >
                 <a href="#demo">
@@ -122,34 +92,29 @@ export default function Hero() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative"
           >
-            {/* Floating Dashboard Card */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative bg-card rounded-2xl shadow-2xl p-6 border border-border"
-            >
+            {/* Dashboard Card */}
+            <div className="bg-card rounded-2xl shadow-2xl p-6 border border-border">
               {/* Mini Dashboard Header */}
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-semibold text-card-foreground">Today&apos;s Progress</h3>
-                   <p className="text-sm text-muted-foreground">January 20, 2026</p>
-                 </div>
-                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                   <span className="text-primary font-bold">78%</span>
-                 </div>
+                  <p className="text-sm text-muted-foreground">Calories &amp; Macros</p>
+                </div>
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm tabular-nums">78%</span>
+                </div>
               </div>
 
               {/* Calorie Ring */}
               <div className="flex items-center justify-center mb-6">
                 <div className="relative w-40 h-40">
-                  <svg className="w-full h-full transform -rotate-90">
+                  <svg className="w-full h-full transform -rotate-90" aria-hidden="true">
                     <circle
                       cx="80"
                       cy="80"
                       r="70"
-                       stroke="hsl(var(--border))"
+                      stroke="var(--border)"
                       strokeWidth="12"
                       fill="none"
                     />
@@ -157,7 +122,7 @@ export default function Hero() {
                       cx="80"
                       cy="80"
                       r="70"
-                      stroke="url(#gradient)"
+                      stroke="var(--primary)"
                       strokeWidth="12"
                       fill="none"
                       strokeLinecap="round"
@@ -165,63 +130,28 @@ export default function Hero() {
                       animate={{ strokeDasharray: '343 440' }}
                       transition={{ duration: 2, delay: 1 }}
                     />
-                    <defs>
-                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                         <stop offset="100%" stopColor="hsl(var(--primary))" />
-                      </linearGradient>
-                    </defs>
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 1.5 }}
-                      className="text-3xl font-bold text-card-foreground"
+                      className="text-3xl font-bold text-card-foreground tabular-nums"
                     >
                       1,560
                     </motion.span>
-                     <span className="text-sm text-muted-foreground">of 2,000 cal</span>
+                    <span className="text-sm text-muted-foreground">of 2,000 cal</span>
                   </div>
                 </div>
               </div>
 
               {/* Macro Bars */}
               <div className="space-y-4">
-                <MacroBar icon={Beef} label="Protein" current={85} goal={120} color="bg-red-500" />
+                <MacroBar icon={Beef} label="Protein" current={85} goal={120} color="bg-rose-500" />
                 <MacroBar icon={Wheat} label="Carbs" current={180} goal={250} color="bg-amber-500" />
-                <MacroBar icon={Flame} label="Fat" current={52} goal={65} color="bg-blue-500" />
+                <MacroBar icon={Droplets} label="Fat" current={52} goal={65} color="bg-sky-500" />
               </div>
-            </motion.div>
-
-            {/* Floating Elements */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.2 }}
-              className="absolute -top-4 -right-4 bg-card rounded-xl shadow-lg p-3 border border-border"
-            >
-               <div className="flex items-center space-x-2">
-                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Check className="h-4 w-4 text-primary" />
-                  </div>
-                 <span className="text-sm font-medium text-foreground">Meal logged!</span>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.5 }}
-              className="absolute -bottom-4 -left-4 bg-card rounded-xl shadow-lg p-3 border border-border"
-            >
-              <div className="flex items-center space-x-2">
-                <div className="text-2xl">7</div>
-                <div className="text-xs text-muted-foreground">
-                  Day<br />Streak
-                </div>
-              </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -246,13 +176,13 @@ function MacroBar({
 
   return (
     <div className="flex items-center space-x-3">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-       <div className="flex-1">
-         <div className="flex justify-between text-sm mb-1">
-           <span className="text-muted-foreground">{label}</span>
-           <span className="text-foreground font-medium">{current}g / {goal}g</span>
-         </div>
-         <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+      <div className="flex-1">
+        <div className="flex justify-between text-sm mb-1">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="text-foreground font-medium tabular-nums">{current}g / {goal}g</span>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}

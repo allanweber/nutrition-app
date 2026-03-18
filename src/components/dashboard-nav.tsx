@@ -57,7 +57,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
   };
 
   return (
-    <nav className="bg-card border-b border-border">
+    <nav aria-label="Main navigation" className="bg-card border-b border-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top bar with logo and user */}
         <div className="flex justify-between items-center h-16">
@@ -77,9 +77,11 @@ export function DashboardNav({ user }: DashboardNavProps) {
             <button
               type="button"
               className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">{mobileMenuOpen ? 'Close main menu' : 'Open main menu'}</span>
               {mobileMenuOpen ? (
                 <X className="block h-6 w-6" aria-hidden="true" />
               ) : (
@@ -116,7 +118,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-card">
+        <div id="mobile-nav-menu" className="md:hidden border-t border-border bg-card">
           <div className="py-2">
             {navigation.map((item) => {
               const active = isActive(item.href);

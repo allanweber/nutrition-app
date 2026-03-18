@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     let cachedFood: typeof matchingFoods[number]['food'] | null = matchingFoods[0]?.food ?? null;
-    let cachedPhotoThumb: string | null = matchingFoods[0]?.photo?.thumb ?? null;
+    const cachedPhotoThumb: string | null = matchingFoods[0]?.photo?.thumb ?? null;
 
     if (!cachedFood) {
       // Create a minimal food entry if not found in local DB

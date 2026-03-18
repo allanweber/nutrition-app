@@ -1,76 +1,77 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useDailyNutrition } from '@/hooks/use-daily-nutrition';
 import { useWeeklyNutrition } from '@/hooks/use-weekly-nutrition';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Flame, Beef, Wheat, Droplets, Apple, Clock, TrendingUp, Target, Award } from 'lucide-react';
+import { MealTypeLabel } from '@/components/meal-type-label';
+import { MACRO_COLORS } from '@/lib/nutrition-constants';
+import { Clock, TrendingUp, UtensilsCrossed } from 'lucide-react';
 import Link from 'next/link';
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts';
 
-function MacroCard({
-  icon: Icon,
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function MacroRow({
   label,
   current,
   goal,
   unit,
   color,
-  bgColor,
 }: {
-  icon: React.ElementType;
   label: string;
   current: number;
   goal: number;
   unit: string;
   color: string;
-  bgColor: string;
 }) {
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
-
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-foreground">{label}</h3>
-          <Icon className={`h-5 w-5 ${color}`} />
-        </div>
-        <div className="flex items-end space-x-2">
-          <span className="text-3xl font-bold text-foreground">
-            {Math.round(current)}{unit}
-          </span>
-          <span className="text-muted-foreground mb-1">/ {goal}{unit}</span>
-        </div>
-        <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className={`h-full ${bgColor} rounded-full transition-all duration-500`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <div className="flex justify-between text-sm mb-1.5">
+        <span className="font-medium text-foreground">{label}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {Math.round(current)}{unit}
+          <span className="text-muted-foreground/60"> / {goal}{unit}</span>
+        </span>
+      </div>
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`h-full ${color} rounded-full transition-all duration-500`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
   );
 }
 
-function MealTypeLabel({ mealType }: { mealType: string }) {
-  const colors: Record<string, string> = {
-    breakfast: 'bg-yellow-100 text-yellow-800',
-    lunch: 'bg-blue-100 text-blue-800',
-    dinner: 'bg-purple-100 text-purple-800',
-    snack: 'bg-green-100 text-green-800',
-  };
+function StatRow({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
-    <Badge variant="secondary" className={colors[mealType] || 'bg-gray-100 text-gray-800'}>
-      {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-    </Badge>
+    <div className="flex justify-between items-baseline py-1">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-semibold text-foreground tabular-nums">
+        {value}
+        {sub && <span className="font-normal text-muted-foreground ml-1">{sub}</span>}
+      </span>
+    </div>
   );
 }
 
@@ -81,6 +82,8 @@ function formatTime(date: Date | string) {
     hour12: true,
   });
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { data: nutrition, logs, isLoading: nutritionLoading } = useDailyNutrition();
@@ -109,28 +112,30 @@ export default function DashboardPage() {
     foodCount: 0,
   };
 
-  // Calculate weekly stats for analytics
-  const chartData = (weeklyData || []).map(day => ({
-    day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
-    calories: Math.round(day.calories),
-    protein: Math.round(day.protein),
-    carbs: Math.round(day.carbs),
-    fat: Math.round(day.fat),
-  }));
+  const { chartData, avgCalories, proteinGoalPercent, streak } = useMemo(() => {
+    const chartData = (weeklyData || []).map(day => ({
+      day: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+      calories: Math.round(day.calories),
+    }));
+    const avgCalories = weeklyData && weeklyData.length > 0
+      ? Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length)
+      : 0;
+    const avgProtein = weeklyData && weeklyData.length > 0
+      ? Math.round(weeklyData.reduce((sum, d) => sum + d.protein, 0) / weeklyData.length)
+      : 0;
+    const proteinGoalPercent = effectiveGoals.protein > 0
+      ? Math.round((avgProtein / effectiveGoals.protein) * 100)
+      : 0;
+    const streak = weeklyData?.filter(d => d.calories > 0).length || 0;
+    return { chartData, avgCalories, proteinGoalPercent, streak };
+  }, [weeklyData, effectiveGoals.protein]);
 
-  const avgCalories = weeklyData && weeklyData.length > 0
-    ? Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length)
+  const caloriePercent = effectiveGoals.calories > 0
+    ? Math.min(Math.round((todayNutrition.calories / effectiveGoals.calories) * 100), 100)
     : 0;
+  const remainingCalories = Math.max(0, effectiveGoals.calories - Math.round(todayNutrition.calories));
 
-  const avgProtein = weeklyData && weeklyData.length > 0
-    ? Math.round(weeklyData.reduce((sum, d) => sum + d.protein, 0) / weeklyData.length)
-    : 0;
-
-  const proteinGoalPercent = effectiveGoals.protein > 0
-    ? Math.round((avgProtein / effectiveGoals.protein) * 100)
-    : 0;
-
-  const streak = weeklyData?.filter(d => d.calories > 0).length || 0;
+  // ── Loading skeleton ───────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
@@ -141,308 +146,266 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Loading your nutrition data...</p>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-5">
-                <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
-                <div className="h-8 bg-muted rounded w-2/3 mb-3"></div>
-                <div className="h-2 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="animate-pulse rounded-xl border border-border bg-card p-6 space-y-4">
+            <div className="h-3 bg-muted rounded w-1/3" />
+            <div className="h-12 bg-muted rounded w-2/3" />
+            <div className="h-1.5 bg-muted rounded-full" />
+          </div>
+          <div className="lg:col-span-2 animate-pulse rounded-xl border border-border bg-card p-6 space-y-5">
+            <div className="h-3 bg-muted rounded w-1/4" />
+            {[1, 2, 3].map(i => (
+              <div key={i} className="space-y-1.5">
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-1.5 bg-muted rounded-full" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   const recentLogs = logs.slice(0, 5);
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening';
+  const todayLabel = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">{greeting}</h1>
+          <p className="text-muted-foreground mt-0.5">{todayLabel}</p>
         </div>
         <Link
           href="/food-log"
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
         >
-          + Log Food
+          Log Food
         </Link>
       </div>
 
-      {/* Main Macro Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <MacroCard
-          icon={Flame}
-          label="Calories"
-          current={todayNutrition.calories}
-          goal={effectiveGoals.calories}
-          unit=""
-          color="text-orange-500"
-          bgColor="bg-gradient-to-r from-emerald-500 to-teal-500"
-        />
-        <MacroCard
-          icon={Beef}
-          label="Protein"
-          current={todayNutrition.protein}
-          goal={effectiveGoals.protein}
-          unit="g"
-          color="text-red-500"
-          bgColor="bg-red-500"
-        />
-        <MacroCard
-          icon={Wheat}
-          label="Carbs"
-          current={todayNutrition.carbs}
-          goal={effectiveGoals.carbs}
-          unit="g"
-          color="text-amber-500"
-          bgColor="bg-amber-500"
-        />
-      </div>
+      {/* Today at a glance: Calories (1/3) + Macros (2/3) */}
+      <div className="grid gap-4 lg:grid-cols-3">
 
-      {/* Secondary Stats Row */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
-                <Droplets className="h-5 w-5 text-rose-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Fat</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {Math.round(todayNutrition.fat)}g <span className="text-sm font-normal text-muted-foreground">/ {effectiveGoals.fat}g</span>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Apple className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Fiber</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {Math.round(todayNutrition.fiber)}g <span className="text-sm font-normal text-muted-foreground">/ {effectiveGoals.fiber}g</span>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-purple-500 font-bold text-sm">Na</span>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sodium</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {Math.round(todayNutrition.sodium)}mg
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-500 font-bold text-sm">S</span>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sugar</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {Math.round(todayNutrition.sugar)}g
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Weekly Stats Row */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Flame className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Avg Calories</div>
-                <div className="flex items-end space-x-2">
-                  <span className="text-xl font-bold text-foreground">{avgCalories.toLocaleString()}</span>
-                  <span className="text-xs text-emerald-500 flex items-center">
-                    <TrendingUp className="h-3 w-3 mr-0.5" />+3%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Target className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Protein Goal</div>
-                <div className="flex items-end space-x-2">
-                  <span className="text-xl font-bold text-foreground">{proteinGoalPercent}%</span>
-                  <span className="text-xs text-emerald-500 flex items-center">
-                    <TrendingUp className="h-3 w-3 mr-0.5" />+8%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Award className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Streak</div>
-                <div className="flex items-end space-x-2">
-                  <span className="text-xl font-bold text-foreground">{streak} days</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Calorie Intake Chart */}
-      <Card className="shadow-sm">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              <span className="font-semibold text-foreground">Calorie Intake</span>
-            </div>
-            <span className="text-sm text-muted-foreground">This week</span>
+        {/* Calories — primary metric */}
+        <div className="flex flex-col justify-between py-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              Calories
+            </p>
+            <p className="text-5xl font-bold tabular-nums text-foreground leading-none">
+              {Math.round(todayNutrition.calories).toLocaleString()}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              of {effectiveGoals.calories.toLocaleString()} goal
+            </p>
           </div>
-
-          <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="calorieGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value) => [`${value} cal`, 'Calories']}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="calories"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fill="url(#calorieGradient)"
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, fill: '#10b981' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-2 flex items-center justify-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-muted-foreground">Daily Calories</span>
+          <div className="mt-8">
+            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-500"
+                style={{ width: `${caloriePercent}%` }}
+              />
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-6 border-t-2 border-dashed border-gray-400" />
-              <span className="text-muted-foreground">Goal: {effectiveGoals.calories.toLocaleString()}</span>
+            <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+              <span>{caloriePercent}%</span>
+              <span>
+                {remainingCalories > 0
+                  ? `${remainingCalories.toLocaleString()} remaining`
+                  : 'Goal reached'}
+              </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Macros — secondary metrics */}
+        <div className="lg:col-span-2 py-2 lg:border-l lg:border-border lg:pl-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-5">
+            Macros
+          </p>
+          <div className="grid gap-4">
+            <MacroRow
+              label="Protein"
+              current={todayNutrition.protein}
+              goal={effectiveGoals.protein}
+              unit="g"
+              color={MACRO_COLORS.protein}
+            />
+            <MacroRow
+              label="Carbohydrates"
+              current={todayNutrition.carbs}
+              goal={effectiveGoals.carbs}
+              unit="g"
+              color={MACRO_COLORS.carbs}
+            />
+            <MacroRow
+              label="Fat"
+              current={todayNutrition.fat}
+              goal={effectiveGoals.fat}
+              unit="g"
+              color={MACRO_COLORS.fat}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Chart (2/3) + Secondary stats (1/3) */}
+      <div className="grid gap-4 lg:grid-cols-3">
+
+        {/* Weekly calorie chart */}
+        <Card className="lg:col-span-2 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold text-foreground">Calorie Intake</span>
+              </div>
+              <span className="text-sm text-muted-foreground">This week</span>
+            </div>
+            <div className="h-48" style={{ overflow: 'visible' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'var(--primary)', fillOpacity: 0.08 }}
+                    wrapperStyle={{ zIndex: 10 }}
+                    contentStyle={{
+                      backgroundColor: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: 'var(--card-foreground)',
+                    }}
+                    formatter={(value) => [`${value} cal`, 'Calories']}
+                  />
+                  <ReferenceLine
+                    y={effectiveGoals.calories}
+                    stroke="var(--muted-foreground)"
+                    strokeDasharray="4 4"
+                    strokeOpacity={0.5}
+                  />
+                  <Bar
+                    dataKey="calories"
+                    fill="var(--primary)"
+                    radius={[3, 3, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Secondary stats */}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              Today
+            </p>
+            <div className="divide-y divide-border">
+              <StatRow
+                label="Fiber"
+                value={`${Math.round(todayNutrition.fiber)}g`}
+                sub={`/ ${effectiveGoals.fiber}g`}
+              />
+              <StatRow
+                label="Sodium"
+                value={`${Math.round(todayNutrition.sodium)}mg`}
+                sub={`/ ${effectiveGoals.sodium}mg`}
+              />
+              <StatRow
+                label="Sugar"
+                value={`${Math.round(todayNutrition.sugar)}g`}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              This Week
+            </p>
+            <div className="divide-y divide-border">
+              <StatRow
+                label="Avg Calories"
+                value={avgCalories.toLocaleString()}
+              />
+              <StatRow
+                label="Protein Goal"
+                value={`${proteinGoalPercent}%`}
+              />
+              <StatRow
+                label="Streak"
+                value={streak > 0 ? `${streak} days` : 'Start today'}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Recent Foods */}
       <Card className="shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg font-semibold">Recent Foods</CardTitle>
+          <CardTitle className="text-base font-semibold">Recent Foods</CardTitle>
           <Link href="/food-log" className="text-sm text-primary hover:underline">
             View All
           </Link>
         </CardHeader>
         <CardContent>
           {recentLogs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-2">No foods logged today</p>
-              <Link href="/food-log" className="text-primary hover:underline text-sm">
-                Start logging your meals
+            <div className="py-10 text-center space-y-3">
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+              <div>
+                <p className="font-semibold text-foreground">Start logging your meals</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your macros and daily progress will appear here as you log.
+                </p>
+              </div>
+              <Link
+                href="/food-log"
+                className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+              >
+                Log your first meal
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-border">
               {recentLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{formatTime(log.consumedAt)}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-foreground">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-xs text-muted-foreground tabular-nums shrink-0 hidden sm:flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatTime(log.consumedAt)}
+                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-foreground text-sm truncate">
                         {log.food?.name || 'Unknown Food'}
                       </span>
                       <MealTypeLabel mealType={log.mealType} />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-medium text-foreground">
-                      {Math.round((log.food?.calories || 0) * log.quantity)} cal
-                    </span>
-                  </div>
+                  <span className="text-sm font-medium text-foreground tabular-nums shrink-0 ml-4">
+                    {Math.round((log.food?.calories || 0) * log.quantity)} cal
+                  </span>
                 </div>
               ))}
             </div>
@@ -450,21 +413,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Link
-          href="/food-log"
-          className="flex items-center justify-center p-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-medium"
-        >
-          Log Food
-        </Link>
-        <Link
-          href="/goals"
-          className="flex items-center justify-center p-4 bg-card border border-border text-foreground rounded-xl hover:bg-muted transition-colors font-medium"
-        >
-          Update Goals
-        </Link>
-      </div>
     </div>
   );
 }
+

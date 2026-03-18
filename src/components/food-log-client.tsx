@@ -1,24 +1,23 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { addDays, format, isToday, subDays } from 'date-fns';
 import {
-  Beef,
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Flame,
   Loader2,
   Trash2,
-  Wheat,
+  UtensilsCrossed,
 } from 'lucide-react';
 
 import { FoodLogEntry } from '@/types/food';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
 interface Totals {
   calories: number;
@@ -36,17 +35,9 @@ interface FoodLogClientProps {
   totals: Totals;
   isLoading?: boolean;
   onDateChange: (date: Date) => void;
-  onDeleteLog: (logId: number) => void;
+  onDeleteLog: (logId: number) => Promise<void>;
 }
 
-const mealTypeOrder = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
-
-const mealTypeLabels: Record<string, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  snack: 'Snack',
-};
 
 export default function FoodLogClient({
   logs,
@@ -58,6 +49,8 @@ export default function FoodLogClient({
 }: FoodLogClientProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handlePreviousDay = () => {
     const newDate = subDays(selectedDate, 1);
@@ -77,23 +70,29 @@ export default function FoodLogClient({
     onDateChange(newDate);
   };
 
-  const handleDelete = async (logId: number) => {
-    if (!confirm('Are you sure you want to delete this food log?')) {
-      return;
-    }
+  const handleDeleteRequest = (logId: number) => {
+    setConfirmingDelete(logId);
+    setDeleteError(null);
+  };
 
+  const handleDeleteConfirm = async (logId: number) => {
     setDeleting(logId);
+    setConfirmingDelete(null);
     try {
       await onDeleteLog(logId);
     } catch (error) {
       console.error('Error deleting log:', error);
-      alert('Failed to delete food log');
+      setDeleteError('Failed to remove food entry. Please try again.');
     } finally {
       setDeleting(null);
     }
   };
 
-  const calculateLogNutrients = (log: FoodLogEntry) => {
+  const handleDeleteCancel = () => {
+    setConfirmingDelete(null);
+  };
+
+  const calculateLogNutrients = useCallback((log: FoodLogEntry) => {
     const qty = log.quantity || 1;
     const servingQty = log.food?.servingQty || 1;
     const multiplier = qty / servingQty;
@@ -104,7 +103,7 @@ export default function FoodLogClient({
       carbs: Math.round((log.food?.carbs || 0) * multiplier * 10) / 10,
       fat: Math.round((log.food?.fat || 0) * multiplier * 10) / 10,
     };
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -112,8 +111,8 @@ export default function FoodLogClient({
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center justify-between">
-            <Button variant="outline" size="icon" onClick={handlePreviousDay}>
-              <ChevronLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={handlePreviousDay} aria-label="Previous day">
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
 
             <div className="flex items-center space-x-4">
@@ -140,53 +139,52 @@ export default function FoodLogClient({
               size="icon"
               onClick={handleNextDay}
               disabled={isToday(selectedDate)}
+              aria-label="Next day"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Daily Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-              <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {totals.calories}
-              </div>
-              <div className="text-sm text-muted-foreground">Calories</div>
-            </div>
-            <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
-              <Beef className="h-6 w-6 text-red-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {totals.protein}g
-              </div>
-              <div className="text-sm text-muted-foreground">Protein</div>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
-              <Wheat className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {totals.carbs}g
-              </div>
-              <div className="text-sm text-muted-foreground">Carbs</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-              <div className="h-6 w-6 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-bold">
-                F
-              </div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {totals.fat}g
-              </div>
-              <div className="text-sm text-muted-foreground">Fat</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-2" data-testid="daily-summary">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Calories</p>
+          <p className="text-3xl font-bold tabular-nums text-foreground leading-none" data-testid="calories-total">{totals.calories}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Protein</p>
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.protein} leading-none`}>
+            {totals.protein}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Carbs</p>
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.carbs} leading-none`}>
+            {totals.carbs}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Fat</p>
+          <p className={`text-3xl font-bold tabular-nums ${MACRO_TEXT_COLORS.fat} leading-none`}>
+            {totals.fat}<span className="text-base font-medium ml-0.5">g</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Inline delete error */}
+      {deleteError && (
+        <div role="alert" className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg text-sm">
+          {deleteError}
+          <button
+            className="ml-2 underline hover:no-underline"
+            onClick={() => setDeleteError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Food Logs by Meal */}
       {isLoading ? (
@@ -200,19 +198,24 @@ export default function FoodLogClient({
         </Card>
       ) : logs.length === 0 ? (
         <Card>
-          <CardContent className="py-8">
+          <CardContent className="py-12">
             <div
-              className="text-center text-muted-foreground"
+              className="text-center space-y-3"
               data-testid="empty-state"
             >
-              <p className="text-lg font-medium mb-2">No foods logged</p>
-              <p>Start by searching and adding foods using the form above.</p>
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30 mx-auto" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-foreground">No meals logged yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Search for a food above — calories and macros update as you log.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {mealTypeOrder.map((mealType) => {
+          {MEAL_TYPE_ORDER.map((mealType) => {
             const mealLogs = logsByMeal[mealType] || [];
             if (mealLogs.length === 0) return null;
 
@@ -234,7 +237,7 @@ export default function FoodLogClient({
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">
-                      {mealTypeLabels[mealType]}
+                      {MEAL_TYPE_LABELS[mealType]}
                     </CardTitle>
                     <Badge variant="secondary">{mealTotals.calories} cal</Badge>
                   </div>
@@ -250,9 +253,11 @@ export default function FoodLogClient({
                           data-testid={`food-log-${log.id}`}
                         >
                           {log.food.photoUrl && (
-                            <img
+                            <Image
                               src={log.food.photoUrl}
                               alt={log.food.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 rounded object-cover"
                             />
                           )}
@@ -269,9 +274,19 @@ export default function FoodLogClient({
                               {log.quantity}{' '}
                               {log.servingUnit || log.food.servingUnit}
                             </div>
+                            {/* Mobile-only: nutrition summary inline */}
+                            <div className="sm:hidden mt-1 flex items-center gap-2 text-xs">
+                              <span className="font-medium text-foreground tabular-nums">
+                                {nutrients.calories} cal
+                              </span>
+                              <span className="text-muted-foreground">
+                                P: {nutrients.protein}g · C: {nutrients.carbs}g · F: {nutrients.fat}g
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right hidden sm:block">
-                            <div className="font-medium">
+                          {/* Desktop: right-aligned nutrition block */}
+                          <div className="text-right hidden sm:block shrink-0">
+                            <div className="font-medium tabular-nums">
                               {nutrients.calories} cal
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -279,20 +294,42 @@ export default function FoodLogClient({
                               F: {nutrients.fat}g
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(log.id)}
-                            disabled={deleting === log.id}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`delete-log-${log.id}`}
-                          >
-                            {deleting === log.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
+                          {confirmingDelete === log.id ? (
+                            <div className="flex items-center gap-1 shrink-0" role="group" aria-label={`Confirm removal of ${log.food.name}`}>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteConfirm(log.id)}
+                                data-testid={`delete-confirm-${log.id}`}
+                              >
+                                Remove
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleDeleteCancel}
+                                data-testid={`delete-cancel-${log.id}`}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRequest(log.id)}
+                              disabled={deleting === log.id}
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              aria-label={`Remove ${log.food.name} from log`}
+                              data-testid={`delete-log-${log.id}`}
+                            >
+                              {deleting === log.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                       );
                     })}

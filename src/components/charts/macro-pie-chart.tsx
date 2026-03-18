@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 
 interface MacroPieChartProps {
   protein: number;
@@ -9,17 +10,11 @@ interface MacroPieChartProps {
   fat: number;
 }
 
-const COLORS = {
-  protein: '#3b82f6', // blue-500
-  carbs: '#10b981', // green-500
-  fat: '#f59e0b', // amber-500
-};
-
 export function MacroPieChart({ protein, carbs, fat }: MacroPieChartProps) {
   const data = [
-    { name: 'Protein', value: protein, color: COLORS.protein },
-    { name: 'Carbs', value: carbs, color: COLORS.carbs },
-    { name: 'Fat', value: fat, color: COLORS.fat },
+    { name: 'Protein', value: protein, color: MACRO_HEX_COLORS.protein },
+    { name: 'Carbs', value: carbs, color: MACRO_HEX_COLORS.carbs },
+    { name: 'Fat', value: fat, color: MACRO_HEX_COLORS.fat },
   ].filter(item => item.value > 0);
 
   if (data.length === 0) {
@@ -69,15 +64,15 @@ export function MacroPieChart({ protein, carbs, fat }: MacroPieChartProps) {
         </ResponsiveContainer>
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS.protein }} />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: MACRO_HEX_COLORS.protein }} />
             <span>Protein: {protein}g</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS.carbs }} />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: MACRO_HEX_COLORS.carbs }} />
             <span>Carbs: {carbs}g</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS.fat }} />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: MACRO_HEX_COLORS.fat }} />
             <span>Fat: {fat}g</span>
           </div>
         </div>
