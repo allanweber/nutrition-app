@@ -1,6 +1,6 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Droplets,
   Flame,
   Loader2,
   Trash2,
@@ -58,6 +59,8 @@ export default function FoodLogClient({
 }: FoodLogClientProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handlePreviousDay = () => {
     const newDate = subDays(selectedDate, 1);
@@ -77,20 +80,26 @@ export default function FoodLogClient({
     onDateChange(newDate);
   };
 
-  const handleDelete = async (logId: number) => {
-    if (!confirm('Are you sure you want to delete this food log?')) {
-      return;
-    }
+  const handleDeleteRequest = (logId: number) => {
+    setConfirmingDelete(logId);
+    setDeleteError(null);
+  };
 
+  const handleDeleteConfirm = async (logId: number) => {
     setDeleting(logId);
+    setConfirmingDelete(null);
     try {
       await onDeleteLog(logId);
     } catch (error) {
       console.error('Error deleting log:', error);
-      alert('Failed to delete food log');
+      setDeleteError('Failed to remove food entry. Please try again.');
     } finally {
       setDeleting(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setConfirmingDelete(null);
   };
 
   const calculateLogNutrients = (log: FoodLogEntry) => {
@@ -112,8 +121,8 @@ export default function FoodLogClient({
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center justify-between">
-            <Button variant="outline" size="icon" onClick={handlePreviousDay}>
-              <ChevronLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={handlePreviousDay} aria-label="Previous day">
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
 
             <div className="flex items-center space-x-4">
@@ -140,8 +149,9 @@ export default function FoodLogClient({
               size="icon"
               onClick={handleNextDay}
               disabled={isToday(selectedDate)}
+              aria-label="Next day"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </CardContent>
@@ -155,31 +165,29 @@ export default function FoodLogClient({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-              <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <Flame className="h-6 w-6 text-orange-500 dark:text-orange-400 mx-auto mb-2" aria-hidden="true" />
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 tabular-nums">
                 {totals.calories}
               </div>
               <div className="text-sm text-muted-foreground">Calories</div>
             </div>
-            <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg">
-              <Beef className="h-6 w-6 text-red-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+            <div className="text-center p-4 bg-rose-50 dark:bg-rose-950/30 rounded-lg">
+              <Beef className="h-6 w-6 text-rose-500 dark:text-rose-400 mx-auto mb-2" aria-hidden="true" />
+              <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">
                 {totals.protein}g
               </div>
               <div className="text-sm text-muted-foreground">Protein</div>
             </div>
-            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
-              <Wheat className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+            <div className="text-center p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg">
+              <Wheat className="h-6 w-6 text-amber-500 dark:text-amber-400 mx-auto mb-2" aria-hidden="true" />
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">
                 {totals.carbs}g
               </div>
               <div className="text-sm text-muted-foreground">Carbs</div>
             </div>
-            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-              <div className="h-6 w-6 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-bold">
-                F
-              </div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-center p-4 bg-sky-50 dark:bg-sky-950/30 rounded-lg">
+              <Droplets className="h-6 w-6 text-sky-500 dark:text-sky-400 mx-auto mb-2" aria-hidden="true" />
+              <div className="text-2xl font-bold text-sky-600 dark:text-sky-400 tabular-nums">
                 {totals.fat}g
               </div>
               <div className="text-sm text-muted-foreground">Fat</div>
@@ -187,6 +195,19 @@ export default function FoodLogClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Inline delete error */}
+      {deleteError && (
+        <div role="alert" className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg text-sm">
+          {deleteError}
+          <button
+            className="ml-2 underline hover:no-underline"
+            onClick={() => setDeleteError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Food Logs by Meal */}
       {isLoading ? (
@@ -200,13 +221,15 @@ export default function FoodLogClient({
         </Card>
       ) : logs.length === 0 ? (
         <Card>
-          <CardContent className="py-8">
+          <CardContent className="py-10">
             <div
-              className="text-center text-muted-foreground"
+              className="text-center space-y-1.5"
               data-testid="empty-state"
             >
-              <p className="text-lg font-medium mb-2">No foods logged</p>
-              <p>Start by searching and adding foods using the form above.</p>
+              <p className="font-medium text-foreground">Nothing logged yet</p>
+              <p className="text-sm text-muted-foreground">
+                Search for a food above — calories and macros update as you log.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -250,9 +273,11 @@ export default function FoodLogClient({
                           data-testid={`food-log-${log.id}`}
                         >
                           {log.food.photoUrl && (
-                            <img
+                            <Image
                               src={log.food.photoUrl}
                               alt={log.food.name}
+                              width={48}
+                              height={48}
                               className="w-12 h-12 rounded object-cover"
                             />
                           )}
@@ -269,9 +294,19 @@ export default function FoodLogClient({
                               {log.quantity}{' '}
                               {log.servingUnit || log.food.servingUnit}
                             </div>
+                            {/* Mobile-only: nutrition summary inline */}
+                            <div className="sm:hidden mt-1 flex items-center gap-2 text-xs">
+                              <span className="font-medium text-foreground tabular-nums">
+                                {nutrients.calories} cal
+                              </span>
+                              <span className="text-muted-foreground">
+                                P: {nutrients.protein}g · C: {nutrients.carbs}g · F: {nutrients.fat}g
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right hidden sm:block">
-                            <div className="font-medium">
+                          {/* Desktop: right-aligned nutrition block */}
+                          <div className="text-right hidden sm:block shrink-0">
+                            <div className="font-medium tabular-nums">
                               {nutrients.calories} cal
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -279,20 +314,42 @@ export default function FoodLogClient({
                               F: {nutrients.fat}g
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(log.id)}
-                            disabled={deleting === log.id}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`delete-log-${log.id}`}
-                          >
-                            {deleting === log.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
+                          {confirmingDelete === log.id ? (
+                            <div className="flex items-center gap-1 shrink-0" role="group" aria-label={`Confirm removal of ${log.food.name}`}>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteConfirm(log.id)}
+                                data-testid={`delete-confirm-${log.id}`}
+                              >
+                                Remove
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleDeleteCancel}
+                                data-testid={`delete-cancel-${log.id}`}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRequest(log.id)}
+                              disabled={deleting === log.id}
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                              aria-label={`Remove ${log.food.name} from log`}
+                              data-testid={`delete-log-${log.id}`}
+                            >
+                              {deleting === log.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                       );
                     })}

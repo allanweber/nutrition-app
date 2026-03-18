@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { 
-  Target, 
-  Utensils, 
-  TrendingUp, 
+import {
+  Target,
+  Utensils,
+  TrendingUp,
   Trophy,
   Calendar,
   ArrowRight,
-  Flame
+  Flame,
+  Zap,
 } from 'lucide-react';
 
 const features = [
@@ -22,7 +23,7 @@ const features = [
   {
     icon: Utensils,
     title: 'Log Effortlessly',
-    description: 'Search 1M+ foods, scan barcodes, or simply type "chicken salad for lunch".',
+    description: 'Search 500,000+ foods from the FatSecret database, or simply type "chicken salad for lunch".',
   },
   {
     icon: TrendingUp,
@@ -53,13 +54,13 @@ export default function ForIndividuals() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <div className="inline-flex items-center px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               For Individuals
             </div>
-            
+
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
               Your Personal{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+              <span className="text-primary">
                 Nutrition Companion
               </span>
             </h2>
@@ -79,9 +80,9 @@ export default function ForIndividuals() {
                   viewport={{ once: true }}
                   className="flex items-start space-x-4"
                 >
-                   <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                     <feature.icon className="h-5 w-5 text-emerald-600" />
-                   </div>
+                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </div>
                    <div>
                      <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
                      <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -90,14 +91,10 @@ export default function ForIndividuals() {
               ))}
             </div>
 
-            <Button
-              size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700"
-              asChild
-            >
+            <Button size="lg" asChild>
               <Link href="/signup">
                 Start Tracking Free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </motion.div>
@@ -112,17 +109,17 @@ export default function ForIndividuals() {
           >
             {/* Phone Frame */}
             <div className="relative mx-auto w-72 md:w-80">
-                     <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
-                 <div className="bg-background rounded-[2.5rem] overflow-hidden">
+                    <div className="bg-foreground/90 rounded-[3rem] p-3 shadow-2xl">
+                  <div className="bg-background rounded-[2.5rem] overflow-hidden">
                   {/* Phone Screen Content */}
                   <div className="p-6">
                     {/* Status Bar */}
-                    <div className="flex justify-between items-center mb-6 text-xs text-gray-500">
+                    <div className="flex justify-between items-center mb-6 text-xs text-muted-foreground" aria-hidden="true">
                       <span>9:41</span>
                       <div className="flex space-x-1">
-                        <div className="w-4 h-2 bg-gray-300 rounded-sm" />
-                        <div className="w-4 h-2 bg-gray-300 rounded-sm" />
-                        <div className="w-6 h-3 bg-emerald-500 rounded-sm" />
+                        <div className="w-4 h-2 bg-muted-foreground/40 rounded-sm" />
+                        <div className="w-4 h-2 bg-muted-foreground/40 rounded-sm" />
+                        <div className="w-6 h-3 bg-primary rounded-sm" />
                       </div>
                     </div>
 
@@ -140,7 +137,7 @@ export default function ForIndividuals() {
                             cx="64"
                             cy="64"
                             r="56"
-                            stroke="#e5e7eb"
+                            stroke="hsl(var(--border))"
                             strokeWidth="10"
                             fill="none"
                           />
@@ -159,8 +156,8 @@ export default function ForIndividuals() {
                           />
                           <defs>
                             <linearGradient id="mobileGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#10b981" />
-                              <stop offset="100%" stopColor="#14b8a6" />
+                              <stop offset="0%" stopColor="hsl(var(--primary))" />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
                             </linearGradient>
                           </defs>
                         </svg>
@@ -174,52 +171,34 @@ export default function ForIndividuals() {
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-3 gap-3 mb-6">
-                      <div className="bg-red-50 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-red-600">85g</div>
-                        <div className="text-xs text-gray-500">Protein</div>
+                      <div className="bg-rose-50 dark:bg-rose-950/30 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-rose-600 dark:text-rose-400 tabular-nums">85g</div>
+                        <div className="text-xs text-muted-foreground">Protein</div>
                       </div>
-                      <div className="bg-amber-50 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-amber-600">180g</div>
-                        <div className="text-xs text-gray-500">Carbs</div>
+                      <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-amber-600 dark:text-amber-400 tabular-nums">180g</div>
+                        <div className="text-xs text-muted-foreground">Carbs</div>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-blue-600">52g</div>
-                        <div className="text-xs text-gray-500">Fat</div>
+                      <div className="bg-sky-50 dark:bg-sky-950/30 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-sky-600 dark:text-sky-400 tabular-nums">52g</div>
+                        <div className="text-xs text-muted-foreground">Fat</div>
                       </div>
                     </div>
 
                     {/* Streak */}
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-4 text-white">
+                    <div className="bg-primary rounded-xl p-4 text-primary-foreground">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm opacity-90">Current Streak</div>
-                          <div className="text-2xl font-bold">7 Days</div>
+                          <div className="text-sm opacity-80">Current Streak</div>
+                          <div className="text-2xl font-bold tabular-nums">7 Days</div>
                         </div>
-                        <div className="text-4xl">🔥</div>
+                        <Zap className="h-8 w-8 opacity-80" aria-hidden="true" />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Floating Notification */}
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 1, duration: 0.4 }}
-                viewport={{ once: true }}
-                className="absolute -right-8 top-20 bg-white rounded-xl shadow-lg p-3 border border-gray-100"
-              >
-                   <div className="flex items-center space-x-2">
-                     <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                       <Trophy className="h-4 w-4 text-emerald-600" />
-                     </div>
-                     <div className="text-xs">
-                       <div className="font-medium text-foreground">Goal reached!</div>
-                       <div className="text-muted-foreground">Protein target hit</div>
-                     </div>
-                   </div>
-              </motion.div>
             </div>
           </motion.div>
         </div>

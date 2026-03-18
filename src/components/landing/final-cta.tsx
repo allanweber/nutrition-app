@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ArrowRight, User, Users } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function FinalCTA() {
@@ -47,7 +47,7 @@ export default function FinalCTA() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
             Ready to Take Control of Your Nutrition?
           </h2>
-          <p className="text-xl text-white/90 mb-10">
+          <p className="text-xl text-primary-foreground/90 mb-10">
             Join thousands of individuals and professionals who&apos;ve
             transformed their health with NutritionTracker.
           </p>
@@ -62,19 +62,16 @@ export default function FinalCTA() {
               viewport={{ once: true }}
               className="bg-primary/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20"
             >
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <User className="h-6 w-6 text-primary-foreground" />
-              </div>
               <h3 className="text-xl font-semibold text-primary-foreground mb-2">
                 For Individuals
               </h3>
-              <p className="text-white/80 text-sm mb-6">
+              <p className="text-primary-foreground/80 text-sm mb-6">
                 Start tracking your nutrition today. Free forever, upgrade
                 anytime.
               </p>
               <Button
                 size="lg"
-                className="w-full bg-background text-brand-primary hover:bg-muted"
+                className="w-full bg-background text-foreground hover:bg-muted"
                 asChild
               >
                 <Link href="/signup">
@@ -92,13 +89,10 @@ export default function FinalCTA() {
               viewport={{ once: true }}
               className="bg-primary/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20"
             >
-              <div className="w-12 h-12 bg-primary-foreground/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6 text-primary-foreground" />
-              </div>
               <h3 className="text-xl font-semibold text-primary-foreground mb-2">
                 For Professionals
               </h3>
-              <p className="text-white/80 text-sm mb-6">
+              <p className="text-primary-foreground/80 text-sm mb-6">
                 Manage clients and grow your practice with powerful tools.
               </p>
               <Button
@@ -121,7 +115,7 @@ export default function FinalCTA() {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
             viewport={{ once: true }}
-            className="mt-8 text-white/70 text-sm"
+            className="mt-8 text-primary-foreground/70 text-sm"
           >
             No credit card required. Cancel anytime.
           </motion.p>

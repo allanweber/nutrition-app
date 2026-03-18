@@ -57,7 +57,7 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                <span className="text-primary-foreground font-bold text-lg">N</span>
              </div>
-             <span className={`font-bold text-xl ${isScrolled ? 'text-foreground' : 'text-foreground'}`}>
+             <span className="font-bold text-xl text-foreground">
                NutritionTracker
              </span>
           </button>
@@ -69,9 +69,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isScrolled ? 'text-muted-foreground' : 'text-muted-foreground'
-                }`}
+                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
               >
                 {link.label}
               </a>
@@ -97,6 +95,7 @@ export default function Navbar() {
             className="md:hidden p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
           >
              {isMobileMenuOpen ? (
                <X className="h-6 w-6 text-foreground" />

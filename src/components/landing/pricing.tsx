@@ -137,8 +137,14 @@ export default function Pricing() {
           </p>
 
           {/* Plan Type Switcher */}
-          <div className="inline-flex items-center bg-muted rounded-full p-1">
+          <div
+            role="tablist"
+            aria-label="Plan type"
+            className="inline-flex items-center bg-muted rounded-full p-1"
+          >
             <button
+              role="tab"
+              aria-selected={planType === 'individual'}
               onClick={() => setPlanType('individual')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 planType === 'individual'
@@ -149,6 +155,8 @@ export default function Pricing() {
               For Individuals
             </button>
             <button
+              role="tab"
+              aria-selected={planType === 'professional'}
               onClick={() => setPlanType('professional')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 planType === 'professional'
@@ -178,7 +186,7 @@ export default function Pricing() {
               viewport={{ once: true }}
               className={`relative rounded-2xl p-8 ${
                 plan.popular
-                  ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-primary-foreground shadow-xl shadow-emerald-200'
+                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20'
                   : 'bg-card border border-border'
               }`}
             >
@@ -206,7 +214,7 @@ export default function Pricing() {
                 <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
                   {plan.name}
                 </h3>
-                <p className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                <p className={`text-sm ${plan.popular ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                   {plan.description}
                 </p>
               </div>
@@ -216,7 +224,7 @@ export default function Pricing() {
                 <span className={`text-4xl font-bold ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
                   {plan.price}
                 </span>
-                <span className={`text-sm ${plan.popular ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                <span className={`text-sm ${plan.popular ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                   {' '}/{plan.period}
                 </span>
               </div>
@@ -226,14 +234,14 @@ export default function Pricing() {
                 {plan.features.map((feature, featureIndex) => (
                   <li key={featureIndex} className="flex items-start space-x-3">
                     {feature.included ? (
-                      <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-200' : 'text-emerald-500'}`} />
+                      <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-primary-foreground/80' : 'text-primary'}`} aria-hidden="true" />
                      ) : (
-                       <X className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-emerald-300/50' : 'text-muted-foreground/50'}`} />
+                       <X className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-primary-foreground/30' : 'text-muted-foreground/40'}`} aria-hidden="true" />
                      )}
                      <span className={`text-sm ${
-                       feature.included 
+                       feature.included
                          ? plan.popular ? 'text-primary-foreground' : 'text-foreground'
-                         : plan.popular ? 'text-emerald-200/50' : 'text-muted-foreground'
+                         : plan.popular ? 'text-primary-foreground/40' : 'text-muted-foreground'
                     }`}>
                       {feature.text}
                     </span>
@@ -244,11 +252,8 @@ export default function Pricing() {
               {/* CTA Button */}
               <Button
                 size="lg"
-                className={`w-full ${
-                  plan.popular
-                    ? 'bg-white text-emerald-600 hover:bg-gray-100'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                }`}
+                variant={plan.popular ? 'secondary' : 'default'}
+                className="w-full"
                 asChild
               >
                 <Link href={plan.ctaLink}>

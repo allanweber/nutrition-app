@@ -24,7 +24,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Notification settings will be available here soon.
+              Notification controls are in development. You&apos;ll be able to set email reminders and daily log alerts here.
             </p>
           </CardContent>
         </Card>
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Privacy settings will be available here soon.
+              Privacy controls are in development. You&apos;ll be able to manage data sharing and account visibility here.
             </p>
           </CardContent>
         </Card>
@@ -48,7 +48,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Data export functionality will be available here soon.
+              Data export is in development. You&apos;ll be able to download your full food log history as CSV or PDF.
             </p>
           </CardContent>
         </Card>

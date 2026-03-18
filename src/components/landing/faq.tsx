@@ -14,7 +14,7 @@ const faqs = [
       },
       {
         question: 'What food database do you use?',
-        answer: 'We use the Nutritionix database, which contains over 1 million foods including restaurant items, grocery products, and generic foods. The database is updated regularly to ensure accuracy.',
+        answer: 'We use the FatSecret database, which contains over 500,000 foods including restaurant items, grocery products, and generic foods. It is updated continuously to ensure accuracy.',
       },
       {
         question: 'Is there a mobile app?',
@@ -40,7 +40,7 @@ const faqs = [
     questions: [
       {
         question: 'How does professional verification work?',
-        answer: 'Submit your credentials (RD, RDN, CNS, etc.) through our verification portal. Our team reviews applications within 2-3 business days. Once approved, you\'ll receive a verified badge on your profile.',
+        answer: 'Submit your professional credentials through our verification portal. We recognize RDs (Registered Dietitians), RDNs (Registered Dietitian Nutritionists), CNSs, and equivalent designations. Our team reviews applications within 2–3 business days. Once approved, you receive a verified badge on your profile.',
       },
       {
         question: 'Can my clients use the free tier?',
@@ -97,7 +97,7 @@ export default function FAQ() {
               viewport={{ once: true }}
             >
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full mr-3" />
+                <div className="w-2 h-2 bg-primary rounded-full mr-3" />
                 {category.category}
               </h3>
               
@@ -157,7 +157,7 @@ export default function FAQ() {
         >
           <p className="text-muted-foreground">
             Still have questions?{' '}
-            <a href="/contact" className="text-emerald-600 font-medium hover:underline">
+            <a href="/contact" className="text-primary font-medium hover:underline">
               Contact our support team
             </a>
           </p>

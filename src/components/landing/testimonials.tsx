@@ -86,7 +86,7 @@ export default function Testimonials() {
               className="bg-card rounded-2xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
             >
               {/* Quote Icon */}
-              <Quote className="h-8 w-8 text-emerald-200 mb-4" />
+              <Quote className="h-8 w-8 text-primary/20 mb-4" />
 
               {/* Content */}
               <p className="text-foreground mb-6 leading-relaxed">
@@ -102,10 +102,10 @@ export default function Testimonials() {
 
               {/* Author */}
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground font-medium ${
-                  testimonial.type === 'professional' 
-                    ? 'bg-gradient-to-br from-blue-500 to-purple-600' 
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm ${
+                  testimonial.type === 'professional'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
                 }`}>
                   {testimonial.name.charAt(0)}
                 </div>
@@ -114,7 +114,7 @@ export default function Testimonials() {
                   <div className="text-sm text-muted-foreground flex items-center">
                     {testimonial.role}
                     {testimonial.type === 'professional' && (
-                      <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                      <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
                         Pro
                       </span>
                     )}
