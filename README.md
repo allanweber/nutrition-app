@@ -161,7 +161,7 @@ intent and lets you reproduce or audit the SpecKit run later.
 2. /speckit.specify
 3. /speckit.clarify
 4. /speckit.plan
-5. /speckit.checklist
+5. /speckit.checklist - avoid
 6. /speckit.tasks
 7. /speckit.analyze
 8. /speckit.implement
