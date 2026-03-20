@@ -1,4 +1,4 @@
-import type { FatSecretSearchResponse } from '@/types/fatsecret';
+import type { FatSecretSearchFood, FatSecretSearchResponse } from '@/types/fatsecret';
 
 // Multi-result search response (food is an array) — real v5 shape
 export const mockMultiSearchResponse: FatSecretSearchResponse = {
@@ -162,8 +162,27 @@ export const mockSingleSearchResponse: FatSecretSearchResponse = {
   },
 };
 
+const KNOWN_KEYWORDS = ['apple', 'apples', 'juice', 'vinegar', 'chicken', 'egg', 'banana', 'carrot', 'rice', 'quinoa'];
+
 // Export search function compatible with fatsecret client interface
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getMockSearchResponse(keyword: string, page: number): Promise<FatSecretSearchResponse> {
+  const kw = keyword.toLowerCase().trim();
+  const hasMatch = KNOWN_KEYWORDS.some((k) => kw.includes(k) || k.includes(kw));
+
+  if (!hasMatch) {
+    return {
+      foods_search: {
+        max_results: '10',
+        total_results: '0',
+        page_number: String(page - 1),
+        results: { food: [] as FatSecretSearchFood[] },
+      },
+    };
+  }
+
+  if (kw.includes('quinoa')) {
+    return mockSingleSearchResponse;
+  }
+
   return mockMultiSearchResponse;
 }

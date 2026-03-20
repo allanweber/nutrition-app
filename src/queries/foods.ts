@@ -27,3 +27,20 @@ export function useFoodSearchQuery(keyword: string, page = 1) {
     enabled: keyword.length >= 3,
   });
 }
+
+export function usePublicFoodSearchQuery(keyword: string, page = 1) {
+  return useQuery({
+    queryKey: ['foods', 'public', 'search', keyword, page],
+    queryFn: async (): Promise<FoodSearchResponse> => {
+      const response = await fetch(
+        `/api/foods/public/search?q=${encodeURIComponent(keyword)}&page=${page}`,
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to search foods');
+      }
+      return response.json();
+    },
+    enabled: keyword.length >= 3,
+  });
+}

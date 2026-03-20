@@ -22,11 +22,11 @@ description: "Task list for Unified Food Search Field Component"
 
 **Purpose**: Read and understand the files being replaced or modified before making any changes. No code is written in this phase.
 
-- [ ] T001 Read src/components/food-search.tsx to understand the component being replaced before deleting it
-- [ ] T002 [P] Read src/app/(dashboard)/food-log/page.tsx to understand current search wiring and diary functionality
-- [ ] T003 [P] Read src/queries/foods.ts and src/queries/food-detail.ts to confirm existing hooks are reused unchanged
-- [ ] T004 [P] Read src/server/services/food-search.service.ts to confirm it is unchanged and filters only fatsecret foods
-- [ ] T005 [P] Read src/proxy.ts to understand the existing proxy function and config.matcher before adding rate limiting
+- [X] T001 Read src/components/food-search.tsx to understand the component being replaced before deleting it
+- [X] T002 [P] Read src/app/(dashboard)/food-log/page.tsx to understand current search wiring and diary functionality
+- [X] T003 [P] Read src/queries/foods.ts and src/queries/food-detail.ts to confirm existing hooks are reused unchanged
+- [X] T004 [P] Read src/server/services/food-search.service.ts to confirm it is unchanged and filters only fatsecret foods
+- [X] T005 [P] Read src/proxy.ts to understand the existing proxy function and config.matcher before adding rate limiting
 
 **Checkpoint**: Existing code understood — implementation can begin
 
@@ -38,11 +38,11 @@ description: "Task list for Unified Food Search Field Component"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Define shared TypeScript types in src/components/food-search-field/types.ts — export `UnifiedFoodSearchResultItem`, `FoodSearchState`, `FoodSearchFieldProps`, and `FoodAddModalProps` per data-model.md
-- [ ] T007 [P] Create src/components/food-search-field/result-item.tsx — single food result row displaying thumbnail, name, brandName, calories, description, and food category label; applies query-term highlight to name and description; accepts `item: UnifiedFoodSearchResultItem`, `query: string`, `highlighted: boolean`, `onSelect: (item) => void`
-- [ ] T008 [P] Create src/components/food-search-field/states.tsx — four named exports: `LoadingSkeleton` (shown after 500ms), `EmptyState` (no results found), `ErrorState` (with retry callback), `PromptState` ("Type at least 3 characters")
-- [ ] T033 Create src/hooks/use-food-search.ts — composite hook merging `useFoodSearchQuery` and `useCustomFoodSearchQuery`; accepts `{ query: string, includeCustom: boolean }`; returns unified `FoodSearchState` with results organized by category (Common, Branded, Custom), plus combined loading/error state; required by T016 (food-log page) and T018 (SearchSection) before either can be implemented
-- [ ] T034 [P] Add food-details navigation link to src/components/food-search-field/result-item.tsx — render a link icon (→) beside each result row that navigates to `/foods/[item.fatSecretId]`; link must be distinct from the `onSelect` click target so clicking the row adds to diary while the link navigates to details (FR-015)
+- [X] T006 Define shared TypeScript types in src/components/food-search-field/types.ts — export `UnifiedFoodSearchResultItem`, `FoodSearchState`, `FoodSearchFieldProps`, and `FoodAddModalProps` per data-model.md
+- [X] T007 [P] Create src/components/food-search-field/result-item.tsx — single food result row displaying thumbnail, name, brandName, calories, description, and food category label; applies query-term highlight to name and description; accepts `item: UnifiedFoodSearchResultItem`, `query: string`, `highlighted: boolean`, `onSelect: (item) => void`
+- [X] T008 [P] Create src/components/food-search-field/states.tsx — four named exports: `LoadingSkeleton` (shown after 500ms), `EmptyState` (no results found), `ErrorState` (with retry callback), `PromptState` ("Type at least 3 characters")
+- [X] T033 Create src/hooks/use-food-search.ts — composite hook merging `useFoodSearchQuery` and `useCustomFoodSearchQuery`; accepts `{ query: string, includeCustom: boolean }`; returns unified `FoodSearchState` with results organized by category (Common, Branded, Custom), plus combined loading/error state; required by T016 (food-log page) and T018 (SearchSection) before either can be implemented
+- [X] T034 [P] Add food-details navigation link to src/components/food-search-field/result-item.tsx — render a link icon (→) beside each result row that navigates to `/foods/[item.fatSecretId]`; link must be distinct from the `onSelect` click target so clicking the row adds to diary while the link navigates to details (FR-015)
 
 **Checkpoint**: Shared types and primitives ready — user stories can now be implemented
 
@@ -56,16 +56,16 @@ description: "Task list for Unified Food Search Field Component"
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Create src/queries/custom-foods.ts — export `useCustomFoodSearchQuery(query: string, offset = 0)` using TanStack Query v5; calls `GET /api/foods/custom/search?q={query}&offset={offset}`; enabled only when `query.length >= 3`; 300ms debounce; `offset` is managed by the Load more control (T036)
-- [ ] T010 [P] [US1] Create src/app/api/foods/custom/search/route.ts — `GET` handler; Zod validation (`q: z.string().min(3).max(200).transform(s => s.trim()), offset: z.coerce.number().int().min(0).default(0)`); BetterAuth session check (return 401 if unauthenticated); Drizzle query filtering `isCustom = true AND userId = session.user.id`; returns `{ results: [...], total: number }` ordered by name, limited to 10 with offset applied; returns 400 on validation failure, 500 on DB error per contracts/api-foods-custom-search.md
-- [ ] T011 [US1] Create src/components/food-search-field/tabs.tsx — tabbed result switcher with "Common", "Branded", and "Custom" tabs; each tab shows item count badge; `showCustomTab` prop hides Custom tab; renders `<ResultItem>` list for active tab using T007; renders Load more button when more results are available (T035)
-- [ ] T035 [P] [US1] Add Load more control to src/components/food-search-field/tabs.tsx — each tab tracks its own `offset` state (initial 0); renders a "Load more" button when `results.length < total`; clicking increments offset by 10 and appends new results to the existing list; button is hidden when all results are loaded or tab has < 10 results (FR-004)
-- [ ] T012 [US1] Create src/components/food-search-field/dropdown.tsx — portal-positioned dropdown container; closes on outside click (`useEffect` + `mousedown` listener); renders history-list (when query=""), states (T008), or tabs (T011) based on current query and state
-- [ ] T013 [US1] Create src/components/food-search-field/input.tsx — controlled text input with clear (×) button; accepts `value`, `onChange`, `onKeyDown`, `placeholder`, `className` props; shows clear button only when value is non-empty
-- [ ] T014 [US1] Create src/components/food-search-field/index.tsx — `FoodSearchField` root client component; accepts `FoodSearchFieldProps`; manages `activeTab` and `highlightedIndex` state; wires `<SearchInput>` and `<Dropdown>` together; `onSelect` fires on result click; `Escape` clears input and closes dropdown (keyboard nav left minimal — full keyboard support added in US4)
-- [ ] T015 [US1] Create src/components/food-log-add-modal.tsx — modal using TanStack Form v0; fields: meal type selector (using `MEAL_TYPE_LABELS` from `src/lib/nutrition-constants.ts`) and serving size selector; accepts `foodDetail` as a prop (resolved by `useFoodDetailQuery` in food-log/page.tsx — NOT called inside this component, per constitution §TanStack Query); `onAdded` callback fires after successful diary entry; uses existing shadcn/ui Dialog and Form components
-- [ ] T016 [US1] Refactor src/app/(dashboard)/food-log/page.tsx — replace existing `FoodSearch` usage with `useFoodSearch({ includeCustom: true })` hook (T033) + `<FoodSearchField>` + `<FoodLogAddModal>`; call `useFoodDetailQuery` here and pass resolved data as `foodDetail` prop to `<FoodLogAddModal>`; existing diary display and diary entry functionality must remain unchanged (FR-016)
-- [ ] T017 [US1] Delete src/components/food-search.tsx after verifying food-log/page.tsx works correctly with the new component; update any remaining imports
+- [X] T009 [P] [US1] Create src/queries/custom-foods.ts — export `useCustomFoodSearchQuery(query: string, offset = 0)` using TanStack Query v5; calls `GET /api/foods/custom/search?q={query}&offset={offset}`; enabled only when `query.length >= 3`; 300ms debounce; `offset` is managed by the Load more control (T036)
+- [X] T010 [P] [US1] Create src/app/api/foods/custom/search/route.ts — `GET` handler; Zod validation (`q: z.string().min(3).max(200).transform(s => s.trim()), offset: z.coerce.number().int().min(0).default(0)`); BetterAuth session check (return 401 if unauthenticated); Drizzle query filtering `isCustom = true AND userId = session.user.id`; returns `{ results: [...], total: number }` ordered by name, limited to 10 with offset applied; returns 400 on validation failure, 500 on DB error per contracts/api-foods-custom-search.md
+- [X] T011 [US1] Create src/components/food-search-field/tabs.tsx — tabbed result switcher with "Common", "Branded", and "Custom" tabs; each tab shows item count badge; `showCustomTab` prop hides Custom tab; renders `<ResultItem>` list for active tab using T007; renders Load more button when more results are available (T035)
+- [X] T035 [P] [US1] Add Load more control to src/components/food-search-field/tabs.tsx — each tab tracks its own `offset` state (initial 0); renders a "Load more" button when `results.length < total`; clicking increments offset by 10 and appends new results to the existing list; button is hidden when all results are loaded or tab has < 10 results (FR-004)
+- [X] T012 [US1] Create src/components/food-search-field/dropdown.tsx — portal-positioned dropdown container; closes on outside click (`useEffect` + `mousedown` listener); renders history-list (when query=""), states (T008), or tabs (T011) based on current query and state
+- [X] T013 [US1] Create src/components/food-search-field/input.tsx — controlled text input with clear (×) button; accepts `value`, `onChange`, `onKeyDown`, `placeholder`, `className` props; shows clear button only when value is non-empty
+- [X] T014 [US1] Create src/components/food-search-field/index.tsx — `FoodSearchField` root client component; accepts `FoodSearchFieldProps`; manages `activeTab` and `highlightedIndex` state; wires `<SearchInput>` and `<Dropdown>` together; `onSelect` fires on result click; `Escape` clears input and closes dropdown (keyboard nav left minimal — full keyboard support added in US4)
+- [X] T015 [US1] Create src/components/food-log-add-modal.tsx — modal using TanStack Form v0; fields: meal type selector (using `MEAL_TYPE_LABELS` from `src/lib/nutrition-constants.ts`) and serving size selector; accepts `foodDetail` as a prop (resolved by `useFoodDetailQuery` in food-log/page.tsx — NOT called inside this component, per constitution §TanStack Query); `onAdded` callback fires after successful diary entry; uses existing shadcn/ui Dialog and Form components
+- [X] T016 [US1] Refactor src/app/(dashboard)/food-log/page.tsx — replace existing `FoodSearch` usage with `useFoodSearch({ includeCustom: true })` hook (T033) + `<FoodSearchField>` + `<FoodLogAddModal>`; call `useFoodDetailQuery` here and pass resolved data as `foodDetail` prop to `<FoodLogAddModal>`; existing diary display and diary entry functionality must remain unchanged (FR-016)
+- [X] T017 [US1] Delete src/components/food-search.tsx after verifying food-log/page.tsx works correctly with the new component; update any remaining imports
 
 **Checkpoint**: US1 fully functional — authenticated users can search and add foods to diary
 
@@ -79,12 +79,12 @@ description: "Task list for Unified Food Search Field Component"
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Create src/components/landing/search-section.tsx — `'use client'` component; owns `useFoodSearch({ includeCustom: false })` query state; renders `<FoodSearchField showCustomTab={false} onSelect={navigateToFoodDetail} />`; `onSelect` calls `router.push('/foods/' + item.fatSecretId)` for FatSecret foods
-- [ ] T019 [US2] Update src/app/page.tsx — import and render `<SearchSection>` in the landing page body; landing page remains an RSC; `SearchSection` is the interactive client boundary
-- [ ] T020 [US2] Create src/app/foods/[fatSecretId]/page.tsx — RSC page per contracts/page-foods-detail.md; `generateMetadata` export for SEO title/description/OpenGraph; data resolution: Drizzle DB query first (`WHERE sourceId = :fatSecretId`), FatSecret API fallback on miss; renders food title (`<h1>`), brand name (if present), images, calories, macros, and extended nutrients; error page with "Search for a food →" link if both sources fail; pass resolved food data to T037 for async caching
-- [ ] T036 [P] [US2] Cache FatSecret API response to DB after successful fallback fetch in src/app/foods/[fatSecretId]/page.tsx — after FatSecret returns data and the page renders, fire-and-forget a background write to the local DB (Drizzle insert with conflict ignore) so subsequent visits hit the DB cache instead of the API; constitutionally required (External API Integration: "Frequently accessed external data MUST be cached locally")
-- [ ] T037 [P] [US2] Add structured logging for FatSecret API interactions in src/app/foods/[fatSecretId]/page.tsx — log successful fetches, errors (connectivity/timeout/not-found), and rate-limit events using `console.error` / `console.log` with a structured prefix (e.g. `[fatsecret:detail]`); constitutionally required (External API Integration: "All external provider interactions MUST be logged")
-- [ ] T021 [US2] Add rate limiting to src/proxy.ts — in-memory sliding-window `Map<string, { count: number; resetAt: number }>` tracking per-IP; limit: 60 requests/minute; applies to `/foods/**` and `/api/foods/search` paths; rate limit check placed BEFORE the `auth.api.getSession()` call; returns `429 Too Many Requests` with `Retry-After: 60` header when exceeded; cleanup stale entries on each check
+- [X] T018 [P] [US2] Create src/components/landing/search-section.tsx — `'use client'` component; owns `useFoodSearch({ includeCustom: false })` query state; renders `<FoodSearchField showCustomTab={false} onSelect={navigateToFoodDetail} />`; `onSelect` calls `router.push('/foods/' + item.fatSecretId)` for FatSecret foods
+- [X] T019 [US2] Update src/app/page.tsx — import and render `<SearchSection>` in the landing page body; landing page remains an RSC; `SearchSection` is the interactive client boundary
+- [X] T020 [US2] Create src/app/foods/[fatSecretId]/page.tsx — RSC page per contracts/page-foods-detail.md; `generateMetadata` export for SEO title/description/OpenGraph; data resolution: Drizzle DB query first (`WHERE sourceId = :fatSecretId`), FatSecret API fallback on miss; renders food title (`<h1>`), brand name (if present), images, calories, macros, and extended nutrients; error page with "Search for a food →" link if both sources fail; pass resolved food data to T037 for async caching
+- [X] T036 [P] [US2] Cache FatSecret API response to DB after successful fallback fetch in src/app/foods/[fatSecretId]/page.tsx — after FatSecret returns data and the page renders, fire-and-forget a background write to the local DB (Drizzle insert with conflict ignore) so subsequent visits hit the DB cache instead of the API; constitutionally required (External API Integration: "Frequently accessed external data MUST be cached locally")
+- [X] T037 [P] [US2] Add structured logging for FatSecret API interactions in src/app/foods/[fatSecretId]/page.tsx — log successful fetches, errors (connectivity/timeout/not-found), and rate-limit events using `console.error` / `console.log` with a structured prefix (e.g. `[fatsecret:detail]`); constitutionally required (External API Integration: "All external provider interactions MUST be logged")
+- [X] T021 [US2] Add rate limiting to src/proxy.ts — in-memory sliding-window `Map<string, { count: number; resetAt: number }>` tracking per-IP; limit: 60 requests/minute; applies to `/foods/**` and `/api/foods/search` paths; rate limit check placed BEFORE the `auth.api.getSession()` call; returns `429 Too Many Requests` with `Retry-After: 60` header when exceeded; cleanup stale entries on each check
 
 **Checkpoint**: US2 fully functional — anonymous users can search and view food details from landing page
 
@@ -98,10 +98,10 @@ description: "Task list for Unified Food Search Field Component"
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Create src/hooks/use-search-history.ts — localStorage hook; key `fsf-search-history`; reads and filters expired entries (> 30 days) on mount; exposes: `history: SearchHistoryEntry[]`, `addEntry(term)`, `clearHistory()`; `addEntry` deduplicates by `normalizedTerm` (lowercase), moves existing entry to front with updated `lastAccessedAt`, or prepends new entry and trims to 30; writes to localStorage after every mutation
-- [ ] T023 [P] [US3] Create src/components/food-search-field/history-list.tsx — renders up to 5 most-recent `SearchHistoryEntry` items as clickable rows with a clock icon; `onSelect(term: string)` prop fires when entry is clicked; shown by `<Dropdown>` when `query === ""` and history is non-empty
-- [ ] T024 [P] [US3] Create src/components/food-search-field/suggestions.tsx — renders up to 5 autocomplete suggestions; sources: partial matches from `history` entries + current result titles that start with the query; shown inside dropdown when `query.length >= 1`; `onSelect(term: string)` prop fires on suggestion click
-- [ ] T025 [US3] Update src/components/food-search-field/index.tsx — integrate `useSearchHistory` hook; pass `history` to `<Dropdown>` and `<Suggestions>`; call `addEntry(query)` when a search result is selected; pass `onSelect` from history-list and suggestions to set query and trigger search
+- [X] T022 [US3] Create src/hooks/use-search-history.ts — localStorage hook; key `fsf-search-history`; reads and filters expired entries (> 30 days) on mount; exposes: `history: SearchHistoryEntry[]`, `addEntry(term)`, `clearHistory()`; `addEntry` deduplicates by `normalizedTerm` (lowercase), moves existing entry to front with updated `lastAccessedAt`, or prepends new entry and trims to 30; writes to localStorage after every mutation
+- [X] T023 [P] [US3] Create src/components/food-search-field/history-list.tsx — renders up to 5 most-recent `SearchHistoryEntry` items as clickable rows with a clock icon; `onSelect(term: string)` prop fires when entry is clicked; shown by `<Dropdown>` when `query === ""` and history is non-empty
+- [X] T024 [P] [US3] Create src/components/food-search-field/suggestions.tsx — renders up to 5 autocomplete suggestions; sources: partial matches from `history` entries + current result titles that start with the query; shown inside dropdown when `query.length >= 1`; `onSelect(term: string)` prop fires on suggestion click
+- [X] T025 [US3] Update src/components/food-search-field/index.tsx — integrate `useSearchHistory` hook; pass `history` to `<Dropdown>` and `<Suggestions>`; call `addEntry(query)` when a search result is selected; pass `onSelect` from history-list and suggestions to set query and trigger search
 
 **Checkpoint**: US3 fully functional — history appears on focus, suggestions appear on typing
 
@@ -115,10 +115,10 @@ description: "Task list for Unified Food Search Field Component"
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Update src/components/food-search-field/index.tsx — add `highlightedIndex` state (default: -1); add `handleKeyDown` that maps ArrowDown (+1, wrap), ArrowUp (-1, return to -1 at top), Enter (fire `onSelect` with highlighted item), Escape (clear query, set highlightedIndex to -1, close dropdown); pass `highlightedIndex` down to `<Dropdown>` → `<Tabs>` → `<ResultItem>`
-- [ ] T027 [US4] Update src/components/food-search-field/input.tsx — add `onKeyDown` prop; pass `handleKeyDown` from parent; ensure ArrowDown/ArrowUp do not move browser cursor in the text input (`event.preventDefault()` for those keys)
-- [ ] T028 [US4] Update src/components/food-search-field/result-item.tsx — add `highlighted: boolean` prop; apply visual highlight style (e.g. shadcn/ui `bg-accent`) when `highlighted === true`
-- [ ] T029 [US4] Update src/components/food-search-field/tabs.tsx — accept `highlightedIndex` and pass it to each `<ResultItem>` with the correct per-tab offset so the global index maps to the correct item in the active tab
+- [X] T026 [US4] Update src/components/food-search-field/index.tsx — add `highlightedIndex` state (default: -1); add `handleKeyDown` that maps ArrowDown (+1, wrap), ArrowUp (-1, return to -1 at top), Enter (fire `onSelect` with highlighted item), Escape (clear query, set highlightedIndex to -1, close dropdown); pass `highlightedIndex` down to `<Dropdown>` → `<Tabs>` → `<ResultItem>`
+- [X] T027 [US4] Update src/components/food-search-field/input.tsx — add `onKeyDown` prop; pass `handleKeyDown` from parent; ensure ArrowDown/ArrowUp do not move browser cursor in the text input (`event.preventDefault()` for those keys)
+- [X] T028 [US4] Update src/components/food-search-field/result-item.tsx — add `highlighted: boolean` prop; apply visual highlight style (e.g. shadcn/ui `bg-accent`) when `highlighted === true`
+- [X] T029 [US4] Update src/components/food-search-field/tabs.tsx — accept `highlightedIndex` and pass it to each `<ResultItem>` with the correct per-tab offset so the global index maps to the correct item in the active tab
 
 **Checkpoint**: US4 fully functional — full keyboard navigation works without mouse
 
@@ -128,9 +128,9 @@ description: "Task list for Unified Food Search Field Component"
 
 **Purpose**: Verify the whole feature works end-to-end and no regressions exist.
 
-- [ ] T030 Write Playwright E2E tests in e2e/004-food-search-field.spec.ts covering all 4 user stories per the scenarios in quickstart.md: P1 food log search + add to diary, P2 anonymous landing page search + food detail page, P3 search history (focus shows history, typing shows suggestion, click executes), P4 keyboard navigation (arrows highlight, Enter selects, Escape clears)
-- [ ] T031 Run `npm test && npm run lint` and fix any type errors or lint violations introduced by this feature
-- [ ] T032 Verify `npm run test:e2e -- --grep "004"` passes for all 4 user story flows
+- [X] T030 Write Playwright E2E tests in e2e/004-food-search-field.spec.ts covering all 4 user stories per the scenarios in quickstart.md: P1 food log search + add to diary, P2 anonymous landing page search + food detail page, P3 search history (focus shows history, typing shows suggestion, click executes), P4 keyboard navigation (arrows highlight, Enter selects, Escape clears)
+- [X] T031 Run `npm test && npm run lint` and fix any type errors or lint violations introduced by this feature
+- [X] T032 Verify `npm run test:e2e -- --grep "004"` passes for all 4 user story flows
 
 ---
 

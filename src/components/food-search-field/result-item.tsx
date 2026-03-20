@@ -1,0 +1,88 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import type { UnifiedFoodSearchResultItem } from './types';
+
+interface ResultItemProps {
+  item: UnifiedFoodSearchResultItem;
+  query: string;
+  highlighted: boolean;
+  onSelect: (item: UnifiedFoodSearchResultItem) => void;
+}
+
+function highlight(text: string, query: string): React.ReactNode {
+  if (!query || query.length < 1) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'i'));
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={i} className="bg-transparent font-semibold text-foreground">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  );
+}
+
+const FOOD_TYPE_LABEL: Record<string, string> = {
+  Generic: 'Common',
+  Brand: 'Branded',
+  Custom: 'Custom',
+};
+
+export function ResultItem({ item, query, highlighted, onSelect }: ResultItemProps) {
+  return (
+    <div
+      className={`flex items-center gap-3 px-3 py-2 cursor-pointer rounded-md transition-colors ${
+        highlighted ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/60'
+      }`}
+      onClick={() => onSelect(item)}
+      role="option"
+      aria-selected={highlighted}
+      data-testid="food-result-item"
+    >
+      {item.thumbnail ? (
+        <Image
+          src={item.thumbnail}
+          alt={item.name}
+          width={40}
+          height={40}
+          className="w-10 h-10 rounded object-cover flex-shrink-0"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded bg-muted flex-shrink-0" />
+      )}
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{highlight(item.name, query)}</p>
+        {item.brandName && (
+          <p className="text-xs text-muted-foreground truncate">{item.brandName}</p>
+        )}
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs text-muted-foreground">{FOOD_TYPE_LABEL[item.foodType]}</span>
+          {item.calories !== null && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              · {item.calories} kcal/100g
+            </span>
+          )}
+        </div>
+      </div>
+
+      {item.fatSecretId && (
+        <Link
+          href={`/foods/${item.fatSecretId}`}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label={`View nutrition details for ${item.name}`}
+          title="View nutrition details"
+          data-testid="food-detail-link"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}

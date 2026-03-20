@@ -16,7 +16,7 @@ export class FoodLogPage {
     this.page = page;
     this.heading = page.getByRole('heading', { name: 'Food Log' });
     this.searchInput = page.getByTestId('food-search-input');
-    this.searchResults = page.getByTestId('search-results');
+    this.searchResults = page.getByTestId('food-search-dropdown');
     this.quantityInput = page.getByTestId('quantity-input');
     this.mealTypeSelect = page.getByTestId('meal-type-select');
     this.addFoodButton = page.getByTestId('add-food-button');
