@@ -16,6 +16,7 @@ import {
   Footer,
   ScrollToTop,
 } from '@/components/landing';
+import { SearchSection } from '@/components/landing/search-section';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,7 @@ export default async function Home() {
     <main className="min-h-screen">
       <Navbar />
       <Hero />
+      <SearchSection />
       <SocialProof />
       <AppPreview />
       <FeaturesGrid />

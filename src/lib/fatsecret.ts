@@ -1,7 +1,8 @@
-import type { FatSecretSearchResponse } from '@/types/fatsecret';
+import type { FatSecretSearchFood, FatSecretSearchResponse } from '@/types/fatsecret';
 
 const FATSECRET_TOKEN_URL = 'https://oauth.fatsecret.com/connect/token';
 const FATSECRET_SEARCH_URL = 'https://platform.fatsecret.com/rest/foods/search/v5';
+const FATSECRET_FOOD_GET_URL = 'https://platform.fatsecret.com/rest/food/v4';
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
@@ -68,4 +69,30 @@ export async function searchFoods(
   }
 
   return response.json() as Promise<FatSecretSearchResponse>;
+}
+
+interface FatSecretFoodGetResponse {
+  food: FatSecretSearchFood;
+}
+
+export async function getFoodById(foodId: string): Promise<FatSecretSearchFood> {
+  const token = await getAccessToken();
+  const queryString = new URLSearchParams({
+    food_id: foodId,
+    include_food_images: 'true',
+    format: 'json',
+  }).toString();
+
+  const response = await fetch(`${FATSECRET_FOOD_GET_URL}?${queryString}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`FatSecret API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as FatSecretFoodGetResponse;
+  return data.food;
 }

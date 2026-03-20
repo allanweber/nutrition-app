@@ -2,15 +2,69 @@ import { auth } from '@/lib/auth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+// In-memory rate limiter — 60 requests/minute per IP for /foods/** and /api/foods/search
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 60;
+const RATE_WINDOW_MS = 60_000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  // Cleanup stale entries on each check
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT) {
+    return false;
+  }
+
+  entry.count += 1;
+  return true;
+}
+
+function isRateLimitedPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/foods/') || pathname === '/api/foods/public/search'
+  );
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+  );
+}
+
 export async function proxy(request: NextRequest) {
+  // Rate limiting — checked BEFORE auth to avoid unnecessary session overhead
+  if (isRateLimitedPath(request.nextUrl.pathname)) {
+    const ip = getClientIp(request);
+    if (!checkRateLimit(ip)) {
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: { 'Retry-After': '60' },
+      });
+    }
+  }
+
   // Skip auth for API routes, static files, auth routes, and legal pages
   if (
+    request.nextUrl.pathname.startsWith('/api/foods/public/') ||
     request.nextUrl.pathname.startsWith('/api/auth') ||
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/static') ||
     request.nextUrl.pathname === '/login' ||
     request.nextUrl.pathname === '/signup' ||
     request.nextUrl.pathname === '/' ||
+    request.nextUrl.pathname.startsWith('/foods/') ||
     request.nextUrl.pathname.startsWith('/terms') ||
     request.nextUrl.pathname.startsWith('/privacy') ||
     request.nextUrl.pathname.startsWith('/forgot-password') ||

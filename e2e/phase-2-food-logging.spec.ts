@@ -49,8 +49,7 @@ test.describe('Phase 2: Food Logging', () => {
       const hasResults = await foodLogPage.searchResults
         .isVisible()
         .catch(() => false);
-      const noResultsMessage = page.getByText('No foods found');
-      const hasNoResults = await noResultsMessage
+      const hasNoResults = await page.getByTestId('search-empty')
         .isVisible()
         .catch(() => false);
 
@@ -229,15 +228,16 @@ test.describe('Phase 2: Food Logging', () => {
       await foodLogPage.searchInput.fill('apple');
       await page.waitForTimeout(1500); // Wait for debounced search
 
-      // Wait for search results
+      // Wait for search results dropdown
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
 
-      // Click on first result
-      const firstResult = page.getByTestId('food-result-0');
+      // Click on first result — modal opens
+      const firstResult = page.getByTestId('food-result-item').first();
       await expect(firstResult).toBeVisible({ timeout: 5000 });
       await firstResult.click();
 
-      // Verify selected food form appears
+      // Verify add modal appears with form
+      await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
       await expect(foodLogPage.quantityInput).toBeVisible();
       await expect(foodLogPage.mealTypeSelect).toBeVisible();
 
@@ -251,10 +251,8 @@ test.describe('Phase 2: Food Logging', () => {
       // Click add button
       await foodLogPage.addFoodButton.click();
 
-      // Check for success message
-      await expect(page.getByText(/added to your log/i)).toBeVisible({
-        timeout: 10000,
-      });
+      // Modal should close on success
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
       // Wait for the log to appear
       await page.waitForTimeout(1000);
@@ -313,18 +311,18 @@ test.describe('Phase 2: Food Logging', () => {
 
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
 
-      const firstResult = page.getByTestId('food-result-0');
+      const firstResult = page.getByTestId('food-result-item').first();
       await expect(firstResult).toBeVisible({ timeout: 5000 });
       await firstResult.click();
 
+      await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
       await foodLogPage.quantityInput.fill('1');
       await foodLogPage.mealTypeSelect.click();
       await page.getByRole('option', { name: /lunch/i }).click();
       await foodLogPage.addFoodButton.click();
 
-      await expect(page.getByText(/added to your log/i)).toBeVisible({
-        timeout: 10000,
-      });
+      // Modal should close on success
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
       // Wait for the UI to update
       await page.waitForTimeout(1500);
@@ -342,37 +340,32 @@ test.describe('Phase 2: Food Logging', () => {
 
       // Add apple to breakfast
       await foodLogPage.searchInput.fill('apple');
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(600);
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
-      await page.getByTestId('food-result-0').click();
+      await page.getByTestId('food-result-item').first().click();
+      await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
       await foodLogPage.quantityInput.fill('1');
       await foodLogPage.mealTypeSelect.click();
       await page.getByRole('option', { name: /breakfast/i }).click();
       await foodLogPage.addFoodButton.click();
 
-      // Wait for success message to appear and disappear
-      await expect(page.getByText(/added to your log/i)).toBeVisible({
-        timeout: 10000,
-      });
-      await page.waitForSelector('text=/added to your log/i', {
-        state: 'hidden',
-        timeout: 5000,
-      });
+      // Wait for modal to close
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
       // Add rice to lunch
+      await foodLogPage.searchInput.click();
       await foodLogPage.searchInput.fill('rice');
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(600);
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
-      await page.getByTestId('food-result-0').click();
+      await page.getByTestId('food-result-item').first().click();
+      await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
       await foodLogPage.quantityInput.fill('1');
       await foodLogPage.mealTypeSelect.click();
       await page.getByRole('option', { name: /lunch/i }).click();
       await foodLogPage.addFoodButton.click();
 
-      // Wait for success message to appear
-      await expect(page.getByText(/added to your log/i)).toBeVisible({
-        timeout: 10000,
-      });
+      // Wait for modal to close
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
       // Wait for the log to refresh and show both meals
       await page.waitForTimeout(1000);

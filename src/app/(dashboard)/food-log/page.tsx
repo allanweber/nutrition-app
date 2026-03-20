@@ -1,69 +1,58 @@
 'use client';
 
 import { useState } from 'react';
-import FoodSearch from '@/components/food-search';
+import { FoodSearchField } from '@/components/food-search-field';
+import { FoodLogAddModal } from '@/components/food-log-add-modal';
 import FoodLogClient from '@/components/food-log-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFoodLogsQuery, useCreateFoodLogMutation, useDeleteFoodLogMutation } from '@/queries/food-logs';
-import { useFoodSearchQuery } from '@/queries/foods';
+import { useFoodLogsQuery, useDeleteFoodLogMutation } from '@/queries/food-logs';
 import { useFoodDetailQuery, type FoodSelection } from '@/queries/food-detail';
-import { parseApiError } from '@/lib/api-error';
+import { useFoodSearch } from '@/hooks/use-food-search';
 import { format } from 'date-fns';
+import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 
 export default function FoodLogPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFood, setSelectedFood] = useState<FoodSelection | null>(null);
+  const [selectedFood, setSelectedFood] = useState<UnifiedFoodSearchResultItem | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   const logsQuery = useFoodLogsQuery(dateStr);
-  const createMutation = useCreateFoodLogMutation();
   const deleteMutation = useDeleteFoodLogMutation();
 
-  const searchQueryHook = useFoodSearchQuery(searchQuery, currentPage);
-  const detailQueryHook = useFoodDetailQuery(selectedFood);
+  const foodSearch = useFoodSearch({ includeCustom: true });
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
+  // Build FoodSelection for detail query
+  const foodSelection: FoodSelection | null = selectedFood
+    ? selectedFood.id !== null
+      ? { id: selectedFood.id, fatSecretId: selectedFood.fatSecretId ?? undefined }
+      : selectedFood.fatSecretId
+        ? { id: null, fatSecretId: selectedFood.fatSecretId }
+        : null
+    : null;
+
+  const detailQuery = useFoodDetailQuery(foodSelection);
+
+  const handleSelect = (item: UnifiedFoodSearchResultItem) => {
+    setSelectedFood(item);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
     setSelectedFood(null);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleSelectFood = (food: { id: number | null; fatSecretId: string }) => {
-    setSelectedFood(food.id !== null ? { id: food.id } : { id: null, fatSecretId: food.fatSecretId });
-  };
-
-  const handleCloseDetail = () => {
+  const handleFoodAdded = () => {
+    setModalOpen(false);
     setSelectedFood(null);
-  };
-
-  const handleFoodAdded = async (food: { food_name: string; brand_name?: string; serving_unit: string }, quantity: string, mealType: string) => {
-    await createMutation.mutateAsync({
-      foodName: food.food_name,
-      brandName: food.brand_name,
-      quantity,
-      servingUnit: food.serving_unit,
-      mealType,
-    });
+    foodSearch.setQuery('');
   };
 
   const handleDeleteLog = async (logId: number) => {
     await deleteMutation.mutateAsync(logId);
   };
-
-  const searchError = searchQueryHook.error
-    ? parseApiError(searchQueryHook.error).message
-    : null;
-
-  const detailError = detailQueryHook.error
-    ? parseApiError(detailQueryHook.error).message
-    : null;
 
   return (
     <div className="space-y-6">
@@ -74,31 +63,33 @@ export default function FoodLogPage() {
       </div>
 
       {/* Add Food Section */}
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center space-x-2">
-              <span>Add Food</span>
-            </CardTitle>
+            <CardTitle>Add Food — Default size</CardTitle>
           </CardHeader>
           <CardContent>
-            <FoodSearch
-              results={searchQueryHook.data?.results ?? []}
-              pagination={searchQueryHook.data?.pagination ?? null}
-              isLoading={searchQueryHook.isLoading}
-              error={searchError}
-              onSearch={handleSearch}
-              onPageChange={handlePageChange}
-              onSelectFood={handleSelectFood}
-              foodDetail={detailQueryHook.data?.food ?? null}
-              isDetailLoading={detailQueryHook.isLoading}
-              detailError={detailError}
-              onCloseDetail={handleCloseDetail}
-              onAddFood={handleFoodAdded}
+            <FoodSearchField
+              state={foodSearch}
+              onQueryChange={foodSearch.setQuery}
+              onLoadMore={foodSearch.loadMore}
+              onSelect={handleSelect}
+              showCustomTab={true}
+              placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
             />
           </CardContent>
         </Card>
       </div>
+
+      {/* Add to Diary Modal */}
+      <FoodLogAddModal
+        open={modalOpen}
+        food={selectedFood}
+        foodDetail={detailQuery.data?.food ?? null}
+        isDetailLoading={detailQuery.isLoading}
+        onClose={handleModalClose}
+        onAdded={handleFoodAdded}
+      />
 
       {/* Food Log Display */}
       <FoodLogClient

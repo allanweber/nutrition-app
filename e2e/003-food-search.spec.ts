@@ -29,6 +29,7 @@ async function goToFoodLog(page: import('@playwright/test').Page) {
 
 async function typeSearch(page: import('@playwright/test').Page, query: string) {
   const searchInput = page.getByTestId('food-search-input');
+  await searchInput.click();
   await searchInput.fill(query);
   await page.waitForTimeout(500); // Allow debounce + request
 }
@@ -48,30 +49,27 @@ test.describe('US1: Search Foods by Keyword', () => {
   }) => {
     await typeSearch(page, 'apple');
 
-    // Wait for results
-    await expect(page.getByTestId('search-results')).toBeVisible({ timeout: 5000 });
+    // Wait for dropdown with results
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
 
     // First result should show name
-    const firstResult = page.getByTestId('food-result-0');
+    const firstResult = page.getByTestId('food-result-item').first();
     await expect(firstResult).toBeVisible();
     await expect(firstResult).toContainText('Apple');
 
-    // Pagination should be visible since mock returns totalResults=9
-    await expect(page.getByTestId('pagination')).toBeVisible();
+    // Load more button visible since mock returns totalResults=9
+    await expect(page.getByRole('button', { name: /load more results/i })).toBeVisible();
   });
 
   test('search with no matching food shows empty-results message', async ({
     page,
   }) => {
-    // Mock returns the same data regardless, but we test the empty state
-    // by mocking a known non-existent query (mock will return results, so
-    // we test the UI shows results gracefully and no crash)
     await typeSearch(page, 'zzz');
     await page.waitForTimeout(600);
 
     // Either results or empty message — no crash
-    const hasResults = await page.getByTestId('search-results').isVisible().catch(() => false);
-    const hasEmpty = await page.getByTestId('empty-results').isVisible().catch(() => false);
+    const hasResults = await page.getByTestId('food-search-dropdown').isVisible().catch(() => false);
+    const hasEmpty = await page.getByTestId('search-empty').isVisible().catch(() => false);
     expect(hasResults || hasEmpty).toBe(true);
   });
 
@@ -82,22 +80,22 @@ test.describe('US1: Search Foods by Keyword', () => {
     await page.waitForTimeout(600);
 
     // Search should not trigger (enabled: keyword.length >= 3)
-    const hasResults = await page.getByTestId('search-results').isVisible().catch(() => false);
+    // Dropdown may still be open but showing prompt state, not results
+    const hasResults = await page.getByTestId('food-result-item').isVisible().catch(() => false);
     expect(hasResults).toBe(false);
   });
 
   test('navigating to page 2 shows next results', async ({ page }) => {
     await typeSearch(page, 'apple');
-    await expect(page.getByTestId('search-results')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByTestId('pagination')).toBeVisible();
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
 
-    const nextBtn = page.getByTestId('pagination-next');
-    if (await nextBtn.isEnabled()) {
-      await nextBtn.click();
+    const loadMoreBtn = page.getByRole('button', { name: /load more results/i });
+    if (await loadMoreBtn.isVisible()) {
+      await loadMoreBtn.click();
       await page.waitForTimeout(500);
-      // Results should still display (no crash)
-      const stillHasResults = await page.getByTestId('search-results').isVisible().catch(() => false);
-      const hasEmpty = await page.getByTestId('empty-results').isVisible().catch(() => false);
+      // Dropdown should still display (no crash)
+      const stillHasResults = await page.getByTestId('food-search-dropdown').isVisible().catch(() => false);
+      const hasEmpty = await page.getByTestId('search-empty').isVisible().catch(() => false);
       expect(stillHasResults || hasEmpty).toBe(true);
     }
   });
@@ -117,30 +115,33 @@ test.describe('US2: View Food Nutritional Detail', () => {
     page,
   }) => {
     await typeSearch(page, 'apple');
-    await expect(page.getByTestId('search-results')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
 
-    // Click first result
-    await page.getByTestId('food-result-0').click();
+    // Click first result — add modal should open
+    await page.getByTestId('food-result-item').first().click();
     await page.waitForTimeout(500);
 
-    // Detail view should appear (either loading or loaded)
-    const backBtn = page.getByRole('button', { name: /back to results/i });
-    await expect(backBtn).toBeVisible({ timeout: 5000 });
+    // Modal should appear with meal and serving selectors
+    await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('meal-type-select')).toBeVisible();
+    await expect(page.getByTestId('serving-select')).toBeVisible();
   });
 
   test('back/close button returns to search results', async ({ page }) => {
     await typeSearch(page, 'apple');
-    await expect(page.getByTestId('search-results')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
 
-    await page.getByTestId('food-result-0').click();
+    await page.getByTestId('food-result-item').first().click();
     await page.waitForTimeout(500);
 
-    const backBtn = page.getByRole('button', { name: /back to results/i });
-    await expect(backBtn).toBeVisible({ timeout: 5000 });
-    await backBtn.click();
+    await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
 
-    // Should return to search results
+    // Close modal with Escape
+    await page.keyboard.press('Escape');
+
+    // Search input should still be visible
     await expect(page.getByTestId('food-search-input')).toBeVisible();
+    await expect(page.getByTestId('food-add-modal')).not.toBeVisible();
   });
 });
 
