@@ -76,55 +76,59 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-foreground p-12 flex-col justify-between">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-primary to-teal-600 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-background/10 rounded-lg flex items-center justify-center">
-            <span className="text-background font-bold text-xl">N</span>
+        <Link href="/" className="relative z-10 flex items-center space-x-3">
+          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">N</span>
           </div>
-          <span className="text-xl font-bold text-background">
+          <span className="text-xl font-bold text-white">
             NutritionTracker
           </span>
         </Link>
 
         {/* Main Content */}
-        <div className="space-y-10">
+        <div className="relative z-10 space-y-10">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-background/40 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-4">
               Nutrition Intelligence
             </p>
-            <h2 className="text-4xl font-bold text-background leading-tight mb-5">
+            <h2 className="text-4xl font-bold text-white leading-tight mb-5">
               Precision tracking for serious results.
             </h2>
-            <p className="text-lg text-background/60 leading-relaxed">
+            <p className="text-lg text-white/80 leading-relaxed">
               Built for dietitians and health professionals. Every macro, every
               meal, every client — visible at a glance.
             </p>
           </div>
 
-          <div className="space-y-0 border-t border-background/10 pt-8">
-            <div className="flex justify-between items-baseline py-3 border-b border-background/10">
-              <span className="text-sm text-background/40">Foods in database</span>
-              <span className="text-sm font-semibold text-background tabular-nums">500,000+</span>
+          <div className="space-y-0 border-t border-white/20 pt-8">
+            <div className="flex justify-between items-baseline py-3 border-b border-white/20">
+              <span className="text-sm text-white/60">Foods in database</span>
+              <span className="text-sm font-semibold text-white tabular-nums">500,000+</span>
             </div>
-            <div className="flex justify-between items-baseline py-3 border-b border-background/10">
-              <span className="text-sm text-background/40">Macros tracked</span>
-              <span className="text-sm font-semibold text-background">Calories · Protein · Carbs · Fat</span>
+            <div className="flex justify-between items-baseline py-3 border-b border-white/20">
+              <span className="text-sm text-white/60">Macros tracked</span>
+              <span className="text-sm font-semibold text-white">Calories · Protein · Carbs · Fat</span>
             </div>
             <div className="flex justify-between items-baseline py-3">
-              <span className="text-sm text-background/40">Goal types</span>
-              <span className="text-sm font-semibold text-background tabular-nums">7</span>
+              <span className="text-sm text-white/60">Goal types</span>
+              <span className="text-sm font-semibold text-white tabular-nums">7</span>
             </div>
           </div>
         </div>
 
         {/* Testimonial */}
-        <div className="border-t border-background/10 pt-6">
-          <blockquote className="text-background/50 text-sm leading-relaxed">
+        <div className="relative z-10 border-t border-white/20 pt-6">
+          <blockquote className="text-white/70 text-sm leading-relaxed">
             &ldquo;The data density is exactly what I needed as a practitioner.
             Finally a tool that respects my workflow.&rdquo;
           </blockquote>
-          <p className="text-background/30 text-xs mt-2">— Registered Dietitian</p>
+          <p className="text-white/50 text-xs mt-2">— Registered Dietitian</p>
         </div>
       </div>
 

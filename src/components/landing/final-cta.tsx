@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function FinalCTA() {
@@ -42,42 +41,37 @@ export default function FinalCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-center max-w-3xl mx-auto"
+          className="text-center max-w-4xl mx-auto"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-primary-foreground mb-6 leading-tight">
             Ready to Take Control of Your Nutrition?
           </h2>
-          <p className="text-xl text-primary-foreground/90 mb-10">
-            Join thousands of individuals and professionals who&apos;ve
-            transformed their health with NutritionTracker.
+          <p className="text-lg text-primary-foreground/80 mb-12">
+            Join 50,000+ others archiving their journey to better health.
           </p>
 
           {/* Dual CTA Cards */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-center gap-6 pt-2">
             {/* Individuals Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               viewport={{ once: true }}
-              className="bg-primary/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20"
+              className="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1"
             >
-              <h3 className="text-xl font-semibold text-primary-foreground mb-2">
-                For Individuals
+              <h3 className="font-headline font-bold text-xl text-primary-foreground mb-3">
+                Individuals
               </h3>
-              <p className="text-primary-foreground/80 text-sm mb-6">
-                Start tracking your nutrition today. Free forever, upgrade
-                anytime.
+              <p className="text-primary-foreground/70 text-sm mb-6">
+                Start logging your meals for free today.
               </p>
               <Button
                 size="lg"
-                className="w-full bg-background text-foreground hover:bg-muted"
+                className="w-full bg-white text-primary hover:bg-white/90 font-black rounded-xl"
                 asChild
               >
-                <Link href="/signup">
-                  Start Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                <Link href="/signup">Start Free</Link>
               </Button>
             </motion.div>
 
@@ -87,38 +81,23 @@ export default function FinalCTA() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true }}
-              className="bg-primary/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20"
+              className="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1"
             >
-              <h3 className="text-xl font-semibold text-primary-foreground mb-2">
-                For Professionals
+              <h3 className="font-headline font-bold text-xl text-primary-foreground mb-3">
+                Professionals
               </h3>
-              <p className="text-primary-foreground/80 text-sm mb-6">
-                Manage clients and grow your practice with powerful tools.
+              <p className="text-primary-foreground/70 text-sm mb-6">
+                Transform your practice with data.
               </p>
               <Button
                 size="lg"
-                variant="secondary"
-                className="w-full hover:bg-primary/90"
+                className="w-full bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed/90 font-black rounded-xl"
                 asChild
               >
-                <Link href="/signup?type=professional">
-                  Start 14-Day Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                <Link href="/signup?type=professional">Start 14-Day Trial</Link>
               </Button>
             </motion.div>
           </div>
-
-          {/* Trust Text */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="mt-8 text-primary-foreground/70 text-sm"
-          >
-            No credit card required. Cancel anytime.
-          </motion.p>
         </motion.div>
       </div>
     </section>

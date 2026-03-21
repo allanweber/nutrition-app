@@ -1,14 +1,10 @@
 export { default as Navbar } from './navbar';
 export { default as Hero } from './hero';
 export { default as SocialProof } from './social-proof';
-export { default as AppPreview } from './app-preview';
 export { default as FeaturesGrid } from './features-grid';
 export { default as ForIndividuals } from './for-individuals';
 export { default as ForProfessionals } from './for-professionals';
-export { default as HowItWorks } from './how-it-works';
-export { default as Testimonials } from './testimonials';
 export { default as Pricing } from './pricing';
-export { default as FAQ } from './faq';
 export { default as FinalCTA } from './final-cta';
 export { default as Footer } from './footer';
 export { default as ScrollToTop } from './scroll-to-top';

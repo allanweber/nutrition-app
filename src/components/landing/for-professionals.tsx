@@ -2,301 +2,138 @@
 
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import {
-  ArrowRight,
-  BadgeCheck,
-  BarChart3,
-  ClipboardList,
-  LineChart,
-  MessageSquare,
-  Users,
-} from 'lucide-react';
+import { BadgeCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 
-const features = [
-  {
-    icon: Users,
-    title: 'Client Management',
-    description:
-      'Dashboard to view all your clients at a glance with status indicators.',
-  },
-  {
-    icon: ClipboardList,
-    title: 'Custom Meal Plans',
-    description:
-      'Create and assign personalized diet plans to individual clients.',
-  },
-  {
-    icon: LineChart,
-    title: 'Track Client Progress',
-    description:
-      'Monitor adherence, goals, and nutrition data remotely in real-time.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Professional Verification',
-    description:
-      'Display verified credentials to build trust with potential clients.',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Client Communication',
-    description: 'Notes, feedback, and communication tools built right in.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Practice Analytics',
-    description:
-      'Insights on client outcomes, engagement, and your practice growth.',
-  },
+const clients = [
+  { name: 'Marcus Aurelius', avatar: 'MA', color: 'bg-blue-200', status: 'Over Calorie Limit', statusClass: 'bg-destructive/10 text-destructive' },
+  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-primary-fixed text-on-primary-fixed' },
+  { name: 'Arthur Morgan', avatar: 'AM', color: 'bg-orange-200', status: 'Logged 2h ago', statusClass: 'bg-muted text-muted-foreground' },
 ];
 
-const steps = [
-  {
-    number: '01',
-    title: 'Get Verified',
-    description: 'Submit your credentials for a professional badge',
-  },
-  {
-    number: '02',
-    title: 'Add Clients',
-    description: 'Invite clients via email or shareable link',
-  },
-  {
-    number: '03',
-    title: 'Create Plans',
-    description: 'Design personalized nutrition plans',
-  },
-  {
-    number: '04',
-    title: 'Monitor Progress',
-    description: 'Track adherence and adjust as needed',
-  },
+const features = [
+  { icon: Users, title: 'Client Management', description: 'Dashboard to view all clients at a glance with status indicators.' },
+  { icon: BadgeCheck, title: 'Professional Verification', description: 'Display verified credentials to build trust with potential clients.' },
 ];
 
 export default function ForProfessionals() {
   return (
-    <section
-      id="for-professionals"
-      className="py-20 md:py-28 bg-background overflow-hidden"
-    >
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left - Dashboard Mockup */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="order-2 lg:order-1"
-          >
-            {/* Dashboard Card */}
-            <div className="bg-card rounded-2xl shadow-2xl overflow-hidden">
-              {/* Dashboard Header */}
-              <div className="bg-primary p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-primary-foreground font-bold text-lg">
-                      Client Dashboard
-                    </h3>
-                    <p className="text-accent text-sm">8 active clients</p>
-                  </div>
-                   <div className="flex items-center space-x-2 bg-primary-foreground/20 rounded-full px-3 py-1">
-                    <BadgeCheck className="h-4 w-4 text-primary-foreground" />
-                    <span className="text-primary-foreground text-sm font-medium">
-                      Verified RD
-                    </span>
-                  </div>
+    <section id="for-professionals" className="py-24 px-6 bg-surface-container-low">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+
+        {/* Left — Text Content */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="flex-1 space-y-8"
+        >
+          <div className="w-fit px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground font-bold text-xs uppercase tracking-widest">
+            For Professionals
+          </div>
+
+          <h2 className="font-headline text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
+            Powerful Tools for Nutrition Professionals
+          </h2>
+
+          <p className="text-on-surface-variant text-lg leading-relaxed max-w-lg">
+            Manage hundreds of clients with clinical precision. HIPAA-compliant dashboards, real-time logging alerts, and direct messaging built for RDs and Health Coaches.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {features.map((feature) => (
+              <div key={feature.title} className="flex gap-4">
+                <feature.icon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  <span className="font-bold block text-foreground">{feature.title}</span>
+                  <span className="text-sm text-on-surface-variant">{feature.description}</span>
                 </div>
               </div>
+            ))}
+          </div>
 
-              {/* Client List */}
-              <div className="p-4">
-                {[
-                  {
-                    name: 'Sarah M.',
-                    goal: 'Weight Loss',
-                    progress: 85,
-                    status: 'on-track',
-                  },
-                  {
-                    name: 'Mike T.',
-                    goal: 'Muscle Gain',
-                    progress: 72,
-                    status: 'on-track',
-                  },
-                  {
-                    name: 'Emily R.',
-                    goal: 'Maintenance',
-                    progress: 45,
-                    status: 'needs-attention',
-                  },
-                  {
-                    name: 'James K.',
-                    goal: 'Weight Loss',
-                    progress: 92,
-                    status: 'on-track',
-                  },
-                ].map((client, index) => (
-                  <motion.div
-                    key={client.name}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                     className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                   >
-                     <div className="flex items-center space-x-3">
-                       <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-medium">
-                         {client.name.charAt(0)}
-                       </div>
-                       <div>
-                         <div className="font-medium text-card-foreground">
-                           {client.name}
-                         </div>
-                         <div className="text-xs text-muted-foreground">
-                           {client.goal}
-                         </div>
-                       </div>
-                     </div>
-                     <div className="flex items-center space-x-3">
-                       <div className="text-right">
-                         <div className="text-sm font-medium text-card-foreground">
-                           {client.progress}%
-                         </div>
-                         <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                           <motion.div
-                             initial={{ width: 0 }}
-                             whileInView={{ width: `${client.progress}%` }}
-                             transition={{
-                               duration: 0.8,
-                               delay: 0.5 + index * 0.1,
-                             }}
-                             viewport={{ once: true }}
-                             className={`h-full rounded-full ${
-                               client.status === 'on-track'
-                                 ? 'bg-primary'
-                                 : 'bg-amber-500'
-                             }`}
-                           />
-                         </div>
-                       </div>
-                       <div
-                         className={`w-2 h-2 rounded-full ${
-                           client.status === 'on-track'
-                             ? 'bg-primary'
-                             : 'bg-amber-500'
-                         }`}
-                       />
-                    </div>
-                  </motion.div>
-                ))}
+          <div className="flex flex-wrap gap-4 pt-2">
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-8"
+              asChild
+            >
+              <Link href="/signup?type=professional">
+                Apply for Professional Account
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="ghost"
+              className="text-primary font-bold px-8 rounded-xl"
+              asChild
+            >
+              <a href="#pricing">View Pro Pricing →</a>
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Right — Client Dashboard Mockup */}
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          viewport={{ once: true }}
+          className="flex-1 w-full max-w-md"
+        >
+          <div className="bg-card rounded-3xl shadow-2xl p-6 border border-outline-variant/10">
+            {/* Dashboard Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">RD</div>
+                <div>
+                  <h4 className="font-headline font-bold text-foreground">Sarah Jenkins, RD</h4>
+                  <span className="text-xs px-2 py-0.5 bg-primary-fixed text-on-primary-fixed rounded-full font-bold">8 Active Clients</span>
+                </div>
               </div>
-
-               {/* Quick Actions */}
-               <div className="bg-muted p-4 flex gap-3">
-                 <button className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
-                   + Add Client
-                 </button>
-                 <button className="flex-1 bg-card border border-border text-card-foreground rounded-lg py-2 text-sm font-medium hover:bg-muted transition-colors">
-                   Create Plan
-                 </button>
-               </div>
-            </div>
-          </motion.div>
-
-          {/* Right Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="order-1 lg:order-2"
-          >
-            <div className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-              For Professionals
+              <div className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-full">
+                <BadgeCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                <span className="text-xs font-semibold text-foreground">Verified RD</span>
+              </div>
             </div>
 
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Powerful Tools for{' '}
-              <span className="text-primary">
-                Nutrition Professionals
-              </span>
-            </h2>
-
-            <p className="text-lg text-muted-foreground mb-8">
-              Manage clients, create personalized meal plans, and grow your
-              practice with our comprehensive suite of professional tools.
-            </p>
-
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-              {features.map((feature, index) => (
+            {/* Client Rows */}
+            <div className="space-y-3">
+              {clients.map((client) => (
                 <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
+                  key={client.name}
+                  initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  transition={{ duration: 0.3 }}
                   viewport={{ once: true }}
-                  className="flex items-start space-x-3"
+                  className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl"
                 >
-                  <feature.icon className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                   <div>
-                     <h3 className="font-medium text-foreground text-sm">
-                       {feature.title}
-                     </h3>
-                     <p className="text-muted-foreground text-xs">
-                       {feature.description}
-                     </p>
-                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full ${client.color} flex items-center justify-center text-xs font-bold text-gray-700`}>
+                      {client.avatar}
+                    </div>
+                    <span className="font-medium text-sm text-foreground">{client.name}</span>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-md font-bold ${client.statusClass}`}>
+                    {client.status}
+                  </span>
                 </motion.div>
               ))}
             </div>
 
-               {/* How It Works for Pros */}
-               <div className="bg-card rounded-xl p-5 mb-8">
-                 <h3 className="text-foreground font-semibold mb-4">How It Works</h3>
-                 <div className="grid grid-cols-2 gap-4">
-                   {steps.map((step, index) => (
-                     <div key={index} className="flex items-start space-x-3">
-                       <div className="text-accent font-bold text-sm">
-                         {step.number}
-                       </div>
-                       <div>
-                         <div className="text-foreground text-sm font-medium">
-                           {step.title}
-                         </div>
-                         <div className="text-muted-foreground text-xs">
-                           {step.description}
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-                 </div>
-               </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                asChild
-              >
-                <Link href="/signup?type=professional">
-                  Apply for Professional Account
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
-                asChild
-              >
-                <a href="#pricing">View Pro Pricing</a>
-              </Button>
+            {/* Quick Actions */}
+            <div className="flex gap-3 mt-4">
+              <button className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-primary/90 transition-colors">
+                + Add Client
+              </button>
+              <button className="flex-1 bg-surface-container-low border border-border text-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-surface-container transition-colors">
+                Create Plan
+              </button>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
+
       </div>
     </section>
   );

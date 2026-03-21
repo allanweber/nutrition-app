@@ -1,206 +1,146 @@
 'use client';
 
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import {
-  Target,
-  Utensils,
-  TrendingUp,
-  Trophy,
-  Calendar,
-  ArrowRight,
-  Flame,
-  Zap,
-} from 'lucide-react';
-
-const features = [
-  {
-    icon: Target,
-    title: 'Set Your Goals',
-    description: 'Weight loss, maintenance, or gain with custom calorie and macro targets tailored to you.',
-  },
-  {
-    icon: Utensils,
-    title: 'Log Effortlessly',
-    description: 'Search 500,000+ foods from the FatSecret database, or simply type "chicken salad for lunch".',
-  },
-  {
-    icon: TrendingUp,
-    title: 'See Your Progress',
-    description: 'Beautiful charts showing daily, weekly, and monthly nutrition trends.',
-  },
-  {
-    icon: Trophy,
-    title: 'Stay Motivated',
-    description: 'Streak tracking, achievements, and milestone celebrations keep you going.',
-  },
-  {
-    icon: Calendar,
-    title: 'Plan Meals',
-    description: 'Create and save favorite meals for lightning-fast logging.',
-  },
-];
+import { Flame, Target, Users } from 'lucide-react';
 
 export default function ForIndividuals() {
   return (
-    <section id="for-individuals" className="py-20 md:py-28 bg-background overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left Content */}
+    <section id="for-individuals" className="py-24 px-6 bg-surface-container-lowest">
+      <div className="max-w-7xl mx-auto">
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16 max-w-3xl mx-auto space-y-4"
+        >
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-foreground">
+            Personalized Vitality
+          </h2>
+          <p className="text-on-surface-variant text-lg">
+            Your health isn&apos;t a series of data points. It&apos;s an unfolding narrative supported by clinical-grade architecture.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+          {/* Daily Archive — Wide Card */}
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
             viewport={{ once: true }}
+            className="md:col-span-8 bg-surface-container rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between group border border-outline-variant/10 min-h-[280px]"
           >
-            <div className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-              For Individuals
+            <div className="relative z-10">
+              <Flame className="h-9 w-9 text-primary mb-4" aria-hidden="true" />
+              <h3 className="font-headline text-3xl font-bold mb-3 text-foreground">Daily Archive</h3>
+              <p className="text-on-surface-variant max-w-sm">
+                A sophisticated dashboard that curates your metabolic markers into an intuitive journal of your body&apos;s performance.
+              </p>
             </div>
-
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Your Personal{' '}
-              <span className="text-primary">
-                Nutrition Companion
-              </span>
-            </h2>
-            
-            <p className="text-lg text-muted-foreground mb-8">
-              Whether you&apos;re losing weight, building muscle, or just eating healthier, 
-              we make tracking simple and insights powerful.
-            </p>
-
-            <div className="space-y-5 mb-8">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="flex items-start space-x-4"
-                >
-                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <feature.icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                  </div>
-                   <div>
-                     <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
-                     <p className="text-muted-foreground text-sm">{feature.description}</p>
-                   </div>
-                </motion.div>
-              ))}
+            <div className="mt-8 relative z-10 flex gap-4 overflow-x-auto pb-2">
+              <div className="min-w-[140px] p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 flex-shrink-0">
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Sleep</p>
+                <p className="text-lg font-bold text-foreground font-headline">8h 12m</p>
+              </div>
+              <div className="min-w-[140px] p-4 bg-primary/10 border border-primary/20 rounded-xl flex-shrink-0">
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Calories</p>
+                <p className="text-lg font-bold text-primary font-headline">1,560 kcal</p>
+              </div>
+              <div className="min-w-[140px] p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 flex-shrink-0">
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Protein</p>
+                <p className="text-lg font-bold text-foreground font-headline">85g</p>
+              </div>
             </div>
-
-            <Button size="lg" asChild>
-              <Link href="/signup">
-                Start Tracking Free
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
           </motion.div>
 
-          {/* Right - Phone Mockup */}
+          {/* Nutrition Architecture — Gradient Card */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
             viewport={{ once: true }}
-            className="relative"
+            className="md:col-span-4 bg-gradient-to-br from-primary to-primary/80 rounded-[2rem] p-8 text-primary-foreground flex flex-col justify-between shadow-lg min-h-[280px]"
           >
-            {/* Phone Frame */}
-            <div className="relative mx-auto w-72 md:w-80">
-                    <div className="bg-foreground/90 rounded-[3rem] p-3 shadow-2xl">
-                  <div className="bg-background rounded-[2.5rem] overflow-hidden">
-                  {/* Phone Screen Content */}
-                  <div className="p-6">
-                    {/* Status Bar */}
-                    <div className="flex justify-between items-center mb-6 text-xs text-muted-foreground" aria-hidden="true">
-                      <span>9:41</span>
-                      <div className="flex space-x-1">
-                        <div className="w-4 h-2 bg-muted-foreground/40 rounded-sm" />
-                        <div className="w-4 h-2 bg-muted-foreground/40 rounded-sm" />
-                        <div className="w-6 h-3 bg-primary rounded-sm" />
-                      </div>
-                    </div>
+            <div>
+              <div className="text-3xl mb-4">🥗</div>
+              <h3 className="font-headline text-2xl font-bold mb-3">Nutrition Architecture</h3>
+              <p className="opacity-90 text-sm leading-relaxed">
+                Design meal protocols that align with your metabolic needs and personal goals.
+              </p>
+            </div>
+            <div className="mt-6 p-4 bg-black/20 backdrop-blur-md rounded-xl border border-white/20">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase tracking-wide">Today&apos;s Protocol</span>
+                <span className="text-xs bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full font-bold">92% Match</span>
+              </div>
+              <p className="text-sm font-medium">Mediterranean · High Protein</p>
+            </div>
+          </motion.div>
 
-                    {/* Header */}
-                    <div className="mb-6">
-                       <h3 className="text-lg font-bold text-foreground">Good morning, Sarah!</h3>
-                       <p className="text-sm text-muted-foreground">Let&apos;s crush your goals today</p>
-                    </div>
+          {/* Goal Tracking Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12 }}
+            viewport={{ once: true }}
+            className="md:col-span-4 bg-surface-container rounded-[2rem] p-8 border border-outline-variant/10"
+          >
+            <Target className="h-9 w-9 text-amber-500 mb-4" aria-hidden="true" />
+            <h3 className="font-headline text-2xl font-bold mb-3 text-foreground">Goal Tracking</h3>
+            <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
+              Set weight, macro, and calorie targets. Streak tracking and milestone celebrations keep you going.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/10">
+                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                <span className="text-xs font-semibold text-foreground">Morning Mobility Flow</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-lg border border-outline-variant/10">
+                <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                <span className="text-xs font-semibold text-foreground">Calorie Goal — 87% complete</span>
+              </div>
+            </div>
+          </motion.div>
 
-                    {/* Calorie Ring */}
-                    <div className="flex justify-center mb-6">
-                      <div className="relative w-32 h-32">
-                        <svg className="w-full h-full transform -rotate-90">
-                          <circle
-                            cx="64"
-                            cy="64"
-                            r="56"
-                            stroke="hsl(var(--border))"
-                            strokeWidth="10"
-                            fill="none"
-                          />
-                          <motion.circle
-                            cx="64"
-                            cy="64"
-                            r="56"
-                            stroke="url(#mobileGradient)"
-                            strokeWidth="10"
-                            fill="none"
-                            strokeLinecap="round"
-                            initial={{ strokeDasharray: '0 352' }}
-                            whileInView={{ strokeDasharray: '275 352' }}
-                            transition={{ duration: 1.5, delay: 0.5 }}
-                            viewport={{ once: true }}
-                          />
-                          <defs>
-                            <linearGradient id="mobileGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="hsl(var(--primary))" />
-                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                           <Flame className="h-5 w-5 text-orange-500 mb-1" />
-                           <span className="text-2xl font-bold text-foreground">1,560</span>
-                           <span className="text-xs text-muted-foreground">/ 2,000 cal</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <div className="bg-rose-50 dark:bg-rose-950/30 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-rose-600 dark:text-rose-400 tabular-nums">85g</div>
-                        <div className="text-xs text-muted-foreground">Protein</div>
-                      </div>
-                      <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-amber-600 dark:text-amber-400 tabular-nums">180g</div>
-                        <div className="text-xs text-muted-foreground">Carbs</div>
-                      </div>
-                      <div className="bg-sky-50 dark:bg-sky-950/30 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-sky-600 dark:text-sky-400 tabular-nums">52g</div>
-                        <div className="text-xs text-muted-foreground">Fat</div>
-                      </div>
-                    </div>
-
-                    {/* Streak */}
-                    <div className="bg-primary rounded-xl p-4 text-primary-foreground">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm opacity-80">Current Streak</div>
-                          <div className="text-2xl font-bold tabular-nums">7 Days</div>
-                        </div>
-                        <Zap className="h-8 w-8 opacity-80" aria-hidden="true" />
-                      </div>
-                    </div>
-                  </div>
+          {/* Professional Network Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.16 }}
+            viewport={{ once: true }}
+            className="md:col-span-8 bg-surface-container-high rounded-[2rem] p-8 flex flex-col md:flex-row items-center gap-8 border border-outline-variant/10"
+          >
+            <div className="w-full md:w-1/2">
+              <h3 className="font-headline text-3xl font-bold mb-3 text-foreground">Built for Precision</h3>
+              <p className="text-on-surface-variant leading-relaxed mb-6">
+                Connect with your own practitioner or browse our vetted network of nutrition specialists who use the same platform.
+              </p>
+              <a href="#for-professionals" className="inline-flex items-center gap-2 text-primary font-bold hover:translate-x-1 transition-transform">
+                View Professional Network <Users className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+            <div className="w-full md:w-1/2 grid grid-cols-2 gap-3">
+              <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold mb-3">RD</div>
+                <p className="text-xs font-bold text-foreground">Registered Dietitian</p>
+                <p className="text-xs text-on-surface-variant mt-1">Sarah Jenkins, MS</p>
+              </div>
+              <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Active Protocols</p>
+                  <p className="text-2xl font-headline font-extrabold text-primary">42</p>
+                </div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-xs text-on-surface-variant font-medium">Certified Network</span>
                 </div>
               </div>
-
             </div>
           </motion.div>
+
         </div>
       </div>
     </section>

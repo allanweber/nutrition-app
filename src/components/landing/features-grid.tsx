@@ -1,58 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-  BarChart3,
-  Lightbulb,
-  Search,
-  Smartphone,
-  Target,
-  Users,
-} from 'lucide-react';
-
-const primaryFeatures = [
-  {
-    icon: Search,
-    title: 'Smart Food Search',
-    description:
-      'Search 500,000+ foods from the FatSecret database. Use natural language like "2 eggs and toast" and log meals in seconds.',
-    textColor: 'text-primary',
-  },
-  {
-    icon: BarChart3,
-    title: 'Visual Progress',
-    description:
-      'Beautiful charts and progress rings show your daily and weekly trends at a glance. Understand your patterns, not just your numbers.',
-    textColor: 'text-violet-500',
-  },
-];
-
-const supportingFeatures = [
-  {
-    icon: Target,
-    title: 'Goal Tracking',
-    description: 'Set calorie, macro, and nutrient goals. Track streaks and celebrate milestones.',
-    textColor: 'text-rose-500',
-  },
-  {
-    icon: Smartphone,
-    title: 'Log Anywhere',
-    description: 'Quick-add meals on any device. Your data syncs instantly across all platforms.',
-    textColor: 'text-amber-500',
-  },
-  {
-    icon: Lightbulb,
-    title: 'Smart Insights',
-    description: 'Get personalized recommendations based on your eating patterns and goals.',
-    textColor: 'text-sky-500',
-  },
-  {
-    icon: Users,
-    title: 'Pro Tools',
-    description: 'Dietitian dashboard for managing clients, creating meal plans, and tracking progress.',
-    textColor: 'text-primary',
-  },
-];
+import { BarChart3, Lightbulb, Search, Smartphone, Target } from 'lucide-react';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -65,8 +14,8 @@ const fadeUp = {
 
 export default function FeaturesGrid() {
   return (
-    <section id="features" className="py-20 md:py-28 bg-muted">
-      <div className="container mx-auto px-4">
+    <section id="features" className="py-24 px-6 bg-surface-container-lowest">
+      <div className="max-w-7xl mx-auto">
 
         {/* Section Header */}
         <motion.div
@@ -74,69 +23,123 @@ export default function FeaturesGrid() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mb-14"
+          className="text-center mb-16 space-y-4"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Everything you need to{' '}
-            <span className="text-primary">succeed</span>
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+            Everything you need to succeed
           </h2>
-          <p className="text-lg text-muted-foreground max-w-xl">
-            Powerful features designed to make nutrition tracking simple,
-            insightful, and effective.
+          <p className="text-on-surface-variant max-w-2xl mx-auto">
+            From smart food search to professional clinical analytics — built for precision.
           </p>
         </motion.div>
 
-        {/* Primary features — 2 wide cards, icon inline with title */}
-        <div className="grid md:grid-cols-2 gap-5 mb-10">
-          {primaryFeatures.map((feature, i) => (
-            <motion.div
-              key={feature.title}
-              custom={i}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-80px' }}
-              className="bg-card rounded-2xl p-8 border border-border hover:border-primary/20 hover:shadow-md transition-all duration-300"
-            >
-              <div className="flex items-center gap-2.5 mb-4">
-                <feature.icon className={`h-5 w-5 ${feature.textColor} flex-shrink-0`} aria-hidden="true" />
-                <h3 className="text-xl font-semibold text-card-foreground">
-                  {feature.title}
-                </h3>
-              </div>
-              <p className="text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
 
-        {/* Supporting features — 4 items, no card wrappers */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.16 }}
-          viewport={{ once: true, margin: '-80px' }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 px-1"
-        >
-          {supportingFeatures.map((feature) => (
-            <div key={feature.title} className="flex gap-3">
-              <feature.icon
-                className={`h-4 w-4 mt-0.5 ${feature.textColor} flex-shrink-0`}
-                aria-hidden="true"
-              />
-              <div>
-                <h3 className="text-sm font-semibold text-card-foreground mb-1">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {feature.description}
+          {/* Large Card 1 — Smart Food Search */}
+          <motion.div
+            custom={0}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            className="md:col-span-3 bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 shadow-sm overflow-hidden group"
+          >
+            <div className="flex flex-col h-full justify-between gap-10">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center text-primary">
+                  <Search className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <h3 className="font-headline text-2xl font-bold text-foreground">Smart Food Search</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  500,000+ verified foods from the FatSecret database. Search in natural language and log meals in seconds.
                 </p>
               </div>
+              <div className="relative h-36 bg-surface-container-low rounded-xl p-4 transform translate-y-2 transition-transform group-hover:translate-y-0">
+                <div className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-lg shadow-sm mb-3">
+                  <div className="w-10 h-10 rounded-md bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm">🥗</div>
+                  <div className="flex-1">
+                    <div className="h-2 w-24 bg-surface-container rounded-full mb-2" />
+                    <div className="h-2 w-16 bg-surface-container-high rounded-full" />
+                  </div>
+                  <span className="text-primary text-lg font-bold">✓</span>
+                </div>
+              </div>
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
 
+          {/* Large Card 2 — Visual Progress */}
+          <motion.div
+            custom={1}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            className="md:col-span-3 bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 shadow-sm overflow-hidden group"
+          >
+            <div className="flex flex-col h-full justify-between gap-10">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-secondary-foreground">
+                  <BarChart3 className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <h3 className="font-headline text-2xl font-bold text-foreground">Visual Progress</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  See trends over months and years. Data is more than numbers — it&apos;s your story.
+                </p>
+              </div>
+              <div className="relative h-36 bg-surface-container-low rounded-xl p-4 flex items-end gap-2 transform translate-y-2 transition-transform group-hover:translate-y-0">
+                <div className="flex-1 bg-primary h-10 rounded-t-sm" />
+                <div className="flex-1 bg-primary/70 h-14 rounded-t-sm" />
+                <div className="flex-1 bg-primary/50 h-20 rounded-t-sm" />
+                <div className="flex-1 bg-primary/30 h-16 rounded-t-sm" />
+                <div className="flex-1 bg-primary/15 h-24 rounded-t-sm" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Small Card — Goal Tracking */}
+          <motion.div
+            custom={2}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            className="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3"
+          >
+            <Target className="h-6 w-6 text-primary" aria-hidden="true" />
+            <h4 className="font-headline font-bold text-foreground">Goal Tracking</h4>
+            <p className="text-sm text-on-surface-variant">Set custom macro ratios and weight milestones.</p>
+          </motion.div>
+
+          {/* Small Card — Log Anywhere */}
+          <motion.div
+            custom={3}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            className="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3"
+          >
+            <Smartphone className="h-6 w-6 text-secondary-foreground" aria-hidden="true" />
+            <h4 className="font-headline font-bold text-foreground">Log Anywhere</h4>
+            <p className="text-sm text-on-surface-variant">Quick-log on any device. Your data syncs instantly.</p>
+          </motion.div>
+
+          {/* Small Card — Smart Insights */}
+          <motion.div
+            custom={4}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            className="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3"
+          >
+            <Lightbulb className="h-6 w-6 text-amber-500" aria-hidden="true" />
+            <h4 className="font-headline font-bold text-foreground">Smart Insights</h4>
+            <p className="text-sm text-on-surface-variant">AI-generated reports on your eating habits.</p>
+          </motion.div>
+
+        </div>
       </div>
     </section>
   );

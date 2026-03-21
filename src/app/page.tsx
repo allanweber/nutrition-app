@@ -4,14 +4,10 @@ import {
   Navbar,
   Hero,
   SocialProof,
-  AppPreview,
   FeaturesGrid,
   ForIndividuals,
   ForProfessionals,
-  HowItWorks,
-  Testimonials,
   Pricing,
-  FAQ,
   FinalCTA,
   Footer,
   ScrollToTop,
@@ -33,14 +29,10 @@ export default async function Home() {
       <Hero />
       <SearchSection />
       <SocialProof />
-      <AppPreview />
       <FeaturesGrid />
       <ForIndividuals />
       <ForProfessionals />
-      <HowItWorks />
-      <Testimonials />
       <Pricing />
-      <FAQ />
       <FinalCTA />
       <Footer />
       <ScrollToTop />

@@ -46,7 +46,7 @@ export default function Navbar() {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-card/95 backdrop-blur-md shadow-sm'
+          ? 'bg-background/80 backdrop-blur-lg border-b border-outline-variant/30 shadow-sm'
           : 'bg-transparent'
       }`}
     >
@@ -54,10 +54,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <button onClick={scrollToTop} className="flex items-center space-x-2 cursor-pointer">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-               <span className="text-primary-foreground font-bold text-lg">N</span>
+            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+               <span className="text-primary-foreground font-black text-lg">N</span>
              </div>
-             <span className="font-bold text-xl text-foreground">
+             <span className="font-headline font-extrabold text-xl text-foreground">
                NutritionTracker
              </span>
           </button>
@@ -69,7 +69,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+                className="font-headline font-bold transition-colors hover:text-primary text-muted-foreground"
               >
                 {link.label}
               </a>
@@ -118,7 +118,7 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="block text-muted-foreground hover:text-primary font-medium"
+                  className="block text-muted-foreground hover:text-primary font-headline font-bold"
                   onClick={(e) => scrollToSection(e, link.href)}
                 >
                   {link.label}

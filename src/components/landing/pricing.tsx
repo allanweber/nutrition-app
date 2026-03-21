@@ -4,179 +4,118 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Check, X, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 
-type PlanType = 'individual' | 'professional';
-
-interface PlanFeature {
-  text: string;
-  included: boolean;
-}
+type BillingCycle = 'monthly' | 'yearly';
 
 interface Plan {
   name: string;
-  description: string;
-  price: string;
+  price: { monthly: string; yearly: string };
   period: string;
-  features: PlanFeature[];
+  features: string[];
   cta: string;
   ctaLink: string;
   popular?: boolean;
-  badge?: string;
 }
 
-const individualPlans: Plan[] = [
+const plans: Plan[] = [
   {
-    name: 'Free',
-    description: 'Get started with the basics',
-    price: '$0',
-    period: 'forever',
+    name: 'Essential',
+    price: { monthly: '$0', yearly: '$0' },
+    period: '/forever',
     features: [
-      { text: 'Unlimited food logging', included: true },
-      { text: 'Basic dashboard', included: true },
-      { text: '7-day history', included: true },
-      { text: '3 nutrition goals', included: true },
-      { text: 'Basic charts', included: true },
-      { text: 'Community support', included: true },
-      { text: 'Advanced analytics', included: false },
-      { text: 'Unlimited history', included: false },
-      { text: 'Meal planning', included: false },
-      { text: 'Data export', included: false },
+      'Basic Macro Tracking',
+      'Standard Food Library',
+      'Daily Progress View',
+      '7-day History',
+      'Community Support',
     ],
-    cta: 'Get Started Free',
+    cta: 'Get Started',
     ctaLink: '/signup',
   },
   {
-    name: 'Complete',
-    description: 'Everything for serious trackers',
-    price: '$7.99',
-    period: 'per month',
+    name: 'Vitality Pro',
+    price: { monthly: '$7.99', yearly: '$6.39' },
+    period: '/mo',
     popular: true,
     features: [
-      { text: 'Everything in Free', included: true },
-      { text: 'Unlimited history', included: true },
-      { text: 'Unlimited goals', included: true },
-      { text: 'Advanced analytics', included: true },
-      { text: 'Detailed insights', included: true },
-      { text: 'Meal planning', included: true },
-      { text: 'Data export (CSV, PDF)', included: true },
-      { text: 'Weekly email reports', included: true },
-      { text: 'Priority support', included: true },
-      { text: 'No ads', included: true },
+      'Everything in Essential',
+      'AI Photo Logging',
+      'Advanced Micronutrients',
+      'Custom Goal Cycles',
+      'Export to PDF/CSV',
+      'Unlimited History',
+      'Priority Support',
+      'No Ads',
     ],
-    cta: 'Upgrade to Complete',
-    ctaLink: '/signup?plan=complete',
-  },
-];
-
-const professionalPlans: Plan[] = [
-  {
-    name: 'Pro',
-    description: 'For individual practitioners',
-    price: '$19.99',
-    period: 'per month',
-    features: [
-      { text: 'Up to 10 clients', included: true },
-      { text: 'Client dashboard', included: true },
-      { text: 'Meal plan creation', included: true },
-      { text: 'Client progress tracking', included: true },
-      { text: 'Professional verification badge', included: true },
-      { text: 'Basic analytics', included: true },
-      { text: 'Email support', included: true },
-      { text: 'Unlimited clients', included: false },
-      { text: 'White-label options', included: false },
-      { text: 'API access', included: false },
-    ],
-    cta: 'Start 14-Day Trial',
-    ctaLink: '/signup?type=professional&plan=pro',
+    cta: 'Start 14-Day Free Trial',
+    ctaLink: '/signup?plan=pro',
   },
   {
-    name: 'Enterprise',
-    description: 'For clinics and large practices',
-    price: 'Custom',
-    period: 'contact sales',
-    badge: 'Contact Us',
+    name: 'Clinician',
+    price: { monthly: '$19.99', yearly: '$15.99' },
+    period: '/mo',
     features: [
-      { text: 'Everything in Pro', included: true },
-      { text: 'Unlimited clients', included: true },
-      { text: 'Team collaboration', included: true },
-      { text: 'White-label options', included: true },
-      { text: 'API access', included: true },
-      { text: 'Custom integrations', included: true },
-      { text: 'Advanced reporting', included: true },
-      { text: 'HIPAA compliance docs', included: true },
-      { text: 'Dedicated account manager', included: true },
-      { text: 'Priority onboarding', included: true },
+      'Everything in Vitality Pro',
+      'Client Dashboard',
+      'Real-time Monitoring',
+      'Custom Meal Plans',
+      'Direct Message Suite',
+      'Custom Branding',
+      'HIPAA Compliance Docs',
+      'Practice Analytics',
     ],
-    cta: 'Contact Sales',
-    ctaLink: '/contact?type=enterprise',
+    cta: 'Join Professional Network',
+    ctaLink: '/signup?type=professional',
   },
 ];
 
 export default function Pricing() {
-  const [planType, setPlanType] = useState<PlanType>('individual');
-  
-  const plans = planType === 'individual' ? individualPlans : professionalPlans;
+  const [billing, setBilling] = useState<BillingCycle>('monthly');
 
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto px-4">
+    <section id="pricing" className="py-24 px-6 bg-surface-container-lowest">
+      <div className="max-w-7xl mx-auto">
+
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-16 space-y-6"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Simple, Transparent Pricing
+          <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+            Investment in Vitality
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Choose the plan that&apos;s right for you. All plans include a free trial.
-          </p>
 
-          {/* Plan Type Switcher */}
-          <div
-            role="tablist"
-            aria-label="Plan type"
-            className="inline-flex items-center bg-muted rounded-full p-1"
-          >
+          {/* Billing Toggle */}
+          <div className="inline-flex p-1 bg-surface-container rounded-xl">
             <button
-              role="tab"
-              aria-selected={planType === 'individual'}
-              onClick={() => setPlanType('individual')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                planType === 'individual'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+              onClick={() => setBilling('monthly')}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                billing === 'monthly'
+                  ? 'bg-surface-container-lowest shadow-sm text-foreground'
+                  : 'text-on-surface-variant hover:text-foreground'
               }`}
             >
-              For Individuals
+              Monthly
             </button>
             <button
-              role="tab"
-              aria-selected={planType === 'professional'}
-              onClick={() => setPlanType('professional')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                planType === 'professional'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+              onClick={() => setBilling('yearly')}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                billing === 'yearly'
+                  ? 'bg-surface-container-lowest shadow-sm text-foreground'
+                  : 'text-on-surface-variant hover:text-foreground'
               }`}
             >
-              For Professionals
+              Yearly <span className="text-primary">(Save 20%)</span>
             </button>
           </div>
         </motion.div>
 
         {/* Pricing Cards */}
-        <motion.div
-          key={planType}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto"
-        >
+        <div className="grid md:grid-cols-3 gap-8 items-center">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -184,99 +123,65 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative flex flex-col p-8 rounded-[2rem] border ${
                 plan.popular
-                  ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20'
-                  : 'bg-card border border-border'
+                  ? 'bg-surface-container-lowest border-4 border-primary shadow-xl scale-105 z-10'
+                  : 'bg-surface-container-lowest border border-outline-variant/10 shadow-sm'
               }`}
             >
               {/* Popular Badge */}
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="inline-flex items-center px-4 py-1 bg-amber-400 text-amber-900 rounded-full text-sm font-medium shadow-lg">
-                    <Sparkles className="h-4 w-4 mr-1" />
-                    Most Popular
-                  </div>
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                  Most Popular
                 </div>
               )}
 
-              {/* Enterprise Badge */}
-              {plan.badge && !plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="inline-flex items-center px-4 py-1 bg-slate-800 text-white rounded-full text-sm font-medium shadow-lg">
-                    {plan.badge}
-                  </div>
-                </div>
-              )}
+              <h3 className="font-headline font-bold text-xl mb-2 text-foreground">{plan.name}</h3>
 
-              {/* Plan Header */}
-              <div className="text-center mb-6">
-                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
-                  {plan.name}
-                </h3>
-                <p className={`text-sm ${plan.popular ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                  {plan.description}
-                </p>
+              <div className="flex items-baseline gap-1 mb-8">
+                <span className="font-headline text-4xl font-black text-foreground">
+                  {plan.price[billing]}
+                </span>
+                <span className="text-on-surface-variant text-sm">{plan.period}</span>
               </div>
 
-              {/* Price */}
-              <div className="text-center mb-6">
-                <span className={`text-4xl font-bold ${plan.popular ? 'text-primary-foreground' : 'text-foreground'}`}>
-                  {plan.price}
-                </span>
-                <span className={`text-sm ${plan.popular ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                  {' '}/{plan.period}
-                </span>
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start space-x-3">
-                    {feature.included ? (
-                      <Check className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-primary-foreground/80' : 'text-primary'}`} aria-hidden="true" />
-                     ) : (
-                       <X className={`h-5 w-5 flex-shrink-0 ${plan.popular ? 'text-primary-foreground/30' : 'text-muted-foreground/40'}`} aria-hidden="true" />
-                     )}
-                     <span className={`text-sm ${
-                       feature.included
-                         ? plan.popular ? 'text-primary-foreground' : 'text-foreground'
-                         : plan.popular ? 'text-primary-foreground/40' : 'text-muted-foreground'
-                    }`}>
-                      {feature.text}
-                    </span>
+              <ul className="space-y-3 mb-8 flex-1">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-sm text-foreground">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0" aria-hidden="true" />
+                    {feature}
                   </li>
                 ))}
               </ul>
 
-              {/* CTA Button */}
               <Button
                 size="lg"
-                variant={plan.popular ? 'secondary' : 'default'}
-                className="w-full"
+                variant={plan.popular ? 'default' : 'outline'}
+                className={`w-full rounded-xl font-bold ${
+                  plan.popular
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg'
+                    : 'border-2 border-primary text-primary hover:bg-primary-fixed'
+                }`}
                 asChild
               >
-                <Link href={plan.ctaLink}>
-                  {plan.cta}
-                </Link>
+                <Link href={plan.ctaLink}>{plan.cta}</Link>
               </Button>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Additional Info */}
-        <motion.div
+        {/* Footer Note */}
+        <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           viewport={{ once: true }}
-          className="text-center mt-12 text-muted-foreground text-sm"
+          className="text-center mt-12 text-sm text-on-surface-variant"
         >
-          <p>All plans include a 14-day free trial. No credit card required to start.</p>
-          <p className="mt-2">
-            Questions? <a href="/contact" className="text-primary hover:underline">Contact our sales team</a>
-          </p>
-        </motion.div>
+          All plans include a 14-day free trial. No credit card required to start.{' '}
+          <a href="/contact" className="text-primary hover:underline">Questions? Contact us.</a>
+        </motion.p>
+
       </div>
     </section>
   );

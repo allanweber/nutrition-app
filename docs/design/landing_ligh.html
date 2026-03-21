@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vitality Edit — The Living Archive of Human Health</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#ffb1c7",
+              "surface-tint": "#2a6b2c",
+              "secondary-fixed-dim": "#b4cad6",
+              "secondary-container": "#cfe6f2",
+              "secondary-fixed": "#cfe6f2",
+              "inverse-on-surface": "#eff1f2",
+              "on-secondary-fixed-variant": "#354a53",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2e3132",
+              "tertiary-container": "#b14b6f",
+              "surface-dim": "#d8dadb",
+              "primary-fixed": "#acf4a4",
+              "tertiary": "#923357",
+              "surface-variant": "#e1e3e4",
+              "surface-container-highest": "#e1e3e4",
+              "outline-variant": "#bfcaba",
+              "on-primary-container": "#cbffc2",
+              "error-container": "#ffdad6",
+              "on-primary-fixed-variant": "#0c5216",
+              "primary-fixed-dim": "#91d78a",
+              "secondary": "#4c616c",
+              "on-surface-variant": "#40493d",
+              "error": "#ba1a1a",
+              "on-primary": "#ffffff",
+              "surface-container-high": "#e6e8e9",
+              "on-tertiary": "#ffffff",
+              "background": "#f8fafb",
+              "on-error": "#ffffff",
+              "tertiary-fixed": "#ffd9e2",
+              "surface": "#f8fafb",
+              "primary-container": "#3a7b3a",
+              "surface-bright": "#f8fafb",
+              "on-secondary-fixed": "#071e27",
+              "on-primary-fixed": "#002203",
+              "on-background": "#191c1d",
+              "surface-container": "#eceeef",
+              "on-tertiary-fixed": "#3f001c",
+              "primary": "#206223",
+              "on-tertiary-fixed-variant": "#7f2448",
+              "on-secondary-container": "#526772",
+              "on-surface": "#191c1d",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "outline": "#707a6c",
+              "inverse-primary": "#91d78a",
+              "surface-container-low": "#f2f4f5",
+              "on-tertiary-container": "#ffedf0"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #206223 0%, #3a7b3a 100%);
+        }
+        .backdrop-blur-nav {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg shadow-sm">
+<div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center text-white font-black text-xl">N</div>
+<span class="text-2xl font-extrabold text-green-900 font-headline tracking-tight">Vitality Edit</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-green-700 font-bold border-b-2 border-green-700 pb-1 font-headline" href="#">Features</a>
+<a class="text-slate-600 hover:text-green-800 transition-colors font-headline" href="#">Individuals</a>
+<a class="text-slate-600 hover:text-green-800 transition-colors font-headline" href="#">Professionals</a>
+<a class="text-slate-600 hover:text-green-800 transition-colors font-headline" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:block text-primary font-semibold px-4 py-2">Log in</button>
+<button class="bg-gradient-primary text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:opacity-90 transition-opacity">Get Started</button>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="pt-32 pb-20 px-6 overflow-hidden">
+<div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-8">
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-fixed text-on-primary-fixed font-semibold text-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                    New — AI-powered meal suggestions
+                </div>
+<h1 class="text-5xl md:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight">
+                    The Living Archive of <span class="text-primary italic">Your Health.</span>
+</h1>
+<p class="text-lg text-on-surface-variant max-w-lg leading-relaxed">
+                    Precision nutrition for individuals and professional tools for clinicians. Track, analyze, and optimize every aspect of human vitality.
+                </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-gradient-primary text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20">Start Free Trial</button>
+<button class="bg-surface-container-high text-on-surface px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined">play_circle</span>
+                        Watch Demo
+                    </button>
+</div>
+</div>
+<!-- Dashboard Mockup Hero -->
+<div class="relative">
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-3xl p-8 shadow-2xl relative z-10">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="font-headline font-bold text-xl">Daily Snapshot</h3>
+<p class="text-sm text-on-surface-variant">Wednesday, May 24</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+</div>
+<div class="flex flex-col md:flex-row gap-8 items-center">
+<!-- Calorie Ring -->
+<div class="relative w-48 h-48 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-dasharray="502" stroke-dashoffset="110" stroke-width="12"></circle>
+</svg>
+<div class="absolute text-center">
+<span class="block text-3xl font-black font-headline">1,560</span>
+<span class="text-xs uppercase tracking-widest font-bold text-on-surface-variant">/ 2000 kcal</span>
+</div>
+</div>
+<!-- Macro Bars -->
+<div class="flex-1 w-full space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span>Protein</span>
+<span>85g / 120g</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 70%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span>Carbs</span>
+<span>180g / 250g</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 72%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span>Fat</span>
+<span>52g / 65g</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 80%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Elements -->
+<div class="absolute -top-10 -right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+<div class="absolute -bottom-10 -left-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
+</div>
+</div>
+</header>
+<!-- Social Proof -->
+<section class="py-16 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+<div>
+<div class="text-4xl font-headline font-black text-primary">500K+</div>
+<div class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mt-2">Meals Logged</div>
+</div>
+<div>
+<div class="text-4xl font-headline font-black text-primary">50K+</div>
+<div class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mt-2">Active Users</div>
+</div>
+<div>
+<div class="text-4xl font-headline font-black text-primary">2K+</div>
+<div class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mt-2">Verified Pros</div>
+</div>
+<div>
+<div class="text-4xl font-headline font-black text-primary">4.9</div>
+<div class="flex justify-center gap-1 mt-2 text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-24 px-6 bg-surface">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16 space-y-4">
+<h2 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Everything you need to succeed</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto">From AI photo logging to professional clinical analytics, we've built the ultimate archive for your health journey.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-6 gap-6">
+<!-- Large Card 1 -->
+<div class="md:col-span-3 bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 shadow-sm overflow-hidden group">
+<div class="flex flex-col h-full justify-between gap-12">
+<div class="space-y-4">
+<div class="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">search_insights</span>
+</div>
+<h3 class="text-2xl font-headline font-bold">Smart Food Search</h3>
+<p class="text-on-surface-variant">Our database contains over 2 million verified foods, brands, and local restaurant items.</p>
+</div>
+<div class="relative h-40 bg-surface-container-low rounded-xl p-4 transform translate-y-4 transition-transform group-hover:translate-y-2">
+<div class="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm mb-3">
+<img class="w-10 h-10 rounded-md object-cover" data-alt="Healthy bowl of fresh vegetables" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE9ftvxl8fObKoCmXCsMkFp8q4QIOw-Yst4uwc4Jved42RU9WYGmgjZgglpzeXls-e_LpsSpKJ0hVlMuagns1VbsqkvA9bRNqpaYFJ_zWh4Gx2JCrE80c3gqYfchHQuZGi-0WQdahG6L5jKAsLOxbE5ZRFhpiTeqS98ZgQgDPPxwFxV_tcYv2N3ANKiE-hOUSO4m2V6kJqoKHyb3V6BwpANIRyG9uxrK_UsNWTa8fpG4g-KrA16nTLOLxvwQNYJArshTkLuON6d570"/>
+<div class="flex-1">
+<div class="h-2 w-24 bg-surface-container rounded-full mb-2"></div>
+<div class="h-2 w-16 bg-surface-container-high rounded-full"></div>
+</div>
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Large Card 2 -->
+<div class="md:col-span-3 bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 shadow-sm overflow-hidden group">
+<div class="flex flex-col h-full justify-between gap-12">
+<div class="space-y-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<h3 class="text-2xl font-headline font-bold">Visual Progress</h3>
+<p class="text-on-surface-variant">See trends over months and years. Data is more than numbers; it's your story.</p>
+</div>
+<div class="relative h-40 bg-surface-container-low rounded-xl p-6 flex items-end gap-2 transform translate-y-4 transition-transform group-hover:translate-y-2">
+<div class="flex-1 bg-primary h-12 rounded-t-sm"></div>
+<div class="flex-1 bg-primary/80 h-16 rounded-t-sm"></div>
+<div class="flex-1 bg-primary/60 h-24 rounded-t-sm"></div>
+<div class="flex-1 bg-primary/40 h-20 rounded-t-sm"></div>
+<div class="flex-1 bg-primary/20 h-28 rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Small Features -->
+<div class="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3">
+<span class="material-symbols-outlined text-primary">target</span>
+<h4 class="font-headline font-bold">Goal Tracking</h4>
+<p class="text-sm text-on-surface-variant">Set custom macro ratios and weight milestones.</p>
+</div>
+<div class="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3">
+<span class="material-symbols-outlined text-secondary">history</span>
+<h4 class="font-headline font-bold">Log Anywhere</h4>
+<p class="text-sm text-on-surface-variant">Quick-log via voice, photo, or barcode scanning.</p>
+</div>
+<div class="md:col-span-2 bg-surface-container-low p-6 rounded-3xl space-y-3">
+<span class="material-symbols-outlined text-tertiary">lightbulb</span>
+<h4 class="font-headline font-bold">Smart Insights</h4>
+<p class="text-sm text-on-surface-variant">AI-generated reports on your eating habits.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- For Professionals Section -->
+<section class="py-24 px-6 bg-surface-container-low relative overflow-hidden">
+<div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+<div class="flex-1 space-y-8">
+<div class="w-fit px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-bold text-xs uppercase tracking-widest">For Professionals</div>
+<h2 class="text-4xl md:text-6xl font-headline font-extrabold leading-tight">Powerful Tools for Nutrition Professionals</h2>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                    Manage hundreds of clients with clinical precision. HIPAA-compliant dashboards, real-time logging alerts, and direct messaging built for RDs and Health Coaches.
+                </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<div>
+<span class="font-bold block">Verified Badging</span>
+<span class="text-sm text-on-surface-variant">Build trust with a professional profile.</span>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">group</span>
+<div>
+<span class="font-bold block">Client Management</span>
+<span class="text-sm text-on-surface-variant">Unlimited dashboards &amp; deep analytics.</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="bg-gradient-primary text-white px-8 py-4 rounded-xl font-bold">Apply for Professional Account</button>
+<button class="text-primary font-bold px-8 py-4">View Pro Pricing</button>
+</div>
+</div>
+<!-- Pro Dashboard Mockup -->
+<div class="flex-1 w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-6 border border-outline-variant/10">
+<div class="flex justify-between items-center mb-8 pb-4 border-b border-surface-container">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-slate-100 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional registered dietitian portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnDzUTMy86yroS2hD_Ori_O9lJ23erde2ydm5IVuUjpoqPFRrgaXO3xSZPD9j_WhsQa6nkaN2Pjmi1_MVj1rvboEQYn-AcMgv4UsItNu1OmGvLCzu2oE4faYLUoYZ-5920LLEYBL69kLK03D8eU-E2PdzjPD_BA05OBfOMXgknhMW8gvoMYHD7C9MmM0R_GQFYRjDhi9-4FzlZISBJhsDXk6FrfDHzx739thbfppyXKuhvuQLnliFwD6JXrF4NZ_kCsqIETr3Ht7oJ"/>
+</div>
+<div>
+<h4 class="font-bold">Sarah Jenkins, RD</h4>
+<span class="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-bold">8 Active Clients</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-blue-200"></div>
+<span class="font-medium">Marcus Aurelius</span>
+</div>
+<span class="text-xs bg-error-container text-on-error-container px-2 py-1 rounded-md font-bold">Over Calorie Limit</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-purple-200"></div>
+<span class="font-medium">Elena Fisher</span>
+</div>
+<span class="text-xs bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded-md font-bold">Macro Perfect</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-orange-200"></div>
+<span class="font-medium">Arthur Morgan</span>
+</div>
+<span class="text-xs bg-surface-variant text-on-surface-variant px-2 py-1 rounded-md font-bold">Logged 2h ago</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-24 px-6">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-headline font-extrabold mb-4">Investment in Vitality</h2>
+<div class="inline-flex p-1 bg-surface-container rounded-xl">
+<button class="px-6 py-2 bg-white rounded-lg shadow-sm font-bold">Monthly</button>
+<button class="px-6 py-2 font-bold text-on-surface-variant">Yearly (Save 20%)</button>
+</div>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<!-- Free Plan -->
+<div class="bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 flex flex-col">
+<h3 class="font-headline font-bold text-xl mb-2">Essential</h3>
+<div class="flex items-baseline gap-1 mb-6">
+<span class="text-4xl font-black">$0</span>
+<span class="text-on-surface-variant">/forever</span>
+</div>
+<ul class="space-y-4 mb-8 flex-1">
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Basic Macro Tracking</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Standard Food Library</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Daily Progress View</li>
+</ul>
+<button class="w-full py-3 rounded-xl border-2 border-primary text-primary font-bold">Get Started</button>
+</div>
+<!-- Featured Plan -->
+<div class="bg-surface-container-lowest p-8 rounded-[2rem] border-4 border-primary flex flex-col relative scale-105 shadow-xl">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">Most Popular</div>
+<h3 class="font-headline font-bold text-xl mb-2">Vitality Pro</h3>
+<div class="flex items-baseline gap-1 mb-6">
+<span class="text-4xl font-black">$7.99</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-8 flex-1">
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check</span> AI Photo Logging</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check</span> Advanced Micronutrients</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check</span> Custom Goal Cycles</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check</span> Export to PDF/CSV</li>
+</ul>
+<button class="w-full py-3 rounded-xl bg-gradient-primary text-white font-bold shadow-lg">Start 14-Day Free Trial</button>
+</div>
+<!-- Professional Plan -->
+<div class="bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10 flex flex-col">
+<h3 class="font-headline font-bold text-xl mb-2">Clinician</h3>
+<div class="flex items-baseline gap-1 mb-6">
+<span class="text-4xl font-black">$19.99</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-8 flex-1">
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Client Dashboard</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Real-time Monitoring</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Direct Message Suite</li>
+<li class="flex gap-2 text-sm"><span class="material-symbols-outlined text-primary text-lg">check</span> Custom Branding</li>
+</ul>
+<button class="w-full py-3 rounded-xl border-2 border-primary text-primary font-bold">Join Professional Network</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-24 px-6 bg-gradient-primary">
+<div class="max-w-4xl mx-auto text-center space-y-8">
+<h2 class="text-4xl md:text-5xl font-headline font-extrabold text-white leading-tight">Ready to Take Control of Your Nutrition?</h2>
+<p class="text-white/80 text-lg">Join 50,000+ others archiving their journey to better health.</p>
+<div class="flex flex-col md:flex-row justify-center gap-6 pt-8">
+<div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1">
+<h4 class="text-white font-bold mb-4">Individuals</h4>
+<p class="text-white/70 text-sm mb-6">Start logging your meals for free today.</p>
+<button class="w-full bg-white text-primary py-3 rounded-xl font-black">Start Free</button>
+</div>
+<div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1">
+<h4 class="text-white font-bold mb-4">Professionals</h4>
+<p class="text-white/70 text-sm mb-6">Transform your practice with data.</p>
+<button class="w-full bg-primary-fixed text-on-primary-fixed py-3 rounded-xl font-black">Start 14-Day Trial</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-slate-50 dark:bg-slate-950 w-full py-12 px-6 border-t border-slate-200 dark:border-slate-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-12">
+<div class="space-y-6">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white font-black">N</div>
+<span class="font-['Manrope'] font-black text-green-900 text-xl">Vitality Edit</span>
+</div>
+<p class="text-slate-500 text-sm leading-relaxed">
+                    The Living Archive of Human Health. Empowering precision nutrition for everyone.
+                </p>
+<div class="flex gap-4">
+<div class="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center text-on-surface-variant cursor-pointer hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg">share</span>
+</div>
+</div>
+</div>
+<div>
+<h4 class="font-headline font-bold mb-6 text-green-900">Product</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Features</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Pricing</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Scientific Method</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Support</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-headline font-bold mb-6 text-green-900">Company</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">About Us</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Blog</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Careers</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Contact Us</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-headline font-bold mb-6 text-green-900">Legal</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Privacy Policy</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">Terms of Service</a></li>
+<li><a class="text-slate-500 hover:text-green-700 transition-all" href="#">HIPAA Compliance</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto pt-8 border-t border-slate-200">
+<p class="text-center font-['Inter'] text-sm text-slate-500">
+                © 2024 Vitality Edit. The Living Archive of Human Health.
+            </p>
+</div>
+</footer>
+<!-- ScrollToTop FAB -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 z-40">
+<span class="material-symbols-outlined">arrow_upward</span>
+</button>
+</body></html>

@@ -21,7 +21,8 @@ function formatCount(n: number, target: number): string {
   return Math.floor(n).toLocaleString();
 }
 
-function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function AnimatedStat({ icon: _icon, value, suffix, label, delay }: StatProps) {
   const prefersReducedMotion = useReducedMotion();
   const [count, setCount] = useState(prefersReducedMotion ? value : 0);
   const ref = useRef(null);
@@ -55,15 +56,12 @@ function AnimatedStat({ icon: Icon, value, suffix, label, delay }: StatProps) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       viewport={{ once: true }}
-      className="flex flex-col items-center"
+      className="flex flex-col items-center text-center"
     >
-      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-3">
-        <Icon className="h-6 w-6 text-primary" aria-hidden="true" />
-      </div>
-      <div className="text-3xl md:text-4xl font-bold text-foreground mb-1" aria-label={`${value}${suffix} ${label}`}>
+      <div className="text-4xl md:text-5xl font-headline font-black text-primary mb-2" aria-label={`${value}${suffix} ${label}`}>
         {formatCount(count, value)}{suffix}
       </div>
-      <div className="text-muted-foreground text-sm" aria-hidden="true">{label}</div>
+      <div className="text-sm font-bold text-on-surface-variant uppercase tracking-widest" aria-hidden="true">{label}</div>
     </motion.div>
   );
 }
@@ -77,8 +75,8 @@ export default function SocialProof() {
   ];
 
   return (
-    <section className="bg-muted py-12 md:py-16">
-      <div className="container mx-auto px-4">
+    <section className="bg-surface-container-low py-16 md:py-20">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, index) => (
             <AnimatedStat key={index} {...stat} />
