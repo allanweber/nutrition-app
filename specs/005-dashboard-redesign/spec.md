@@ -35,7 +35,7 @@ A user can toggle between a light and dark theme on the dashboard. Both themes u
 
 1. **Given** the light theme is active, **When** a user views the dashboard, **Then** the surface colors are white/light-slate, the primary color is dark green, and text contrast passes accessibility standards.
 2. **Given** the dark theme is active, **When** a user views the dashboard, **Then** the surface colors are deep slate, the primary color is bright emerald, and text contrast passes accessibility standards.
-3. **Given** a user has selected dark mode, **When** they reload the page, **Then** their theme preference is preserved.
+3. **Given** a user has selected dark mode, **When** they reload the page, **Then** their theme preference is preserved with no visible flash — the correct theme is applied before the page is visible.
 
 ---
 
@@ -50,7 +50,7 @@ Each dashboard section displays a skeleton loading state while its data is being
 **Acceptance Scenarios**:
 
 1. **Given** a section's data is still loading, **When** a user views the dashboard, **Then** the section renders a skeleton placeholder that matches the section's expected shape and occupies the same space as the loaded view.
-2. **Given** a section's data fetch fails, **When** a user views the dashboard, **Then** the section renders a consistent error state with a retry affordance, without crashing or hiding other sections.
+2. **Given** a section's data fetch fails, **When** a user views the dashboard, **Then** the section renders a consistent error state with a retry button; clicking retry re-fetches only that section's data without affecting any other section.
 3. **Given** loading and error states across different sections, **When** comparing their visual presentation, **Then** the skeleton and error UI uses the same shared component pattern so they look consistent.
 
 ---
@@ -113,7 +113,7 @@ A user sees a timeline of the current day's logged meals and activities, organiz
 **Acceptance Scenarios**:
 
 1. **Given** a user with meals and activities logged today, **When** the Daily Schedule section loads, **Then** entries are grouped by morning/midday/evening with correct icon, time, and calorie values.
-2. **Given** no entries for a time group, **When** the section renders, **Then** that group is hidden or shows an empty state without breaking the layout.
+2. **Given** no entries for a time group, **When** the section renders, **Then** all three time groups (Morning, Midday, Evening) remain visible, and the empty group displays a subtle "Nothing logged yet" placeholder — no group is ever hidden.
 3. **Given** the "View All" button, **When** clicked, **Then** the user navigates to the food log page.
 
 ---
@@ -137,7 +137,7 @@ A user sees their daily water intake displayed as a large number in liters, a li
 
 - What happens when all sections fail to load simultaneously (e.g., server error)?
 - How does the bento grid handle very long food or activity names in the Daily Schedule section?
-- What if a user has no goal set — does the Calories section show progress against zero?
+- When a user has no goal configured, the Calories section, macro progress bars, and hydration bar display a sensible default goal value and show a non-blocking "Set your goals" nudge — progress indicators are never hidden or shown against zero.
 - How does the circular progress ring behave when calorie intake exceeds the goal?
 - What happens when the weekly chart has only one day of data vs. a full seven?
 - How does the theme toggle behave when the user's OS preference changes while the session is active?
@@ -149,20 +149,22 @@ A user sees their daily water intake displayed as a large number in liters, a li
 - **FR-001**: The dashboard page MUST render server-side, delivering a full HTML structure before JavaScript hydration.
 - **FR-002**: Each dashboard section (Calories, Hydration, Macronutrients, Weekly Momentum, Daily Schedule) MUST load its own data asynchronously and independently, in parallel with all other sections.
 - **FR-003**: Each dashboard section MUST display a loading skeleton state while data is being fetched, matching the section's expected visual shape.
-- **FR-004**: Each dashboard section MUST display a consistent error state with a retry action if data fetching fails, without affecting other sections.
+- **FR-004**: Each dashboard section MUST display a consistent error state with a retry button if data fetching fails; activating retry MUST re-fetch only that section's data without triggering a full page reload or affecting other sections.
 - **FR-005**: The loading skeleton and error states MUST use a shared component pattern so their presentation is consistent across all sections.
 - **FR-006**: The dashboard MUST implement the bento grid layout: Calories (large, ~2/3 width), Hydration (small, ~1/3 width), Macronutrients (medium, ~5/12 width), Weekly Momentum (medium, ~7/12 width), and Daily Schedule (full width).
 - **FR-007**: The dashboard MUST support both a light theme and a dark theme, with each section correctly adopting the active theme's color palette.
 - **FR-008**: The Calories section MUST display: calories consumed (large headline), daily calorie goal, percentage consumed as a circular progress ring, calories burned, and net calorie balance.
 - **FR-009**: The Macronutrients section MUST display protein, carbohydrates, and fat as individual progress bars showing consumed vs. goal values in grams, using the project's established macro color system.
 - **FR-010**: The Weekly Momentum section MUST display a 7-day bar chart with the current day visually highlighted and day-of-week labels.
-- **FR-011**: The Daily Schedule section MUST group logged meals and activities by time of day (Morning, Midday, Evening) with icon, time, name, and calorie/duration data, and provide a "View All" link to the food log.
+- **FR-011**: The Daily Schedule section MUST always display all three time-of-day groups (Morning, Midday, Evening) with icon, time, name, and calorie/duration data. Groups with no logged entries MUST show a subtle "Nothing logged yet" placeholder — groups are never hidden. A "View All" link to the food log MUST be present.
 - **FR-012**: The Hydration section MUST display water consumed in liters, a progress bar toward the daily goal, and a quick-add button.
 - **FR-013**: The navigation header MUST be fixed at the top of the viewport with the brand mark, primary navigation links (Dashboard, Food Log, Meal Planner, Exercise Library, Goals), and notification/profile icon buttons.
 - **FR-014**: The dashboard layout MUST be fully responsive — bento cells stack to a single column on mobile viewports.
 - **FR-015**: Components created for this dashboard MUST be structured for reuse in future features (e.g., progress bar, stat card, skeleton loader, section error boundary).
 - **FR-016**: The global CSS theme file MUST be updated to include all color tokens required by both light and dark design variants.
 - **FR-017**: The dashboard MUST include a "Log Activity" primary action button in the header area.
+- **FR-018**: When a user has no goal configured for any metric (calories, macros, hydration), the dashboard MUST display a sensible default goal value for that metric and surface a non-blocking "Set your goals" nudge adjacent to the affected section — progress indicators MUST NOT be hidden or calculated against zero.
+- **FR-019**: New server-side aggregation endpoints MUST be created as part of this feature to serve the four dashboard data entities: DailySummary, HydrationLog, WeeklySnapshot, and ScheduleEntry. Existing food search/detail endpoints are out of scope for this purpose.
 
 ### Key Entities
 
@@ -184,6 +186,16 @@ A user sees their daily water intake displayed as a large number in liters, a li
 - **SC-007**: At least three reusable components (e.g., progress bar, stat card, section skeleton) are extractable and usable in future features without modification.
 - **SC-008**: A user completing a full dashboard review (all five sections read and understood) can do so in under 30 seconds — the information hierarchy is clear and scannable.
 
+## Clarifications
+
+### Session 2026-03-21
+
+- Q: What should the Calories section (and other goal-based metrics) display when a user has no goal configured? → A: Apply a default goal value; show a non-blocking "Set your goals" nudge near the metric — progress indicators are never hidden or shown against zero.
+- Q: Do the dashboard data entities (DailySummary, HydrationLog, WeeklySnapshot, ScheduleEntry) map to existing API endpoints, or do new endpoints need to be created? → A: New aggregation endpoints must be created as part of this feature.
+- Q: When a user clicks the retry action on a failed section, what should happen? → A: Retry fetches only the failed section's data — other sections are unaffected and remain in their current state.
+- Q: What should the Daily Schedule section show when a time group (Morning/Midday/Evening) has no logged entries? → A: Always show all three time groups; empty groups display a subtle "Nothing logged yet" placeholder — groups are never hidden.
+- Q: Where should the theme preference be persisted to avoid a flash of the wrong theme on SSR page load? → A: Store in a browser cookie readable server-side, so the correct theme class is set in the initial HTML render — no theme flash on load.
+
 ## Assumptions
 
 - The user is already authenticated; this feature does not change authentication flows.
@@ -193,4 +205,5 @@ A user sees their daily water intake displayed as a large number in liters, a li
 - The quick-add water button increments by a standard 250ml (one glass) per tap.
 - The Weekly Momentum chart shows calorie adherence (consumed vs. goal ratio) as the bar height metric.
 - Theme toggling is handled by a class on the root HTML element (e.g., a `dark` class), consistent with the reference design files.
+- Theme preference is persisted in a browser cookie so it can be read server-side and applied to the initial HTML render, preventing a theme flash on load.
 - The global CSS file contains the authoritative design token source of truth and will be updated as part of this feature.
