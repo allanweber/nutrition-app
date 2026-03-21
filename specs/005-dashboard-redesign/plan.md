@@ -21,7 +21,7 @@ Redesign the user dashboard with a bento-grid layout supporting light and dark t
 **Project Type**: Web application (Next.js full-stack)
 **Performance Goals**: Initial HTML with navigation and section structure in < 1.5s (SC-001)
 **Constraints**: No new UI kit, no new charting library; reuse existing Recharts and shadcn/ui
-**Scale/Scope**: Single dashboard page, 5 sections, ~15 new components, 4 new API routes, 1 new DB table
+**Scale/Scope**: Single dashboard page, 5 sections, ~15 new components, 5 new API routes (4 GET endpoints + 1 POST mutation), 1 new DB table
 
 ---
 
@@ -67,7 +67,7 @@ specs/005-dashboard-redesign/
 src/
 ├── app/
 │   ├── globals.css                         # Add dashboard color tokens
-│   ├── layout.tsx                          # Update: cookie-class script for theme
+│   ├── layout.tsx                          # No changes needed — next-themes inline script already prevents theme flash (see research.md §3)
 │   ├── (dashboard)/
 │   │   ├── layout.tsx                      # Update: new DashboardNav + full-width layout
 │   │   ├── dashboard/
@@ -124,8 +124,8 @@ src/
 │           ├── daily-schedule-section.tsx  # Async RSC wrapper
 │           └── daily-schedule-content.tsx  # Visual content (3-column grid)
 │
-└── queries/
-    └── dashboard.ts                        # TanStack Query hooks (for future client use)
+# Note: src/queries/dashboard.ts deferred — dashboard sections use RSC direct service calls.
+# TanStack Query hooks will be added if client-side dashboard widgets are introduced.
 ```
 
 **Structure Decision**: Single Next.js project (Option 1). Dashboard components are co-located under `src/components/dashboard/` with a shared sub-folder for reusable primitives. Server-side data functions live in `src/server/services/dashboard.service.ts`, following the existing `food-search.service.ts` pattern.
@@ -203,7 +203,7 @@ Add missing semantic tokens that the dashboard design references but are not yet
   --on-surface: var(--foreground);             /* maps to on-surface semantic */
   --on-surface-variant: oklch(0.45 0.03 160);  /* secondary text */
   --secondary: oklch(0.50 0.02 220);           /* muted label color */
-  --tertiary: oklch(0.65 0.22 355);            /* pink for carbs bar */
+  --tertiary: oklch(0.65 0.22 355);            /* rose-toned accent token — NOT for macro bars; macro bars use MACRO_COLORS from nutrition-constants.ts */
 }
 
 /* Dark theme overrides */

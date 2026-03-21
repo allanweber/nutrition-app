@@ -162,7 +162,7 @@ A user sees their daily water intake displayed as a large number in liters, a li
 - **FR-014**: The dashboard layout MUST be fully responsive — bento cells stack to a single column on mobile viewports.
 - **FR-015**: Components created for this dashboard MUST be structured for reuse in future features (e.g., progress bar, stat card, skeleton loader, section error boundary).
 - **FR-016**: The global CSS theme file MUST be updated to include all color tokens required by both light and dark design variants.
-- **FR-017**: The dashboard MUST include a "Log Activity" primary action button in the header area.
+- **FR-017**: The dashboard MUST include a "Log Activity" primary action button in the header area. Clicking it navigates the user to `/food-log` to begin logging a meal.
 - **FR-018**: When a user has no goal configured for any metric (calories, macros, hydration), the dashboard MUST display a sensible default goal value for that metric and surface a non-blocking "Set your goals" nudge adjacent to the affected section — progress indicators MUST NOT be hidden or calculated against zero.
 - **FR-019**: New server-side aggregation endpoints MUST be created as part of this feature to serve the four dashboard data entities: DailySummary, HydrationLog, WeeklySnapshot, and ScheduleEntry. Existing food search/detail endpoints are out of scope for this purpose.
 
@@ -194,7 +194,7 @@ A user sees their daily water intake displayed as a large number in liters, a li
 - Q: Do the dashboard data entities (DailySummary, HydrationLog, WeeklySnapshot, ScheduleEntry) map to existing API endpoints, or do new endpoints need to be created? → A: New aggregation endpoints must be created as part of this feature.
 - Q: When a user clicks the retry action on a failed section, what should happen? → A: Retry fetches only the failed section's data — other sections are unaffected and remain in their current state.
 - Q: What should the Daily Schedule section show when a time group (Morning/Midday/Evening) has no logged entries? → A: Always show all three time groups; empty groups display a subtle "Nothing logged yet" placeholder — groups are never hidden.
-- Q: Where should the theme preference be persisted to avoid a flash of the wrong theme on SSR page load? → A: Store in a browser cookie readable server-side, so the correct theme class is set in the initial HTML render — no theme flash on load.
+- Q: Where should the theme preference be persisted to avoid a flash of the wrong theme on SSR page load? → A: Store in a browser cookie readable server-side, so the correct theme class is set in the initial HTML render — no theme flash on load. (Deferred — next-themes localStorage approach already prevents flash via inline blocking script; cookie-based SSR detection deferred to a future iteration per research.md §3)
 
 ## Assumptions
 
