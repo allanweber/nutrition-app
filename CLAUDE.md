@@ -1,11 +1,13 @@
 # nutrition-app-claude Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-19
+Auto-generated from all feature plans. Last updated: 2026-03-21
 
 ## Active Technologies
 - TypeScript 5.x / Node.js 20 + Next.js 16 (App Router), TanStack Query, TanStack Form, shadcn/ui (Radix primitives), Drizzle ORM, BetterAuth, Playwright (E2E) (004-food-search-field)
 - PostgreSQL (Drizzle ORM) for food data; browser `localStorage` for search history (device-local, no server storage) (004-food-search-field)
 - TypeScript 5.x / Node.js 20 + Next.js 16 (App Router), TanStack Query v5, TanStack Form v0, shadcn/ui (Radix primitives), Drizzle ORM, BetterAuth, Playwright (004-food-search-field)
+- TypeScript 5.x / Node.js 20 + Next.js 16.1.2 (App Router), React 19, Recharts 3.6, TanStack Query v5, next-themes 0.4.6, Drizzle ORM 0.45, shadcn/ui (Radix), Tailwind CSS 4 (005-dashboard-redesign)
+- PostgreSQL (Drizzle ORM) — new `hydration_logs` table + migration (005-dashboard-redesign)
 
 - TypeScript 5.x, Node.js 20 + Next.js 16 (App Router), Drizzle ORM, TanStack Query, (003-fatsecret-food-retrieval)
 
@@ -25,10 +27,10 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20: Follow standard conventions
 
 ## Recent Changes
+- 005-dashboard-redesign: Added TypeScript 5.x / Node.js 20 + Next.js 16.1.2 (App Router), React 19, Recharts 3.6, TanStack Query v5, next-themes 0.4.6, Drizzle ORM 0.45, shadcn/ui (Radix), Tailwind CSS 4
 - 004-food-search-field: Added TypeScript 5.x / Node.js 20 + Next.js 16 (App Router), TanStack Query v5, TanStack Form v0, shadcn/ui (Radix primitives), Drizzle ORM, BetterAuth, Playwright
 - 004-food-search-field: Added TypeScript 5.x / Node.js 20 + Next.js 16 (App Router), TanStack Query, TanStack Form, shadcn/ui (Radix primitives), Drizzle ORM, BetterAuth, Playwright (E2E)
 
-- 003-fatsecret-food-retrieval: Added TypeScript 5.x, Node.js 20 + Next.js 16 (App Router), Drizzle ORM, TanStack Query,
 
 <!-- MANUAL ADDITIONS START -->
 ## Feature 003: FatSecret Food Retrieval (active branch)
