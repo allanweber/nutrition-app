@@ -2,7 +2,7 @@ export function renderEmailVerificationCodeEmail(params: {
   code: string;
   expiresMinutes: number;
 }): { subject: string; html: string; text: string } {
-  const subject = 'Your Nutrition App verification code';
+  const subject = 'Your Vitalis verification code';
   const text = [
     'Your verification code is:',
     params.code,
@@ -28,7 +28,7 @@ export function renderPasswordResetCodeEmail(params: {
   code: string;
   expiresMinutes: number;
 }): { subject: string; html: string; text: string } {
-  const subject = 'Your Nutrition App password reset code';
+  const subject = 'Your Vitalis password reset code';
   const text = [
     'Your password reset code is:',
     params.code,

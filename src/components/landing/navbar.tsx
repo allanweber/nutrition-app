@@ -58,7 +58,7 @@ export default function Navbar() {
                <span className="text-primary-foreground font-black text-lg">N</span>
              </div>
              <span className="font-headline font-extrabold text-xl text-foreground">
-               NutritionTracker
+               Vitalis
              </span>
           </button>
 

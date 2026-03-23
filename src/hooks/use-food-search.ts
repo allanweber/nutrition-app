@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, startTransition } from 'react';
 import { useFoodSearchQuery, usePublicFoodSearchQuery } from '@/queries/foods';
 import { useCustomFoodSearchQuery } from '@/queries/custom-foods';
 import type { FoodSearchState, UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
@@ -62,13 +62,13 @@ export function useFoodSearch({ includeCustom, anonymous = false }: UseFoodSearc
     }));
     if (debouncedQuery !== lastDebouncedQueryRef.current) {
       lastDebouncedQueryRef.current = debouncedQuery;
-      setAccumulatedFatsecretItems(newItems);
+      startTransition(() => setAccumulatedFatsecretItems(() => newItems));
     } else {
-      setAccumulatedFatsecretItems((prev) => {
+      startTransition(() => setAccumulatedFatsecretItems((prev) => {
         const existingIds = new Set(prev.map((i) => i.fatSecretId ?? i.id));
         const fresh = newItems.filter((i) => !existingIds.has(i.fatSecretId ?? i.id));
         return page === 1 ? newItems : [...prev, ...fresh];
-      });
+      }));
     }
   }, [fatsecretQuery.data, debouncedQuery, page]);
 

@@ -18,8 +18,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nutrition App",
-    template: "%s | Nutrition App",
+    default: "Vitalis",
+    template: "%s | Vitalis",
   },
   description: "Track your nutrition, set goals, and achieve a healthier lifestyle with personalized calorie and macro tracking.",
 };

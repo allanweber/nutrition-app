@@ -187,6 +187,16 @@ CREATE TABLE "foods" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "hydration_logs" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"date" date NOT NULL,
+	"total_ml" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "hydration_logs_user_date_unique" UNIQUE("user_id","date")
+);
+--> statement-breakpoint
 CREATE TABLE "nutrition_goals" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -212,6 +222,7 @@ CREATE TABLE "nutrition_goals" (
 	"target_fat" numeric(10, 2),
 	"target_fiber" numeric(10, 2),
 	"target_sodium" numeric(10, 2),
+	"target_hydration_ml" integer DEFAULT 2500 NOT NULL,
 	"activity_level" varchar(50),
 	"start_date" timestamp NOT NULL,
 	"end_date" timestamp,
@@ -280,6 +291,7 @@ ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_user_id_user_id_fk" 
 ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meal_groups_id_fk" FOREIGN KEY ("source_diet_plan_meal_group_id") REFERENCES "public"."diet_plan_meal_groups"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_photos" ADD CONSTRAINT "food_photos_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "foods" ADD CONSTRAINT "foods_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "hydration_logs" ADD CONSTRAINT "hydration_logs_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "nutrition_goals" ADD CONSTRAINT "nutrition_goals_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "security_event" ADD CONSTRAINT "security_event_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -309,6 +321,7 @@ CREATE INDEX "foods_source_id_idx" ON "foods" USING btree ("source_id");--> stat
 CREATE INDEX "foods_source_idx" ON "foods" USING btree ("source");--> statement-breakpoint
 CREATE INDEX "foods_user_id_idx" ON "foods" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "foods_is_custom_idx" ON "foods" USING btree ("is_custom");--> statement-breakpoint
+CREATE INDEX "hydration_logs_user_date_idx" ON "hydration_logs" USING btree ("user_id","date");--> statement-breakpoint
 CREATE INDEX "nutrition_goals_user_id_idx" ON "nutrition_goals" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "nutrition_goals_user_start_date_idx" ON "nutrition_goals" USING btree ("user_id","start_date");--> statement-breakpoint
 CREATE INDEX "nutrition_goals_user_end_date_idx" ON "nutrition_goals" USING btree ("user_id","end_date");--> statement-breakpoint

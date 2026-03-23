@@ -13,25 +13,15 @@ test.describe('Phase 3: Dashboard & Charts', () => {
 
   test('dashboard loads successfully', async ({ page }) => {
     await page.goto('/dashboard');
-    
-    // Check page heading (shows greeting like "Good morning/afternoon/evening")
+
+    // Check page heading
     await expect(page.locator('h1')).toBeVisible();
 
-    // Check that key dashboard elements are visible
-    await expect(page.locator('text=Calories').first()).toBeVisible();
-    await expect(page.locator('text=Protein').first()).toBeVisible();
-    await expect(page.locator('text=Carbohydrates').first()).toBeVisible();
-    
-    // Check that chart section is visible
-    await expect(page.locator('text=Calorie Intake')).toBeVisible();
-    
-    // Check weekly stats section
-    await expect(page.locator('text=Avg Calories')).toBeVisible();
-    await expect(page.locator('text=Protein Goal')).toBeVisible();
-    await expect(page.locator('text=Streak')).toBeVisible();
-    
-    // Check Recent Foods section
-    await expect(page.locator('text=Recent Foods')).toBeVisible();
+    // Check that key dashboard sections are visible
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Macronutrients' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Weekly Momentum' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
   });
 
   test('dashboard shows data for seeded user', async ({ page }) => {
@@ -48,32 +38,29 @@ test.describe('Phase 3: Dashboard & Charts', () => {
 
   test('charts display correctly with data', async ({ page }) => {
     await page.goto('/dashboard');
-    
-    // Wait for charts to load
-    await page.waitForTimeout(2000);
-    
-    // Check chart section exists in DOM
-    await expect(page.locator('text=Calorie Intake')).toBeVisible();
-    
-    // Check for chart SVG elements (recharts renders SVGs)
-    const chartContainers = page.locator('.recharts-wrapper');
-    const hasCharts = await chartContainers.count() > 0 || 
-                     await page.locator('svg').count() > 5; // Multiple charts have SVGs
-    
-    expect(hasCharts).toBeTruthy();
+
+    // Check Weekly Momentum section with its bar chart
+    await expect(page.getByRole('heading', { name: 'Weekly Momentum' })).toBeVisible({ timeout: 10000 });
+
+    // recharts-wrapper is a div and always has dimensions
+    await expect(page.locator('.recharts-wrapper').first()).toBeVisible({ timeout: 10000 });
+
+    // SVG <g> elements have no bounding box — use toBeAttached to confirm presence
+    await expect(page.locator('.recharts-xAxis')).toBeAttached();
+    await expect(page.locator('.recharts-bar')).toBeAttached();
   });
 
   test('dashboard is responsive on mobile', async ({ page }) => {
     // Mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/dashboard');
-    
-    // Check mobile layout - dashboard should still display
+
+    // Check mobile layout — dashboard should still display
     await expect(page.locator('h1')).toBeVisible();
-    
-    // Check key elements are still present on mobile
-    await expect(page.locator('text=Calorie Intake')).toBeVisible();
-    await expect(page.locator('text=Recent Foods')).toBeVisible();
+
+    // Check key sections are present on mobile
+    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
   });
 
   test('dashboard redirects to login when not authenticated', async ({ browser }) => {

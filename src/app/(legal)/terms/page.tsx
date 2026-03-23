@@ -24,7 +24,7 @@ export default function TermsPage() {
 
         <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-6 mb-8">
           <p className="text-muted-foreground leading-relaxed">
-            By accessing and using NutritionTracker, you accept and agree to be
+            By accessing and using Vitalis, you accept and agree to be
             bound by terms and provision of this agreement. If you do not agree
             to abide by the above, please do not use this service.
           </p>
@@ -36,7 +36,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing and using NutritionTracker, you accept and agree to
+              By accessing and using Vitalis, you accept and agree to
               be bound by the terms and provisions of this agreement. If you do
               not agree to abide by the above, please do not use this service.
             </p>
@@ -47,7 +47,7 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              NutritionTracker is a nutrition tracking and analysis platform
+              Vitalis is a nutrition tracking and analysis platform
               that allows users to:
             </p>
             <ul className="list-disc list-inside mt-4 space-y-2 text-muted-foreground ml-4">
@@ -98,7 +98,7 @@ export default function TermsPage() {
               practices.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              By using NutritionTracker, you consent to the collection and use
+              By using Vitalis, you consent to the collection and use
               of your nutritional data as described in our Privacy Policy.
             </p>
           </section>
@@ -166,7 +166,7 @@ export default function TermsPage() {
               8. Limitation of Liability
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              In no event shall NutritionTracker, its directors, employees,
+              In no event shall Vitalis, its directors, employees,
               partners, agents, suppliers, or affiliates be liable for any
               indirect, incidental, special, consequential, or punitive damages,
               including without limitation, loss of profits, data, use,
@@ -214,7 +214,7 @@ export default function TermsPage() {
 
         <div className="mt-16 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground text-center">
-            By using NutritionTracker, you acknowledge that you have read,
+            By using Vitalis, you acknowledge that you have read,
             understood, and agree to be bound by these Terms of Service.
           </p>
         </div>

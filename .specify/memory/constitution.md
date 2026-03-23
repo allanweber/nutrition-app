@@ -17,9 +17,9 @@ Sync Impact Report
   - AGENTS.md still references Nutritionix API in the project summary and env vars; update it once migration to FatSecret is confirmed complete.
 -->
 
-# Nutrition App Constitution
+# Vitalis Constitution
 
-This document defines the non-negotiable engineering principles and repository rules for Nutrition App.
+This document defines the non-negotiable engineering principles and repository rules for Vitalis.
 It is intended to prevent quality regressions, UX inconsistency, and architectural drift.
 
 ## Core Principles

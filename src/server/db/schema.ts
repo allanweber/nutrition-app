@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  date,
   decimal,
   index,
   integer,
@@ -10,6 +11,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
@@ -363,6 +365,7 @@ export const nutritionGoals = pgTable(
     targetFat: decimal('target_fat', { precision: 10, scale: 2 }),
     targetFiber: decimal('target_fiber', { precision: 10, scale: 2 }),
     targetSodium: decimal('target_sodium', { precision: 10, scale: 2 }),
+    targetHydrationMl: integer('target_hydration_ml').notNull().default(2500),
     activityLevel: varchar('activity_level', { length: 50 }),
     startDate: timestamp('start_date').notNull(),
     endDate: timestamp('end_date'),
@@ -507,6 +510,25 @@ export const dietPlanMealItems = pgTable(
 );
 
 
+// Hydration logs table — one row per user per calendar date
+export const hydrationLogs = pgTable(
+  'hydration_logs',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    totalMl: integer('total_ml').notNull().default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('hydration_logs_user_date_idx').on(table.userId, table.date),
+    unique('hydration_logs_user_date_unique').on(table.userId, table.date),
+  ],
+);
+
 // ============================================
 // RELATIONS
 // ============================================
@@ -519,6 +541,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   bodyCheckins: many(bodyCheckins),
   dietPlans: many(dietPlans),
   customFoods: many(foods), // Custom foods owned by user
+  hydrationLogs: many(hydrationLogs),
 }));
 
 export const foodsRelations = relations(foods, ({ one, many }) => ({
@@ -637,6 +660,13 @@ export const dietPlanMealItemsRelations = relations(dietPlanMealItems, ({ one })
   }),
 }));
 
+export const hydrationLogsRelations = relations(hydrationLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [hydrationLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {
     fields: [sessions.userId],
@@ -679,6 +709,8 @@ export const insertDietPlanMealGroupSchema = createInsertSchema(dietPlanMealGrou
 export const selectDietPlanMealGroupSchema = createSelectSchema(dietPlanMealGroups);
 export const insertDietPlanMealItemSchema = createInsertSchema(dietPlanMealItems);
 export const selectDietPlanMealItemSchema = createSelectSchema(dietPlanMealItems);
+export const insertHydrationLogSchema = createInsertSchema(hydrationLogs);
+export const selectHydrationLogSchema = createSelectSchema(hydrationLogs);
 
 // ============================================
 // TYPE EXPORTS
@@ -714,3 +746,5 @@ export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 export type Verification = typeof verifications.$inferSelect;
 export type NewVerification = typeof verifications.$inferInsert;
+export type HydrationLog = typeof hydrationLogs.$inferSelect;
+export type NewHydrationLog = typeof hydrationLogs.$inferInsert;

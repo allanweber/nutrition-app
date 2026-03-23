@@ -1,4 +1,4 @@
-# Nutrition App - Consolidated Implementation Plan
+# Vitalis - Consolidated Implementation Plan
 
 > **Last Updated**: 2026-01-21  
 > **Version**: 5.0  

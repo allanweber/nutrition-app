@@ -8,8 +8,18 @@ if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Create postgres client
-const client = postgres(connectionString, { prepare: false });
+// Singleton pattern to prevent connection pool exhaustion during Next.js hot reloads
+const globalForDb = globalThis as unknown as {
+  pgClient: postgres.Sql | undefined;
+};
+
+const client =
+  globalForDb.pgClient ??
+  postgres(connectionString, { prepare: false, max: 10 });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForDb.pgClient = client;
+}
 
 export const db = drizzle(client, { schema });
 

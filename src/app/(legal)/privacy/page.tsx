@@ -24,7 +24,7 @@ export default function PrivacyPage() {
 
         <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-6 mb-8">
           <p className="text-muted-foreground leading-relaxed">
-            At NutritionTracker, we are committed to protecting your privacy and
+            At Vitalis, we are committed to protecting your privacy and
             ensuring the security of your personal information. This Privacy
             Policy explains how we collect, use, and protect your information
             when you use our nutrition tracking service.
@@ -278,7 +278,7 @@ export default function PrivacyPage() {
         <div className="mt-16 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground text-center">
             This Privacy Policy is effective as of the date stated above and
-            governs your use of NutritionTracker.
+            governs your use of Vitalis.
           </p>
         </div>
       </div>
