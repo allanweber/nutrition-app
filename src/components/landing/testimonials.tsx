@@ -9,7 +9,7 @@ const testimonials = [
     role: 'Lost 25 lbs in 4 months',
     type: 'individual',
     image: null,
-    content: "I've tried every calorie counter out there. NutritionTracker finally made it stick - the visual progress kept me motivated and I hit my goal weight faster than I expected!",
+    content: "I've tried every calorie counter out there. Vitalis finally made it stick - the visual progress kept me motivated and I hit my goal weight faster than I expected!",
     rating: 5,
   },
   {
@@ -70,7 +70,7 @@ export default function Testimonials() {
             Loved by Thousands
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See what individuals and professionals are saying about NutritionTracker.
+            See what individuals and professionals are saying about Vitalis.
           </p>
         </motion.div>
 

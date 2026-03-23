@@ -44,7 +44,7 @@ const faqs = [
       },
       {
         question: 'Can my clients use the free tier?',
-        answer: 'Yes! Your clients can use NutritionTracker for free. They\'ll have access to all basic features, and you can view their logs and progress from your professional dashboard.',
+        answer: 'Yes! Your clients can use Vitalis for free. They\'ll have access to all basic features, and you can view their logs and progress from your professional dashboard.',
       },
       {
         question: "What's included in Enterprise?",
@@ -82,7 +82,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about NutritionTracker.
+            Everything you need to know about Vitalis.
           </p>
         </motion.div>
 

@@ -1,4 +1,4 @@
-# AGENTS.md — Nutrition App Agent Instructions (Single Source of Truth)
+# AGENTS.md — Vitalis Agent Instructions (Single Source of Truth)
 
 This document is the single source of truth for AI agents (Copilot, Claude, Gemini, etc.) working in this repository.
 
@@ -8,7 +8,7 @@ Other agent instruction files may exist only as **pointers** to this file. Do no
 
 ## Project Summary
 
-**Nutrition App** is a nutrition tracking platform for individuals and professionals (dietitians/nutritionists).
+**Vitalis** is a nutrition tracking platform for individuals and professionals (dietitians/nutritionists).
 
 Core product areas:
 

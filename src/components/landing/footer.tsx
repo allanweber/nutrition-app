@@ -49,7 +49,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-black text-lg">N</span>
               </div>
-              <span className="font-headline font-extrabold text-xl text-foreground">NutritionTracker</span>
+              <span className="font-headline font-extrabold text-xl text-foreground">Vitalis</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               The Living Archive of Human Health. Empowering precision nutrition for everyone.
@@ -117,7 +117,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border text-center">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} NutritionTracker. All rights reserved.
+            &copy; {new Date().getFullYear()} Vitalis. All rights reserved.
           </p>
         </div>
       </div>

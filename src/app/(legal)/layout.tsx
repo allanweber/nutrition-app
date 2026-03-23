@@ -51,7 +51,7 @@ export default function LegalLayout({
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} NutritionTracker. All rights reserved.
+              &copy; {new Date().getFullYear()} Vitalis. All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
               <Link href="/terms" className={`text-sm hover:text-foreground transition-colors ${pathname === '/terms' ? 'text-foreground' : 'text-muted-foreground'}`}>

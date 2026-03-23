@@ -19,6 +19,8 @@
   --color-primary-fixed: var(--primary-fixed);
   --color-on-primary-fixed: var(--on-primary-fixed);
   --color-outline-variant: var(--outline-variant);
+  --color-on-surface: var(--on-surface);
+  --color-tertiary: var(--tertiary);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -95,7 +97,9 @@
   --surface-container: oklch(0.95 0.007 160);
   --surface-container-high: oklch(0.93 0.008 160);
   --surface-container-highest: oklch(0.91 0.01 160);
+  --on-surface: var(--foreground);
   --on-surface-variant: oklch(0.45 0.03 160);
+  --tertiary: oklch(0.65 0.22 355);
   --primary-fixed: oklch(0.92 0.05 160);
   --on-primary-fixed: oklch(0.18 0.06 160);
   --outline-variant: oklch(0.87 0.01 160);
@@ -138,7 +142,9 @@
   --surface-container: oklch(0.27 0.04 262);
   --surface-container-high: oklch(0.32 0.042 260);
   --surface-container-highest: oklch(0.37 0.043 258);
+  --on-surface: var(--foreground);
   --on-surface-variant: oklch(0.65 0.025 255);
+  --tertiary: oklch(0.72 0.22 355);
   --primary-fixed: oklch(0.92 0.05 160);
   --on-primary-fixed: oklch(0.10 0.05 160);
   --outline-variant: oklch(0.45 0.043 257);
@@ -150,7 +156,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    scrollbar-gutter: stable;
   }
+}
+
+.editorial-gradient {
+  background: linear-gradient(135deg, var(--primary), oklch(0.35 0.14 160));
 }
 
 @media (prefers-reduced-motion: reduce) {

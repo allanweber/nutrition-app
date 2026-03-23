@@ -87,7 +87,7 @@ export default function LoginPage() {
             <span className="text-white font-bold text-xl">N</span>
           </div>
           <span className="text-xl font-bold text-white">
-            NutritionTracker
+            Vitalis
           </span>
         </Link>
 
@@ -157,7 +157,7 @@ export default function LoginPage() {
                   </span>
                 </div>
                 <span className="text-xl font-bold text-foreground">
-                  NutritionTracker
+                  Vitalis
                 </span>
               </Link>
             </div>

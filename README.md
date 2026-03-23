@@ -1,4 +1,4 @@
-# Nutrition App
+# Vitalis
 
 ## Getting Started
 
@@ -56,7 +56,7 @@ At minimum, you will need:
 - `GOOGLE_CLIENT_ID` (optional if you don't use Google sign-in)
 - `GOOGLE_CLIENT_SECRET` (optional if you don't use Google sign-in)
 - `RESEND_API_KEY` (required for email verification/password reset emails)
-- `EMAIL_FROM` (e.g. `Nutrition App <no-reply@yourdomain.com>`)
+- `EMAIL_FROM` (e.g. `Vitalis <no-reply@yourdomain.com>`)
 
 ## Drizzle Commands
 

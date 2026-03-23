@@ -113,7 +113,7 @@ export default function SignupPage() {
               <span className="text-white font-bold text-2xl">N</span>
             </div>
             <span className="text-2xl font-bold text-white">
-              NutritionTracker
+              Vitalis
             </span>
           </Link>
         </div>
@@ -208,7 +208,7 @@ export default function SignupPage() {
                   </span>
                 </div>
                 <span className="text-xl font-bold text-foreground">
-                  NutritionTracker
+                  Vitalis
                 </span>
               </Link>
             </div>

@@ -7,7 +7,7 @@
   - `BETTER_AUTH_SECRET`
   - `DATABASE_URL`
   - `RESEND_API_KEY`
-  - `EMAIL_FROM` (e.g. `Nutrition App <no-reply@yourdomain>`)
+  - `EMAIL_FROM` (e.g. `Vitalis <no-reply@yourdomain>`)
 
 ## Run locally
 

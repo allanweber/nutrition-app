@@ -1,4 +1,5 @@
 import { DashboardNav } from '@/components/dashboard-nav';
+import { DashboardFooter } from '@/components/dashboard-footer';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { emailVerificationChallenges } from '@/server/db/schema';
@@ -40,9 +41,11 @@ export default async function DashboardLayout({
       />
 
       {/* Main content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-6">
         {children}
       </main>
+
+      <DashboardFooter />
     </div>
   );
 }

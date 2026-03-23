@@ -18,8 +18,8 @@
 
 **Purpose**: Create the new component directory structure and stub barrel export.
 
-- [ ] T001 Create component subdirectories: `src/components/dashboard/shared/`, `src/components/dashboard/calories/`, `src/components/dashboard/hydration/`, `src/components/dashboard/macronutrients/`, `src/components/dashboard/weekly-momentum/`, `src/components/dashboard/daily-schedule/`
-- [ ] T002 Create stub barrel export file `src/components/dashboard/index.ts` (will be updated as components are added in later phases)
+- [x] T001 Create component subdirectories: `src/components/dashboard/shared/`, `src/components/dashboard/calories/`, `src/components/dashboard/hydration/`, `src/components/dashboard/macronutrients/`, `src/components/dashboard/weekly-momentum/`, `src/components/dashboard/daily-schedule/`
+- [x] T002 Create stub barrel export file `src/components/dashboard/index.ts` (will be updated as components are added in later phases)
 
 ---
 
@@ -29,14 +29,14 @@
 
 **⚠️ CRITICAL**: No user story phase can begin until this phase is complete.
 
-- [ ] T003 Add `hydrationLogs` Drizzle table definition, Zod schemas (`insertHydrationLogSchema`, `selectHydrationLogSchema`), and type aliases (`HydrationLog`, `NewHydrationLog`) to `src/server/db/schema.ts` per `specs/005-dashboard-redesign/data-model.md`
-- [ ] T004 Run `npx drizzle-kit generate` to produce the `hydration_logs` migration file and commit it to the repo (depends on T003)
-- [ ] T005 Create `src/server/services/dashboard.service.ts` with all 5 server-side data functions: `getDailySummary`, `getHydrationLog`, `addWater`, `getWeeklySnapshot`, `getDailySchedule` — each returning typed DTOs matching `specs/005-dashboard-redesign/contracts/api-dashboard.md`, with default goal fallbacks when `hasGoal: false` (depends on T003)
-- [ ] T006 [P] Create `src/app/api/dashboard/daily-summary/route.ts` — `GET` handler with optional `date` Zod-validated query param, `getCurrentUser()` auth check → 401 if missing, calls `getDailySummary`, returns `DailySummary` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
-- [ ] T007 [P] Create `src/app/api/dashboard/hydration/route.ts` — `GET` handler, auth check, calls `getHydrationLog` (upserts zero-row if none exists for today), returns `HydrationLog` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
-- [ ] T008 [P] Create `src/app/api/dashboard/hydration/add/route.ts` — `POST` handler, no request body, auth check, calls `addWater` incrementing `total_ml` by 250 ml, returns updated `HydrationLog` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
-- [ ] T009 [P] Create `src/app/api/dashboard/weekly-snapshot/route.ts` — `GET` handler, auth check, calls `getWeeklySnapshot` returning all 7 entries for current Mon–Sun calendar week (future days: `hasData: false`); `export const dynamic = 'force-dynamic'` (depends on T005)
-- [ ] T010 [P] Create `src/app/api/dashboard/schedule/route.ts` — `GET` handler with optional Zod-validated `date` param, auth check, calls `getDailySchedule` returning `{ morning, midday, evening }` groups (always all three keys); `export const dynamic = 'force-dynamic'` (depends on T005)
+- [x] T003 Add `hydrationLogs` Drizzle table definition, Zod schemas (`insertHydrationLogSchema`, `selectHydrationLogSchema`), and type aliases (`HydrationLog`, `NewHydrationLog`) to `src/server/db/schema.ts` per `specs/005-dashboard-redesign/data-model.md`
+- [x] T004 Run `npx drizzle-kit generate` to produce the `hydration_logs` migration file and commit it to the repo (depends on T003)
+- [x] T005 Create `src/server/services/dashboard.service.ts` with all 5 server-side data functions: `getDailySummary`, `getHydrationLog`, `addWater`, `getWeeklySnapshot`, `getDailySchedule` — each returning typed DTOs matching `specs/005-dashboard-redesign/contracts/api-dashboard.md`, with default goal fallbacks when `hasGoal: false` (depends on T003)
+- [x] T006 [P] Create `src/app/api/dashboard/daily-summary/route.ts` — `GET` handler with optional `date` Zod-validated query param, `getCurrentUser()` auth check → 401 if missing, calls `getDailySummary`, returns `DailySummary` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
+- [x] T007 [P] Create `src/app/api/dashboard/hydration/route.ts` — `GET` handler, auth check, calls `getHydrationLog` (upserts zero-row if none exists for today), returns `HydrationLog` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
+- [x] T008 [P] Create `src/app/api/dashboard/hydration/add/route.ts` — `POST` handler, no request body, auth check, calls `addWater` incrementing `total_ml` by 250 ml, returns updated `HydrationLog` DTO; `export const dynamic = 'force-dynamic'` (depends on T005)
+- [x] T009 [P] Create `src/app/api/dashboard/weekly-snapshot/route.ts` — `GET` handler, auth check, calls `getWeeklySnapshot` returning all 7 entries for current Mon–Sun calendar week (future days: `hasData: false`); `export const dynamic = 'force-dynamic'` (depends on T005)
+- [x] T010 [P] Create `src/app/api/dashboard/schedule/route.ts` — `GET` handler with optional Zod-validated `date` param, auth check, calls `getDailySchedule` returning `{ morning, midday, evening }` groups (always all three keys); `export const dynamic = 'force-dynamic'` (depends on T005)
 
 **Checkpoint**: All 5 API routes respond correctly with typed data. `dashboard.service.ts` functions tested via API calls.
 
@@ -48,12 +48,12 @@
 
 **Independent Test**: Navigate to `/dashboard` — verify 12-column bento grid at `md+` breakpoints stacks to single column on mobile; navigation shows "Vitalis" brand with 5 links; `/meal-planner` and `/exercise-library` routes return "Coming soon" pages.
 
-- [ ] T011 [US1] Update `src/components/dashboard-nav.tsx`: brand name → "Vitalis" (italic, `font-headline`, `text-primary`), nav links → Dashboard / Food Log / Meal Planner / Exercise Library / Goals, `fixed top-0 z-50` positioning, `bg-background/80 backdrop-blur-md`, active-link bottom border (`border-b-2 border-primary`), notifications Lucide icon button + profile button on the right
-- [ ] T012 [P] [US1] Create `src/app/(dashboard)/meal-planner/page.tsx` — async RSC with heading "Meal Planner" and "Coming soon" message; no data fetching
-- [ ] T013 [P] [US1] Create `src/app/(dashboard)/exercise-library/page.tsx` — async RSC with heading "Exercise Library" and "Coming soon" message; no data fetching
-- [ ] T014 [US1] Update `src/app/(dashboard)/layout.tsx`: replace `max-w-6xl mx-auto` with `max-w-screen-2xl mx-auto`, add `pt-16` top padding on `<main>` for the fixed nav; keep existing auth check and session logic unchanged
-- [ ] T015 [US1] Create `src/components/dashboard/shared/bento-cell.tsx` — wrapper `<div>` with `rounded-[24px] bg-surface-container-low border border-outline-variant shadow-sm p-8`; props: `children: React.ReactNode`, `className?: string`
-- [ ] T016 [US1] Replace `src/app/(dashboard)/dashboard/page.tsx` with an async Server Component: compute `today` date string; render inline page header (`<h1>Today</h1>` + `<Link href="/food-log">` primary button "Log Activity" — no separate component file); render 12-column bento grid (`grid grid-cols-1 md:grid-cols-12 gap-6`) with 5 `<BentoCell>` placeholder slots — Calories (`md:col-span-8`), Hydration (`md:col-span-4`), Macros (`md:col-span-5`), Weekly (`md:col-span-7`), Schedule (`md:col-span-12`)
+- [x] T011 [US1] Update `src/components/dashboard-nav.tsx`: brand name → "Vitalis" (italic, `font-headline`, `text-primary`), nav links → Dashboard / Food Log / Meal Planner / Exercise Library / Goals, `fixed top-0 z-50` positioning, `bg-background/80 backdrop-blur-md`, active-link bottom border (`border-b-2 border-primary`), notifications Lucide icon button + profile button on the right
+- [x] T012 [P] [US1] Create `src/app/(dashboard)/meal-planner/page.tsx` — async RSC with heading "Meal Planner" and "Coming soon" message; no data fetching
+- [x] T013 [P] [US1] Create `src/app/(dashboard)/exercise-library/page.tsx` — async RSC with heading "Exercise Library" and "Coming soon" message; no data fetching
+- [x] T014 [US1] Update `src/app/(dashboard)/layout.tsx`: replace `max-w-6xl mx-auto` with `max-w-screen-2xl mx-auto`, add `pt-16` top padding on `<main>` for the fixed nav; keep existing auth check and session logic unchanged
+- [x] T015 [US1] Create `src/components/dashboard/shared/bento-cell.tsx` — wrapper `<div>` with `rounded-[24px] bg-surface-container-low border border-outline-variant shadow-sm p-8`; props: `children: React.ReactNode`, `className?: string`
+- [x] T016 [US1] Replace `src/app/(dashboard)/dashboard/page.tsx` with an async Server Component: compute `today` date string; render inline page header (`<h1>Today</h1>` + `<Link href="/food-log">` primary button "Log Activity" — no separate component file); render 12-column bento grid (`grid grid-cols-1 md:grid-cols-12 gap-6`) with 5 `<BentoCell>` placeholder slots — Calories (`md:col-span-8`), Hydration (`md:col-span-4`), Macros (`md:col-span-5`), Weekly (`md:col-span-7`), Schedule (`md:col-span-12`)
 
 **Checkpoint**: Dashboard page renders bento grid with 5 placeholder cells. Nav has correct links. Mobile view stacks to single column.
 
@@ -65,7 +65,7 @@
 
 **Independent Test**: Toggle the existing theme control. Verify all dashboard layout elements adopt correct surface, text, and primary colors in both light and dark modes. Reload the page — active theme is preserved with no visible flash.
 
-- [ ] T017 [US2] Update `src/app/globals.css`: add `--on-surface`, `--on-surface-variant`, `--secondary`, `--tertiary` CSS variables (OKLch values) to both `:root` (light) and `.dark` blocks; add `.editorial-gradient` utility class (`background: linear-gradient(135deg, var(--primary), oklch(0.35 0.14 160))`); reference `specs/005-dashboard-redesign/plan.md` Phase B for exact OKLch values
+- [x] T017 [US2] Update `src/app/globals.css`: add `--on-surface`, `--on-surface-variant`, `--secondary`, `--tertiary` CSS variables (OKLch values) to both `:root` (light) and `.dark` blocks; add `.editorial-gradient` utility class (`background: linear-gradient(135deg, var(--primary), oklch(0.35 0.14 160))`); reference `specs/005-dashboard-redesign/plan.md` Phase B for exact OKLch values
 
 **Checkpoint**: Both themes render correct colors across the dashboard layout with no flash on reload (next-themes inline script handles this — no layout.tsx changes needed).
 
@@ -77,11 +77,11 @@
 
 **Independent Test**: Navigate to dashboard and verify Calories cell: circular ring fills proportionally to `percentConsumed`; ring is empty at 0 calories; ring is full when over goal; StatCards show burned and net balance values; SectionNudge link appears when `hasGoal: false`.
 
-- [ ] T018 [P] [US4] Create `src/components/dashboard/shared/stat-card.tsx` — props: `label: string`, `value: string | number`, `unit?: string`; renders a small labeled metric card matching the "Burned" and "Net Balance" design in the Calories cell
-- [ ] T019 [P] [US4] Create `src/components/dashboard/shared/section-nudge.tsx` — props: `message?: string`; renders "Set your goals →" text with a link to `/goals`; displayed inline adjacent to sections where `hasGoal: false`
-- [ ] T020 [P] [US4] Create `src/components/dashboard/calories/circular-progress.tsx` — SVG ring indicator using `stroke-dashoffset`; props: `percentage: number`, `label: string`, `value: string | number`, `size?: number`; ring fills proportionally to percentage; fills completely when percentage ≥ 100
-- [ ] T021 [US4] Create `src/components/dashboard/calories/calories-content.tsx` — renders: tag line, large calorie number + `/ {calorieGoal}` denominator, `<StatCard>` for Burned, `<StatCard>` for Net Balance, `<CircularProgress>` with percentage; `<SectionNudge>` when `hasGoal: false`; receives `DailySummary` DTO as props (depends on T018, T019, T020)
-- [ ] T022 [US4] Create `src/components/dashboard/calories/calories-section.tsx` — async RSC; `getCurrentUser()` for userId; calls `getDailySummary(userId, date)` from `src/server/services/dashboard.service.ts`; renders `<BentoCell><CaloriesContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Calories `<BentoCell>` placeholder with `<CaloriesSection date={today} />` (depends on T021)
+- [x] T018 [P] [US4] Create `src/components/dashboard/shared/stat-card.tsx` — props: `label: string`, `value: string | number`, `unit?: string`; renders a small labeled metric card matching the "Burned" and "Net Balance" design in the Calories cell
+- [x] T019 [P] [US4] Create `src/components/dashboard/shared/section-nudge.tsx` — props: `message?: string`; renders "Set your goals →" text with a link to `/goals`; displayed inline adjacent to sections where `hasGoal: false`
+- [x] T020 [P] [US4] Create `src/components/dashboard/calories/circular-progress.tsx` — SVG ring indicator using `stroke-dashoffset`; props: `percentage: number`, `label: string`, `value: string | number`, `size?: number`; ring fills proportionally to percentage; fills completely when percentage ≥ 100
+- [x] T021 [US4] Create `src/components/dashboard/calories/calories-content.tsx` — renders: tag line, large calorie number + `/ {calorieGoal}` denominator, `<StatCard>` for Burned, `<StatCard>` for Net Balance, `<CircularProgress>` with percentage; `<SectionNudge>` when `hasGoal: false`; receives `DailySummary` DTO as props (depends on T018, T019, T020)
+- [x] T022 [US4] Create `src/components/dashboard/calories/calories-section.tsx` — async RSC; `getCurrentUser()` for userId; calls `getDailySummary(userId, date)` from `src/server/services/dashboard.service.ts`; renders `<BentoCell><CaloriesContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Calories `<BentoCell>` placeholder with `<CaloriesSection date={today} />` (depends on T021)
 
 **Checkpoint**: Calories bento cell renders with real data from `/api/dashboard/daily-summary`.
 
@@ -93,9 +93,9 @@
 
 **Independent Test**: Navigate to dashboard and verify Macros cell: three bars render with correct color coding (rose/amber/sky); bars fill proportionally to goal percentage; empty bars show label and target; over-goal bars fill completely; macro colors match `MACRO_COLORS` from `nutrition-constants.ts`.
 
-- [ ] T023 [US5] Create `src/components/dashboard/shared/progress-bar.tsx` — props: `label: string`, `value: number`, `goal: number`, `unit: string`, `color: string` (Tailwind bg class from `MACRO_COLORS`), `percentage?: number`; renders label, `{value}/{goal}{unit}` text, filled bar; bar fills completely when over goal; zero-safe (empty bar, label still shows)
-- [ ] T024 [US5] Create `src/components/dashboard/macronutrients/macronutrients-content.tsx` — renders three `<ProgressBar>` components using `MACRO_COLORS` from `src/lib/nutrition-constants.ts` (Protein: `rose-500`, Carbs: `amber-500`, Fat: `sky-500`). Do NOT use the `--tertiary` CSS token for macro bars — that token is for other accents only. `<SectionNudge>` when `hasGoal: false`; receives `DailySummary` DTO as props (depends on T023)
-- [ ] T025 [US5] Create `src/components/dashboard/macronutrients/macronutrients-section.tsx` — async RSC; calls `getDailySummary(userId, date)`; renders `<BentoCell><MacronutrientsContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Macros placeholder with `<MacronutrientsSection date={today} />` (depends on T024)
+- [x] T023 [US5] Create `src/components/dashboard/shared/progress-bar.tsx` — props: `label: string`, `value: number`, `goal: number`, `unit: string`, `color: string` (Tailwind bg class from `MACRO_COLORS`), `percentage?: number`; renders label, `{value}/{goal}{unit}` text, filled bar; bar fills completely when over goal; zero-safe (empty bar, label still shows)
+- [x] T024 [US5] Create `src/components/dashboard/macronutrients/macronutrients-content.tsx` — renders three `<ProgressBar>` components using `MACRO_COLORS` from `src/lib/nutrition-constants.ts` (Protein: `rose-500`, Carbs: `amber-500`, Fat: `sky-500`). Do NOT use the `--tertiary` CSS token for macro bars — that token is for other accents only. `<SectionNudge>` when `hasGoal: false`; receives `DailySummary` DTO as props (depends on T023)
+- [x] T025 [US5] Create `src/components/dashboard/macronutrients/macronutrients-section.tsx` — async RSC; calls `getDailySummary(userId, date)`; renders `<BentoCell><MacronutrientsContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Macros placeholder with `<MacronutrientsSection date={today} />` (depends on T024)
 
 **Checkpoint**: Macronutrients bento cell renders with real data and correct color coding from `nutrition-constants.ts`.
 
@@ -107,9 +107,9 @@
 
 **Independent Test**: Simulate a delayed response for one section — its skeleton appears while others load normally. Simulate a fetch failure — error state with retry button appears for that section only; clicking retry calls `router.refresh()` and re-streams only that section; other sections are unaffected.
 
-- [ ] T026 [US3] Create `src/components/dashboard/shared/section-skeleton.tsx` — props: `variant: 'calories' | 'hydration' | 'macros' | 'weekly' | 'schedule'`; `animate-pulse` skeleton per variant matching the target section's height and approximate shape; `aria-busy="true"`, `aria-label="Loading [section name]"`
-- [ ] T027 [US3] Create `src/components/dashboard/shared/section-error-boundary.tsx` — `'use client'` React class `ErrorBoundary`; renders error icon (Lucide) + "Something went wrong" message + "Retry" button; retry calls `useRouter().refresh()` wrapped in `startTransition`; visual height matches skeleton so layout does not shift
-- [ ] T028 [US3] Update `src/app/(dashboard)/dashboard/page.tsx` to wrap each of the 5 section slots with `<SectionErrorBoundary>` (outer) + `<Suspense fallback={<SectionSkeleton variant="..." />}>` (inner). `<CaloriesSection />` (from T022) and `<MacronutrientsSection />` (from T025) are already in place — wrap them in ErrorBoundary+Suspense without replacing their content. Hydration, Weekly, Schedule slots still contain placeholder divs — wrap those too; their real sections will be inserted in Phases 8–10. (depends on T022, T025)
+- [x] T026 [US3] Create `src/components/dashboard/shared/section-skeleton.tsx` — props: `variant: 'calories' | 'hydration' | 'macros' | 'weekly' | 'schedule'`; `animate-pulse` skeleton per variant matching the target section's height and approximate shape; `aria-busy="true"`, `aria-label="Loading [section name]"`
+- [x] T027 [US3] Create `src/components/dashboard/shared/section-error-boundary.tsx` — `'use client'` React class `ErrorBoundary`; renders error icon (Lucide) + "Something went wrong" message + "Retry" button; retry calls `useRouter().refresh()` wrapped in `startTransition`; visual height matches skeleton so layout does not shift
+- [x] T028 [US3] Update `src/app/(dashboard)/dashboard/page.tsx` to wrap each of the 5 section slots with `<SectionErrorBoundary>` (outer) + `<Suspense fallback={<SectionSkeleton variant="..." />}>` (inner). `<CaloriesSection />` (from T022) and `<MacronutrientsSection />` (from T025) are already in place — wrap them in ErrorBoundary+Suspense without replacing their content. Hydration, Weekly, Schedule slots still contain placeholder divs — wrap those too; their real sections will be inserted in Phases 8–10. (depends on T022, T025)
 
 **Checkpoint**: All 5 section slots have skeleton fallbacks and error boundaries. Retry button re-streams failed section without affecting others.
 
@@ -121,9 +121,9 @@
 
 **Independent Test**: Navigate to dashboard. Hydration cell shows liters consumed and correct progress percentage. Clicking the add-water button POSTs to `/api/dashboard/hydration/add` and updates the displayed value — other sections are not visually disrupted.
 
-- [ ] T029 [P] [US8] Create Server Action `src/server/actions/hydration.ts` — `addWaterAction()` validates session via `getCurrentUser()` (throws if unauthenticated), calls `addWater(userId, today)` from `dashboard.service.ts`, then calls `revalidatePath('/dashboard')`; returns updated `HydrationLog` DTO. Then create `src/components/dashboard/hydration/add-water-button.tsx` — `'use client'`; calls `addWaterAction()` via `useTransition`; shows Lucide loading spinner while `isPending`; no manual `router.refresh()` needed (revalidatePath handles it)
-- [ ] T030 [US8] Create `src/components/dashboard/hydration/hydration-content.tsx` — renders total liters as large number, `<ProgressBar>` for `percentConsumed` (clamped 0–100), `<AddWaterButton>`; receives `HydrationLog` DTO as props (depends on T029)
-- [ ] T031 [US8] Create `src/components/dashboard/hydration/hydration-section.tsx` — async RSC; calls `getHydrationLog(userId, today)`; renders `<BentoCell><HydrationContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Hydration placeholder with `<HydrationSection />` inside existing Suspense boundary from T028 (depends on T030)
+- [x] T029 [P] [US8] Create Server Action `src/server/actions/hydration.ts` — `addWaterAction()` validates session via `getCurrentUser()` (throws if unauthenticated), calls `addWater(userId, today)` from `dashboard.service.ts`, then calls `revalidatePath('/dashboard')`; returns updated `HydrationLog` DTO. Then create `src/components/dashboard/hydration/add-water-button.tsx` — `'use client'`; calls `addWaterAction()` via `useTransition`; shows Lucide loading spinner while `isPending`; no manual `router.refresh()` needed (revalidatePath handles it)
+- [x] T030 [US8] Create `src/components/dashboard/hydration/hydration-content.tsx` — renders total liters as large number, `<ProgressBar>` for `percentConsumed` (clamped 0–100), `<AddWaterButton>`; receives `HydrationLog` DTO as props (depends on T029)
+- [x] T031 [US8] Create `src/components/dashboard/hydration/hydration-section.tsx` — async RSC; calls `getHydrationLog(userId, today)`; renders `<BentoCell><HydrationContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Hydration placeholder with `<HydrationSection />` inside existing Suspense boundary from T028 (depends on T030)
 
 **Checkpoint**: Hydration bento cell renders with live data. Add-water button increments intake and progress bar updates.
 
@@ -135,8 +135,8 @@
 
 **Independent Test**: Navigate to dashboard. Weekly cell shows 7 bars for Mon–Sun; bar heights proportional to `adherenceRatio`; current day bar uses primary color; future/empty days show minimal bars; `MON`–`SUN` day labels are present below bars.
 
-- [ ] T032 [US6] Create `src/components/dashboard/weekly-momentum/weekly-momentum-chart.tsx` — `'use client'`; Recharts `BarChart` with `ResponsiveContainer`; bar height = `Math.min(adherenceRatio, 1) × 100%`; `isCurrentDay` bar fill = `var(--primary)`, other bars = `var(--surface-container)`; `dayLabel` text below each bar; current day label uses `text-primary`; no axes or grid lines (minimal aesthetic)
-- [ ] T033 [US6] Create `src/components/dashboard/weekly-momentum/weekly-momentum-section.tsx` — async RSC; calls `getWeeklySnapshot(userId)`; renders `<BentoCell><WeeklyMomentumChart days={snapshot.days} /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Weekly placeholder with `<WeeklyMomentumSection />` inside existing Suspense boundary (depends on T032)
+- [x] T032 [US6] Create `src/components/dashboard/weekly-momentum/weekly-momentum-chart.tsx` — `'use client'`; Recharts `BarChart` with `ResponsiveContainer`; bar height = `Math.min(adherenceRatio, 1) × 100%`; `isCurrentDay` bar fill = `var(--primary)`, other bars = `var(--surface-container)`; `dayLabel` text below each bar; current day label uses `text-primary`; no axes or grid lines (minimal aesthetic)
+- [x] T033 [US6] Create `src/components/dashboard/weekly-momentum/weekly-momentum-section.tsx` — async RSC; calls `getWeeklySnapshot(userId)`; renders `<BentoCell><WeeklyMomentumChart days={snapshot.days} /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Weekly placeholder with `<WeeklyMomentumSection />` inside existing Suspense boundary (depends on T032)
 
 **Checkpoint**: Weekly Momentum bento cell renders with live 7-day data and correct visual highlight for current day.
 
@@ -148,8 +148,8 @@
 
 **Independent Test**: Navigate to dashboard with meals logged in morning and midday only. Verify: all three time-group cards render; morning and midday show entries with Lucide icon, time, name, and calories; evening shows "Nothing logged yet" placeholder; "View All" navigates to `/food-log`.
 
-- [ ] T034 [US7] Create `src/components/dashboard/daily-schedule/daily-schedule-content.tsx` — renders three time-group cards (Morning, Midday, Evening) always; each card lists `ScheduleEntry` items with Lucide icon, `time`, `name`, `calories` value; empty group shows "Nothing logged yet" placeholder text; icon background per group (Morning: primary/10 tint, Midday: `amber-100`, Evening: pink/10 tint); "View All" link → `/food-log`; receives `{ morning: ScheduleEntry[], midday: ScheduleEntry[], evening: ScheduleEntry[] }` as props
-- [ ] T035 [US7] Create `src/components/dashboard/daily-schedule/daily-schedule-section.tsx` — async RSC; calls `getDailySchedule(userId, date)`; renders `<BentoCell><DailyScheduleContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Schedule placeholder with `<DailyScheduleSection date={today} />` inside existing Suspense boundary (depends on T034)
+- [x] T034 [US7] Create `src/components/dashboard/daily-schedule/daily-schedule-content.tsx` — renders three time-group cards (Morning, Midday, Evening) always; each card lists `ScheduleEntry` items with Lucide icon, `time`, `name`, `calories` value; empty group shows "Nothing logged yet" placeholder text; icon background per group (Morning: primary/10 tint, Midday: `amber-100`, Evening: pink/10 tint); "View All" link → `/food-log`; receives `{ morning: ScheduleEntry[], midday: ScheduleEntry[], evening: ScheduleEntry[] }` as props
+- [x] T035 [US7] Create `src/components/dashboard/daily-schedule/daily-schedule-section.tsx` — async RSC; calls `getDailySchedule(userId, date)`; renders `<BentoCell><DailyScheduleContent ... /></BentoCell>`; update `src/app/(dashboard)/dashboard/page.tsx` to replace Schedule placeholder with `<DailyScheduleSection date={today} />` inside existing Suspense boundary (depends on T034)
 
 **Checkpoint**: Daily Schedule bento cell renders today's meals grouped by time of day. Empty groups show placeholders.
 
@@ -159,14 +159,14 @@
 
 **Purpose**: Deduplication optimization, accessibility, responsive validation, footer, barrel export, and final quality checks.
 
-- [ ] T036 Wrap `getDailySummary` with `React.cache()` in `src/server/services/dashboard.service.ts` to deduplicate the database query between `CaloriesSection` and `MacronutrientsSection` within a single RSC render tree
-- [ ] T037 [P] Add ARIA attributes to `src/components/dashboard/calories/circular-progress.tsx`: `role="img"`, `aria-label` describing current percentage (e.g., "Calories: 67% of daily goal")
-- [ ] T038 [P] Add ARIA attributes to `src/components/dashboard/shared/progress-bar.tsx`: `role="progressbar"`, `aria-valuenow={Math.round(percentage)}`, `aria-valuemin={0}`, `aria-valuemax={100}`, `aria-label` with macro or hydration name
-- [ ] T039 [P] Create `src/components/dashboard-footer.tsx` — "Vitalis" brand name, copyright text, Privacy Policy / Terms / Support links; import into `src/app/(dashboard)/layout.tsx` and render below `<main>`
-- [ ] T040 Verify responsive layout from 375px to 2560px: bento grid stacks to `grid-cols-1` on mobile, all 5 sections readable without horizontal scroll, no overlapping elements at any viewport — fix any issues found
-- [ ] T041 Update `src/components/dashboard/index.ts` barrel export with all new components: `BentoCell`, `StatCard`, `SectionNudge`, `CircularProgress`, `ProgressBar`, `SectionSkeleton`, `SectionErrorBoundary`
-- [ ] T042 [P] Create `tests/dashboard/dashboard.spec.ts` — Playwright E2E covering: (1) authenticated user navigates to `/dashboard` → all 5 bento cells visible; (2) Hydration add-water button clicked → `totalLiters` value increases; (3) dashboard renders on 375px viewport without horizontal scroll; (4) theme toggle switches `dark` class on `<html>` element — no flash on reload
-- [ ] T043 Run `npm test && npm run lint` and resolve all type errors and lint violations
+- [x] T036 Wrap `getDailySummary` with `React.cache()` in `src/server/services/dashboard.service.ts` to deduplicate the database query between `CaloriesSection` and `MacronutrientsSection` within a single RSC render tree
+- [x] T037 [P] Add ARIA attributes to `src/components/dashboard/calories/circular-progress.tsx`: `role="img"`, `aria-label` describing current percentage (e.g., "Calories: 67% of daily goal")
+- [x] T038 [P] Add ARIA attributes to `src/components/dashboard/shared/progress-bar.tsx`: `role="progressbar"`, `aria-valuenow={Math.round(percentage)}`, `aria-valuemin={0}`, `aria-valuemax={100}`, `aria-label` with macro or hydration name
+- [x] T039 [P] Create `src/components/dashboard-footer.tsx` — "Vitalis" brand name, copyright text, Privacy Policy / Terms / Support links; import into `src/app/(dashboard)/layout.tsx` and render below `<main>`
+- [x] T040 Verify responsive layout from 375px to 2560px: bento grid stacks to `grid-cols-1` on mobile, all 5 sections readable without horizontal scroll, no overlapping elements at any viewport — fix any issues found
+- [x] T041 Update `src/components/dashboard/index.ts` barrel export with all new components: `BentoCell`, `StatCard`, `SectionNudge`, `CircularProgress`, `ProgressBar`, `SectionSkeleton`, `SectionErrorBoundary`
+- [x] T042 [P] Create `tests/dashboard/dashboard.spec.ts` — Playwright E2E covering: (1) authenticated user navigates to `/dashboard` → all 5 bento cells visible; (2) Hydration add-water button clicked → `totalLiters` value increases; (3) dashboard renders on 375px viewport without horizontal scroll; (4) theme toggle switches `dark` class on `<html>` element — no flash on reload
+- [x] T043 Run `npm test && npm run lint` and resolve all type errors and lint violations
 
 ---
 
