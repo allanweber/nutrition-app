@@ -91,14 +91,16 @@ A new **`hydration_logs` database table** must be created. The schema currently 
 
 ```
 hydration_logs
-  id              serial PK
+  id              uuid PK (UUID7)
   user_id         text FK → users.id
   date            date NOT NULL
   total_ml        integer NOT NULL DEFAULT 0
-  goal_ml         integer NOT NULL DEFAULT 2500
   created_at      timestamp
   updated_at      timestamp
   UNIQUE(user_id, date)
+```
+Hydration goal is sourced from `nutrition_goals.target_hydration_ml` (default 2500 ml) — not stored on this table.
+```
 ```
 
 The quick-add water button increments `total_ml` by 250 (one glass). The upsert pattern (`INSERT ... ON CONFLICT DO UPDATE`) ensures one row per user per day.

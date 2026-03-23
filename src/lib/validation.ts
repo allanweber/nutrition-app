@@ -81,9 +81,8 @@ export const nutritionGoalsSchema = z.object({
 })
 
 // Food log ID validation
-export const foodLogIdSchema = z.number()
-  .int('Food log ID must be an integer')
-  .positive('Food log ID must be positive')
+export const foodLogIdSchema = z.string()
+  .uuid('Food log ID must be a valid UUID')
 
 // ============================================
 // VALIDATION HELPER FUNCTIONS
@@ -125,6 +124,6 @@ export function validateNutritionGoals(goals: unknown): z.infer<typeof nutrition
   return validateAndSanitize(nutritionGoalsSchema, goals, 'nutrition goals')
 }
 
-export function validateFoodLogId(id: number): number {
+export function validateFoodLogId(id: string): string {
   return validateAndSanitize(foodLogIdSchema, id, 'food log ID')
 }

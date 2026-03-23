@@ -83,7 +83,7 @@ export function useDeleteFoodLogMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (logId: number): Promise<void> => {
+    mutationFn: async (logId: string): Promise<void> => {
       const response = await fetch(`/api/food-logs/${logId}`, {
         method: 'DELETE',
       })

@@ -19,9 +19,9 @@ CREATE TABLE "account" (
 );
 --> statement-breakpoint
 CREATE TABLE "body_checkins" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
-	"goal_id" integer,
+	"goal_id" uuid,
 	"check_in_date" timestamp NOT NULL,
 	"input_unit_system" varchar(10),
 	"weight_kg" numeric(10, 2) NOT NULL,
@@ -33,8 +33,8 @@ CREATE TABLE "body_checkins" (
 );
 --> statement-breakpoint
 CREATE TABLE "diet_plan_meal_groups" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"diet_plan_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"diet_plan_id" uuid NOT NULL,
 	"meal_type" "meal_type" NOT NULL,
 	"day_of_week" integer,
 	"scheduled_at" timestamp,
@@ -43,9 +43,9 @@ CREATE TABLE "diet_plan_meal_groups" (
 );
 --> statement-breakpoint
 CREATE TABLE "diet_plan_meal_items" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"group_id" integer NOT NULL,
-	"food_id" integer,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"group_id" uuid NOT NULL,
+	"food_id" uuid,
 	"quantity" numeric(10, 2) NOT NULL,
 	"serving_unit" varchar(100),
 	"food_name" varchar(500) NOT NULL,
@@ -66,9 +66,9 @@ CREATE TABLE "diet_plan_meal_items" (
 );
 --> statement-breakpoint
 CREATE TABLE "diet_plan_meals" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"diet_plan_id" integer NOT NULL,
-	"food_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"diet_plan_id" uuid NOT NULL,
+	"food_id" uuid NOT NULL,
 	"meal_type" "meal_type" NOT NULL,
 	"quantity" numeric(10, 2) NOT NULL,
 	"serving_unit" varchar(100),
@@ -77,7 +77,7 @@ CREATE TABLE "diet_plan_meals" (
 );
 --> statement-breakpoint
 CREATE TABLE "diet_plans" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"client_id" text NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" text,
@@ -110,8 +110,8 @@ CREATE TABLE "email_verification_challenge" (
 );
 --> statement-breakpoint
 CREATE TABLE "food_alt_measures" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"food_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"food_id" uuid NOT NULL,
 	"serving_weight" numeric(10, 2) NOT NULL,
 	"measure" varchar(100) NOT NULL,
 	"seq" integer DEFAULT 1,
@@ -120,9 +120,9 @@ CREATE TABLE "food_alt_measures" (
 );
 --> statement-breakpoint
 CREATE TABLE "food_log_items" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"meal_id" integer NOT NULL,
-	"food_id" integer,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"meal_id" uuid NOT NULL,
+	"food_id" uuid,
 	"quantity" numeric(10, 2) NOT NULL,
 	"serving_unit" varchar(100),
 	"food_name" varchar(500) NOT NULL,
@@ -143,18 +143,18 @@ CREATE TABLE "food_log_items" (
 );
 --> statement-breakpoint
 CREATE TABLE "food_log_meals" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"meal_type" "meal_type" NOT NULL,
 	"consumed_at" timestamp NOT NULL,
-	"source_diet_plan_meal_group_id" integer,
+	"source_diet_plan_meal_group_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "food_photos" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"food_id" integer NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
+	"food_id" uuid NOT NULL,
 	"thumb" varchar(500),
 	"medium" varchar(500),
 	"highres" varchar(500),
@@ -163,7 +163,7 @@ CREATE TABLE "food_photos" (
 );
 --> statement-breakpoint
 CREATE TABLE "foods" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"source_id" varchar(100),
 	"source" varchar(100) DEFAULT 'user_custom' NOT NULL,
 	"name" varchar(500) NOT NULL,
@@ -188,7 +188,7 @@ CREATE TABLE "foods" (
 );
 --> statement-breakpoint
 CREATE TABLE "hydration_logs" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"date" date NOT NULL,
 	"total_ml" integer DEFAULT 0 NOT NULL,
@@ -198,7 +198,7 @@ CREATE TABLE "hydration_logs" (
 );
 --> statement-breakpoint
 CREATE TABLE "nutrition_goals" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"goal_type" "goal_type" NOT NULL,
 	"age_years" integer,

@@ -52,7 +52,7 @@ export interface WeeklySnapshotDTO {
 }
 
 export interface ScheduleEntry {
-  id: number;
+  id: string;
   name: string;
   time: string;
   timeGroup: 'morning' | 'midday' | 'evening';
@@ -452,9 +452,9 @@ export async function getDailySchedule(
 
   // Group rows by meal
   const mealsMap = new Map<
-    number,
+    string,
     {
-      mealId: number;
+      mealId: string;
       mealType: string;
       consumedAt: Date;
       firstName: string | null;

@@ -64,7 +64,7 @@ export class FoodLogPage {
     await this.addFood();
   }
 
-  async deleteLog(logId: number) {
+  async deleteLog(logId: string) {
     const deleteButton = this.page.getByTestId(`delete-log-${logId}`);
     await deleteButton.click();
   }

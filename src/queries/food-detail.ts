@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 export interface FoodServing {
-  id: number;
+  id: string;
   description: string;
   weightGrams: number;
   calories: number;
@@ -20,7 +20,7 @@ export interface FoodImages {
 }
 
 export interface FoodDetailResponse {
-  id: number;
+  id: string;
   name: string;
   brandName: string | null;
   foodType: 'Generic' | 'Brand';
@@ -44,7 +44,7 @@ export interface FoodDetailResponse {
   images: FoodImages | null;
 }
 
-export type FoodSelection = { id: number; fatSecretId?: string } | { id: null; fatSecretId: string };
+export type FoodSelection = { id: string; fatSecretId?: string } | { id: null; fatSecretId: string };
 
 export function useFoodDetailQuery(selection: FoodSelection | null) {
   return useQuery({

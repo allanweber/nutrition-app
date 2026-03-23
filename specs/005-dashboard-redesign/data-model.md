@@ -24,11 +24,10 @@ Tracks daily water intake per user. One row per user per calendar date.
 
 ```sql
 CREATE TABLE hydration_logs (
-  id          SERIAL PRIMARY KEY,
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
   date        DATE NOT NULL,
   total_ml    INTEGER NOT NULL DEFAULT 0,
-  goal_ml     INTEGER NOT NULL DEFAULT 2500,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, date)
@@ -39,21 +38,20 @@ CREATE INDEX hydration_logs_user_date_idx ON hydration_logs (user_id, date);
 
 ### Field Notes
 - `total_ml`: Cumulative milliliters logged for the day. Incremented by 250 per glass.
-- `goal_ml`: Daily target in milliliters. Defaults to 2500 (2.5L). Stored per-row to allow future per-user goal customization without joining `nutritionGoals`.
 - `UNIQUE(user_id, date)`: Prevents duplicate rows; enables upsert on add-water action.
+- **Hydration goal**: Sourced from `nutrition_goals.target_hydration_ml` (default 2500 ml) at query time. Not stored on `hydration_logs`.
 
 ### Drizzle Schema Addition (in `src/server/db/schema.ts`)
 ```typescript
 export const hydrationLogs = pgTable(
   'hydration_logs',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     totalMl: integer('total_ml').notNull().default(0),
-    goalMl: integer('goal_ml').notNull().default(2500),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -105,7 +103,7 @@ Daily water intake record.
 | `date` | `string` (ISO date) | Today | |
 | `totalMl` | `number` | `hydration_logs.total_ml` | 0 if no row exists yet |
 | `totalLiters` | `number` | `totalMl / 1000` | Rounded to 1 decimal |
-| `goalMl` | `number` | `hydration_logs.goal_ml` | Default 2500 |
+| `goalMl` | `number` | `nutrition_goals.target_hydration_ml` | Default 2500 if no goal row |
 | `percentConsumed` | `number` | `totalMl / goalMl × 100` | Clamped 0–100 for progress bar |
 | `hasGoal` | `boolean` | Always `true` (default goal applied) | No separate goal config yet |
 
@@ -142,7 +140,7 @@ A single logged meal or activity for the current day.
 
 | Field | Type | Source | Notes |
 |-------|------|--------|-------|
-| `id` | `number` | `food_log_meals.id` | |
+| `id` | `string` | `food_log_meals.id` | UUID7 |
 | `name` | `string` | First `food_log_items.food_name` in the meal | Or meal type label if no items |
 | `time` | `string` | `food_log_meals.consumed_at` formatted | e.g., "08:00 AM" |
 | `timeGroup` | `"morning" \| "midday" \| "evening"` | Derived from `consumed_at` hour | See mapping below |

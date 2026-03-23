@@ -15,7 +15,7 @@ import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import type { ActivityLevel, GoalType } from '@/types/goals';
 import { useForm } from '@tanstack/react-form';
 import { Loader2, Target } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type GoalsFormValues = {
   goalType: GoalType;
@@ -63,6 +63,20 @@ export default function GoalsPage() {
       }
     },
   });
+
+  useEffect(() => {
+    if (!goals) return;
+    form.reset({
+      goalType: (goals.goalType as GoalType) || 'maintenance',
+      activityLevel: (goals.activityLevel as ActivityLevel) || 'moderate',
+      calories: goals.calories?.toString() || '2000',
+      protein: goals.protein?.toString() || '150',
+      carbs: goals.carbs?.toString() || '250',
+      fat: goals.fat?.toString() || '65',
+      fiber: goals.fiber?.toString() || '25',
+      sodium: goals.sodium?.toString() || '2300',
+    });
+  }, [goals]);
 
   if (isLoading) {
     return (

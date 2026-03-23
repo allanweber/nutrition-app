@@ -31,7 +31,7 @@ const createMealGroupSchema = z.object({
   items: z
     .array(
       z.object({
-        foodId: z.number().int().positive(),
+        foodId: z.string().uuid(),
         quantity: z.number().positive().max(10000),
         servingUnit: z.string().min(1).max(100).optional(),
       }),
@@ -40,12 +40,9 @@ const createMealGroupSchema = z.object({
     .max(100),
 });
 
-function parseDietPlanId(raw: string) {
-  const value = Number(raw);
-  if (!Number.isInteger(value) || value <= 0) {
-    return null;
-  }
-  return value;
+function parseDietPlanId(raw: string): string | null {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(raw.trim()) ? raw.trim() : null;
 }
 
 export async function GET(
@@ -103,18 +100,18 @@ export async function GET(
       .leftJoin(foodPhotos, eq(dietPlanMealItems.foodId, foodPhotos.foodId))
       .where(eq(dietPlanMealGroups.dietPlanId, dietPlanId));
 
-    const grouped = new Map<number, {
-      id: number;
+    const grouped = new Map<string, {
+      id: string;
       mealType: string;
       dayOfWeek: number | null;
       scheduledAt: Date | null;
       createdAt: Date;
       items: Array<{
-        id: number;
+        id: string;
         quantity: number;
         servingUnit: string | null;
         food: {
-          id: number | null;
+          id: string | null;
           name: string;
           brandName: string | null;
           calories: number;
@@ -211,7 +208,7 @@ export async function POST(
     const payload = validation.data;
 
     const foodsById = new Map<
-      number,
+      string,
       {
         food: Awaited<ReturnType<typeof db.query.foods.findFirst>>;
         photoThumb: string | null;

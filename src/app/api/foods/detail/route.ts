@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
   // Build the where condition: prefer local DB id, fall back to source_id lookup
   let whereCondition;
   if (rawId && rawId.trim() !== '') {
-    const id = parseInt(rawId, 10);
-    if (isNaN(id) || id <= 0) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(rawId.trim())) {
       return NextResponse.json(
-        { success: false, error: 'id must be a positive integer.', field: 'id' },
+        { success: false, error: 'id must be a valid UUID.', field: 'id' },
         { status: 400 },
       );
     }
-    whereCondition = and(eq(foods.id, id), isNotNull(foods.calories));
+    whereCondition = and(eq(foods.id, rawId.trim()), isNotNull(foods.calories));
   } else {
     whereCondition = and(
       eq(foods.source, 'fatsecret'),

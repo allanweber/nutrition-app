@@ -10,7 +10,7 @@ These entities already exist in the DB schema and are **not modified** by this f
 
 ### `foods` (existing table)
 Relevant fields for this feature:
-- `id: number` — internal primary key
+- `id: string` — internal primary key (UUID7)
 - `sourceId: string | null` — FatSecret food ID (used as URL parameter for public page)
 - `source: string` — `'fatsecret'` for catalog foods, `'user_custom'` for custom
 - `name: string`
@@ -22,7 +22,7 @@ Relevant fields for this feature:
 - `thumbnail` — via `foodPhotos` join
 
 ### `foodPhotos` (existing table)
-- `foodId: number` — FK to `foods.id`
+- `foodId: string` — FK to `foods.id` (UUID7)
 - `thumb: string | null` — 72×72 image URL
 - `medium: string | null` — 400×400 image URL
 - `highres: string | null` — 1024×1024 image URL
@@ -57,7 +57,7 @@ Merges FatSecret results (Generic/Brand) and user custom foods into a single typ
 
 | Field | Type | Source |
 |-------|------|--------|
-| `id` | `number \| null` | Internal DB id; `null` if not yet cached locally |
+| `id` | `string \| null` | Internal DB UUID7; `null` if not yet cached locally |
 | `fatSecretId` | `string \| null` | FatSecret food_id; `null` for custom foods |
 | `name` | `string` | Food name |
 | `brandName` | `string \| null` | Brand name if applicable |
@@ -112,7 +112,7 @@ Props for the add-to-diary modal (food log page context).
 ```typescript
 interface CustomFoodSearchResponse {
   results: Array<{
-    id: number;
+    id: string;
     name: string;
     brandName: string | null;
     thumbnail: string | null;

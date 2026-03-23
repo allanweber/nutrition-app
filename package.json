@@ -45,6 +45,7 @@
     "recharts": "^3.6.0",
     "resend": "^6.8.0",
     "tailwind-merge": "^3.4.0",
+    "uuidv7": "^1.2.1",
     "zod": "^4.3.5",
     "zustand": "^5.0.10"
   },

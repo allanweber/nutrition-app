@@ -41,7 +41,7 @@ export interface NutritionGoalWizardInputsSnapshot {
 }
 
 export interface NutritionGoalHistoryRecord {
-  id: number;
+  id: string;
   goalType: GoalType;
   activityLevel?: ActivityLevel | null;
   startDate: string;
@@ -74,9 +74,9 @@ export type CheckinPhotoKey = 'front' | 'back' | 'left' | 'right';
 export type BodyCheckinPhotos = Partial<Record<CheckinPhotoKey, string>>;
 
 export interface BodyCheckin {
-  id: number;
+  id: string;
   userId: string;
-  goalId?: number | null;
+  goalId?: string | null;
   checkInDate: string;
 
   weightKg: number;

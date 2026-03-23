@@ -12,7 +12,7 @@ interface PageProps {
 }
 
 interface FoodData {
-  id: number | null;
+  id: string | null;
   name: string;
   brandName: string | null;
   foodType: string | null;
@@ -31,7 +31,7 @@ interface FoodData {
   iron: number | null;
   images: { thumb: string | null; medium: string | null; highres: string | null } | null;
   servings: Array<{
-    id: number;
+    id: string;
     description: string;
     weightGrams: number;
     calories: number;
@@ -156,7 +156,7 @@ async function getFoodFromFatSecret(fatSecretId: string): Promise<FoodData | nul
         const baseCarbs = parseFloat(baseServing.carbohydrate);
         const baseFat = parseFloat(baseServing.fat);
         return {
-          id: i + 1,
+          id: String(i + 1),
           description: s.serving_description,
           weightGrams: w,
           calories: parseFloat((baseCalories * w / 100).toFixed(0)),

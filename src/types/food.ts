@@ -26,7 +26,7 @@ export interface Nutrient {
 }
 
 export interface BaseFood {
-  id: number;
+  id: string;
   sourceId: string | null; // Generic ID from source system
   sourceType: FoodSource;
   name: string;
@@ -53,9 +53,9 @@ export interface BaseFood {
 }
 
 export interface FoodLogEntry {
-  id: number;
+  id: string;
   userId: string;
-  foodId: number;
+  foodId: string;
   quantity: number;
   servingUnit?: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';

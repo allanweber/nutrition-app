@@ -1,5 +1,5 @@
 export interface UnifiedFoodSearchResultItem {
-  id: number | null;
+  id: string | null;
   fatSecretId: string | null;
   name: string;
   brandName: string | null;

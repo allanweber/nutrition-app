@@ -12,8 +12,8 @@ highres 1024×1024). The existing schema stores only `thumb` and `highres`.
 ```typescript
 // BEFORE
 export const foodPhotos = pgTable('food_photos', {
-  id: serial('id').primaryKey(),
-  foodId: integer('food_id').notNull().references(() => foods.id, { onDelete: 'cascade' }).unique(),
+  id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+  foodId: uuid('food_id').notNull().references(() => foods.id, { onDelete: 'cascade' }).unique(),
   thumb: varchar('thumb', { length: 500 }),
   highres: varchar('highres', { length: 500 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -21,8 +21,8 @@ export const foodPhotos = pgTable('food_photos', {
 
 // AFTER — add medium column
 export const foodPhotos = pgTable('food_photos', {
-  id: serial('id').primaryKey(),
-  foodId: integer('food_id').notNull().references(() => foods.id, { onDelete: 'cascade' }).unique(),
+  id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+  foodId: uuid('food_id').notNull().references(() => foods.id, { onDelete: 'cascade' }).unique(),
   thumb: varchar('thumb', { length: 500 }),
   medium: varchar('medium', { length: 500 }),   // NEW: 400×400 URL
   highres: varchar('highres', { length: 500 }),
@@ -131,7 +131,7 @@ Used in `GET /api/foods/search` response only. Not a DB entity.
 
 ```typescript
 interface FoodSearchResultItem {
-  id: number | null;           // local DB id; null if not yet saved
+  id: string | null;           // local DB UUID; null if not yet saved
   fatSecretId: string;         // FatSecret food_id
   name: string;
   brandName: string | null;
@@ -154,7 +154,7 @@ Used in `GET /api/foods/detail?fatSecretId=...` response only.
 
 ```typescript
 interface FoodDetailResponse {
-  id: number;                 // local DB id
+  id: string;                 // local DB UUID
   fatSecretId: string;
   name: string;
   brandName: string | null;
@@ -177,7 +177,7 @@ interface FoodDetailResponse {
 }
 
 interface FoodServing {
-  id: number;                 // local DB id (foodAltMeasures.id)
+  id: string;                 // local DB UUID (foodAltMeasures.id)
   description: string;
   weightGrams: number;
   // Calculated fields (proportional from 100g base):
