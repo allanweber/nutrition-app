@@ -14,7 +14,7 @@ import {
 } from '@/types/fatsecret';
 
 export interface FoodSearchResultItem {
-  id: number | null;
+  id: string | null;
   fatSecretId: string;
   name: string;
   brandName: string | null;

@@ -144,9 +144,7 @@ export const nutritionGoalsSchema = z.object({
 // Food log ID validation
 export const foodLogIdSchema = z
   .string()
-  .regex(/^\d+$/, 'Food log ID must be a valid number')
-  .transform((val) => parseInt(val, 10))
-  .refine((val) => val > 0, 'Food log ID must be a positive number');
+  .uuid('Food log ID must be a valid UUID');
 
 // ============================================
 // TRANSFORMATION HELPERS

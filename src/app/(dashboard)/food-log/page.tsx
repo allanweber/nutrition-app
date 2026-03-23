@@ -50,7 +50,7 @@ export default function FoodLogPage() {
     foodSearch.setQuery('');
   };
 
-  const handleDeleteLog = async (logId: number) => {
+  const handleDeleteLog = async (logId: string) => {
     await deleteMutation.mutateAsync(logId);
   };
 

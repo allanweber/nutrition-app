@@ -8,13 +8,14 @@ import {
   jsonb,
   pgEnum,
   pgTable,
-  serial,
   text,
   timestamp,
   unique,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { uuidv7 } from 'uuidv7';
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', [
@@ -184,7 +185,7 @@ export const securityEvents = pgTable(
 export const foods = pgTable(
   'foods',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     sourceId: varchar('source_id', { length: 100 }),
     source: varchar('source', { length: 100 }).notNull().default('user_custom'),
     name: varchar('name', { length: 500 }).notNull(),
@@ -222,8 +223,8 @@ export const foods = pgTable(
 export const foodPhotos = pgTable(
   'food_photos',
   {
-    id: serial('id').primaryKey(),
-    foodId: integer('food_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    foodId: uuid('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' })
       .unique(),
@@ -238,8 +239,8 @@ export const foodPhotos = pgTable(
 export const foodAltMeasures = pgTable(
   'food_alt_measures',
   {
-    id: serial('id').primaryKey(),
-    foodId: integer('food_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    foodId: uuid('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' }),
     servingWeight: decimal('serving_weight', {
@@ -276,13 +277,13 @@ const foodSnapshotColumns = {
 export const foodLogMeals = pgTable(
   'food_log_meals',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     mealType: mealTypeEnum('meal_type').notNull(),
     consumedAt: timestamp('consumed_at').notNull(),
-    sourceDietPlanMealGroupId: integer('source_diet_plan_meal_group_id').references(
+    sourceDietPlanMealGroupId: uuid('source_diet_plan_meal_group_id').references(
       () => dietPlanMealGroups.id,
       { onDelete: 'set null' },
     ),
@@ -303,11 +304,11 @@ export const foodLogMeals = pgTable(
 export const foodLogItems = pgTable(
   'food_log_items',
   {
-    id: serial('id').primaryKey(),
-    mealId: integer('meal_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    mealId: uuid('meal_id')
       .notNull()
       .references(() => foodLogMeals.id, { onDelete: 'cascade' }),
-    foodId: integer('food_id').references(() => foods.id, { onDelete: 'set null' }),
+    foodId: uuid('food_id').references(() => foods.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
     servingUnit: varchar('serving_unit', { length: 100 }),
     ...foodSnapshotColumns,
@@ -324,7 +325,7 @@ export const foodLogItems = pgTable(
 export const nutritionGoals = pgTable(
   'nutrition_goals',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -386,11 +387,11 @@ export const nutritionGoals = pgTable(
 export const bodyCheckins = pgTable(
   'body_checkins',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    goalId: integer('goal_id').references(() => nutritionGoals.id, {
+    goalId: uuid('goal_id').references(() => nutritionGoals.id, {
       onDelete: 'set null',
     }),
     checkInDate: timestamp('check_in_date').notNull(),
@@ -422,7 +423,7 @@ export const bodyCheckins = pgTable(
 export const dietPlans = pgTable(
   'diet_plans',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     clientId: text('client_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -447,11 +448,11 @@ export const dietPlans = pgTable(
 export const dietPlanMeals = pgTable(
   'diet_plan_meals',
   {
-    id: serial('id').primaryKey(),
-    dietPlanId: integer('diet_plan_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    dietPlanId: uuid('diet_plan_id')
       .notNull()
       .references(() => dietPlans.id, { onDelete: 'cascade' }),
-    foodId: integer('food_id')
+    foodId: uuid('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' }),
     mealType: mealTypeEnum('meal_type').notNull(),
@@ -469,8 +470,8 @@ export const dietPlanMeals = pgTable(
 export const dietPlanMealGroups = pgTable(
   'diet_plan_meal_groups',
   {
-    id: serial('id').primaryKey(),
-    dietPlanId: integer('diet_plan_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    dietPlanId: uuid('diet_plan_id')
       .notNull()
       .references(() => dietPlans.id, { onDelete: 'cascade' }),
     mealType: mealTypeEnum('meal_type').notNull(),
@@ -492,11 +493,11 @@ export const dietPlanMealGroups = pgTable(
 export const dietPlanMealItems = pgTable(
   'diet_plan_meal_items',
   {
-    id: serial('id').primaryKey(),
-    groupId: integer('group_id')
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    groupId: uuid('group_id')
       .notNull()
       .references(() => dietPlanMealGroups.id, { onDelete: 'cascade' }),
-    foodId: integer('food_id').references(() => foods.id, { onDelete: 'set null' }),
+    foodId: uuid('food_id').references(() => foods.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
     servingUnit: varchar('serving_unit', { length: 100 }),
     ...foodSnapshotColumns,
@@ -514,7 +515,7 @@ export const dietPlanMealItems = pgTable(
 export const hydrationLogs = pgTable(
   'hydration_logs',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 interface CustomFoodSearchResult {
-  id: number;
+  id: string;
   name: string;
   brandName: string | null;
   thumbnail: string | null;

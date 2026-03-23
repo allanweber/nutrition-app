@@ -35,7 +35,7 @@ interface FoodLogClientProps {
   totals: Totals;
   isLoading?: boolean;
   onDateChange: (date: Date) => void;
-  onDeleteLog: (logId: number) => Promise<void>;
+  onDeleteLog: (logId: string) => Promise<void>;
 }
 
 
@@ -48,8 +48,8 @@ export default function FoodLogClient({
   onDeleteLog
 }: FoodLogClientProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [deleting, setDeleting] = useState<number | null>(null);
-  const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handlePreviousDay = () => {
@@ -70,12 +70,12 @@ export default function FoodLogClient({
     onDateChange(newDate);
   };
 
-  const handleDeleteRequest = (logId: number) => {
+  const handleDeleteRequest = (logId: string) => {
     setConfirmingDelete(logId);
     setDeleteError(null);
   };
 
-  const handleDeleteConfirm = async (logId: number) => {
+  const handleDeleteConfirm = async (logId: string) => {
     setDeleting(logId);
     setConfirmingDelete(null);
     try {

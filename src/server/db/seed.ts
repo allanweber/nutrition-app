@@ -425,12 +425,12 @@ type GoalVariant =
 // Generate food logs for the past 14 days
 function generateFoodLogs(
   userId: string,
-  foodIds: number[],
+  foodIds: string[],
   variant: GoalVariant
 ) {
   const logs: Array<{
     userId: string;
-    foodId: number;
+    foodId: string;
     quantity: string;
     servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -588,7 +588,7 @@ async function insertGroupedFoodLogs(
   userId: string,
   logs: Array<{
     userId: string;
-    foodId: number;
+    foodId: string;
     quantity: string;
     servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';

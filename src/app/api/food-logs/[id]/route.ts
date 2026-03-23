@@ -83,7 +83,7 @@ export async function GET(
         createdAt: itemLog.createdAt,
         food: {
           ...itemLog.food,
-          id: itemLog.food.id || 0,
+          id: itemLog.food.id ?? null,
           calories: toNumber(itemLog.food.calories),
           protein: toNumber(itemLog.food.protein),
           carbs: toNumber(itemLog.food.carbs),
