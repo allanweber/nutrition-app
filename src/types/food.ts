@@ -43,7 +43,6 @@ export interface BaseFood {
   sodium?: number;
   fullNutrients?: Nutrient[];
   isRaw?: boolean;
-  isCustom?: boolean;
   userId?: string | null;
   photo?: FoodPhoto | null;
   photoUrl?: string | null; // Flattened photo URL for API responses

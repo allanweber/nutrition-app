@@ -32,7 +32,7 @@ GET /api/foods/custom/search?q={query}
 }
 ```
 
-Results are filtered to the authenticated user's custom foods only (`isCustom = true AND userId = currentUser.id`), ordered by name, limited to 20 items.
+Results are filtered to the authenticated user's own foods only (`userId = currentUser.id`), ordered by name, limited to 20 items. A food is considered "custom" when it has a non-null `userId`.
 
 ### 400 Bad Request
 

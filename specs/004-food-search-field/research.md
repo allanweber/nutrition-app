@@ -8,11 +8,11 @@
 
 **Decision**: Serve custom foods from a new dedicated `/api/foods/custom/search` endpoint.
 
-**Rationale**: The existing `food-search.service.ts` queries only `source = 'fatsecret'` foods. Custom foods (`isCustom = true`, `userId = user.id`) are user-scoped and require an authenticated server query that the existing public-facing service cannot provide. Keeping this as a separate endpoint avoids modifying the existing API contract (FR-022) while correctly enforcing auth boundaries.
+**Rationale**: The existing `food-search.service.ts` queries only shared catalog foods (`userId IS NULL`). Custom foods (`userId = user.id`) are user-scoped and require an authenticated server query that the existing public-facing service cannot provide. Keeping this as a separate endpoint avoids modifying the existing API contract (FR-022) while correctly enforcing auth boundaries.
 
 **Findings from codebase**:
-- `foods` table has `isCustom: boolean('is_custom').default(false)` and `userId: text('user_id').references(() => users.id)`
-- Existing search service explicitly filters `eq(foods.source, 'fatsecret')` — custom foods are excluded
+- `foods` table uses `userId: text('user_id').references(() => users.id)` — `null` means shared catalog, non-null means user-owned custom food
+- Existing search service filters `isNull(foods.userId)` — custom foods are excluded
 - No existing endpoint exposes custom food search
 
 **Alternatives considered**:

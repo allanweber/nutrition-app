@@ -343,6 +343,7 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
       await page.getByTestId('food-result-item').first().click();
       await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
+      await expect(foodLogPage.quantityInput).toBeVisible({ timeout: 10000 });
       await foodLogPage.quantityInput.fill('1');
       await foodLogPage.mealTypeSelect.click();
       await page.getByRole('option', { name: /breakfast/i }).click();
@@ -358,6 +359,7 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
       await page.getByTestId('food-result-item').first().click();
       await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
+      await expect(foodLogPage.quantityInput).toBeVisible({ timeout: 10000 });
       await foodLogPage.quantityInput.fill('1');
       await foodLogPage.mealTypeSelect.click();
       await page.getByRole('option', { name: /lunch/i }).click();
@@ -365,9 +367,6 @@ test.describe('Phase 2: Food Logging', () => {
 
       // Wait for modal to close
       await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
-
-      // Wait for the log to refresh and show both meals
-      await page.waitForTimeout(1000);
 
       // Verify both meals are shown (case insensitive match)
       await expect(
@@ -378,8 +377,7 @@ test.describe('Phase 2: Food Logging', () => {
       ).toBeVisible();
 
       // Verify food count is 2
-      const logCount = await foodLogPage.getFoodLogCount();
-      expect(logCount).toBe(2);
+      await expect.poll(async () => await foodLogPage.getFoodLogCount(), { timeout: 10000 }).toBe(2);
     });
   });
 });

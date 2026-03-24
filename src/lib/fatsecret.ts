@@ -76,6 +76,11 @@ interface FatSecretFoodGetResponse {
 }
 
 export async function getFoodById(foodId: string): Promise<FatSecretSearchFood> {
+  if (process.env.USE_MOCK_FATSECRET === 'true') {
+    const mock = await import('@/lib/__tests__/mock-fatsecret');
+    return mock.getMockFoodById(foodId);
+  }
+
   const token = await getAccessToken();
   const queryString = new URLSearchParams({
     food_id: foodId,

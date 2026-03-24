@@ -164,6 +164,27 @@ export const mockSingleSearchResponse: FatSecretSearchResponse = {
 
 const KNOWN_KEYWORDS = ['apple', 'apples', 'juice', 'vinegar', 'chicken', 'egg', 'banana', 'carrot', 'rice', 'quinoa'];
 
+// Build a flat map of food_id → FatSecretSearchFood from all mock data
+const MOCK_FOOD_BY_ID: Record<string, FatSecretSearchFood> = {};
+for (const food of [
+  ...(Array.isArray(mockMultiSearchResponse.foods_search.results.food)
+    ? mockMultiSearchResponse.foods_search.results.food
+    : [mockMultiSearchResponse.foods_search.results.food]),
+  mockSingleSearchResponse.foods_search.results.food as FatSecretSearchFood,
+]) {
+  if (food && food.food_id) {
+    MOCK_FOOD_BY_ID[food.food_id] = food;
+  }
+}
+
+// The "Apples" entry (food_id: '35718') serves as the default fallback
+const DEFAULT_MOCK_FOOD = MOCK_FOOD_BY_ID['35718'] ?? Object.values(MOCK_FOOD_BY_ID)[0];
+
+// Mock for getFoodById — returns mock food data for any food ID (used by food detail page)
+export function getMockFoodById(foodId: string): FatSecretSearchFood {
+  return MOCK_FOOD_BY_ID[foodId] ?? DEFAULT_MOCK_FOOD;
+}
+
 // Export search function compatible with fatsecret client interface
 export async function getMockSearchResponse(keyword: string, page: number): Promise<FatSecretSearchResponse> {
   const kw = keyword.toLowerCase().trim();

@@ -208,7 +208,6 @@ async function cacheFoodToDB(fatSecretId: string, food: FoodData): Promise<void>
           foodType: food.foodType,
         },
         isRaw: false,
-        isCustom: false,
         userId: null,
       })
       .onConflictDoNothing()

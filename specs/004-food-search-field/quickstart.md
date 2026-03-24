@@ -36,7 +36,7 @@ Before implementing, read these files to understand the existing patterns:
 3. **`src/queries/foods.ts`** — existing TanStack Query hook for food search (reused unchanged)
 4. **`src/queries/food-detail.ts`** — existing TanStack Query hook for food detail (reused in modal)
 5. **`src/server/services/food-search.service.ts`** — existing search orchestration (unchanged)
-6. **`src/server/db/schema.ts`** — `foods` table schema (look at `isCustom` and `userId` fields)
+6. **`src/server/db/schema.ts`** — `foods` table schema (look at `userId` field — `null` for shared catalog foods, set for custom user foods)
 
 ## Implementation Order
 

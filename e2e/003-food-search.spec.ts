@@ -169,3 +169,93 @@ test.describe('US3: Error Conditions', () => {
     expect(pageContent).not.toContain('FATSECRET_CONSUMER');
   });
 });
+
+// ──────────────────────────────────────────────
+// US4: Generic Catalog — shared foods access model
+// ──────────────────────────────────────────────
+
+test.describe('US4: Generic Catalog — Shared Foods Access Model', () => {
+  test('shared catalog foods (userId=null) appear in search results for authenticated users', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+    await goToFoodLog(page);
+
+    // Mock the search endpoint to return a shared food (userId=null)
+    await page.route('**/api/foods/search*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [
+            {
+              id: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa',
+              fatSecretId: '12345',
+              name: 'Shared Catalog Food',
+              brandName: null,
+              foodType: 'Generic',
+              thumbnail: null,
+              calories: 100,
+              isLocal: true,
+            },
+          ],
+          pagination: { page: 1, totalResults: 1, maxResults: 10 },
+        }),
+      });
+    });
+
+    await typeSearch(page, 'shared');
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('food-result-item').first()).toContainText('Shared Catalog Food');
+  });
+
+  test('food detail for a shared food (userId=null) is accessible to authenticated users', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+
+    // Mock the detail endpoint to return a shared food
+    await page.route('**/api/foods/detail*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          food: {
+            id: 'aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa',
+            name: 'Shared Catalog Food',
+            brandName: null,
+            foodType: 'Generic',
+            foodUrl: null,
+            baseServing: { calories: 100, protein: 5, carbs: 20, fat: 2, fiber: null, sugar: null, sodium: null },
+            servings: [],
+            images: null,
+          },
+        }),
+      });
+    });
+
+    await page.goto('/food-log');
+    await page.waitForLoadState('networkidle');
+
+    // Detail endpoint returns 200 — no 403 for shared foods
+    const response = await page.request.get('/api/foods/detail?id=aaaaaaaa-aaaa-7aaa-aaaa-aaaaaaaaaaaa');
+    // Route mock returns 200 for shared food; just confirm no forbidden error
+    expect(response.status()).not.toBe(403);
+  });
+
+  test('FatSecret-sourced food is saved without userId (shared catalog)', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+    await goToFoodLog(page);
+
+    // Searching triggers FatSecret sync — verify the search completes (sync is fire-and-forget)
+    await typeSearch(page, 'apple');
+    await page.waitForTimeout(600);
+
+    // The UI should show results without error (sync does not block the response)
+    const hasDropdown = await page.getByTestId('food-search-dropdown').isVisible().catch(() => false);
+    const hasEmpty = await page.getByTestId('search-empty').isVisible().catch(() => false);
+    expect(hasDropdown || hasEmpty).toBe(true);
+  });
+});

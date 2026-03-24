@@ -181,7 +181,6 @@ CREATE TABLE "foods" (
 	"food_type" varchar(50),
 	"full_nutrients" jsonb,
 	"is_raw" boolean DEFAULT false,
-	"is_custom" boolean DEFAULT false,
 	"user_id" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -320,7 +319,6 @@ CREATE INDEX "foods_name_idx" ON "foods" USING btree ("name");--> statement-brea
 CREATE INDEX "foods_source_id_idx" ON "foods" USING btree ("source_id");--> statement-breakpoint
 CREATE INDEX "foods_source_idx" ON "foods" USING btree ("source");--> statement-breakpoint
 CREATE INDEX "foods_user_id_idx" ON "foods" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "foods_is_custom_idx" ON "foods" USING btree ("is_custom");--> statement-breakpoint
 CREATE INDEX "hydration_logs_user_date_idx" ON "hydration_logs" USING btree ("user_id","date");--> statement-breakpoint
 CREATE INDEX "nutrition_goals_user_id_idx" ON "nutrition_goals" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "nutrition_goals_user_start_date_idx" ON "nutrition_goals" USING btree ("user_id","start_date");--> statement-breakpoint

@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
       .leftJoin(foodPhotos, eq(foodPhotos.foodId, foods.id))
       .where(
         and(
-          eq(foods.isCustom, true),
           eq(foods.userId, session.user.id),
           ilike(foods.name, `%${q}%`),
         ),

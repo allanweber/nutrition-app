@@ -206,7 +206,6 @@ export const foods = pgTable(
     foodType: varchar('food_type', { length: 50 }),
     fullNutrients: jsonb('full_nutrients'),
     isRaw: boolean('is_raw').default(false),
-    isCustom: boolean('is_custom').default(false),
     userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -216,7 +215,6 @@ export const foods = pgTable(
     index('foods_source_id_idx').on(table.sourceId),
     index('foods_source_idx').on(table.source),
     index('foods_user_id_idx').on(table.userId),
-    index('foods_is_custom_idx').on(table.isCustom),
   ],
 );
 

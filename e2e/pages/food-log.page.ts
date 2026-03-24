@@ -83,7 +83,7 @@ export class FoodLogPage {
   }
 
   async getFoodLogCount() {
-    const logs = await this.page.locator('[data-testid^="food-log-"]').count();
+    const logs = await this.page.locator('[data-testid^="food-log-"]:not([data-testid="food-log-heading"])').count();
     return logs;
   }
 

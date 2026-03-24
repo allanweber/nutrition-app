@@ -1,5 +1,5 @@
 {
-  "id": "07b5ebe6-064a-44e4-9888-b45c20e72b45",
+  "id": "17b6829f-4d4e-4f8f-868c-a7c889644eb9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1643,13 +1643,6 @@
           "notNull": false,
           "default": false
         },
-        "is_custom": {
-          "name": "is_custom",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
         "user_id": {
           "name": "user_id",
           "type": "text",
@@ -1722,21 +1715,6 @@
           "columns": [
             {
               "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "foods_is_custom_idx": {
-          "name": "foods_is_custom_idx",
-          "columns": [
-            {
-              "expression": "is_custom",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

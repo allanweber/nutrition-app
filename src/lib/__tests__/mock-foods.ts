@@ -21,7 +21,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 150,
     photoUrl: null,
     isRaw: false,
-    isCustom: true,
     userId: 'user_001',
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
@@ -44,7 +43,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 200,
     photoUrl: null,
     isRaw: false,
-    isCustom: true,
     userId: 'user_001',
     createdAt: new Date('2024-01-02T00:00:00.000Z'),
     updatedAt: new Date('2024-01-02T00:00:00.000Z')
@@ -69,7 +67,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 79,
     photoUrl: null,
     isRaw: true,
-    isCustom: false,
     createdAt: new Date('2024-01-15T00:00:00.000Z'),
     updatedAt: new Date('2024-01-15T00:00:00.000Z')
   },
@@ -92,7 +89,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 200,
     photoUrl: null,
     isRaw: false,
-    isCustom: false,
     createdAt: new Date('2024-02-01T00:00:00.000Z'),
     updatedAt: new Date('2024-02-01T00:00:00.000Z')
   },
@@ -116,7 +112,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 74,
     photoUrl: null,
     isRaw: false,
-    isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   },
@@ -138,7 +133,6 @@ export const mockFoods: BaseFood[] = [
     sodium: 5,
     photoUrl: null,
     isRaw: false,
-    isCustom: false,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   }

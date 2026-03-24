@@ -64,8 +64,7 @@ FatSecret data when mapped correctly (see below).
 | `sodium` | 100g serving `sodium` | nullable |
 | `fullNutrients` | Extended nutrients JSONB (see below) | |
 | `isRaw` | `false` | FatSecret doesn't flag raw foods |
-| `isCustom` | `false` | Not user-created |
-| `userId` | `null` | Shared global food |
+| `userId` | `null` | Shared global food (no userId = accessible to all users) |
 
 **`fullNutrients` JSONB structure** (stores micronutrients + metadata):
 ```json

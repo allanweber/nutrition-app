@@ -412,8 +412,123 @@ const sampleUserDefs = {
   ],
 };
 
+// Custom foods per seed user (inserted with userId after user creation)
+// Cleanup is automatic via cascade delete when users are deleted
+const customFoodsByEmail: Record<string, Array<{
+  sourceId: string;
+  source: string;
+  name: string;
+  servingQty: string;
+  servingUnit: string;
+  servingWeightGrams: string;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+  fiber: string;
+  sugar: string;
+  sodium: string;
+}>> = {
+  'user.weight-loss@example.com': [
+    {
+      sourceId: 'custom-green-smoothie',
+      source: 'user_custom',
+      name: "Alex's Green Smoothie",
+      servingQty: '1',
+      servingUnit: 'glass (350ml)',
+      servingWeightGrams: '350',
+      calories: '185',
+      protein: '6',
+      carbs: '35',
+      fat: '3',
+      fiber: '5',
+      sugar: '22',
+      sodium: '80',
+    },
+    {
+      sourceId: 'custom-chicken-wrap',
+      source: 'user_custom',
+      name: 'Homemade Chicken Wrap',
+      servingQty: '1',
+      servingUnit: 'wrap',
+      servingWeightGrams: '220',
+      calories: '380',
+      protein: '35',
+      carbs: '30',
+      fat: '12',
+      fiber: '4',
+      sugar: '3',
+      sodium: '520',
+    },
+    {
+      sourceId: 'custom-overnight-oats',
+      source: 'user_custom',
+      name: 'Overnight Oats with Berries',
+      servingQty: '1',
+      servingUnit: 'jar (300g)',
+      servingWeightGrams: '300',
+      calories: '320',
+      protein: '14',
+      carbs: '52',
+      fat: '7',
+      fiber: '8',
+      sugar: '18',
+      sodium: '120',
+    },
+  ],
+  'user.muscle-gain@example.com': [
+    {
+      sourceId: 'custom-mass-shake',
+      source: 'user_custom',
+      name: "Chris's Mass Builder Shake",
+      servingQty: '1',
+      servingUnit: 'shake (500ml)',
+      servingWeightGrams: '550',
+      calories: '680',
+      protein: '45',
+      carbs: '85',
+      fat: '15',
+      fiber: '6',
+      sugar: '30',
+      sodium: '200',
+    },
+    {
+      sourceId: 'custom-protein-bowl',
+      source: 'user_custom',
+      name: 'Post-Workout Protein Bowl',
+      servingQty: '1',
+      servingUnit: 'bowl (400g)',
+      servingWeightGrams: '400',
+      calories: '520',
+      protein: '45',
+      carbs: '55',
+      fat: '12',
+      fiber: '7',
+      sugar: '8',
+      sodium: '380',
+    },
+  ],
+  'user.maintenance@example.com': [
+    {
+      sourceId: 'custom-family-stew',
+      source: 'user_custom',
+      name: "Jordan's Family Beef Stew",
+      servingQty: '1',
+      servingUnit: 'bowl (350g)',
+      servingWeightGrams: '350',
+      calories: '420',
+      protein: '28',
+      carbs: '40',
+      fat: '14',
+      fiber: '5',
+      sugar: '6',
+      sodium: '680',
+    },
+  ],
+};
+
 // Goal type for food log generation
-type GoalVariant = 
+type GoalVariant =
   | 'weight_loss'
   | 'maintenance'
   | 'weight_gain'
@@ -774,6 +889,14 @@ async function seed() {
         isActive: true,
       });
 
+      // Insert custom foods for this user (cascade-deleted on user removal)
+      const customFoods = customFoodsByEmail[userDef.email];
+      if (customFoods && customFoods.length > 0) {
+        await db.insert(schema.foods).values(
+          customFoods.map((food) => ({ ...food, userId }))
+        );
+      }
+
       // Generate and insert food logs
       const foodLogs = generateFoodLogs(
         userId,
@@ -786,6 +909,7 @@ async function seed() {
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);
       console.log(`    - Role: ${userDef.role}`);
       console.log(`    - Goal: ${userDef.goal.goalType}`);
+      console.log(`    - Custom foods: ${customFoods?.length ?? 0} entries`);
       console.log(`    - Food logs: ${foodLogs.length} entries`);
     }
 

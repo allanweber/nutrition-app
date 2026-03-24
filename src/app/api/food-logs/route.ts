@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
           carbs: null,
           fat: null,
           isRaw: false,
-          isCustom: false,
           userId: null,
         })
         .returning();
