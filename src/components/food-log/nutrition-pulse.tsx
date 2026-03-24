@@ -1,0 +1,246 @@
+'use client';
+
+import { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useNutritionSummaryQuery } from '@/queries/nutrition-summary';
+import { useFoodLogsQuery } from '@/queries/food-logs';
+import { MACRO_COLORS } from '@/lib/nutrition-constants';
+
+interface NutritionPulseProps {
+  date: string;
+  recentFoods: string[];
+  onQuickAdd: (foodName: string) => void;
+}
+
+export function NutritionPulse({ date, recentFoods, onQuickAdd }: NutritionPulseProps) {
+  const { data, isLoading } = useNutritionSummaryQuery(date);
+  const { data: logsData } = useFoodLogsQuery(date);
+  const [expanded, setExpanded] = useState(false);
+
+  const remaining = data?.remaining ?? 0;
+  const isOverGoal = remaining < 0 && (data?.calorieGoal ?? 0) > 0;
+
+  const pct = Math.min(Math.max(data?.percentConsumed ?? 0, 0), 100);
+  const size = 160;
+  const strokeWidth = 12;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - pct / 100);
+
+  const calorieGoal = data?.calorieGoal ?? 0;
+  const overflowPct = isOverGoal && calorieGoal > 0
+    ? Math.min(((data?.caloriesConsumed ?? 0) - calorieGoal) / calorieGoal * 100, 100)
+    : 0;
+  const overflowDashOffset = circumference * (1 - overflowPct / 100);
+
+  const macros = [
+    { key: 'protein' as const, label: 'Protein', consumed: data?.protein.consumed ?? 0, goal: data?.protein.goal ?? 0 },
+    { key: 'carbs' as const, label: 'Carbs', consumed: data?.carbs.consumed ?? 0, goal: data?.carbs.goal ?? 0 },
+    { key: 'fat' as const, label: 'Fat', consumed: data?.fat.consumed ?? 0, goal: data?.fat.goal ?? 0 },
+  ];
+
+  const logTotals = logsData?.totals;
+  const netCarbs = Math.max(0, Math.round(((logTotals?.carbs ?? 0) - (logTotals?.fiber ?? 0)) * 10) / 10);
+
+  const allNutrientGroups = [
+    {
+      heading: 'Calories & Macros',
+      rows: [
+        { label: 'Calories', value: logTotals?.calories ?? 0, unit: 'kcal', goal: data?.calorieGoal },
+        { label: 'Protein', value: logTotals?.protein ?? 0, unit: 'g', goal: data?.protein.goal },
+        { label: 'Total Carbs', value: logTotals?.carbs ?? 0, unit: 'g', goal: data?.carbs.goal },
+        { label: 'Total Fat', value: logTotals?.fat ?? 0, unit: 'g', goal: data?.fat.goal },
+      ],
+    },
+    {
+      heading: 'Carbohydrates',
+      rows: [
+        { label: 'Net Carbs', value: netCarbs, unit: 'g', goal: undefined },
+        { label: 'Fiber', value: logTotals?.fiber ?? 0, unit: 'g', goal: undefined },
+        { label: 'Sugar', value: logTotals?.sugar ?? 0, unit: 'g', goal: undefined },
+      ],
+    },
+    {
+      heading: 'Other',
+      rows: [
+        { label: 'Sodium', value: Math.round(logTotals?.sodium ?? 0), unit: 'mg', goal: undefined },
+      ],
+    },
+  ];
+
+  return (
+    <div
+      className={[
+        // Light mode: green card
+        'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden relative',
+        // Dark mode: surface card
+        'dark:bg-surface-container dark:border dark:border-primary/30',
+        // CSS vars for ring colors (light defaults, dark overrides)
+        '[--pulse-fill:#206223] [--pulse-track:#aee39d]',
+        'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--surface-container-high)]',
+      ].join(' ')}
+      data-testid="nutrition-pulse"
+    >
+      {/* Decorative circle */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full pointer-events-none dark:bg-primary/5" />
+
+      <h2 className="text-base font-bold text-[#002203] dark:text-foreground mb-6">
+        Nutrition Pulse
+      </h2>
+
+      {/* Calorie Ring */}
+      <div className="flex flex-col items-center mb-8">
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+            {/* Track */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="var(--pulse-track)"
+              strokeWidth={strokeWidth}
+            />
+            {/* Fill — full ring when over goal, partial otherwise */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke="var(--pulse-fill)"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={isOverGoal ? 0 : dashOffset}
+              style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+            />
+            {/* Overflow arc — only shown when over goal */}
+            {isOverGoal && (
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth={strokeWidth}
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={overflowDashOffset}
+                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+              />
+            )}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span
+              className={`text-3xl font-headline font-black tabular-nums leading-none ${
+                isOverGoal
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-[#002203] dark:text-foreground'
+              }`}
+              data-testid="pulse-calories-remaining"
+            >
+              {isLoading ? '—' : remaining}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mt-1">
+              kcal left
+            </span>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-[#002203]/70 dark:text-on-surface-variant tabular-nums text-center">
+          {data?.caloriesConsumed ?? 0} / {data?.calorieGoal ?? 0} kcal consumed
+        </p>
+      </div>
+
+      {/* Macro Bars */}
+      <div className="space-y-4 mb-8">
+        {macros.map(({ key, label, consumed, goal }) => {
+          const macroPct = goal > 0 ? Math.min((consumed / goal) * 100, 100) : 0;
+          return (
+            <div key={key} data-testid={`pulse-macro-${key}`}>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-on-surface-variant">
+                  {label}
+                </span>
+                <span className="text-xs font-bold tabular-nums text-[#002203] dark:text-foreground">
+                  {consumed}g
+                  <span className="font-normal opacity-60"> / {goal}g</span>
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-black/10 dark:bg-surface-container-high overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
+                  style={{ width: `${macroPct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Expand / collapse all nutrients */}
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
+        aria-expanded={expanded}
+      >
+        {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        {expanded ? 'Hide' : 'All nutrients'}
+      </button>
+
+      {/* Extended nutrients panel */}
+      {expanded && (
+        <div className="mb-6 space-y-4">
+          {allNutrientGroups.map((group) => (
+            <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-surface-container-low p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-on-surface-variant mb-3">
+                {group.heading}
+              </p>
+              <div className="space-y-2">
+                {group.rows.map(({ label, value, unit, goal }) => (
+                  <div key={label} className="flex items-baseline justify-between">
+                    <span className="text-xs text-[#002203]/70 dark:text-on-surface-variant">{label}</span>
+                    <span className="text-sm font-bold tabular-nums text-[#002203] dark:text-foreground">
+                      {value}
+                      <span className="text-xs font-normal opacity-60 ml-0.5">{unit}</span>
+                      {goal != null && goal > 0 && (
+                        <span className="text-xs font-normal opacity-50 ml-1">/ {goal}{unit}</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick Add Recent */}
+      {recentFoods.length > 0 && (
+        <div data-testid="quick-add-recent">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mb-3">
+            Quick Add
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {recentFoods.map((food) => {
+              const slug = food
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '')
+                .slice(0, 40);
+              return (
+                <button
+                  key={food}
+                  data-testid={`quick-add-${slug}`}
+                  onClick={() => onQuickAdd(food)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-surface-container-low dark:hover:bg-surface-container text-[#002203] dark:text-foreground font-medium transition-colors"
+                >
+                  {food}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

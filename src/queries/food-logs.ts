@@ -75,6 +75,8 @@ export function useCreateFoodLogMutation() {
       queryClient.invalidateQueries({ queryKey: ['food-logs'] })
       // Also invalidate analytics since they depend on logs
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      // Invalidate nutrition summary so sidebar updates
+      queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
     },
   })
 }
@@ -98,6 +100,8 @@ export function useDeleteFoodLogMutation() {
       queryClient.invalidateQueries({ queryKey: ['food-logs'] })
       // Also invalidate analytics
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
+      // Invalidate nutrition summary so sidebar updates
+      queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
     },
   })
 }

@@ -1,4 +1,5 @@
 import { type Page, type Locator } from '@playwright/test';
+import { format, startOfWeek, addDays } from 'date-fns';
 
 export class FoodLogPage {
   readonly page: Page;
@@ -10,11 +11,17 @@ export class FoodLogPage {
   readonly addFoodButton: Locator;
   readonly errorMessage: Locator;
   readonly emptyState: Locator;
-  readonly dailySummary: Locator;
+  readonly nutritionPulse: Locator;
+  readonly weeklyStrip: Locator;
+  readonly pulseCaloriesRemaining: Locator;
+  readonly pulseMacroProtein: Locator;
+  readonly pulseMacroCarbs: Locator;
+  readonly pulseMacroFat: Locator;
+  readonly quickAddButtons: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { name: 'Food Log' });
+    this.heading = page.getByRole('heading', { name: 'Meal Planner & Daily Intake' });
     this.searchInput = page.getByTestId('food-search-input');
     this.searchResults = page.getByTestId('food-search-dropdown');
     this.quantityInput = page.getByTestId('quantity-input');
@@ -22,7 +29,13 @@ export class FoodLogPage {
     this.addFoodButton = page.getByTestId('add-food-button');
     this.errorMessage = page.getByTestId('error-message');
     this.emptyState = page.getByTestId('empty-state');
-    this.dailySummary = page.getByTestId('daily-summary');
+    this.nutritionPulse = page.getByTestId('nutrition-pulse');
+    this.weeklyStrip = page.getByTestId('weekly-calendar-strip');
+    this.pulseCaloriesRemaining = page.getByTestId('pulse-calories-remaining');
+    this.pulseMacroProtein = page.getByTestId('pulse-macro-protein');
+    this.pulseMacroCarbs = page.getByTestId('pulse-macro-carbs');
+    this.pulseMacroFat = page.getByTestId('pulse-macro-fat');
+    this.quickAddButtons = page.getByTestId('quick-add-recent');
   }
 
   async goto() {
@@ -74,27 +87,60 @@ export class FoodLogPage {
     return logs;
   }
 
-  async getCaloriesTotal() {
-    // Get the calories value from the daily summary
-    const caloriesText = await this.page.getByTestId('calories-total').textContent();
-    return parseInt(caloriesText || '0', 10);
+  async getCaloriesTotal(): Promise<number> {
+    const text = await this.pulseCaloriesRemaining.textContent();
+    return parseInt(text || '0', 10);
+  }
+
+  /** Click a specific day in the weekly strip (0 = Monday of current week … 6 = Sunday) */
+  async clickDay(dayIndex: number) {
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const day = addDays(weekStart, dayIndex);
+    const dayStr = format(day, 'yyyy-MM-dd');
+    await this.page.getByTestId(`week-day-${dayStr}`).click();
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  /** Click today's pill in the weekly strip */
+  async clickTodayInStrip() {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    await this.page.getByTestId(`week-day-${todayStr}`).click();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async navigateToPreviousDay() {
-    await this.page.getByRole('button').filter({ has: this.page.locator('svg.lucide-chevron-left') }).click();
-    await this.page.waitForLoadState('networkidle');
+    // Navigate to Monday of the current week (first available past day)
+    await this.clickDay(0);
   }
 
   async navigateToNextDay() {
-    await this.page.getByRole('button').filter({ has: this.page.locator('svg.lucide-chevron-right') }).click();
-    await this.page.waitForLoadState('networkidle');
+    // Future days are disabled; this is kept for backwards compatibility
+    await this.clickDay(6);
   }
 
   async navigateToToday() {
-    const todayButton = this.page.getByRole('button', { name: /today/i });
-    if (await todayButton.isVisible()) {
-      await todayButton.click();
-      await this.page.waitForLoadState('networkidle');
+    await this.clickTodayInStrip();
+  }
+
+  async getNutritionPulseVisible(): Promise<boolean> {
+    return this.nutritionPulse.isVisible().catch(() => false);
+  }
+
+  async getPulseCaloriesRemaining(): Promise<number> {
+    return this.getCaloriesTotal();
+  }
+
+  async getQuickAddFoodNames(): Promise<string[]> {
+    const container = this.quickAddButtons;
+    const visible = await container.isVisible().catch(() => false);
+    if (!visible) return [];
+    const buttons = container.locator('button');
+    const count = await buttons.count();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const text = await buttons.nth(i).textContent();
+      if (text) names.push(text.trim());
     }
+    return names;
   }
 }

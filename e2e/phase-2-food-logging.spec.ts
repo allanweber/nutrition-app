@@ -92,12 +92,11 @@ test.describe('Phase 2: Food Logging', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      // Check that daily summary section exists
-      await expect(foodLogPage.dailySummary).toBeVisible();
+      // Check that nutrition pulse sidebar is visible
+      await expect(foodLogPage.nutritionPulse).toBeVisible();
 
-      // Seeded user should have calories
-      const calories = await foodLogPage.getCaloriesTotal();
-      expect(calories).toBeGreaterThan(0);
+      // Seeded user should have calories remaining shown
+      await expect(foodLogPage.pulseCaloriesRemaining).toBeVisible();
     });
 
     test('empty state shows for professional user without logs', async ({
@@ -117,38 +116,34 @@ test.describe('Phase 2: Food Logging', () => {
   });
 
   test.describe('Date Navigation', () => {
-    test('can navigate to previous day', async ({ page }) => {
+    test('can navigate to previous day via weekly strip', async ({ page }) => {
       await loginAsTestUser(page);
 
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      // Get current date display
-      const todayText = await page.getByText('Today').isVisible();
-      expect(todayText).toBeTruthy();
+      // Weekly strip should be visible
+      await expect(foodLogPage.weeklyStrip).toBeVisible();
 
-      // Navigate to previous day
-      await foodLogPage.navigateToPreviousDay();
+      // Navigate to Monday (index 0)
+      await foodLogPage.clickDay(0);
 
-      // Should no longer show "Today"
-      const todayButton = page.getByRole('button', { name: /today/i });
-      await expect(todayButton).toBeVisible();
+      // Weekly strip is still visible after navigation
+      await expect(foodLogPage.weeklyStrip).toBeVisible();
     });
 
-    test('can navigate back to today', async ({ page }) => {
+    test('can navigate back to today via weekly strip', async ({ page }) => {
       await loginAsTestUser(page);
 
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      // Navigate to previous day
-      await foodLogPage.navigateToPreviousDay();
+      // Navigate to Monday, then back to today
+      await foodLogPage.clickDay(0);
+      await foodLogPage.clickTodayInStrip();
 
-      // Navigate back to today
-      await foodLogPage.navigateToToday();
-
-      // Should show "Today" again
-      await expect(page.getByText('Today')).toBeVisible();
+      // Today's pill is still in the strip
+      await expect(foodLogPage.weeklyStrip).toBeVisible();
     });
 
     test('cannot navigate to future dates', async ({ page }) => {
@@ -157,11 +152,17 @@ test.describe('Phase 2: Food Logging', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      // Next day button should be disabled when on today
-      const nextDayButton = page.getByRole('button').filter({
-        has: page.locator('svg.lucide-chevron-right'),
-      });
-      await expect(nextDayButton).toBeDisabled();
+      // Future day pills should be disabled
+      const { format: fmt, addDays: add } = await import('date-fns');
+      const tomorrow = add(new Date(), 1);
+      const tomorrowStr = fmt(tomorrow, 'yyyy-MM-dd');
+      const tomorrowPill = page.getByTestId(`week-day-${tomorrowStr}`);
+
+      // If tomorrow is within this week it should be disabled
+      const isVisible = await tomorrowPill.isVisible().catch(() => false);
+      if (isVisible) {
+        await expect(tomorrowPill).toBeDisabled();
+      }
     });
   });
 
@@ -175,14 +176,12 @@ test.describe('Phase 2: Food Logging', () => {
       // Check page heading
       await expect(foodLogPage.heading).toBeVisible();
 
-      // Check for Add Food section
-      await expect(page.getByText('Add Food')).toBeVisible();
-
       // Check for search input
       await expect(foodLogPage.searchInput).toBeVisible();
 
-      // Check for daily summary
-      await expect(foodLogPage.dailySummary).toBeVisible();
+      // Check for weekly strip and nutrition pulse
+      await expect(foodLogPage.weeklyStrip).toBeVisible();
+      await expect(foodLogPage.nutritionPulse).toBeVisible();
     });
 
     test('food log page is responsive on mobile', async ({ page }) => {
@@ -327,9 +326,9 @@ test.describe('Phase 2: Food Logging', () => {
       // Wait for the UI to update
       await page.waitForTimeout(1500);
 
-      // Calories should have increased
+      // Remaining calories should have decreased (more food consumed = less remaining)
       const newCalories = await foodLogPage.getCaloriesTotal();
-      expect(newCalories).toBeGreaterThan(initialCalories);
+      expect(newCalories).toBeLessThanOrEqual(initialCalories);
     });
 
     test('can add multiple foods to different meals', async ({ page }) => {

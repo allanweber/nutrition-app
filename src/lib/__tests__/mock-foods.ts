@@ -4,7 +4,7 @@ import { BaseFood } from '@/types/food';
 export const mockFoods: BaseFood[] = [
   // User custom foods
   {
-    id: 1,
+    id: '11111111-1111-1111-1111-111111111111',
     sourceId: 'custom_001',
     sourceType: 'user_custom',
     name: 'Homemade Protein Shake',
@@ -27,7 +27,7 @@ export const mockFoods: BaseFood[] = [
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   },
   {
-    id: 2,
+    id: '22222222-2222-2222-2222-222222222222',
     sourceId: 'custom_002', 
     sourceType: 'user_custom',
     name: 'Greek Salad',
@@ -52,7 +52,7 @@ export const mockFoods: BaseFood[] = [
 
   // Database/USDA foods
   {
-    id: 3,
+    id: '33333333-3333-3333-3333-333333333333',
     sourceId: 'usda_001',
     sourceType: 'usda',
     name: 'Raw Spinach',
@@ -75,7 +75,7 @@ export const mockFoods: BaseFood[] = [
   },
   // Manual entry foods
   {
-    id: 4,
+    id: '44444444-4444-4444-4444-444444444444',
     sourceId: 'manual_001',
     sourceType: 'manual',
     name: 'Energy Bar',
@@ -99,7 +99,7 @@ export const mockFoods: BaseFood[] = [
 
   // FatSecret foods
   {
-    id: 5,
+    id: '55555555-5555-5555-5555-555555555555',
     sourceId: '2210',
     sourceType: 'fatsecret',
     name: 'Chicken Breast',
@@ -121,7 +121,7 @@ export const mockFoods: BaseFood[] = [
     updatedAt: new Date('2024-01-01T00:00:00.000Z')
   },
   {
-    id: 6,
+    id: '66666666-6666-6666-6666-666666666666',
     sourceId: '35718',
     sourceType: 'fatsecret',
     name: 'Brown Rice',

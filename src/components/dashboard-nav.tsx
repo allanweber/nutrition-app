@@ -13,12 +13,14 @@ import {
   Dumbbell,
   Target,
   Bell,
+  BookMarked,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Food Log', href: '/food-log', icon: UtensilsCrossed },
+  { name: 'My Foods', href: '/my-foods', icon: BookMarked },
   { name: 'Meal Planner', href: '/meal-planner', icon: CalendarDays },
   { name: 'Exercise Library', href: '/exercise-library', icon: Dumbbell },
   { name: 'Goals', href: '/goals', icon: Target },
