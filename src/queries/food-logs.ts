@@ -12,6 +12,15 @@ interface FoodLogsResponse {
     fiber: number
     sugar: number
     sodium: number
+    saturatedFat: number
+    polyunsaturatedFat: number
+    monounsaturatedFat: number
+    cholesterol: number
+    potassium: number
+    vitaminA: number
+    vitaminC: number
+    calcium: number
+    iron: number
   }
 }
 
@@ -38,6 +47,15 @@ export function useFoodLogsQuery(date: string) {
           fiber: 0,
           sugar: 0,
           sodium: 0,
+          saturatedFat: 0,
+          polyunsaturatedFat: 0,
+          monounsaturatedFat: 0,
+          cholesterol: 0,
+          potassium: 0,
+          vitaminA: 0,
+          vitaminC: 0,
+          calcium: 0,
+          iron: 0,
         },
       }
     },

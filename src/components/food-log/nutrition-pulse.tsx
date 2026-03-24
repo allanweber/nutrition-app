@@ -61,9 +61,33 @@ export function NutritionPulse({ date, recentFoods, onQuickAdd }: NutritionPulse
       ],
     },
     {
-      heading: 'Other',
+      heading: 'Fats Detail',
+      rows: [
+        { label: 'Saturated Fat', value: logTotals?.saturatedFat ?? 0, unit: 'g', goal: undefined },
+        { label: 'Polyunsaturated Fat', value: logTotals?.polyunsaturatedFat ?? 0, unit: 'g', goal: undefined },
+        { label: 'Monounsaturated Fat', value: logTotals?.monounsaturatedFat ?? 0, unit: 'g', goal: undefined },
+      ],
+    },
+    {
+      heading: 'Minerals',
       rows: [
         { label: 'Sodium', value: Math.round(logTotals?.sodium ?? 0), unit: 'mg', goal: undefined },
+        { label: 'Potassium', value: logTotals?.potassium ?? 0, unit: 'mg', goal: undefined },
+        { label: 'Calcium', value: logTotals?.calcium ?? 0, unit: 'mg', goal: undefined },
+        { label: 'Iron', value: logTotals?.iron ?? 0, unit: 'mg', goal: undefined },
+      ],
+    },
+    {
+      heading: 'Vitamins',
+      rows: [
+        { label: 'Vitamin A', value: logTotals?.vitaminA ?? 0, unit: 'mcg', goal: undefined },
+        { label: 'Vitamin C', value: logTotals?.vitaminC ?? 0, unit: 'mg', goal: undefined },
+      ],
+    },
+    {
+      heading: 'Other',
+      rows: [
+        { label: 'Cholesterol', value: logTotals?.cholesterol ?? 0, unit: 'mg', goal: undefined },
       ],
     },
   ];

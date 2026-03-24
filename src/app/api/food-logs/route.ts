@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
           fiber: foods.fiber,
           sugar: foods.sugar,
           sodium: foods.sodium,
+          fullNutrients: foods.fullNutrients,
         },
         photoThumb: foodPhotos.thumb,
         altMeasureId: foodAltMeasures.id,
@@ -233,6 +234,7 @@ export async function GET(request: NextRequest) {
         fiber: toNumber(log.food.fiber),
         sugar: toNumber(log.food.sugar),
         sodium: toNumber(log.food.sodium),
+        fullNutrients: (log.food.fullNutrients as Record<string, unknown>) ?? {},
         photoUrl: log.photoThumb ?? null,
       },
       altMeasure: log.altMeasureId
@@ -248,6 +250,11 @@ export async function GET(request: NextRequest) {
     const totalsData = transformedLogs.reduce(
       (acc, log) => {
         const quantity = toNumber(log.quantity);
+        const fn = log.food.fullNutrients;
+        const fnNum = (key: string) => {
+          const v = fn[key];
+          return typeof v === 'number' ? v : 0;
+        };
         return {
           calories: acc.calories + (toNumber(log.food.calories) / 100) * quantity,
           protein: acc.protein + (toNumber(log.food.protein) / 100) * quantity,
@@ -256,6 +263,15 @@ export async function GET(request: NextRequest) {
           fiber: acc.fiber + (toNumber(log.food.fiber) / 100) * quantity,
           sugar: acc.sugar + (toNumber(log.food.sugar) / 100) * quantity,
           sodium: acc.sodium + (toNumber(log.food.sodium) / 100) * quantity,
+          saturatedFat: acc.saturatedFat + (fnNum('saturatedFat') / 100) * quantity,
+          polyunsaturatedFat: acc.polyunsaturatedFat + (fnNum('polyunsaturatedFat') / 100) * quantity,
+          monounsaturatedFat: acc.monounsaturatedFat + (fnNum('monounsaturatedFat') / 100) * quantity,
+          cholesterol: acc.cholesterol + (fnNum('cholesterol') / 100) * quantity,
+          potassium: acc.potassium + (fnNum('potassium') / 100) * quantity,
+          vitaminA: acc.vitaminA + (fnNum('vitaminA') / 100) * quantity,
+          vitaminC: acc.vitaminC + (fnNum('vitaminC') / 100) * quantity,
+          calcium: acc.calcium + (fnNum('calcium') / 100) * quantity,
+          iron: acc.iron + (fnNum('iron') / 100) * quantity,
           foodCount: acc.foodCount + 1,
         };
       },
@@ -267,6 +283,15 @@ export async function GET(request: NextRequest) {
         fiber: 0,
         sugar: 0,
         sodium: 0,
+        saturatedFat: 0,
+        polyunsaturatedFat: 0,
+        monounsaturatedFat: 0,
+        cholesterol: 0,
+        potassium: 0,
+        vitaminA: 0,
+        vitaminC: 0,
+        calcium: 0,
+        iron: 0,
         foodCount: 0,
       },
     );
@@ -293,6 +318,15 @@ export async function GET(request: NextRequest) {
         fiber: Math.round((totalsData.fiber || 0) * 10) / 10,
         sugar: Math.round((totalsData.sugar || 0) * 10) / 10,
         sodium: Math.round((totalsData.sodium || 0) * 10) / 10,
+        saturatedFat: Math.round((totalsData.saturatedFat || 0) * 10) / 10,
+        polyunsaturatedFat: Math.round((totalsData.polyunsaturatedFat || 0) * 10) / 10,
+        monounsaturatedFat: Math.round((totalsData.monounsaturatedFat || 0) * 10) / 10,
+        cholesterol: Math.round((totalsData.cholesterol || 0) * 10) / 10,
+        potassium: Math.round((totalsData.potassium || 0) * 10) / 10,
+        vitaminA: Math.round((totalsData.vitaminA || 0) * 10) / 10,
+        vitaminC: Math.round((totalsData.vitaminC || 0) * 10) / 10,
+        calcium: Math.round((totalsData.calcium || 0) * 10) / 10,
+        iron: Math.round((totalsData.iron || 0) * 10) / 10,
       },
     });
   } catch (error) {
