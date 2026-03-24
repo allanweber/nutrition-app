@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import {
+  foodAltMeasures,
   foodLogItems,
   foodLogMeals,
   foodPhotos,
+  foods,
 } from '@/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { foodLogIdSchema, updateFoodLogSchema, validateApiInput, validateRequestBody } from '@/lib/api-validation';
@@ -33,7 +35,6 @@ export async function GET(
 
     const { id } = await params;
 
-    // Validate food log ID
     const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
     if (!idValidation.success) {
       return NextResponse.json(
@@ -48,55 +49,65 @@ export async function GET(
       .select({
         id: foodLogItems.id,
         quantity: foodLogItems.quantity,
-        servingUnit: foodLogItems.servingUnit,
         mealType: foodLogMeals.mealType,
         consumedAt: foodLogMeals.consumedAt,
         createdAt: foodLogItems.createdAt,
         food: {
-          id: foodLogItems.foodId,
-          name: foodLogItems.foodName,
-          brandName: foodLogItems.brandName,
-          calories: foodLogItems.calories,
-          protein: foodLogItems.protein,
-          carbs: foodLogItems.carbs,
-          fat: foodLogItems.fat,
-          fiber: foodLogItems.fiber,
-          sugar: foodLogItems.sugar,
-          sodium: foodLogItems.sodium,
-          servingQty: foodLogItems.servingQty,
-          servingUnit: foodLogItems.servingUnitSnapshot,
+          id: foods.id,
+          name: foods.name,
+          brandName: foods.brandName,
+          calories: foods.calories,
+          protein: foods.protein,
+          carbs: foods.carbs,
+          fat: foods.fat,
+          fiber: foods.fiber,
+          sugar: foods.sugar,
+          sodium: foods.sodium,
         },
         photoThumb: foodPhotos.thumb,
+        altMeasureId: foodAltMeasures.id,
+        altMeasureDescription: foodAltMeasures.measure,
+        altMeasureWeightGrams: foodAltMeasures.servingWeight,
+        altMeasureQty: foodAltMeasures.qty,
       })
       .from(foodLogItems)
       .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+      .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
       .leftJoin(foodPhotos, eq(foodLogItems.foodId, foodPhotos.foodId))
+      .leftJoin(foodAltMeasures, eq(foodLogItems.altMeasureId, foodAltMeasures.id))
       .where(and(eq(foodLogItems.id, logId), eq(foodLogMeals.userId, user.id)));
 
     if (itemLog) {
-      const transformedLog = {
-        id: itemLog.id,
-        quantity: toNumber(itemLog.quantity),
-        servingUnit: itemLog.servingUnit,
-        mealType: itemLog.mealType,
-        consumedAt: itemLog.consumedAt,
-        createdAt: itemLog.createdAt,
-        food: {
-          ...itemLog.food,
-          id: itemLog.food.id ?? null,
-          calories: toNumber(itemLog.food.calories),
-          protein: toNumber(itemLog.food.protein),
-          carbs: toNumber(itemLog.food.carbs),
-          fat: toNumber(itemLog.food.fat),
-          fiber: toNumber(itemLog.food.fiber),
-          sugar: toNumber(itemLog.food.sugar),
-          sodium: toNumber(itemLog.food.sodium),
-          servingQty: toNumber(itemLog.food.servingQty),
-          photoUrl: itemLog.photoThumb,
+      return NextResponse.json({
+        log: {
+          id: itemLog.id,
+          quantity: toNumber(itemLog.quantity),
+          mealType: itemLog.mealType,
+          consumedAt: itemLog.consumedAt,
+          createdAt: itemLog.createdAt,
+          food: {
+            id: itemLog.food.id,
+            name: itemLog.food.name,
+            brandName: itemLog.food.brandName,
+            calories: toNumber(itemLog.food.calories),
+            protein: toNumber(itemLog.food.protein),
+            carbs: toNumber(itemLog.food.carbs),
+            fat: toNumber(itemLog.food.fat),
+            fiber: toNumber(itemLog.food.fiber),
+            sugar: toNumber(itemLog.food.sugar),
+            sodium: toNumber(itemLog.food.sodium),
+            photoUrl: itemLog.photoThumb ?? null,
+          },
+          altMeasure: itemLog.altMeasureId
+            ? {
+                id: itemLog.altMeasureId,
+                description: itemLog.altMeasureDescription!,
+                weightGrams: toNumber(itemLog.altMeasureWeightGrams),
+                qty: toNumber(itemLog.altMeasureQty),
+              }
+            : null,
         },
-      };
-
-      return NextResponse.json({ log: transformedLog });
+      });
     }
 
     return NextResponse.json(
@@ -130,7 +141,6 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Validate food log ID
     const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
     if (!idValidation.success) {
       return NextResponse.json(
@@ -169,12 +179,10 @@ export async function DELETE(
       });
     }
 
-    if (existingItemLog.length === 0) {
-      return NextResponse.json(
-        { error: 'Food log not found or unauthorized' },
-        { status: 404 }
-      );
-    }
+    return NextResponse.json(
+      { error: 'Food log not found or unauthorized' },
+      { status: 404 }
+    );
 
   } catch (error) {
     console.error('Food log delete error:', error);
@@ -202,7 +210,6 @@ export async function PATCH(
 
     const { id } = await params;
 
-    // Validate food log ID
     const idValidation = validateApiInput(foodLogIdSchema, id, 'id');
     if (!idValidation.success) {
       return NextResponse.json(
@@ -213,7 +220,6 @@ export async function PATCH(
 
     const logId = idValidation.data;
 
-    // Validate request body
     const validation = await validateRequestBody(request, updateFoodLogSchema);
     if (!validation.success) {
       return validation.response;
@@ -233,11 +239,15 @@ export async function PATCH(
     if (existingItemLog.length > 0) {
       const itemUpdateData: {
         quantity?: string;
+        altMeasureId?: string | null;
         updatedAt?: Date;
       } = {};
 
       if (updateData.quantity !== undefined) {
         itemUpdateData.quantity = updateData.quantity.toString();
+      }
+      if ('altMeasureId' in updateData && updateData.altMeasureId !== undefined) {
+        itemUpdateData.altMeasureId = updateData.altMeasureId;
       }
 
       if (Object.keys(itemUpdateData).length > 0) {
@@ -277,17 +287,10 @@ export async function PATCH(
       });
     }
 
-    if (existingItemLog.length === 0) {
-      return NextResponse.json(
-        { error: 'Food log not found or unauthorized' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Food log updated successfully',
-    });
+    return NextResponse.json(
+      { error: 'Food log not found or unauthorized' },
+      { status: 404 }
+    );
 
   } catch (error) {
     console.error('Food log update error:', error);

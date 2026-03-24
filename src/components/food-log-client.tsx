@@ -78,15 +78,13 @@ export default function FoodLogClient({
   };
 
   const calculateLogNutrients = useCallback((log: FoodLogEntry) => {
-    const qty = log.quantity || 1;
-    const servingQty = log.food?.servingQty || 1;
-    const multiplier = qty / servingQty;
-
+    const quantity = log.quantity || 0;
+    // nutrients are per 100g; quantity is always in grams
     return {
-      calories: Math.round((log.food?.calories || 0) * multiplier),
-      protein: Math.round((log.food?.protein || 0) * multiplier * 10) / 10,
-      carbs: Math.round((log.food?.carbs || 0) * multiplier * 10) / 10,
-      fat: Math.round((log.food?.fat || 0) * multiplier * 10) / 10,
+      calories: Math.round(((log.food?.calories || 0) / 100) * quantity),
+      protein: Math.round(((log.food?.protein || 0) / 100) * quantity * 10) / 10,
+      carbs: Math.round(((log.food?.carbs || 0) / 100) * quantity * 10) / 10,
+      fat: Math.round(((log.food?.fat || 0) / 100) * quantity * 10) / 10,
     };
   }, []);
 
@@ -224,7 +222,9 @@ export default function FoodLogClient({
                           </p>
                         )}
                         <p className="text-xs text-on-surface-variant">
-                          {log.quantity} {log.servingUnit || log.food.servingUnit}
+                          {log.altMeasure
+                            ? `${log.altMeasure.qty} ${log.altMeasure.description}`
+                            : `${log.quantity}g`}
                         </p>
                         {/* Macro badges */}
                         <div className="flex items-center gap-1 mt-1 flex-wrap">

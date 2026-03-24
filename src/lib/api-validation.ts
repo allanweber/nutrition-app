@@ -44,15 +44,8 @@ export const daysSchema = z
 // Food log creation validation - based on client input format
 // Note: Uses subset of mealTypeEnum values (client only sends basic meal types)
 export const createFoodLogSchema = z.object({
-  foodName: z
-    .string()
-    .min(1, 'Food name is required')
-    .max(200, 'Food name must be at most 200 characters')
-    .transform(sanitizeString),
-  brandName: z
-    .string()
-    .optional()
-    .transform((val) => (val ? sanitizeString(val) : undefined)),
+  foodId: z.string().uuid('foodId must be a valid UUID'),
+  altMeasureId: z.string().uuid('altMeasureId must be a valid UUID').optional().nullable(),
   quantity: z
     .union([z.string(), z.number()])
     .transform((val) => {
@@ -61,14 +54,9 @@ export const createFoodLogSchema = z.object({
       return num;
     })
     .refine(
-      (val) => val > 0 && val <= 10000,
-      'Quantity must be between 0.01 and 10,000',
+      (val) => val > 0 && val <= 100000,
+      'Quantity must be between 0.01 and 100,000',
     ),
-  servingUnit: z
-    .string()
-    .min(1, 'Serving unit is required')
-    .max(50, 'Serving unit must be at most 50 characters')
-    .transform(sanitizeString),
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']), // Subset of mealTypeEnum
   consumedAt: z
     .string()
@@ -85,12 +73,13 @@ export const updateFoodLogSchema = z.object({
       if (val === undefined) return val;
       const num =
         typeof val === 'string' ? parseFloat(sanitizeNumericString(val)) : val;
-      return num > 0 && num <= 10000 ? num : undefined;
+      return num > 0 && num <= 100000 ? num : undefined;
     })
     .refine(
-      (val) => val === undefined || (val > 0 && val <= 10000),
-      'Quantity must be between 0.01 and 10,000',
+      (val) => val === undefined || (val > 0 && val <= 100000),
+      'Quantity must be between 0.01 and 100,000',
     ),
+  altMeasureId: z.string().uuid('altMeasureId must be a valid UUID').optional().nullable(),
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(), // Subset of mealTypeEnum
   consumedAt: z
     .string()

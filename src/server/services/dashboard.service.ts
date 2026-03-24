@@ -4,6 +4,7 @@ import { db } from '@/server/db';
 import {
   foodLogItems,
   foodLogMeals,
+  foods,
   hydrationLogs,
   nutritionGoals,
 } from '@/server/db/schema';
@@ -162,17 +163,18 @@ export const getDailySummary = cache(async function getDailySummary(
 ): Promise<DailySummaryDTO> {
   const { start, end } = getDayRange(date);
 
-  // Fetch all food log items for the day
+  // Fetch all food log items for the day (join foods for nutrition data)
   const items = await db
     .select({
-      calories: foodLogItems.calories,
-      protein: foodLogItems.protein,
-      carbs: foodLogItems.carbs,
-      fat: foodLogItems.fat,
+      calories: foods.calories,
+      protein: foods.protein,
+      carbs: foods.carbs,
+      fat: foods.fat,
       quantity: foodLogItems.quantity,
     })
     .from(foodLogItems)
     .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+    .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
     .where(
       and(
         eq(foodLogMeals.userId, userId),
@@ -181,15 +183,15 @@ export const getDailySummary = cache(async function getDailySummary(
       ),
     );
 
-  // Aggregate totals
+  // Aggregate totals — nutrients are per 100g, quantity is in grams
   const totals = items.reduce(
     (acc, item) => {
       const q = toNum(item.quantity);
       return {
-        calories: acc.calories + toNum(item.calories) * q,
-        protein: acc.protein + toNum(item.protein) * q,
-        carbs: acc.carbs + toNum(item.carbs) * q,
-        fat: acc.fat + toNum(item.fat) * q,
+        calories: acc.calories + (toNum(item.calories) / 100) * q,
+        protein: acc.protein + (toNum(item.protein) / 100) * q,
+        carbs: acc.carbs + (toNum(item.carbs) / 100) * q,
+        fat: acc.fat + (toNum(item.fat) / 100) * q,
       };
     },
     { calories: 0, protein: 0, carbs: 0, fat: 0 },
@@ -351,18 +353,19 @@ export async function getWeeklySnapshot(
     ? Math.max(toNum(goal.targetCalories), DEFAULT_CALORIE_GOAL)
     : DEFAULT_CALORIE_GOAL;
 
-  // Get all calories and macros for the week
+  // Get all calories and macros for the week (join foods for nutrition data)
   const weekItems = await db
     .select({
       consumedAt: foodLogMeals.consumedAt,
-      calories: foodLogItems.calories,
-      protein: foodLogItems.protein,
-      carbs: foodLogItems.carbs,
-      fat: foodLogItems.fat,
+      calories: foods.calories,
+      protein: foods.protein,
+      carbs: foods.carbs,
+      fat: foods.fat,
       quantity: foodLogItems.quantity,
     })
     .from(foodLogItems)
     .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+    .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
     .where(
       and(
         eq(foodLogMeals.userId, userId),
@@ -371,7 +374,7 @@ export async function getWeeklySnapshot(
       ),
     );
 
-  // Aggregate by date string
+  // Aggregate by date string — nutrients are per 100g, quantity is in grams
   type DayTotals = {
     calories: number;
     protein: number;
@@ -389,10 +392,10 @@ export async function getWeeklySnapshot(
       fat: 0,
     };
     totalsByDate[dayStr] = {
-      calories: existing.calories + toNum(item.calories) * q,
-      protein: existing.protein + toNum(item.protein) * q,
-      carbs: existing.carbs + toNum(item.carbs) * q,
-      fat: existing.fat + toNum(item.fat) * q,
+      calories: existing.calories + (toNum(item.calories) / 100) * q,
+      protein: existing.protein + (toNum(item.protein) / 100) * q,
+      carbs: existing.carbs + (toNum(item.carbs) / 100) * q,
+      fat: existing.fat + (toNum(item.fat) / 100) * q,
     };
   }
 
@@ -428,19 +431,20 @@ export async function getDailySchedule(
 ): Promise<DailyScheduleDTO> {
   const { start, end } = getDayRange(date);
 
-  // Get all meals for the day with their food items
+  // Get all meals for the day with their food items (join foods for name + nutrition)
   const rows = await db
     .select({
       mealId: foodLogMeals.id,
       mealType: foodLogMeals.mealType,
       consumedAt: foodLogMeals.consumedAt,
-      foodName: foodLogItems.foodName,
-      calories: foodLogItems.calories,
+      foodName: foods.name,
+      calories: foods.calories,
       quantity: foodLogItems.quantity,
       itemId: foodLogItems.id,
     })
     .from(foodLogMeals)
     .leftJoin(foodLogItems, eq(foodLogItems.mealId, foodLogMeals.id))
+    .leftJoin(foods, eq(foodLogItems.foodId, foods.id))
     .where(
       and(
         eq(foodLogMeals.userId, userId),
@@ -473,8 +477,9 @@ export async function getDailySchedule(
       });
     }
     const meal = mealsMap.get(row.mealId)!;
+    // nutrients are per 100g, quantity is in grams
     if (row.calories !== null && row.quantity !== null) {
-      meal.calories += toNum(row.calories) * toNum(row.quantity);
+      meal.calories += (toNum(row.calories) / 100) * toNum(row.quantity);
     }
     // Keep the first food name (already set on first insert)
   }

@@ -45,22 +45,9 @@ CREATE TABLE "diet_plan_meal_groups" (
 CREATE TABLE "diet_plan_meal_items" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"group_id" uuid NOT NULL,
-	"food_id" uuid,
+	"food_id" uuid NOT NULL,
+	"alt_measure_id" uuid,
 	"quantity" numeric(10, 2) NOT NULL,
-	"serving_unit" varchar(100),
-	"food_name" varchar(500) NOT NULL,
-	"brand_name" varchar(500),
-	"calories" numeric(10, 2),
-	"protein" numeric(10, 2),
-	"carbs" numeric(10, 2),
-	"fat" numeric(10, 2),
-	"fiber" numeric(10, 2),
-	"sugar" numeric(10, 2),
-	"sodium" numeric(10, 2),
-	"serving_qty" numeric(10, 2),
-	"serving_unit_snapshot" varchar(100),
-	"serving_weight_grams" numeric(10, 2),
-	"photo_thumb_snapshot" varchar(500),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -122,22 +109,9 @@ CREATE TABLE "food_alt_measures" (
 CREATE TABLE "food_log_items" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"meal_id" uuid NOT NULL,
-	"food_id" uuid,
+	"food_id" uuid NOT NULL,
+	"alt_measure_id" uuid,
 	"quantity" numeric(10, 2) NOT NULL,
-	"serving_unit" varchar(100),
-	"food_name" varchar(500) NOT NULL,
-	"brand_name" varchar(500),
-	"calories" numeric(10, 2),
-	"protein" numeric(10, 2),
-	"carbs" numeric(10, 2),
-	"fat" numeric(10, 2),
-	"fiber" numeric(10, 2),
-	"sugar" numeric(10, 2),
-	"sodium" numeric(10, 2),
-	"serving_qty" numeric(10, 2),
-	"serving_unit_snapshot" varchar(100),
-	"serving_weight_grams" numeric(10, 2),
-	"photo_thumb_snapshot" varchar(500),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -278,14 +252,16 @@ ALTER TABLE "body_checkins" ADD CONSTRAINT "body_checkins_user_id_user_id_fk" FO
 ALTER TABLE "body_checkins" ADD CONSTRAINT "body_checkins_goal_id_nutrition_goals_id_fk" FOREIGN KEY ("goal_id") REFERENCES "public"."nutrition_goals"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meal_groups" ADD CONSTRAINT "diet_plan_meal_groups_diet_plan_id_diet_plans_id_fk" FOREIGN KEY ("diet_plan_id") REFERENCES "public"."diet_plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_group_id_diet_plan_meal_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."diet_plan_meal_groups"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_alt_measure_id_food_alt_measures_id_fk" FOREIGN KEY ("alt_measure_id") REFERENCES "public"."food_alt_measures"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_diet_plan_id_diet_plans_id_fk" FOREIGN KEY ("diet_plan_id") REFERENCES "public"."diet_plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plans" ADD CONSTRAINT "diet_plans_client_id_user_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "email_verification_challenge" ADD CONSTRAINT "email_verification_challenge_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_alt_measures" ADD CONSTRAINT "food_alt_measures_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_meal_id_food_log_meals_id_fk" FOREIGN KEY ("meal_id") REFERENCES "public"."food_log_meals"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_alt_measure_id_food_alt_measures_id_fk" FOREIGN KEY ("alt_measure_id") REFERENCES "public"."food_alt_measures"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meal_groups_id_fk" FOREIGN KEY ("source_diet_plan_meal_group_id") REFERENCES "public"."diet_plan_meal_groups"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_photos" ADD CONSTRAINT "food_photos_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

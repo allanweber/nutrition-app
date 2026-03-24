@@ -44,6 +44,18 @@ TypeScript 5.x, Node.js 20: Follow standard conventions
 - DB migration needed: add `medium` column to `food_photos` table
 - Feature flag: `FATSECRET_ENABLED` env var (default: enabled)
 - See `specs/003-fatsecret-food-retrieval/` for full plan, data-model, and contracts
+## Food Log Data Model (redesign-food-log branch)
+
+`foodLogItems` and `dietPlanMealItems` no longer store nutrition snapshots. All nutrition data is read via FK joins:
+
+- `foodId uuid NOT NULL` → `foods.id` (`onDelete: cascade`) — log item cannot exist without a food
+- `altMeasureId uuid nullable` → `food_alt_measures.id` (`onDelete: set null`) — display only (e.g. "2 cups"); null means quantity is raw grams
+- `quantity` is always stored in **grams**
+- Removed columns: `foodName`, `brandName`, `calories`, `protein`, `carbs`, `fat`, `fiber`, `sugar`, `sodium`, `servingQty`, `servingUnitSnapshot`, `servingWeightGrams`, `photoThumbSnapshot`, `servingUnit`
+
+**Unified calculation everywhere**: `nutrient = (foods.nutrient / 100) * quantity_grams`
+
+**POST `/api/food-logs`** now accepts `{ foodId: uuid, altMeasureId?: uuid, quantity: number, mealType, consumedAt }` — no more `foodName`/`servingUnit` strings.
 <!-- MANUAL ADDITIONS END -->
 
 ## Design Context

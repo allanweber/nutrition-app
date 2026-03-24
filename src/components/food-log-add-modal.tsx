@@ -22,27 +22,23 @@ export function FoodLogAddModal({ open, food, foodDetail, isDetailLoading, onClo
       quantity: '1',
     },
     onSubmit: async ({ value }) => {
-      if (!food) return;
+      if (!foodDetail) return;
 
-      let servingUnit = 'g';
+      let altMeasureId: string | null = null;
       let quantity = value.quantity;
 
-      if (value.servingId === 'base') {
-        // 100g base serving — quantity is in grams
-        servingUnit = 'g';
-      } else if (foodDetail) {
+      if (value.servingId !== 'base' && foodDetail) {
         const serving = foodDetail.servings.find((s) => String(s.id) === value.servingId);
         if (serving) {
-          servingUnit = serving.description;
+          altMeasureId = serving.id;
           quantity = String(parseFloat(value.quantity) * serving.weightGrams);
         }
       }
 
       await createMutation.mutateAsync({
-        foodName: food.name,
-        brandName: food.brandName ?? undefined,
+        foodId: foodDetail.id,
+        altMeasureId,
         quantity,
-        servingUnit,
         mealType: value.mealType,
       });
 

@@ -1,12 +1,13 @@
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import {
+  foodAltMeasures,
   foodLogItems,
   foodLogMeals,
   foodPhotos,
   foods,
 } from '@/server/db/schema';
-import { and, desc, eq, gte, ilike, lt } from 'drizzle-orm';
+import { and, desc, eq, gte, lt } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
@@ -41,50 +42,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate request body
     const validation = await validateRequestBody(request, createFoodLogSchema);
     if (!validation.success) {
       return validation.response;
     }
 
-    const { foodName, quantity, servingUnit, mealType, consumedAt } =
+    const { foodId, altMeasureId, quantity, mealType, consumedAt } =
       validation.data;
 
-    // Look up food from local DB by name (FatSecret foods are pre-saved during search)
+    // Verify the food exists
     const matchingFoods = await db
       .select({ food: foods, photo: foodPhotos })
       .from(foods)
       .leftJoin(foodPhotos, eq(foodPhotos.foodId, foods.id))
-      .where(ilike(foods.name, foodName))
+      .where(eq(foods.id, foodId))
       .limit(1);
 
-    let cachedFood: typeof matchingFoods[number]['food'] | null = matchingFoods[0]?.food ?? null;
-    const cachedPhotoThumb: string | null = matchingFoods[0]?.photo?.thumb ?? null;
-
-    if (!cachedFood) {
-      // Create a minimal food entry if not found in local DB
-      const [newFood] = await db
-        .insert(foods)
-        .values({
-          source: 'user_custom',
-          sourceId: null,
-          name: foodName,
-          brandName: null,
-          servingQty: String(quantity),
-          servingUnit: servingUnit || 'g',
-          servingWeightGrams: null,
-          calories: null,
-          protein: null,
-          carbs: null,
-          fat: null,
-          isRaw: false,
-          userId: null,
-        })
-        .returning();
-      cachedFood = newFood;
+    if (matchingFoods.length === 0) {
+      return NextResponse.json({ error: 'Food not found' }, { status: 404 });
     }
 
-    // Create food log entry in grouped meal model
+    const cachedFood = matchingFoods[0].food;
+    const cachedPhotoThumb = matchingFoods[0].photo?.thumb ?? null;
+
+    // Look up altMeasure if provided
+    let altMeasure: typeof foodAltMeasures.$inferSelect | null = null;
+    if (altMeasureId) {
+      const rows = await db
+        .select()
+        .from(foodAltMeasures)
+        .where(eq(foodAltMeasures.id, altMeasureId))
+        .limit(1);
+      altMeasure = rows[0] ?? null;
+    }
+
+    // Find or create meal
     const logDate = consumedAt ? new Date(consumedAt) : new Date();
     const normalizedConsumedAt = roundToMealMinute(logDate);
 
@@ -116,20 +108,8 @@ export async function POST(request: NextRequest) {
       .values({
         mealId,
         foodId: cachedFood.id,
+        altMeasureId: altMeasure?.id ?? null,
         quantity: quantity.toString(),
-        servingUnit: servingUnit || cachedFood.servingUnit || 'g',
-        foodName: cachedFood.name,
-        brandName: cachedFood.brandName || null,
-        calories: cachedFood.calories,
-        protein: cachedFood.protein,
-        carbs: cachedFood.carbs,
-        fat: cachedFood.fat,
-        fiber: cachedFood.fiber,
-        sugar: cachedFood.sugar,
-        sodium: cachedFood.sodium,
-        servingQty: cachedFood.servingQty,
-        servingUnitSnapshot: cachedFood.servingUnit,
-        servingWeightGrams: cachedFood.servingWeightGrams,
       })
       .returning();
 
@@ -137,26 +117,30 @@ export async function POST(request: NextRequest) {
       success: true,
       log: {
         id: newLogItem.id,
-        quantity: newLogItem.quantity,
-        servingUnit: newLogItem.servingUnit,
+        quantity: toNumber(newLogItem.quantity),
         mealType,
         consumedAt: normalizedConsumedAt,
         food: {
           id: cachedFood.id,
           name: cachedFood.name,
           brandName: cachedFood.brandName,
-          calories: cachedFood.calories,
-          protein: cachedFood.protein,
-          carbs: cachedFood.carbs,
-          fat: cachedFood.fat,
-          fiber: cachedFood.fiber,
-          sugar: cachedFood.sugar,
-          sodium: cachedFood.sodium,
-          servingQty: cachedFood.servingQty,
-          servingWeightGrams: cachedFood.servingWeightGrams,
-          servingUnit: cachedFood.servingUnit,
+          calories: toNumber(cachedFood.calories),
+          protein: toNumber(cachedFood.protein),
+          carbs: toNumber(cachedFood.carbs),
+          fat: toNumber(cachedFood.fat),
+          fiber: toNumber(cachedFood.fiber),
+          sugar: toNumber(cachedFood.sugar),
+          sodium: toNumber(cachedFood.sodium),
           photoUrl: cachedPhotoThumb,
         },
+        altMeasure: altMeasure
+          ? {
+              id: altMeasure.id,
+              description: altMeasure.measure,
+              weightGrams: toNumber(altMeasure.servingWeight),
+              qty: toNumber(altMeasure.qty),
+            }
+          : null,
       },
     });
   } catch (error) {
@@ -184,7 +168,6 @@ export async function GET(request: NextRequest) {
     const dateParam =
       searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    // Validate date parameter
     const dateValidation = validateApiInput(dateSchema, dateParam, 'date');
     if (!dateValidation.success) {
       return NextResponse.json(
@@ -199,28 +182,31 @@ export async function GET(request: NextRequest) {
       .select({
         id: foodLogItems.id,
         quantity: foodLogItems.quantity,
-        servingUnit: foodLogItems.servingUnit,
         mealType: foodLogMeals.mealType,
         consumedAt: foodLogMeals.consumedAt,
         food: {
-          id: foodLogItems.foodId,
-          name: foodLogItems.foodName,
-          brandName: foodLogItems.brandName,
-          calories: foodLogItems.calories,
-          protein: foodLogItems.protein,
-          carbs: foodLogItems.carbs,
-          fat: foodLogItems.fat,
-          fiber: foodLogItems.fiber,
-          sugar: foodLogItems.sugar,
-          sodium: foodLogItems.sodium,
-          servingQty: foodLogItems.servingQty,
-          servingUnit: foodLogItems.servingUnitSnapshot,
+          id: foods.id,
+          name: foods.name,
+          brandName: foods.brandName,
+          calories: foods.calories,
+          protein: foods.protein,
+          carbs: foods.carbs,
+          fat: foods.fat,
+          fiber: foods.fiber,
+          sugar: foods.sugar,
+          sodium: foods.sodium,
         },
         photoThumb: foodPhotos.thumb,
+        altMeasureId: foodAltMeasures.id,
+        altMeasureDescription: foodAltMeasures.measure,
+        altMeasureWeightGrams: foodAltMeasures.servingWeight,
+        altMeasureQty: foodAltMeasures.qty,
       })
       .from(foodLogItems)
       .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+      .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
       .leftJoin(foodPhotos, eq(foodLogItems.foodId, foodPhotos.foodId))
+      .leftJoin(foodAltMeasures, eq(foodLogItems.altMeasureId, foodAltMeasures.id))
       .where(
         and(
           eq(foodLogMeals.userId, user.id),
@@ -234,12 +220,12 @@ export async function GET(request: NextRequest) {
     const transformedLogs = mealItemLogs.map((log) => ({
       id: log.id,
       quantity: toNumber(log.quantity),
-      servingUnit: log.servingUnit,
       mealType: log.mealType,
       consumedAt: log.consumedAt,
       food: {
-        ...log.food,
-        id: log.food.id || 0,
+        id: log.food.id,
+        name: log.food.name,
+        brandName: log.food.brandName,
         calories: toNumber(log.food.calories),
         protein: toNumber(log.food.protein),
         carbs: toNumber(log.food.carbs),
@@ -247,22 +233,29 @@ export async function GET(request: NextRequest) {
         fiber: toNumber(log.food.fiber),
         sugar: toNumber(log.food.sugar),
         sodium: toNumber(log.food.sodium),
-        servingQty: toNumber(log.food.servingQty),
-        photoUrl: log.photoThumb || null,
+        photoUrl: log.photoThumb ?? null,
       },
+      altMeasure: log.altMeasureId
+        ? {
+            id: log.altMeasureId,
+            description: log.altMeasureDescription!,
+            weightGrams: toNumber(log.altMeasureWeightGrams),
+            qty: toNumber(log.altMeasureQty),
+          }
+        : null,
     }));
 
     const totalsData = transformedLogs.reduce(
       (acc, log) => {
         const quantity = toNumber(log.quantity);
         return {
-          calories: acc.calories + toNumber(log.food.calories) * quantity,
-          protein: acc.protein + toNumber(log.food.protein) * quantity,
-          carbs: acc.carbs + toNumber(log.food.carbs) * quantity,
-          fat: acc.fat + toNumber(log.food.fat) * quantity,
-          fiber: acc.fiber + toNumber(log.food.fiber) * quantity,
-          sugar: acc.sugar + toNumber(log.food.sugar) * quantity,
-          sodium: acc.sodium + toNumber(log.food.sodium) * quantity,
+          calories: acc.calories + (toNumber(log.food.calories) / 100) * quantity,
+          protein: acc.protein + (toNumber(log.food.protein) / 100) * quantity,
+          carbs: acc.carbs + (toNumber(log.food.carbs) / 100) * quantity,
+          fat: acc.fat + (toNumber(log.food.fat) / 100) * quantity,
+          fiber: acc.fiber + (toNumber(log.food.fiber) / 100) * quantity,
+          sugar: acc.sugar + (toNumber(log.food.sugar) / 100) * quantity,
+          sodium: acc.sodium + (toNumber(log.food.sodium) / 100) * quantity,
           foodCount: acc.foodCount + 1,
         };
       },

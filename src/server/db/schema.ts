@@ -253,24 +253,6 @@ export const foodAltMeasures = pgTable(
   (table) => [index('food_alt_measures_food_id_idx').on(table.foodId)],
 );
 
-const foodSnapshotColumns = {
-  foodName: varchar('food_name', { length: 500 }).notNull(),
-  brandName: varchar('brand_name', { length: 500 }),
-  calories: decimal('calories', { precision: 10, scale: 2 }),
-  protein: decimal('protein', { precision: 10, scale: 2 }),
-  carbs: decimal('carbs', { precision: 10, scale: 2 }),
-  fat: decimal('fat', { precision: 10, scale: 2 }),
-  fiber: decimal('fiber', { precision: 10, scale: 2 }),
-  sugar: decimal('sugar', { precision: 10, scale: 2 }),
-  sodium: decimal('sodium', { precision: 10, scale: 2 }),
-  servingQty: decimal('serving_qty', { precision: 10, scale: 2 }),
-  servingUnitSnapshot: varchar('serving_unit_snapshot', { length: 100 }),
-  servingWeightGrams: decimal('serving_weight_grams', {
-    precision: 10,
-    scale: 2,
-  }),
-  photoThumbSnapshot: varchar('photo_thumb_snapshot', { length: 500 }),
-} as const;
 
 export const foodLogMeals = pgTable(
   'food_log_meals',
@@ -306,10 +288,11 @@ export const foodLogItems = pgTable(
     mealId: uuid('meal_id')
       .notNull()
       .references(() => foodLogMeals.id, { onDelete: 'cascade' }),
-    foodId: uuid('food_id').references(() => foods.id, { onDelete: 'set null' }),
+    foodId: uuid('food_id')
+      .notNull()
+      .references(() => foods.id, { onDelete: 'cascade' }),
+    altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
-    servingUnit: varchar('serving_unit', { length: 100 }),
-    ...foodSnapshotColumns,
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -495,10 +478,11 @@ export const dietPlanMealItems = pgTable(
     groupId: uuid('group_id')
       .notNull()
       .references(() => dietPlanMealGroups.id, { onDelete: 'cascade' }),
-    foodId: uuid('food_id').references(() => foods.id, { onDelete: 'set null' }),
+    foodId: uuid('food_id')
+      .notNull()
+      .references(() => foods.id, { onDelete: 'cascade' }),
+    altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
-    servingUnit: varchar('serving_unit', { length: 100 }),
-    ...foodSnapshotColumns,
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -579,6 +563,10 @@ export const foodLogItemsRelations = relations(foodLogItems, ({ one }) => ({
     fields: [foodLogItems.foodId],
     references: [foods.id],
   }),
+  altMeasure: one(foodAltMeasures, {
+    fields: [foodLogItems.altMeasureId],
+    references: [foodAltMeasures.id],
+  }),
 }));
 
 export const foodPhotosRelations = relations(foodPhotos, ({ one }) => ({
@@ -590,11 +578,13 @@ export const foodPhotosRelations = relations(foodPhotos, ({ one }) => ({
 
 export const foodAltMeasuresRelations = relations(
   foodAltMeasures,
-  ({ one }) => ({
+  ({ one, many }) => ({
     food: one(foods, {
       fields: [foodAltMeasures.foodId],
       references: [foods.id],
     }),
+    foodLogItems: many(foodLogItems),
+    dietPlanMealItems: many(dietPlanMealItems),
   }),
 );
 
@@ -656,6 +646,10 @@ export const dietPlanMealItemsRelations = relations(dietPlanMealItems, ({ one })
   food: one(foods, {
     fields: [dietPlanMealItems.foodId],
     references: [foods.id],
+  }),
+  altMeasure: one(foodAltMeasures, {
+    fields: [dietPlanMealItems.altMeasureId],
+    references: [foodAltMeasures.id],
   }),
 }));
 

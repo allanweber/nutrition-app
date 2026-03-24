@@ -51,16 +51,34 @@ export interface BaseFood {
   updatedAt: Date;
 }
 
+export interface FoodLogEntryFood {
+  id: string;
+  name: string;
+  brandName?: string | null;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  photoUrl?: string | null;
+}
+
+export interface FoodLogEntryAltMeasure {
+  id: string;
+  description: string;
+  weightGrams: number;
+  qty: number;
+}
+
 export interface FoodLogEntry {
   id: string;
-  userId: string;
-  foodId: string;
   quantity: number;
-  servingUnit?: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   consumedAt: Date;
-  createdAt: Date;
-  food: BaseFood;
+  food: FoodLogEntryFood;
+  altMeasure?: FoodLogEntryAltMeasure | null;
 }
 
 // Nutrition summary types (source agnostic)

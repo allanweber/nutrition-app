@@ -45,10 +45,9 @@ export function useFoodLogsQuery(date: string) {
 }
 
 interface CreateFoodLogData {
-  foodName: string
-  brandName?: string
+  foodId: string
+  altMeasureId?: string | null
   quantity: string
-  servingUnit: string
   mealType: string
 }
 

@@ -547,7 +547,6 @@ function generateFoodLogs(
     userId: string;
     foodId: string;
     quantity: string;
-    servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     consumedAt: Date;
   }> = [];
@@ -634,8 +633,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'breakfast',
           consumedAt: setHours(date, breakfastHour + i * 0.1),
         });
@@ -649,8 +647,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'lunch',
           consumedAt: setHours(date, lunchHour + i * 0.1),
         });
@@ -664,8 +661,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'dinner',
           consumedAt: setHours(date, dinnerHour + i * 0.1),
         });
@@ -680,8 +676,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[snackFoodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'snack',
           consumedAt: setHours(date, snackHour),
         });
@@ -692,20 +687,12 @@ function generateFoodLogs(
   return logs;
 }
 
-function toStringOrNull(value: string | number | null | undefined) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  return String(value);
-}
-
 async function insertGroupedFoodLogs(
   userId: string,
   logs: Array<{
     userId: string;
     foodId: string;
     quantity: string;
-    servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     consumedAt: Date;
   }>,
@@ -737,36 +724,11 @@ async function insertGroupedFoodLogs(
         mealId = newMeal.id;
       }
 
-      const food = await tx.query.foods.findFirst({
-        where: eq(schema.foods.id, log.foodId),
-      });
-
-      if (!food) {
-        continue;
-      }
-
-      const photo = await tx.query.foodPhotos.findFirst({
-        where: eq(schema.foodPhotos.foodId, log.foodId),
-      });
-
       await tx.insert(schema.foodLogItems).values({
         mealId,
         foodId: log.foodId,
         quantity: log.quantity,
-        servingUnit: log.servingUnit,
-        foodName: food.name,
-        brandName: food.brandName,
-        calories: toStringOrNull(food.calories),
-        protein: toStringOrNull(food.protein),
-        carbs: toStringOrNull(food.carbs),
-        fat: toStringOrNull(food.fat),
-        fiber: toStringOrNull(food.fiber),
-        sugar: toStringOrNull(food.sugar),
-        sodium: toStringOrNull(food.sodium),
-        servingQty: toStringOrNull(food.servingQty),
-        servingUnitSnapshot: food.servingUnit,
-        servingWeightGrams: toStringOrNull(food.servingWeightGrams),
-        photoThumbSnapshot: photo?.thumb || null,
+        altMeasureId: null,
       });
     }
   });

@@ -1,5 +1,5 @@
 {
-  "id": "17b6829f-4d4e-4f8f-868c-a7c889644eb9",
+  "id": "edcf0190-d4fb-4d48-8d2b-879d4cb93436",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -442,6 +442,12 @@
           "name": "food_id",
           "type": "uuid",
           "primaryKey": false,
+          "notNull": true
+        },
+        "alt_measure_id": {
+          "name": "alt_measure_id",
+          "type": "uuid",
+          "primaryKey": false,
           "notNull": false
         },
         "quantity": {
@@ -449,90 +455,6 @@
           "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": true
-        },
-        "serving_unit": {
-          "name": "serving_unit",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "food_name": {
-          "name": "food_name",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "brand_name": {
-          "name": "brand_name",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "calories": {
-          "name": "calories",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "protein": {
-          "name": "protein",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "carbs": {
-          "name": "carbs",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fat": {
-          "name": "fat",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fiber": {
-          "name": "fiber",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sugar": {
-          "name": "sugar",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sodium": {
-          "name": "sodium",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_qty": {
-          "name": "serving_qty",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_unit_snapshot": {
-          "name": "serving_unit_snapshot",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_weight_grams": {
-          "name": "serving_weight_grams",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "photo_thumb_snapshot": {
-          "name": "photo_thumb_snapshot",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -601,6 +523,19 @@
           "tableTo": "foods",
           "columnsFrom": [
             "food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "diet_plan_meal_items_alt_measure_id_food_alt_measures_id_fk": {
+          "name": "diet_plan_meal_items_alt_measure_id_food_alt_measures_id_fk",
+          "tableFrom": "diet_plan_meal_items",
+          "tableTo": "food_alt_measures",
+          "columnsFrom": [
+            "alt_measure_id"
           ],
           "columnsTo": [
             "id"
@@ -1119,6 +1054,12 @@
           "name": "food_id",
           "type": "uuid",
           "primaryKey": false,
+          "notNull": true
+        },
+        "alt_measure_id": {
+          "name": "alt_measure_id",
+          "type": "uuid",
+          "primaryKey": false,
           "notNull": false
         },
         "quantity": {
@@ -1126,90 +1067,6 @@
           "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": true
-        },
-        "serving_unit": {
-          "name": "serving_unit",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "food_name": {
-          "name": "food_name",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "brand_name": {
-          "name": "brand_name",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "calories": {
-          "name": "calories",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "protein": {
-          "name": "protein",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "carbs": {
-          "name": "carbs",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fat": {
-          "name": "fat",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fiber": {
-          "name": "fiber",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sugar": {
-          "name": "sugar",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sodium": {
-          "name": "sodium",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_qty": {
-          "name": "serving_qty",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_unit_snapshot": {
-          "name": "serving_unit_snapshot",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "serving_weight_grams": {
-          "name": "serving_weight_grams",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "photo_thumb_snapshot": {
-          "name": "photo_thumb_snapshot",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1278,6 +1135,19 @@
           "tableTo": "foods",
           "columnsFrom": [
             "food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "food_log_items_alt_measure_id_food_alt_measures_id_fk": {
+          "name": "food_log_items_alt_measure_id_food_alt_measures_id_fk",
+          "tableFrom": "food_log_items",
+          "tableTo": "food_alt_measures",
+          "columnsFrom": [
+            "alt_measure_id"
           ],
           "columnsTo": [
             "id"
