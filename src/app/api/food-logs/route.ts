@@ -182,6 +182,8 @@ export async function GET(request: NextRequest) {
       .select({
         id: foodLogItems.id,
         quantity: foodLogItems.quantity,
+        dishLogGroupId: foodLogItems.dishLogGroupId,
+        dishNameSnapshot: foodLogItems.dishNameSnapshot,
         mealType: foodLogMeals.mealType,
         consumedAt: foodLogMeals.consumedAt,
         food: {
@@ -221,6 +223,8 @@ export async function GET(request: NextRequest) {
     const transformedLogs = mealItemLogs.map((log) => ({
       id: log.id,
       quantity: toNumber(log.quantity),
+      dishLogGroupId: log.dishLogGroupId ?? null,
+      dishNameSnapshot: log.dishNameSnapshot ?? null,
       mealType: log.mealType,
       consumedAt: log.consumedAt,
       food: {

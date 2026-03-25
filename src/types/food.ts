@@ -79,6 +79,15 @@ export interface FoodLogEntry {
   consumedAt: Date;
   food: FoodLogEntryFood;
   altMeasure?: FoodLogEntryAltMeasure | null;
+  dishLogGroupId?: string | null;
+  dishNameSnapshot?: string | null;
+}
+
+export interface FoodLogEntryDishGroup {
+  dishLogGroupId: string;
+  dishNameSnapshot: string;
+  items: FoodLogEntry[];
+  totalCalories: number;
 }
 
 // Nutrition summary types (source agnostic)

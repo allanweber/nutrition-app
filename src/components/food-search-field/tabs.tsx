@@ -16,6 +16,7 @@ interface TabsProps {
   results: UnifiedFoodSearchResultItem[];
   query: string;
   showCustomTab: boolean;
+  preferCustomTab?: boolean;
   highlightedIndex: number;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -27,6 +28,7 @@ export function Tabs({
   results,
   query,
   showCustomTab,
+  preferCustomTab = false,
   highlightedIndex,
   hasMore,
   isLoadingMore,
@@ -50,7 +52,21 @@ export function Tabs({
       return false;
     }) ?? 'Common';
 
+  const userHasManuallySelectedTab = React.useRef(false);
   const [activeTab, setActiveTab] = React.useState<TabKey>(defaultTab);
+
+  const handleTabClick = (tab: TabKey) => {
+    userHasManuallySelectedTab.current = true;
+    setActiveTab(tab);
+  };
+
+  // Auto-switch to Custom tab when preferCustomTab becomes true (and user hasn't manually switched)
+  React.useEffect(() => {
+    if (preferCustomTab && showCustomTab && !userHasManuallySelectedTab.current && customItems.length > 0) {
+      setActiveTab('Custom');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferCustomTab, customItems.length]);
 
   // Switch to a tab that has items when results change (initial load / query change)
   React.useEffect(() => {
@@ -113,7 +129,7 @@ export function Tabs({
               key={tab}
               role="tab"
               aria-selected={activeTab === tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabClick(tab)}
               className={`relative px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 activeTab === tab
                   ? 'bg-green-600 text-white'

@@ -1,18 +1,21 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FoodSearchField } from '@/components/food-search-field';
 import { CreatePlanButton, CreateFoodButton } from '@/components/create-action-buttons';
 import { FoodLogAddModal } from '@/components/food-log-add-modal';
+import { DishLogModal } from '@/components/dish-log-modal';
 import FoodLogClient from '@/components/food-log-client';
 import { NutritionPulse } from '@/components/food-log/nutrition-pulse';
 import { WeeklyCalendarStrip } from '@/components/food-log/weekly-calendar-strip';
 import { useFoodLogsQuery, useDeleteFoodLogMutation } from '@/queries/food-logs';
+import { useDeleteDishGroupMutation } from '@/queries/dishes';
 import { useFoodDetailQuery, type FoodSelection } from '@/queries/food-detail';
 import { useFoodSearch } from '@/hooks/use-food-search';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
+import type { FavoriteItem } from '@/types/favorites';
 
 export function FoodLogContent() {
   const searchParams = useSearchParams();
@@ -29,10 +32,16 @@ export function FoodLogContent() {
   const [selectedFood, setSelectedFood] = useState<UnifiedFoodSearchResultItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Dish modal state
+  const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
+  const [selectedDishName, setSelectedDishName] = useState<string | undefined>();
+  const [dishModalOpen, setDishModalOpen] = useState(false);
+
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   const logsQuery = useFoodLogsQuery(dateStr);
   const deleteMutation = useDeleteFoodLogMutation();
+  const deleteDishGroupMutation = useDeleteDishGroupMutation();
   const foodSearch = useFoodSearch({ includeCustom: true });
 
   const foodSelection: FoodSelection | null = selectedFood
@@ -45,23 +54,15 @@ export function FoodLogContent() {
 
   const detailQuery = useFoodDetailQuery(foodSelection);
 
-  const recentFoods = useMemo(() => {
-    const logs = logsQuery.data?.logs ?? [];
-    const seen = new Set<string>();
-    const names: string[] = [];
-    for (const log of [...logs].reverse()) {
-      if (!seen.has(log.food.name)) {
-        seen.add(log.food.name);
-        names.push(log.food.name);
-        if (names.length >= 5) break;
-      }
-    }
-    return names;
-  }, [logsQuery.data?.logs]);
-
   const handleSelect = (item: UnifiedFoodSearchResultItem) => {
-    setSelectedFood(item);
-    setModalOpen(true);
+    if (item.itemKind === 'dish' && item.dishId) {
+      setSelectedDishId(item.dishId);
+      setSelectedDishName(item.name);
+      setDishModalOpen(true);
+    } else {
+      setSelectedFood(item);
+      setModalOpen(true);
+    }
   };
 
   const handleModalClose = () => {
@@ -75,8 +76,25 @@ export function FoodLogContent() {
     foodSearch.setQuery('');
   };
 
+  const handleDishModalClose = () => {
+    setDishModalOpen(false);
+    setSelectedDishId(null);
+    setSelectedDishName(undefined);
+  };
+
+  const handleDishLogged = () => {
+    setDishModalOpen(false);
+    setSelectedDishId(null);
+    setSelectedDishName(undefined);
+    foodSearch.setQuery('');
+  };
+
   const handleDeleteLog = async (logId: string) => {
     await deleteMutation.mutateAsync(logId);
+  };
+
+  const handleDeleteDishGroup = async (dishLogGroupId: string) => {
+    await deleteDishGroupMutation.mutateAsync(dishLogGroupId);
   };
 
   const handleDateChange = (date: Date) => {
@@ -84,8 +102,27 @@ export function FoodLogContent() {
     router.replace(`/food-log?date=${format(date, 'yyyy-MM-dd')}`, { scroll: false });
   };
 
-  const handleQuickAdd = (foodName: string) => {
-    foodSearch.setQuery(foodName);
+  // Handle favorite pill click — food or dish
+  const handleFavoriteSelect = (item: FavoriteItem) => {
+    if (item.type === 'dish') {
+      setSelectedDishId(item.itemId);
+      setSelectedDishName(item.name);
+      setDishModalOpen(true);
+    } else {
+      // Open food log add modal by constructing a minimal search result item
+      const searchItem: UnifiedFoodSearchResultItem = {
+        id: item.itemId,
+        fatSecretId: null,
+        name: item.name,
+        brandName: null,
+        foodType: 'Custom',
+        thumbnail: item.thumbnail,
+        calories: item.calories,
+        itemKind: 'food',
+      };
+      setSelectedFood(searchItem);
+      setModalOpen(true);
+    }
   };
 
   return (
@@ -121,6 +158,7 @@ export function FoodLogContent() {
           onLoadMore={foodSearch.loadMore}
           onSelect={handleSelect}
           showCustomTab={true}
+          preferCustomTab={foodSearch.hasCustomResults}
           placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
         />
 
@@ -130,19 +168,15 @@ export function FoodLogContent() {
           logsByMeal={logsQuery.data?.logsByMeal || {}}
           totals={
             logsQuery.data?.totals || {
-              calories: 0,
-              protein: 0,
-              carbs: 0,
-              fat: 0,
-              fiber: 0,
-              sugar: 0,
-              sodium: 0,
+              calories: 0, protein: 0, carbs: 0, fat: 0,
+              fiber: 0, sugar: 0, sodium: 0,
             }
           }
           isLoading={logsQuery.isLoading}
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
           onDeleteLog={handleDeleteLog}
+          onDeleteDishGroup={handleDeleteDishGroup}
         />
       </div>
 
@@ -150,8 +184,7 @@ export function FoodLogContent() {
       <div className="lg:col-span-4">
         <NutritionPulse
           date={dateStr}
-          recentFoods={recentFoods}
-          onQuickAdd={handleQuickAdd}
+          onAddFood={handleFavoriteSelect}
         />
       </div>
 
@@ -162,6 +195,15 @@ export function FoodLogContent() {
         isDetailLoading={detailQuery.isLoading}
         onClose={handleModalClose}
         onAdded={handleFoodAdded}
+      />
+
+      <DishLogModal
+        open={dishModalOpen}
+        dishId={selectedDishId}
+        dishName={selectedDishName}
+        onClose={handleDishModalClose}
+        onLogged={handleDishLogged}
+        consumedAt={new Date().toISOString()}
       />
     </div>
   );

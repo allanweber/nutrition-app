@@ -264,7 +264,7 @@ export const foodLogMeals = pgTable(
     mealType: mealTypeEnum('meal_type').notNull(),
     consumedAt: timestamp('consumed_at').notNull(),
     sourceDietPlanMealGroupId: uuid('source_diet_plan_meal_group_id').references(
-      () => dietPlanMealGroups.id,
+      () => dietPlanMeals.id,
       { onDelete: 'set null' },
     ),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -293,12 +293,15 @@ export const foodLogItems = pgTable(
       .references(() => foods.id, { onDelete: 'cascade' }),
     altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
+    dishLogGroupId: uuid('dish_log_group_id'), // nullable, no FK — correlator for dish log events
+    dishNameSnapshot: varchar('dish_name_snapshot', { length: 500 }), // dish name at log time
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
     index('food_log_items_meal_id_idx').on(table.mealId),
     index('food_log_items_food_id_idx').on(table.foodId),
+    index('food_log_items_dish_log_group_id_idx').on(table.dishLogGroupId),
   ],
 );
 
@@ -425,31 +428,9 @@ export const dietPlans = pgTable(
   ],
 );
 
-// Diet plan meals table
+// Diet plan meals table (meal slot container: one row per mealType+dayOfWeek within a plan)
 export const dietPlanMeals = pgTable(
   'diet_plan_meals',
-  {
-    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
-    dietPlanId: uuid('diet_plan_id')
-      .notNull()
-      .references(() => dietPlans.id, { onDelete: 'cascade' }),
-    foodId: uuid('food_id')
-      .notNull()
-      .references(() => foods.id, { onDelete: 'cascade' }),
-    mealType: mealTypeEnum('meal_type').notNull(),
-    quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
-    servingUnit: varchar('serving_unit', { length: 100 }),
-    dayOfWeek: integer('day_of_week'), // 0-6 (Sunday to Saturday)
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => [
-    index('diet_plan_meals_diet_plan_id_idx').on(table.dietPlanId),
-    index('diet_plan_meals_food_id_idx').on(table.foodId),
-  ],
-);
-
-export const dietPlanMealGroups = pgTable(
-  'diet_plan_meal_groups',
   {
     id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     dietPlanId: uuid('diet_plan_id')
@@ -462,8 +443,8 @@ export const dietPlanMealGroups = pgTable(
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
-    index('diet_plan_meal_groups_diet_plan_id_idx').on(table.dietPlanId),
-    index('diet_plan_meal_groups_plan_day_meal_type_idx').on(
+    index('diet_plan_meals_diet_plan_id_idx').on(table.dietPlanId),
+    index('diet_plan_meals_plan_day_meal_type_idx').on(
       table.dietPlanId,
       table.dayOfWeek,
       table.mealType,
@@ -477,7 +458,7 @@ export const dietPlanMealItems = pgTable(
     id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
     groupId: uuid('group_id')
       .notNull()
-      .references(() => dietPlanMealGroups.id, { onDelete: 'cascade' }),
+      .references(() => dietPlanMeals.id, { onDelete: 'cascade' }),
     foodId: uuid('food_id')
       .notNull()
       .references(() => foods.id, { onDelete: 'cascade' }),
@@ -492,6 +473,79 @@ export const dietPlanMealItems = pgTable(
   ],
 );
 
+
+// Custom dishes table
+export const customDishes = pgTable(
+  'custom_dishes',
+  {
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 500 }).notNull(),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('custom_dishes_user_id_idx').on(table.userId),
+    index('custom_dishes_name_idx').on(table.name),
+  ],
+);
+
+export const customDishIngredients = pgTable(
+  'custom_dish_ingredients',
+  {
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    dishId: uuid('dish_id')
+      .notNull()
+      .references(() => customDishes.id, { onDelete: 'cascade' }),
+    foodId: uuid('food_id')
+      .notNull()
+      .references(() => foods.id, { onDelete: 'cascade' }),
+    altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
+    quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(), // grams
+    seq: integer('seq').default(1),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('custom_dish_ingredients_dish_id_idx').on(table.dishId),
+    index('custom_dish_ingredients_food_id_idx').on(table.foodId),
+  ],
+);
+
+export const dishPhotos = pgTable(
+  'dish_photos',
+  {
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    dishId: uuid('dish_id')
+      .notNull()
+      .references(() => customDishes.id, { onDelete: 'cascade' })
+      .unique(),
+    thumb: varchar('thumb', { length: 500 }), // ~300px, JPEG 65%
+    highres: varchar('highres', { length: 500 }), // ~900px, JPEG 85%
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [index('dish_photos_dish_id_idx').on(table.dishId)],
+);
+
+export const favorites = pgTable(
+  'favorites',
+  {
+    id: uuid('id').primaryKey().notNull().$defaultFn(() => uuidv7()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    foodId: uuid('food_id').references(() => foods.id, { onDelete: 'cascade' }),
+    dishId: uuid('dish_id').references(() => customDishes.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('favorites_user_id_idx').on(table.userId),
+    unique('favorites_user_food_unique').on(table.userId, table.foodId),
+    unique('favorites_user_dish_unique').on(table.userId, table.dishId),
+  ],
+);
 
 // Hydration logs table — one row per user per calendar date
 export const hydrationLogs = pgTable(
@@ -525,6 +579,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   dietPlans: many(dietPlans),
   customFoods: many(foods), // Custom foods owned by user
   hydrationLogs: many(hydrationLogs),
+  customDishes: many(customDishes),
+  favorites: many(favorites),
 }));
 
 export const foodsRelations = relations(foods, ({ one, many }) => ({
@@ -534,7 +590,6 @@ export const foodsRelations = relations(foods, ({ one, many }) => ({
   }),
   altMeasures: many(foodAltMeasures),
   foodLogItems: many(foodLogItems),
-  dietPlanMeals: many(dietPlanMeals),
   dietPlanMealItems: many(dietPlanMealItems),
   user: one(users, {
     fields: [foods.userId],
@@ -547,9 +602,9 @@ export const foodLogMealsRelations = relations(foodLogMeals, ({ one, many }) => 
     fields: [foodLogMeals.userId],
     references: [users.id],
   }),
-  sourceDietPlanMealGroup: one(dietPlanMealGroups, {
+  sourceDietPlanMeal: one(dietPlanMeals, {
     fields: [foodLogMeals.sourceDietPlanMealGroupId],
-    references: [dietPlanMealGroups.id],
+    references: [dietPlanMeals.id],
   }),
   items: many(foodLogItems),
 }));
@@ -612,36 +667,21 @@ export const dietPlansRelations = relations(dietPlans, ({ one, many }) => ({
     references: [users.id],
   }),
   meals: many(dietPlanMeals),
-  mealGroups: many(dietPlanMealGroups),
 }));
 
-export const dietPlanMealsRelations = relations(dietPlanMeals, ({ one }) => ({
+export const dietPlanMealsRelations = relations(dietPlanMeals, ({ one, many }) => ({
   dietPlan: one(dietPlans, {
     fields: [dietPlanMeals.dietPlanId],
     references: [dietPlans.id],
   }),
-  food: one(foods, {
-    fields: [dietPlanMeals.foodId],
-    references: [foods.id],
-  }),
+  items: many(dietPlanMealItems),
+  foodLogMeals: many(foodLogMeals),
 }));
 
-export const dietPlanMealGroupsRelations = relations(
-  dietPlanMealGroups,
-  ({ one, many }) => ({
-    dietPlan: one(dietPlans, {
-      fields: [dietPlanMealGroups.dietPlanId],
-      references: [dietPlans.id],
-    }),
-    items: many(dietPlanMealItems),
-    foodLogMeals: many(foodLogMeals),
-  }),
-);
-
 export const dietPlanMealItemsRelations = relations(dietPlanMealItems, ({ one }) => ({
-  group: one(dietPlanMealGroups, {
+  group: one(dietPlanMeals, {
     fields: [dietPlanMealItems.groupId],
-    references: [dietPlanMealGroups.id],
+    references: [dietPlanMeals.id],
   }),
   food: one(foods, {
     fields: [dietPlanMealItems.foodId],
@@ -657,6 +697,56 @@ export const hydrationLogsRelations = relations(hydrationLogs, ({ one }) => ({
   user: one(users, {
     fields: [hydrationLogs.userId],
     references: [users.id],
+  }),
+}));
+
+export const customDishesRelations = relations(customDishes, ({ one, many }) => ({
+  user: one(users, {
+    fields: [customDishes.userId],
+    references: [users.id],
+  }),
+  ingredients: many(customDishIngredients),
+  favorites: many(favorites),
+  photo: one(dishPhotos, {
+    fields: [customDishes.id],
+    references: [dishPhotos.dishId],
+  }),
+}));
+
+export const dishPhotosRelations = relations(dishPhotos, ({ one }) => ({
+  dish: one(customDishes, {
+    fields: [dishPhotos.dishId],
+    references: [customDishes.id],
+  }),
+}));
+
+export const customDishIngredientsRelations = relations(customDishIngredients, ({ one }) => ({
+  dish: one(customDishes, {
+    fields: [customDishIngredients.dishId],
+    references: [customDishes.id],
+  }),
+  food: one(foods, {
+    fields: [customDishIngredients.foodId],
+    references: [foods.id],
+  }),
+  altMeasure: one(foodAltMeasures, {
+    fields: [customDishIngredients.altMeasureId],
+    references: [foodAltMeasures.id],
+  }),
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  food: one(foods, {
+    fields: [favorites.foodId],
+    references: [foods.id],
+  }),
+  dish: one(customDishes, {
+    fields: [favorites.dishId],
+    references: [customDishes.id],
   }),
 }));
 
@@ -698,12 +788,18 @@ export const insertDietPlanSchema = createInsertSchema(dietPlans);
 export const selectDietPlanSchema = createSelectSchema(dietPlans);
 export const insertDietPlanMealSchema = createInsertSchema(dietPlanMeals);
 export const selectDietPlanMealSchema = createSelectSchema(dietPlanMeals);
-export const insertDietPlanMealGroupSchema = createInsertSchema(dietPlanMealGroups);
-export const selectDietPlanMealGroupSchema = createSelectSchema(dietPlanMealGroups);
 export const insertDietPlanMealItemSchema = createInsertSchema(dietPlanMealItems);
 export const selectDietPlanMealItemSchema = createSelectSchema(dietPlanMealItems);
 export const insertHydrationLogSchema = createInsertSchema(hydrationLogs);
 export const selectHydrationLogSchema = createSelectSchema(hydrationLogs);
+export const insertCustomDishSchema = createInsertSchema(customDishes);
+export const selectCustomDishSchema = createSelectSchema(customDishes);
+export const insertCustomDishIngredientSchema = createInsertSchema(customDishIngredients);
+export const selectCustomDishIngredientSchema = createSelectSchema(customDishIngredients);
+export const insertFavoriteSchema = createInsertSchema(favorites);
+export const selectFavoriteSchema = createSelectSchema(favorites);
+export const insertDishPhotoSchema = createInsertSchema(dishPhotos);
+export const selectDishPhotoSchema = createSelectSchema(dishPhotos);
 
 // ============================================
 // TYPE EXPORTS
@@ -729,8 +825,6 @@ export type DietPlan = typeof dietPlans.$inferSelect;
 export type NewDietPlan = typeof dietPlans.$inferInsert;
 export type DietPlanMeal = typeof dietPlanMeals.$inferSelect;
 export type NewDietPlanMeal = typeof dietPlanMeals.$inferInsert;
-export type DietPlanMealGroup = typeof dietPlanMealGroups.$inferSelect;
-export type NewDietPlanMealGroup = typeof dietPlanMealGroups.$inferInsert;
 export type DietPlanMealItem = typeof dietPlanMealItems.$inferSelect;
 export type NewDietPlanMealItem = typeof dietPlanMealItems.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -741,3 +835,11 @@ export type Verification = typeof verifications.$inferSelect;
 export type NewVerification = typeof verifications.$inferInsert;
 export type HydrationLog = typeof hydrationLogs.$inferSelect;
 export type NewHydrationLog = typeof hydrationLogs.$inferInsert;
+export type CustomDish = typeof customDishes.$inferSelect;
+export type NewCustomDish = typeof customDishes.$inferInsert;
+export type CustomDishIngredient = typeof customDishIngredients.$inferSelect;
+export type NewCustomDishIngredient = typeof customDishIngredients.$inferInsert;
+export type Favorite = typeof favorites.$inferSelect;
+export type NewFavorite = typeof favorites.$inferInsert;
+export type DishPhoto = typeof dishPhotos.$inferSelect;
+export type NewDishPhoto = typeof dishPhotos.$inferInsert;

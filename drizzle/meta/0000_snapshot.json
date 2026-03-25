@@ -1,5 +1,5 @@
 {
-  "id": "edcf0190-d4fb-4d48-8d2b-879d4cb93436",
+  "id": "5be2fe4b-c374-47ec-b36a-1119c36d0bb9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -307,8 +307,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.diet_plan_meal_groups": {
-      "name": "diet_plan_meal_groups",
+    "public.custom_dish_ingredients": {
+      "name": "custom_dish_ingredients",
       "schema": "",
       "columns": {
         "id": {
@@ -317,28 +317,149 @@
           "primaryKey": true,
           "notNull": true
         },
-        "diet_plan_id": {
-          "name": "diet_plan_id",
+        "dish_id": {
+          "name": "dish_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "meal_type": {
-          "name": "meal_type",
-          "type": "meal_type",
-          "typeSchema": "public",
+        "food_id": {
+          "name": "food_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "day_of_week": {
-          "name": "day_of_week",
-          "type": "integer",
+        "alt_measure_id": {
+          "name": "alt_measure_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
-        "scheduled_at": {
-          "name": "scheduled_at",
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "custom_dish_ingredients_dish_id_idx": {
+          "name": "custom_dish_ingredients_dish_id_idx",
+          "columns": [
+            {
+              "expression": "dish_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "custom_dish_ingredients_food_id_idx": {
+          "name": "custom_dish_ingredients_food_id_idx",
+          "columns": [
+            {
+              "expression": "food_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "custom_dish_ingredients_dish_id_custom_dishes_id_fk": {
+          "name": "custom_dish_ingredients_dish_id_custom_dishes_id_fk",
+          "tableFrom": "custom_dish_ingredients",
+          "tableTo": "custom_dishes",
+          "columnsFrom": [
+            "dish_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "custom_dish_ingredients_food_id_foods_id_fk": {
+          "name": "custom_dish_ingredients_food_id_foods_id_fk",
+          "tableFrom": "custom_dish_ingredients",
+          "tableTo": "foods",
+          "columnsFrom": [
+            "food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "custom_dish_ingredients_alt_measure_id_food_alt_measures_id_fk": {
+          "name": "custom_dish_ingredients_alt_measure_id_food_alt_measures_id_fk",
+          "tableFrom": "custom_dish_ingredients",
+          "tableTo": "food_alt_measures",
+          "columnsFrom": [
+            "alt_measure_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.custom_dishes": {
+      "name": "custom_dishes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -358,11 +479,11 @@
         }
       },
       "indexes": {
-        "diet_plan_meal_groups_diet_plan_id_idx": {
-          "name": "diet_plan_meal_groups_diet_plan_id_idx",
+        "custom_dishes_user_id_idx": {
+          "name": "custom_dishes_user_id_idx",
           "columns": [
             {
-              "expression": "diet_plan_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -373,23 +494,11 @@
           "method": "btree",
           "with": {}
         },
-        "diet_plan_meal_groups_plan_day_meal_type_idx": {
-          "name": "diet_plan_meal_groups_plan_day_meal_type_idx",
+        "custom_dishes_name_idx": {
+          "name": "custom_dishes_name_idx",
           "columns": [
             {
-              "expression": "diet_plan_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "day_of_week",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "meal_type",
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -402,12 +511,12 @@
         }
       },
       "foreignKeys": {
-        "diet_plan_meal_groups_diet_plan_id_diet_plans_id_fk": {
-          "name": "diet_plan_meal_groups_diet_plan_id_diet_plans_id_fk",
-          "tableFrom": "diet_plan_meal_groups",
-          "tableTo": "diet_plans",
+        "custom_dishes_user_id_user_id_fk": {
+          "name": "custom_dishes_user_id_user_id_fk",
+          "tableFrom": "custom_dishes",
+          "tableTo": "user",
           "columnsFrom": [
-            "diet_plan_id"
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -504,10 +613,10 @@
         }
       },
       "foreignKeys": {
-        "diet_plan_meal_items_group_id_diet_plan_meal_groups_id_fk": {
-          "name": "diet_plan_meal_items_group_id_diet_plan_meal_groups_id_fk",
+        "diet_plan_meal_items_group_id_diet_plan_meals_id_fk": {
+          "name": "diet_plan_meal_items_group_id_diet_plan_meals_id_fk",
           "tableFrom": "diet_plan_meal_items",
-          "tableTo": "diet_plan_meal_groups",
+          "tableTo": "diet_plan_meals",
           "columnsFrom": [
             "group_id"
           ],
@@ -566,12 +675,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "food_id": {
-          "name": "food_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "meal_type": {
           "name": "meal_type",
           "type": "meal_type",
@@ -579,26 +682,27 @@
           "primaryKey": false,
           "notNull": true
         },
-        "quantity": {
-          "name": "quantity",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "serving_unit": {
-          "name": "serving_unit",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "day_of_week": {
           "name": "day_of_week",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
+        "scheduled_at": {
+          "name": "scheduled_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -621,11 +725,23 @@
           "method": "btree",
           "with": {}
         },
-        "diet_plan_meals_food_id_idx": {
-          "name": "diet_plan_meals_food_id_idx",
+        "diet_plan_meals_plan_day_meal_type_idx": {
+          "name": "diet_plan_meals_plan_day_meal_type_idx",
           "columns": [
             {
-              "expression": "food_id",
+              "expression": "diet_plan_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "day_of_week",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "meal_type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -644,19 +760,6 @@
           "tableTo": "diet_plans",
           "columnsFrom": [
             "diet_plan_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "diet_plan_meals_food_id_foods_id_fk": {
-          "name": "diet_plan_meals_food_id_foods_id_fk",
-          "tableFrom": "diet_plan_meals",
-          "tableTo": "foods",
-          "columnsFrom": [
-            "food_id"
           ],
           "columnsTo": [
             "id"
@@ -791,6 +894,88 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dish_photos": {
+      "name": "dish_photos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dish_id": {
+          "name": "dish_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thumb": {
+          "name": "thumb",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "highres": {
+          "name": "highres",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "dish_photos_dish_id_idx": {
+          "name": "dish_photos_dish_id_idx",
+          "columns": [
+            {
+              "expression": "dish_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dish_photos_dish_id_custom_dishes_id_fk": {
+          "name": "dish_photos_dish_id_custom_dishes_id_fk",
+          "tableFrom": "dish_photos",
+          "tableTo": "custom_dishes",
+          "columnsFrom": [
+            "dish_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "dish_photos_dish_id_unique": {
+          "name": "dish_photos_dish_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "dish_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -946,6 +1131,123 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.favorites": {
+      "name": "favorites",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "food_id": {
+          "name": "food_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_id": {
+          "name": "dish_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "favorites_user_id_idx": {
+          "name": "favorites_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "favorites_user_id_user_id_fk": {
+          "name": "favorites_user_id_user_id_fk",
+          "tableFrom": "favorites",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "favorites_food_id_foods_id_fk": {
+          "name": "favorites_food_id_foods_id_fk",
+          "tableFrom": "favorites",
+          "tableTo": "foods",
+          "columnsFrom": [
+            "food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "favorites_dish_id_custom_dishes_id_fk": {
+          "name": "favorites_dish_id_custom_dishes_id_fk",
+          "tableFrom": "favorites",
+          "tableTo": "custom_dishes",
+          "columnsFrom": [
+            "dish_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "favorites_user_food_unique": {
+          "name": "favorites_user_food_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "food_id"
+          ]
+        },
+        "favorites_user_dish_unique": {
+          "name": "favorites_user_dish_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id",
+            "dish_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.food_alt_measures": {
       "name": "food_alt_measures",
       "schema": "",
@@ -1068,6 +1370,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "dish_log_group_id": {
+          "name": "dish_log_group_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_name_snapshot": {
+          "name": "dish_name_snapshot",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1104,6 +1418,21 @@
           "columns": [
             {
               "expression": "food_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "food_log_items_dish_log_group_id_idx": {
+          "name": "food_log_items_dish_log_group_id_idx",
+          "columns": [
+            {
+              "expression": "dish_log_group_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1291,10 +1620,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meal_groups_id_fk": {
-          "name": "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meal_groups_id_fk",
+        "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meals_id_fk": {
+          "name": "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meals_id_fk",
           "tableFrom": "food_log_meals",
-          "tableTo": "diet_plan_meal_groups",
+          "tableTo": "diet_plan_meals",
           "columnsFrom": [
             "source_diet_plan_meal_group_id"
           ],

@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/session';
 import { validateRequestBody } from '@/lib/api-validation';
 import { db } from '@/server/db';
 import {
-  dietPlanMealGroups,
+  dietPlanMeals,
   dietPlanMealItems,
   dietPlans,
   foodPhotos,
@@ -73,11 +73,11 @@ export async function GET(
 
     const rows = await db
       .select({
-        groupId: dietPlanMealGroups.id,
-        mealType: dietPlanMealGroups.mealType,
-        dayOfWeek: dietPlanMealGroups.dayOfWeek,
-        scheduledAt: dietPlanMealGroups.scheduledAt,
-        createdAt: dietPlanMealGroups.createdAt,
+        groupId: dietPlanMeals.id,
+        mealType: dietPlanMeals.mealType,
+        dayOfWeek: dietPlanMeals.dayOfWeek,
+        scheduledAt: dietPlanMeals.scheduledAt,
+        createdAt: dietPlanMeals.createdAt,
         itemId: dietPlanMealItems.id,
         quantity: dietPlanMealItems.quantity,
         foodId: foods.id,
@@ -92,11 +92,11 @@ export async function GET(
         sodium: foods.sodium,
         photoThumb: foodPhotos.thumb,
       })
-      .from(dietPlanMealGroups)
-      .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMealGroups.id))
+      .from(dietPlanMeals)
+      .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
       .leftJoin(foods, eq(dietPlanMealItems.foodId, foods.id))
       .leftJoin(foodPhotos, eq(dietPlanMealItems.foodId, foodPhotos.foodId))
-      .where(eq(dietPlanMealGroups.dietPlanId, dietPlanId));
+      .where(eq(dietPlanMeals.dietPlanId, dietPlanId));
 
     const grouped = new Map<string, {
       id: string;
@@ -219,7 +219,7 @@ export async function POST(
 
     const created = await db.transaction(async (tx) => {
       const [group] = await tx
-        .insert(dietPlanMealGroups)
+        .insert(dietPlanMeals)
         .values({
           dietPlanId,
           mealType: payload.mealType,

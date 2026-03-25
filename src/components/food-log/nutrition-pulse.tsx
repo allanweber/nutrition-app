@@ -1,21 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star, ChevronRight } from 'lucide-react';
 import { useNutritionSummaryQuery } from '@/queries/nutrition-summary';
 import { useFoodLogsQuery } from '@/queries/food-logs';
+import { useFavoritesTopQuery } from '@/queries/favorites';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
+import { FavoritesModal } from '@/components/favorites-modal';
+import type { FavoriteItem } from '@/types/favorites';
 
 interface NutritionPulseProps {
   date: string;
-  recentFoods: string[];
-  onQuickAdd: (foodName: string) => void;
+  onAddFood: (item: FavoriteItem) => void;
 }
 
-export function NutritionPulse({ date, recentFoods, onQuickAdd }: NutritionPulseProps) {
+export function NutritionPulse({ date, onAddFood }: NutritionPulseProps) {
   const { data, isLoading } = useNutritionSummaryQuery(date);
   const { data: logsData } = useFoodLogsQuery(date);
+  const { data: topFavsData } = useFavoritesTopQuery();
   const [expanded, setExpanded] = useState(false);
+  const [favModalOpen, setFavModalOpen] = useState(false);
 
   const remaining = data?.remaining ?? 0;
   const isOverGoal = remaining < 0 && (data?.calorieGoal ?? 0) > 0;
@@ -92,179 +96,173 @@ export function NutritionPulse({ date, recentFoods, onQuickAdd }: NutritionPulse
     },
   ];
 
+  const topFavorites = topFavsData?.favorites ?? [];
+
   return (
-    <div
-      className={[
-        // Light mode: green card
-        'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden relative',
-        // Dark mode: surface card
-        'dark:bg-surface-container dark:border dark:border-primary/30',
-        // CSS vars for ring colors (light defaults, dark overrides)
-        '[--pulse-fill:#206223] [--pulse-track:#aee39d]',
-        'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--surface-container-high)]',
-      ].join(' ')}
-      data-testid="nutrition-pulse"
-    >
-      {/* Decorative circle */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full pointer-events-none dark:bg-primary/5" />
+    <>
+      <div
+        className={[
+          'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden relative',
+          'dark:bg-surface-container dark:border dark:border-primary/30',
+          '[--pulse-fill:#206223] [--pulse-track:#aee39d]',
+          'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--surface-container-high)]',
+        ].join(' ')}
+        data-testid="nutrition-pulse"
+      >
+        {/* Decorative circle */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full pointer-events-none dark:bg-primary/5" />
 
-      <h2 className="text-base font-bold text-[#002203] dark:text-foreground mb-6">
-        Nutrition Pulse
-      </h2>
+        <h2 className="text-base font-bold text-[#002203] dark:text-foreground mb-6">
+          Nutrition Pulse
+        </h2>
 
-      {/* Calorie Ring */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-            {/* Track */}
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke="var(--pulse-track)"
-              strokeWidth={strokeWidth}
-            />
-            {/* Fill — full ring when over goal, partial otherwise */}
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke="var(--pulse-fill)"
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={isOverGoal ? 0 : dashOffset}
-              style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-            />
-            {/* Overflow arc — only shown when over goal */}
-            {isOverGoal && (
+        {/* Calorie Ring */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+              <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--pulse-track)" strokeWidth={strokeWidth} />
               <circle
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke="#ef4444"
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={overflowDashOffset}
+                cx={size / 2} cy={size / 2} r={radius} fill="none"
+                stroke="var(--pulse-fill)" strokeWidth={strokeWidth} strokeLinecap="round"
+                strokeDasharray={circumference} strokeDashoffset={isOverGoal ? 0 : dashOffset}
                 style={{ transition: 'stroke-dashoffset 0.6s ease' }}
               />
-            )}
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span
-              className={`text-3xl font-headline font-black tabular-nums leading-none ${
-                isOverGoal
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-[#002203] dark:text-foreground'
-              }`}
-              data-testid="pulse-calories-remaining"
-            >
-              {isLoading ? '—' : remaining}
-            </span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mt-1">
-              kcal left
-            </span>
-          </div>
-        </div>
-        <p className="mt-3 text-sm text-[#002203]/70 dark:text-on-surface-variant tabular-nums text-center">
-          {data?.caloriesConsumed ?? 0} / {data?.calorieGoal ?? 0} kcal consumed
-        </p>
-      </div>
-
-      {/* Macro Bars */}
-      <div className="space-y-4 mb-8">
-        {macros.map(({ key, label, consumed, goal }) => {
-          const macroPct = goal > 0 ? Math.min((consumed / goal) * 100, 100) : 0;
-          return (
-            <div key={key} data-testid={`pulse-macro-${key}`}>
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-on-surface-variant">
-                  {label}
-                </span>
-                <span className="text-xs font-bold tabular-nums text-[#002203] dark:text-foreground">
-                  {consumed}g
-                  <span className="font-normal opacity-60"> / {goal}g</span>
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-black/10 dark:bg-surface-container-high overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
-                  style={{ width: `${macroPct}%` }}
+              {isOverGoal && (
+                <circle
+                  cx={size / 2} cy={size / 2} r={radius} fill="none"
+                  stroke="#ef4444" strokeWidth={strokeWidth} strokeLinecap="round"
+                  strokeDasharray={circumference} strokeDashoffset={overflowDashOffset}
+                  style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                 />
-              </div>
+              )}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span
+                className={`text-3xl font-headline font-black tabular-nums leading-none ${
+                  isOverGoal ? 'text-red-600 dark:text-red-400' : 'text-[#002203] dark:text-foreground'
+                }`}
+                data-testid="pulse-calories-remaining"
+              >
+                {isLoading ? '—' : remaining}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mt-1">
+                kcal left
+              </span>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Expand / collapse all nutrients */}
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
-        aria-expanded={expanded}
-      >
-        {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        {expanded ? 'Hide' : 'All nutrients'}
-      </button>
-
-      {/* Extended nutrients panel */}
-      {expanded && (
-        <div className="mb-6 space-y-4">
-          {allNutrientGroups.map((group) => (
-            <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-surface-container-low p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-on-surface-variant mb-3">
-                {group.heading}
-              </p>
-              <div className="space-y-2">
-                {group.rows.map(({ label, value, unit, goal }) => (
-                  <div key={label} className="flex items-baseline justify-between">
-                    <span className="text-xs text-[#002203]/70 dark:text-on-surface-variant">{label}</span>
-                    <span className="text-sm font-bold tabular-nums text-[#002203] dark:text-foreground">
-                      {value}
-                      <span className="text-xs font-normal opacity-60 ml-0.5">{unit}</span>
-                      {goal != null && goal > 0 && (
-                        <span className="text-xs font-normal opacity-50 ml-1">/ {goal}{unit}</span>
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Quick Add Recent */}
-      {recentFoods.length > 0 && (
-        <div data-testid="quick-add-recent">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mb-3">
-            Quick Add
+          </div>
+          <p className="mt-3 text-sm text-[#002203]/70 dark:text-on-surface-variant tabular-nums text-center">
+            {data?.caloriesConsumed ?? 0} / {data?.calorieGoal ?? 0} kcal consumed
           </p>
-          <div className="flex flex-wrap gap-2">
-            {recentFoods.map((food) => {
-              const slug = food
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^a-z0-9-]/g, '')
-                .slice(0, 40);
-              return (
+        </div>
+
+        {/* Macro Bars */}
+        <div className="space-y-4 mb-8">
+          {macros.map(({ key, label, consumed, goal }) => {
+            const macroPct = goal > 0 ? Math.min((consumed / goal) * 100, 100) : 0;
+            return (
+              <div key={key} data-testid={`pulse-macro-${key}`}>
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-on-surface-variant">
+                    {label}
+                  </span>
+                  <span className="text-xs font-bold tabular-nums text-[#002203] dark:text-foreground">
+                    {consumed}g
+                    <span className="font-normal opacity-60"> / {goal}g</span>
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-black/10 dark:bg-surface-container-high overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
+                    style={{ width: `${macroPct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Expand / collapse all nutrients */}
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
+          aria-expanded={expanded}
+        >
+          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          {expanded ? 'Hide' : 'All nutrients'}
+        </button>
+
+        {/* Extended nutrients panel */}
+        {expanded && (
+          <div className="mb-6 space-y-4">
+            {allNutrientGroups.map((group) => (
+              <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-surface-container-low p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-on-surface-variant mb-3">
+                  {group.heading}
+                </p>
+                <div className="space-y-2">
+                  {group.rows.map(({ label, value, unit, goal }) => (
+                    <div key={label} className="flex items-baseline justify-between">
+                      <span className="text-xs text-[#002203]/70 dark:text-on-surface-variant">{label}</span>
+                      <span className="text-sm font-bold tabular-nums text-[#002203] dark:text-foreground">
+                        {value}
+                        <span className="text-xs font-normal opacity-60 ml-0.5">{unit}</span>
+                        {goal != null && goal > 0 && (
+                          <span className="text-xs font-normal opacity-50 ml-1">/ {goal}{unit}</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Favorites section */}
+        <div data-testid="favorites-section">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5">
+              <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant">
+                Favorites
+              </p>
+            </div>
+            <button
+              onClick={() => setFavModalOpen(true)}
+              className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
+              data-testid="see-all-favorites"
+            >
+              See all
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+          {topFavorites.length === 0 ? (
+            <p className="text-xs text-[#002203]/50 dark:text-on-surface-variant/50">
+              Star foods or dishes to add them here
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {topFavorites.map((item) => (
                 <button
-                  key={food}
-                  data-testid={`quick-add-${slug}`}
-                  onClick={() => onQuickAdd(food)}
+                  key={item.id}
+                  onClick={() => onAddFood(item)}
+                  data-testid={`favorite-pill-${item.id}`}
                   className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-surface-container-low dark:hover:bg-surface-container text-[#002203] dark:text-foreground font-medium transition-colors"
                 >
-                  {food}
+                  {item.name}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+
+      <FavoritesModal
+        open={favModalOpen}
+        onClose={() => setFavModalOpen(false)}
+        onSelectFood={onAddFood}
+        onSelectDish={onAddFood}
+      />
+    </>
   );
 }

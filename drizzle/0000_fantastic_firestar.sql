@@ -32,12 +32,21 @@ CREATE TABLE "body_checkins" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "diet_plan_meal_groups" (
+CREATE TABLE "custom_dish_ingredients" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"diet_plan_id" uuid NOT NULL,
-	"meal_type" "meal_type" NOT NULL,
-	"day_of_week" integer,
-	"scheduled_at" timestamp,
+	"dish_id" uuid NOT NULL,
+	"food_id" uuid NOT NULL,
+	"alt_measure_id" uuid,
+	"quantity" numeric(10, 2) NOT NULL,
+	"seq" integer DEFAULT 1,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "custom_dishes" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"name" varchar(500) NOT NULL,
+	"description" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -55,12 +64,11 @@ CREATE TABLE "diet_plan_meal_items" (
 CREATE TABLE "diet_plan_meals" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"diet_plan_id" uuid NOT NULL,
-	"food_id" uuid NOT NULL,
 	"meal_type" "meal_type" NOT NULL,
-	"quantity" numeric(10, 2) NOT NULL,
-	"serving_unit" varchar(100),
 	"day_of_week" integer,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"scheduled_at" timestamp,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "diet_plans" (
@@ -77,6 +85,15 @@ CREATE TABLE "diet_plans" (
 	"is_active" boolean DEFAULT true,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "dish_photos" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"dish_id" uuid NOT NULL,
+	"thumb" varchar(500),
+	"highres" varchar(500),
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "dish_photos_dish_id_unique" UNIQUE("dish_id")
 );
 --> statement-breakpoint
 CREATE TABLE "email_verification_challenge" (
@@ -96,6 +113,16 @@ CREATE TABLE "email_verification_challenge" (
 	CONSTRAINT "email_verification_challenge_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
+CREATE TABLE "favorites" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"food_id" uuid,
+	"dish_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "favorites_user_food_unique" UNIQUE("user_id","food_id"),
+	CONSTRAINT "favorites_user_dish_unique" UNIQUE("user_id","dish_id")
+);
+--> statement-breakpoint
 CREATE TABLE "food_alt_measures" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"food_id" uuid NOT NULL,
@@ -112,6 +139,8 @@ CREATE TABLE "food_log_items" (
 	"food_id" uuid NOT NULL,
 	"alt_measure_id" uuid,
 	"quantity" numeric(10, 2) NOT NULL,
+	"dish_log_group_id" uuid,
+	"dish_name_snapshot" varchar(500),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -250,20 +279,26 @@ CREATE TABLE "verification" (
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "body_checkins" ADD CONSTRAINT "body_checkins_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "body_checkins" ADD CONSTRAINT "body_checkins_goal_id_nutrition_goals_id_fk" FOREIGN KEY ("goal_id") REFERENCES "public"."nutrition_goals"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "diet_plan_meal_groups" ADD CONSTRAINT "diet_plan_meal_groups_diet_plan_id_diet_plans_id_fk" FOREIGN KEY ("diet_plan_id") REFERENCES "public"."diet_plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_group_id_diet_plan_meal_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."diet_plan_meal_groups"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "custom_dish_ingredients" ADD CONSTRAINT "custom_dish_ingredients_dish_id_custom_dishes_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."custom_dishes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "custom_dish_ingredients" ADD CONSTRAINT "custom_dish_ingredients_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "custom_dish_ingredients" ADD CONSTRAINT "custom_dish_ingredients_alt_measure_id_food_alt_measures_id_fk" FOREIGN KEY ("alt_measure_id") REFERENCES "public"."food_alt_measures"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "custom_dishes" ADD CONSTRAINT "custom_dishes_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_group_id_diet_plan_meals_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."diet_plan_meals"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meal_items" ADD CONSTRAINT "diet_plan_meal_items_alt_measure_id_food_alt_measures_id_fk" FOREIGN KEY ("alt_measure_id") REFERENCES "public"."food_alt_measures"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_diet_plan_id_diet_plans_id_fk" FOREIGN KEY ("diet_plan_id") REFERENCES "public"."diet_plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "diet_plan_meals" ADD CONSTRAINT "diet_plan_meals_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "diet_plans" ADD CONSTRAINT "diet_plans_client_id_user_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dish_photos" ADD CONSTRAINT "dish_photos_dish_id_custom_dishes_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."custom_dishes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "email_verification_challenge" ADD CONSTRAINT "email_verification_challenge_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "favorites" ADD CONSTRAINT "favorites_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "favorites" ADD CONSTRAINT "favorites_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "favorites" ADD CONSTRAINT "favorites_dish_id_custom_dishes_id_fk" FOREIGN KEY ("dish_id") REFERENCES "public"."custom_dishes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_alt_measures" ADD CONSTRAINT "food_alt_measures_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_meal_id_food_log_meals_id_fk" FOREIGN KEY ("meal_id") REFERENCES "public"."food_log_meals"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_items" ADD CONSTRAINT "food_log_items_alt_measure_id_food_alt_measures_id_fk" FOREIGN KEY ("alt_measure_id") REFERENCES "public"."food_alt_measures"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meal_groups_id_fk" FOREIGN KEY ("source_diet_plan_meal_group_id") REFERENCES "public"."diet_plan_meal_groups"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "food_log_meals" ADD CONSTRAINT "food_log_meals_source_diet_plan_meal_group_id_diet_plan_meals_id_fk" FOREIGN KEY ("source_diet_plan_meal_group_id") REFERENCES "public"."diet_plan_meals"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "food_photos" ADD CONSTRAINT "food_photos_food_id_foods_id_fk" FOREIGN KEY ("food_id") REFERENCES "public"."foods"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "foods" ADD CONSTRAINT "foods_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "hydration_logs" ADD CONSTRAINT "hydration_logs_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -275,18 +310,23 @@ CREATE INDEX "accounts_provider_id_idx" ON "account" USING btree ("provider_id")
 CREATE INDEX "body_checkins_user_id_idx" ON "body_checkins" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "body_checkins_user_check_in_date_idx" ON "body_checkins" USING btree ("user_id","check_in_date");--> statement-breakpoint
 CREATE INDEX "body_checkins_goal_id_check_in_date_idx" ON "body_checkins" USING btree ("goal_id","check_in_date");--> statement-breakpoint
-CREATE INDEX "diet_plan_meal_groups_diet_plan_id_idx" ON "diet_plan_meal_groups" USING btree ("diet_plan_id");--> statement-breakpoint
-CREATE INDEX "diet_plan_meal_groups_plan_day_meal_type_idx" ON "diet_plan_meal_groups" USING btree ("diet_plan_id","day_of_week","meal_type");--> statement-breakpoint
+CREATE INDEX "custom_dish_ingredients_dish_id_idx" ON "custom_dish_ingredients" USING btree ("dish_id");--> statement-breakpoint
+CREATE INDEX "custom_dish_ingredients_food_id_idx" ON "custom_dish_ingredients" USING btree ("food_id");--> statement-breakpoint
+CREATE INDEX "custom_dishes_user_id_idx" ON "custom_dishes" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "custom_dishes_name_idx" ON "custom_dishes" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "diet_plan_meal_items_group_id_idx" ON "diet_plan_meal_items" USING btree ("group_id");--> statement-breakpoint
 CREATE INDEX "diet_plan_meal_items_food_id_idx" ON "diet_plan_meal_items" USING btree ("food_id");--> statement-breakpoint
 CREATE INDEX "diet_plan_meals_diet_plan_id_idx" ON "diet_plan_meals" USING btree ("diet_plan_id");--> statement-breakpoint
-CREATE INDEX "diet_plan_meals_food_id_idx" ON "diet_plan_meals" USING btree ("food_id");--> statement-breakpoint
+CREATE INDEX "diet_plan_meals_plan_day_meal_type_idx" ON "diet_plan_meals" USING btree ("diet_plan_id","day_of_week","meal_type");--> statement-breakpoint
 CREATE INDEX "diet_plans_client_id_idx" ON "diet_plans" USING btree ("client_id");--> statement-breakpoint
+CREATE INDEX "dish_photos_dish_id_idx" ON "dish_photos" USING btree ("dish_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_user_id_idx" ON "email_verification_challenge" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_email_idx" ON "email_verification_challenge" USING btree ("email");--> statement-breakpoint
+CREATE INDEX "favorites_user_id_idx" ON "favorites" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "food_alt_measures_food_id_idx" ON "food_alt_measures" USING btree ("food_id");--> statement-breakpoint
 CREATE INDEX "food_log_items_meal_id_idx" ON "food_log_items" USING btree ("meal_id");--> statement-breakpoint
 CREATE INDEX "food_log_items_food_id_idx" ON "food_log_items" USING btree ("food_id");--> statement-breakpoint
+CREATE INDEX "food_log_items_dish_log_group_id_idx" ON "food_log_items" USING btree ("dish_log_group_id");--> statement-breakpoint
 CREATE INDEX "food_log_meals_user_id_idx" ON "food_log_meals" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "food_log_meals_user_consumed_at_idx" ON "food_log_meals" USING btree ("user_id","consumed_at");--> statement-breakpoint
 CREATE INDEX "food_log_meals_user_meal_type_consumed_at_idx" ON "food_log_meals" USING btree ("user_id","meal_type","consumed_at");--> statement-breakpoint

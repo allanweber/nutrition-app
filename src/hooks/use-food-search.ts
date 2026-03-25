@@ -13,6 +13,7 @@ interface UseFoodSearchOptions {
 interface UseFoodSearchReturn extends FoodSearchState {
   setQuery: (newQuery: string) => void;
   loadMore: () => void;
+  hasCustomResults: boolean;
 }
 
 export function useFoodSearch({ includeCustom, anonymous = false }: UseFoodSearchOptions): UseFoodSearchReturn {
@@ -74,13 +75,15 @@ export function useFoodSearch({ includeCustom, anonymous = false }: UseFoodSearc
 
   const customResults = customQuery.data?.results ?? [];
   const customItems: UnifiedFoodSearchResultItem[] = customResults.map((r) => ({
-    id: r.id,
+    id: 'id' in r ? (r as { id: string | null }).id : null,
     fatSecretId: null,
     name: r.name,
     brandName: r.brandName,
     foodType: 'Custom' as const,
     thumbnail: r.thumbnail,
     calories: r.calories,
+    itemKind: ('itemKind' in r ? (r as { itemKind: 'food' | 'dish' }).itemKind : 'food') as 'food' | 'dish',
+    dishId: 'dishId' in r ? (r as { dishId?: string }).dishId : undefined,
   }));
 
   const results: UnifiedFoodSearchResultItem[] = [...accumulatedFatsecretItems, ...customItems];
@@ -97,6 +100,8 @@ export function useFoodSearch({ includeCustom, anonymous = false }: UseFoodSearc
     ? accumulatedFatsecretItems.length < pagination.totalResults
     : false;
 
+  const hasCustomResults = customItems.length > 0;
+
   return {
     query,
     results,
@@ -108,5 +113,6 @@ export function useFoodSearch({ includeCustom, anonymous = false }: UseFoodSearc
     page,
     setQuery,
     loadMore,
+    hasCustomResults,
   };
 }

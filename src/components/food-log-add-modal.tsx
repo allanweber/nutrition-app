@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '@/lib/nutrition-constants';
 import { useCreateFoodLogMutation } from '@/queries/food-logs';
 import type { FoodAddModalProps } from '@/components/food-search-field/types';
+import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 
 export function FoodLogAddModal({ open, food, foodDetail, isDetailLoading, onClose, onAdded }: FoodAddModalProps) {
   const createMutation = useCreateFoodLogMutation();
@@ -102,14 +103,21 @@ export function FoodLogAddModal({ open, food, foodDetail, isDetailLoading, onClo
               <p className="text-xs text-muted-foreground">{food.brandName}</p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 ml-4 shrink-0">
+            {food.itemKind === 'dish' && food.dishId ? (
+              <FavoriteToggleButton dishId={food.dishId} />
+            ) : food.id ? (
+              <FavoriteToggleButton foodId={food.id} />
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}

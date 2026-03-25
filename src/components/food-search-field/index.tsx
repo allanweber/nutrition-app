@@ -14,6 +14,7 @@ export function FoodSearchField({
   onLoadMore,
   onSelect,
   showCustomTab = true,
+  preferCustomTab = false,
   placeholder,
   className,
   size = 'default',
@@ -130,6 +131,7 @@ export function FoodSearchField({
         error={state.error}
         hasMore={state.hasMore}
         showCustomTab={showCustomTab}
+        preferCustomTab={preferCustomTab}
         highlightedIndex={highlightedIndex}
         onSelect={handleSelect}
         onLoadMore={onLoadMore}

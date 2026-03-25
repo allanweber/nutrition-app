@@ -6,6 +6,9 @@ export interface UnifiedFoodSearchResultItem {
   foodType: 'Generic' | 'Brand' | 'Custom';
   thumbnail: string | null;
   calories: number | null;
+  itemKind?: 'food' | 'dish';
+  dishId?: string;
+  isFavorite?: boolean;
 }
 
 export interface FoodSearchState {
@@ -25,6 +28,7 @@ export interface FoodSearchFieldProps {
   onLoadMore: () => void;
   onSelect: (item: UnifiedFoodSearchResultItem) => void;
   showCustomTab?: boolean;
+  preferCustomTab?: boolean;
   placeholder?: string;
   className?: string;
   size?: 'default' | 'small';
