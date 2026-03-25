@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Pencil, Trash2, Loader2, UtensilsCrossed, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -43,7 +44,10 @@ function useDeleteCustomFoodMutation() {
 }
 
 export default function MyFoodsPage() {
-  const [tab, setTab] = useState<'foods' | 'dishes'>('foods');
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<'foods' | 'dishes'>(
+    searchParams.get('tab') === 'dishes' ? 'dishes' : 'foods'
+  );
   const foodsQuery = useCustomFoodsQuery();
   const dishesQuery = useDishesQuery();
   const deleteFood = useDeleteCustomFoodMutation();

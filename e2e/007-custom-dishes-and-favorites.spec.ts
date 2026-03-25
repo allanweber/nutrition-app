@@ -70,15 +70,13 @@ test.describe('007: Create custom food', () => {
     await expect(page.getByText(uniqueName)).toBeVisible();
   });
 
-  test('shows validation — required fields prevent submission', async ({ page }) => {
+  test('shows validation — required fields show inline errors on submit', async ({ page }) => {
     await login(page);
     await page.goto('/my-foods/create');
-    // Try to submit without filling required fields — button should be enabled
-    // but HTML5 validation stops it (required attribute)
-    const nameInput = page.getByTestId('field-name');
-    await expect(nameInput).toBeVisible();
-    // Name is required; check the input has required attribute
-    await expect(nameInput).toHaveAttribute('required');
+    // Submit without filling required fields
+    await page.getByTestId('submit-create-food').click();
+    // TanStack Form shows inline field-level error messages
+    await expect(page.getByText(/name is required/i)).toBeVisible();
   });
 });
 

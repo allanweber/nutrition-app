@@ -1,12 +1,23 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+
+import { useForm, useStore } from '@tanstack/react-form';
 import { X, Loader2 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '@/lib/nutrition-constants';
+import { dishLogFormSchema, zodValidator } from '@/lib/form-validation';
+import type { DishLogFormData } from '@/lib/form-validation';
 import { useDishDetailQuery, useLogDishMutation } from '@/queries/dishes';
 import type { DishIngredient } from '@/types/dish';
 
@@ -42,20 +53,37 @@ export function DishLogModal({
   defaultMealType = 'breakfast',
   consumedAt,
 }: DishLogModalProps) {
-  const [form, setForm] = useState({ multiplier: '1', mealType: defaultMealType, error: null as string | null });
   const overlayRef = useRef<HTMLDivElement>(null);
-
   const detailQuery = useDishDetailQuery(open ? dishId : null);
   const logMutation = useLogDishMutation();
-
   const dish = detailQuery.data?.dish;
-  const mult = parseFloat(form.multiplier);
 
-  // Reset state when closed
+  const form = useForm({
+    defaultValues: {
+      multiplier: 1,
+      mealType: defaultMealType as DishLogFormData['mealType'],
+    },
+    onSubmit: async ({ value }) => {
+      if (!dishId) return;
+      await logMutation.mutateAsync({
+        dishId,
+        multiplier: parseFloat(String(value.multiplier)),
+        mealType: String(value.mealType),
+        consumedAt,
+      });
+      onLogged();
+    },
+  });
+
+  // Get live multiplier from form store for nutrition display
+  const multiplier = useStore(form.store, (s) => parseFloat(String(s.values.multiplier)) || 1);
+
+  // Reset form state when closed/reopened
   useEffect(() => {
     if (!open) {
-      setForm({ multiplier: '1', mealType: defaultMealType, error: null });
+      form.reset({ multiplier: 1, mealType: defaultMealType as DishLogFormData['mealType'] });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultMealType]);
 
   useEffect(() => {
@@ -67,30 +95,14 @@ export function DishLogModal({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  const handleSubmit = async () => {
-    if (!dishId) return;
-    setForm((f) => ({ ...f, error: null }));
-    try {
-      await logMutation.mutateAsync({
-        dishId,
-        multiplier: mult,
-        mealType: form.mealType,
-        consumedAt,
-      });
-      onLogged();
-    } catch (err) {
-      setForm((f) => ({ ...f, error: err instanceof Error ? err.message : 'Failed to log dish' }));
-    }
-  };
-
   if (!open) return null;
 
   const totals = dish
     ? {
-        calories: Math.round((dish.totals.calories) * mult),
-        protein: Math.round(dish.totals.protein * mult * 10) / 10,
-        carbs: Math.round(dish.totals.carbs * mult * 10) / 10,
-        fat: Math.round(dish.totals.fat * mult * 10) / 10,
+        calories: Math.round(dish.totals.calories * multiplier),
+        protein: Math.round(dish.totals.protein * multiplier * 10) / 10,
+        carbs: Math.round(dish.totals.carbs * multiplier * 10) / 10,
+        fat: Math.round(dish.totals.fat * multiplier * 10) / 10,
       }
     : null;
 
@@ -159,9 +171,9 @@ export function DishLogModal({
                     <div key={ing.id} className="flex items-center justify-between text-sm">
                       <span className="text-foreground">{ing.foodName}</span>
                       <span className="text-on-surface-variant tabular-nums">
-                        {Math.round(ing.quantity * mult)}g
+                        {Math.round(ing.quantity * multiplier)}g
                         <span className="ml-2 text-xs text-on-surface-variant/60">
-                          {calcIngredientNutrient(ing.calories, mult)} kcal
+                          {calcIngredientNutrient(ing.calories, multiplier)} kcal
                         </span>
                       </span>
                     </div>
@@ -173,7 +185,7 @@ export function DishLogModal({
               {totals && (
                 <div className="rounded-xl bg-surface-container p-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">
-                    Nutrition totals at {mult}×
+                    Nutrition totals at {multiplier}×
                   </p>
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {[
@@ -193,59 +205,104 @@ export function DishLogModal({
               )}
             </>
           ) : null}
-
-          {form.error && (
-            <p className="text-sm text-destructive">{form.error}</p>
-          )}
         </div>
 
-        {/* Footer controls */}
-        <div className="px-6 py-4 border-t border-outline-variant/10 space-y-4">
+        {/* Footer — TanStack Form controls */}
+        <form
+          className="px-6 py-4 border-t border-outline-variant/10 space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             {/* Multiplier */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Servings</Label>
-              <Select value={form.multiplier} onValueChange={(v) => setForm((f) => ({ ...f, multiplier: v }))}>
-                <SelectTrigger data-testid="dish-multiplier-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MULTIPLIERS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <form.Field
+              name="multiplier"
+              validators={{ onChange: zodValidator(dishLogFormSchema.shape.multiplier) }}
+            >
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Servings</Label>
+                  <Select
+                    value={String(field.state.value)}
+                    onValueChange={(v) => field.handleChange(v as never)}
+                  >
+                    <SelectTrigger
+                      className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
+                      data-testid="dish-multiplier-select"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MULTIPLIERS.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+                  )}
+                </div>
+              )}
+            </form.Field>
 
             {/* Meal type */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Meal</Label>
-              <Select value={form.mealType} onValueChange={(v) => setForm((f) => ({ ...f, mealType: v }))}>
-                <SelectTrigger data-testid="dish-meal-type-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MEAL_TYPE_ORDER.filter((m) => ['breakfast', 'lunch', 'dinner', 'snack'].includes(m)).map((m) => (
-                    <SelectItem key={m} value={m}>{MEAL_TYPE_LABELS[m]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <form.Field
+              name="mealType"
+              validators={{ onChange: zodValidator(dishLogFormSchema.shape.mealType) }}
+            >
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Meal</Label>
+                  <Select
+                    value={String(field.state.value)}
+                    onValueChange={(v) => field.handleChange(v as never)}
+                  >
+                    <SelectTrigger
+                      className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
+                      data-testid="dish-meal-type-select"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MEAL_TYPE_ORDER.filter((m) => ['breakfast', 'lunch', 'dinner', 'snack'].includes(m)).map((m) => (
+                        <SelectItem key={m} value={m}>{MEAL_TYPE_LABELS[m]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+                  )}
+                </div>
+              )}
+            </form.Field>
           </div>
 
-          <Button
-            className="w-full"
-            onClick={handleSubmit}
-            disabled={logMutation.isPending || detailQuery.isLoading}
-            data-testid="dish-log-submit"
-          >
-            {logMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" />Adding…</>
-            ) : (
-              'Add to Log'
+          {logMutation.error && (
+            <p className="text-sm text-destructive">
+              {(logMutation.error as Error).message || 'Failed to log dish'}
+            </p>
+          )}
+
+          <form.Subscribe selector={(state) => [state.isSubmitting]}>
+            {([isSubmitting]) => (
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting || logMutation.isPending || detailQuery.isLoading}
+                data-testid="dish-log-submit"
+              >
+                {isSubmitting || logMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Adding…</>
+                ) : (
+                  'Add to Log'
+                )}
+              </Button>
             )}
-          </Button>
-        </div>
+          </form.Subscribe>
+        </form>
       </div>
     </>
   );

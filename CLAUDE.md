@@ -107,3 +107,11 @@ Emotional goal: Users should feel in control. Competent. Like the data is workin
 - `src/components/meal-type-label.tsx` — `<MealTypeLabel>` colored badge for meal types
 
 **Rule**: macro and meal-type colors always come from `nutrition-constants.ts`. Never redeclare inline.
+
+**Form pattern** — all forms use TanStack Form + Zod validation:
+- All Zod schemas live in `src/lib/form-validation.ts`. Add new schemas there, never inline.
+- Use the `zodValidator(schema.shape.fieldName)` helper (exported from `form-validation.ts`) for `validators.onChange` — do NOT write inline validator functions.
+- All form components are `'use client'` components in `src/components/forms/`. Pages import and render these; pages do not contain form logic.
+- For CRUD entities (food, dish), use a single unified component: optional `entityId` + `initialEntity` props determine create vs. edit mode. `useEffect` resets the form when data loads.
+- Field error pattern: `border-destructive` on the input/SelectTrigger + `<p className="text-sm text-destructive">` below field.
+- Photo uploaders and dynamic lists (ingredient arrays) live **outside** the TanStack Form tree.
