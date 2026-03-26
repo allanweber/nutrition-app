@@ -84,7 +84,7 @@ export default function FoodLogClient({
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-  const [collapsedMeals, setCollapsedMeals] = useState<Set<string>>(new Set(MEAL_TYPE_ORDER));
+  const [collapsedMeals, setCollapsedMeals] = useState<Set<string>>(new Set());
 
   const handleDeleteRequest = (id: string) => {
     setConfirmingDelete(id);

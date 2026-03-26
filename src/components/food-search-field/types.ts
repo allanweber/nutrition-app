@@ -32,6 +32,7 @@ export interface FoodSearchFieldProps {
   placeholder?: string;
   className?: string;
   size?: 'default' | 'small';
+  inputTestId?: string;
 }
 
 export interface FoodAddModalProps {

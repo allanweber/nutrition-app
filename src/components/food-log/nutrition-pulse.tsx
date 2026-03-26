@@ -12,9 +12,10 @@ import type { FavoriteItem } from '@/types/favorites';
 interface NutritionPulseProps {
   date: string;
   onAddFood: (item: FavoriteItem) => void;
+  onQuickAddFood?: (name: string) => void;
 }
 
-export function NutritionPulse({ date, onAddFood }: NutritionPulseProps) {
+export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPulseProps) {
   const { data, isLoading } = useNutritionSummaryQuery(date);
   const { data: logsData } = useFoodLogsQuery(date);
   const { data: topFavsData } = useFavoritesTopQuery();
@@ -97,6 +98,11 @@ export function NutritionPulse({ date, onAddFood }: NutritionPulseProps) {
   ];
 
   const topFavorites = topFavsData?.favorites ?? [];
+
+  // Unique foods from today's logs (up to 5) for quick-add
+  const recentFoods = logsData?.logs
+    ? [...new Map(logsData.logs.map((l) => [l.food.id, l.food])).values()].slice(0, 5)
+    : [];
 
   return (
     <>
@@ -255,6 +261,27 @@ export function NutritionPulse({ date, onAddFood }: NutritionPulseProps) {
             </div>
           )}
         </div>
+
+        {/* Quick Add Recent */}
+        {recentFoods.length > 0 && (
+          <div data-testid="quick-add-recent" className="mt-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mb-3">
+              Quick Add
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {recentFoods.map((food) => (
+                <button
+                  key={food.id}
+                  onClick={() => onQuickAddFood?.(food.name)}
+                  data-testid={`quick-add-${food.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-surface-container-low dark:hover:bg-surface-container text-[#002203] dark:text-foreground font-medium transition-colors"
+                >
+                  {food.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <FavoritesModal

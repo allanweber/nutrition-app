@@ -10,6 +10,7 @@ interface SearchInputProps {
   placeholder?: string;
   className?: string;
   size?: 'default' | 'small';
+  inputTestId?: string;
 }
 
 export function SearchInput({
@@ -20,6 +21,7 @@ export function SearchInput({
   placeholder = 'Search for your favorite food or meal',
   className,
   size = 'default',
+  inputTestId = 'food-search-input',
 }: SearchInputProps) {
   const isSmall = size === 'small';
 
@@ -42,7 +44,7 @@ export function SearchInput({
           placeholder={placeholder}
           className={`flex w-full bg-transparent outline-none placeholder:text-muted-foreground ${isSmall ? 'h-6 text-sm' : 'h-10 text-base'}`}
           aria-label="Search foods"
-          data-testid="food-search-input"
+          data-testid={inputTestId}
           autoComplete="off"
           aria-autocomplete="list"
         />

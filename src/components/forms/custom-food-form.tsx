@@ -274,18 +274,18 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           <div className="grid grid-cols-3 gap-3">
             <form.Field
               name="servingQty"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingQty), onSubmit: zodValidator(customFoodFormSchema.shape.servingQty) }}
+              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingQty) }}
             >
-              {(field) => <NumberField label="Serving Qty" name="servingQty" fieldApi={field} required />}
+              {(field) => <NumberField label="Serving Qty" name="servingQty" fieldApi={field} />}
             </form.Field>
 
             <form.Field
               name="servingUnit"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingUnit), onSubmit: zodValidator(customFoodFormSchema.shape.servingUnit) }}
+              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingUnit) }}
             >
               {(field) => (
                 <div className="space-y-1.5">
-                  <Label htmlFor="servingUnit" className="text-xs font-semibold">Serving Unit *</Label>
+                  <Label htmlFor="servingUnit" className="text-xs font-semibold">Serving Unit</Label>
                   <Input
                     id="servingUnit"
                     value={field.state.value as string}
@@ -304,9 +304,9 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
 
             <form.Field
               name="servingWeightGrams"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingWeightGrams), onSubmit: zodValidator(customFoodFormSchema.shape.servingWeightGrams) }}
+              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingWeightGrams) }}
             >
-              {(field) => <NumberField label="Serving Weight" name="servingWeightGrams" fieldApi={field} required unit="g" />}
+              {(field) => <NumberField label="Serving Weight" name="servingWeightGrams" fieldApi={field} unit="g" />}
             </form.Field>
           </div>
         </div>

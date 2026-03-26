@@ -296,6 +296,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
             onSelect={handleAddIngredient}
             preferCustomTab
             placeholder="Search foods to add as ingredient…"
+            inputTestId="ingredient-search"
           />
 
           {ingredients.length > 0 && (

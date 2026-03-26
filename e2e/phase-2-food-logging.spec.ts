@@ -368,13 +368,9 @@ test.describe('Phase 2: Food Logging', () => {
       // Wait for modal to close
       await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
-      // Verify both meals are shown (case insensitive match)
-      await expect(
-        page.locator('text=Breakfast').or(page.locator('text=breakfast')),
-      ).toBeVisible();
-      await expect(
-        page.locator('text=Lunch').or(page.locator('text=lunch')),
-      ).toBeVisible();
+      // Verify both meals are shown
+      await expect(page.getByRole('heading', { name: /breakfast/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /lunch/i })).toBeVisible();
 
       // Verify food count is 2
       await expect.poll(async () => await foodLogPage.getFoodLogCount(), { timeout: 10000 }).toBe(2);

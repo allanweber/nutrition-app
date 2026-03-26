@@ -142,15 +142,15 @@ export const customFoodFormSchema = z.object({
     .optional(),
   servingQty: z.preprocess(
     (v) => (v === '' || v == null ? undefined : v),
-    z.coerce.number({ error: 'Serving qty is required' }).min(0, 'Must be 0 or more'),
+    z.coerce.number().min(0, 'Must be 0 or more').optional(),
   ),
   servingUnit: z
     .string()
-    .min(1, 'Serving unit is required')
-    .max(50, 'Serving unit must be at most 50 characters'),
+    .max(50, 'Serving unit must be at most 50 characters')
+    .optional(),
   servingWeightGrams: z.preprocess(
     (v) => (v === '' || v == null ? undefined : v),
-    z.coerce.number({ error: 'Serving weight is required' }).min(0, 'Must be 0 or more'),
+    z.coerce.number().min(0, 'Must be 0 or more').optional(),
   ),
   // Macros (per 100g) — required
   // z.preprocess converts empty string → undefined so required_error fires (z.coerce.number coerces '' to 0 otherwise)

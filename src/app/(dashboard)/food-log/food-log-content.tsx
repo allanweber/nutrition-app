@@ -185,6 +185,7 @@ export function FoodLogContent() {
         <NutritionPulse
           date={dateStr}
           onAddFood={handleFavoriteSelect}
+          onQuickAddFood={(name) => foodSearch.setQuery(name)}
         />
       </div>
 

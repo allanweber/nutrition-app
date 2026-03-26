@@ -18,6 +18,7 @@ export function FoodSearchField({
   placeholder,
   className,
   size = 'default',
+  inputTestId,
 }: FoodSearchFieldProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -121,6 +122,7 @@ export function FoodSearchField({
         onFocus={handleFocus}
         placeholder={placeholder}
         size={size}
+        inputTestId={inputTestId}
       />
       <Dropdown
         open={dropdownOpen}

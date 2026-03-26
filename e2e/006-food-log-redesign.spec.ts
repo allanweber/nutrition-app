@@ -179,10 +179,10 @@ test.describe('006: Food Log Screen Redesign', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      await expect(page.getByText('Breakfast')).toBeVisible();
-      await expect(page.getByText('Lunch')).toBeVisible();
-      await expect(page.getByText('Dinner')).toBeVisible();
-      await expect(page.getByText('Snack')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Breakfast' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Lunch' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Dinner' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Snack' })).toBeVisible();
     });
 
     test('empty meal placeholders appear for unlogged meals (fresh user)', async ({ page }) => {
