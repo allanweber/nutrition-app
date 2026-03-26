@@ -124,7 +124,7 @@ test.describe('US2: View Food Nutritional Detail', () => {
     // Modal should appear with meal and serving selectors
     await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('meal-type-select')).toBeVisible();
-    await expect(page.getByTestId('serving-select')).toBeVisible();
+    await expect(page.getByTestId('measure-select')).toBeVisible();
   });
 
   test('back/close button returns to search results', async ({ page }) => {

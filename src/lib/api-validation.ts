@@ -57,7 +57,7 @@ export const createFoodLogSchema = z.object({
       (val) => val > 0 && val <= 100000,
       'Quantity must be between 0.01 and 100,000',
     ),
-  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']), // Subset of mealTypeEnum
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack', 'morning_snack', 'afternoon_snack', 'evening_snack', 'pre_workout', 'post_workout', 'other']),
   consumedAt: z
     .string()
     .optional()

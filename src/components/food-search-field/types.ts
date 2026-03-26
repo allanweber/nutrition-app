@@ -42,4 +42,5 @@ export interface FoodAddModalProps {
   isDetailLoading?: boolean;
   onClose: () => void;
   onAdded: () => void;
+  defaultDate?: Date;
 }

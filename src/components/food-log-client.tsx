@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
 import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown } from 'lucide-react';
@@ -30,6 +30,7 @@ interface FoodLogClientProps {
   onDateChange: (date: Date) => void;
   onDeleteLog: (logId: string) => Promise<void>;
   onDeleteDishGroup?: (dishLogGroupId: string) => Promise<void>;
+  onEdit?: (log: FoodLogEntry) => void;
 }
 
 // Dot color for each meal type used in the header
@@ -76,6 +77,7 @@ function isDishGroup(entry: GroupEntry): entry is { dishLogGroupId: string; dish
 export default function FoodLogClient({
   logs,
   logsByMeal,
+  onEdit,
   isLoading = false,
   onDeleteLog,
   onDeleteDishGroup,
@@ -85,6 +87,15 @@ export default function FoodLogClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [collapsedMeals, setCollapsedMeals] = useState<Set<string>>(new Set());
+  const initialCollapseApplied = useRef(false);
+
+  useEffect(() => {
+    if (isLoading || initialCollapseApplied.current) return;
+    initialCollapseApplied.current = true;
+    setCollapsedMeals(new Set(
+      MEAL_TYPE_ORDER.filter((mt) => !logsByMeal[mt] || logsByMeal[mt].length === 0)
+    ));
+  }, [isLoading, logsByMeal]);
 
   const handleDeleteRequest = (id: string) => {
     setConfirmingDelete(id);
@@ -199,6 +210,7 @@ export default function FoodLogClient({
         return (
           <div
             key={mealType}
+            data-testid={`meal-section-${mealType}`}
             className="rounded-2xl border border-outline-variant/20 hover:border-primary/20 transition-all shadow-sm bg-surface-container-lowest dark:bg-surface-container-low overflow-hidden"
           >
             {/* Meal header */}
@@ -206,6 +218,7 @@ export default function FoodLogClient({
               type="button"
               onClick={toggleMeal}
               aria-expanded={!isMealCollapsed}
+              data-testid={`meal-toggle-${mealType}`}
               className={`w-full flex items-center justify-between px-5 py-4 text-left group transition-colors hover:bg-surface-container/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-outline-variant/10' : ''}`}
             >
               <div>
@@ -350,6 +363,7 @@ export default function FoodLogClient({
                               onDeleteRequest={handleDeleteRequest}
                               onDeleteConfirm={handleDeleteConfirm}
                               onDeleteCancel={handleDeleteCancel}
+                              onEdit={onEdit}
                               indent
                             />
                           );
@@ -371,6 +385,7 @@ export default function FoodLogClient({
                       onDeleteRequest={handleDeleteRequest}
                       onDeleteConfirm={handleDeleteConfirm}
                       onDeleteCancel={handleDeleteCancel}
+                      onEdit={onEdit}
                     />
                   );
                 })}
@@ -399,6 +414,7 @@ interface FoodLogRowProps {
   onDeleteRequest: (id: string) => void;
   onDeleteConfirm: (id: string) => Promise<void>;
   onDeleteCancel: () => void;
+  onEdit?: (log: FoodLogEntry) => void;
   indent?: boolean;
 }
 
@@ -408,48 +424,55 @@ const MACRO_BADGE_COLORS2 = {
   fat: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
 } as const;
 
-function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteRequest, onDeleteConfirm, onDeleteCancel, indent = false }: FoodLogRowProps) {
+function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteRequest, onDeleteConfirm, onDeleteCancel, onEdit, indent = false }: FoodLogRowProps) {
   return (
     <div
-      className={`flex items-center gap-3 py-3 hover:bg-surface-container-low/50 transition-colors ${indent ? 'pl-8 pr-5' : 'px-5'}`}
+      className={`flex items-center gap-3 py-3 transition-colors ${indent ? 'pl-8 pr-5' : 'px-5'}`}
       data-testid={`food-log-${log.id}`}
     >
-      {log.food.photoUrl ? (
-        <Image
-          src={log.food.photoUrl}
-          alt={log.food.name}
-          width={48}
-          height={48}
-          className="w-12 h-12 rounded-lg object-cover shrink-0"
-        />
-      ) : (
-        <div className="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 flex items-center justify-center">
-          <UtensilsCrossed className="h-5 w-5 text-on-surface-variant/30" aria-hidden />
-        </div>
-      )}
-
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
-        {log.food.brandName && (
-          <p className="text-xs text-on-surface-variant truncate">{log.food.brandName}</p>
+      <button
+        type="button"
+        onClick={() => onEdit?.(log)}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-75 transition-opacity"
+        aria-label={`Edit ${log.food.name}`}
+      >
+        {log.food.photoUrl ? (
+          <Image
+            src={log.food.photoUrl}
+            alt={log.food.name}
+            width={48}
+            height={48}
+            className="w-12 h-12 rounded-lg object-cover shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 flex items-center justify-center">
+            <UtensilsCrossed className="h-5 w-5 text-on-surface-variant/30" aria-hidden />
+          </div>
         )}
-        <p className="text-xs text-on-surface-variant">
-          {log.altMeasure
-            ? `${log.altMeasure.qty} ${log.altMeasure.description}`
-            : `${log.quantity}g`}
-        </p>
-        <div className="flex items-center gap-1 mt-1 flex-wrap">
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.protein}`}>
-            P {nutrients.protein}g
-          </span>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.carbs}`}>
-            C {nutrients.carbs}g
-          </span>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.fat}`}>
-            F {nutrients.fat}g
-          </span>
+
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
+          {log.food.brandName && (
+            <p className="text-xs text-on-surface-variant truncate">{log.food.brandName}</p>
+          )}
+          <p className="text-xs text-on-surface-variant">
+            {log.altMeasure
+              ? `${log.altMeasure.qty} ${log.altMeasure.description}`
+              : `${log.quantity}g`}
+          </p>
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.protein}`}>
+              P {nutrients.protein}g
+            </span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.carbs}`}>
+              C {nutrients.carbs}g
+            </span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.fat}`}>
+              F {nutrients.fat}g
+            </span>
+          </div>
         </div>
-      </div>
+      </button>
 
       <div className="text-right shrink-0">
         <p className="text-sm font-bold tabular-nums text-foreground">{nutrients.calories} kcal</p>

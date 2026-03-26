@@ -183,8 +183,8 @@ test.describe('007: Dish log modal', () => {
     await expect(page.getByText('High-Protein Breakfast Bowl').first()).toBeVisible({ timeout: 10000 });
     await page.getByText('High-Protein Breakfast Bowl').first().click();
 
-    // DishLogModal should open
-    await expect(page.getByTestId('dish-log-submit')).toBeVisible({ timeout: 5000 });
+    // DishLogModal should open (now uses FoodModal)
+    await expect(page.getByTestId('add-food-button')).toBeVisible({ timeout: 5000 });
   });
 
   test('DishLogModal has multiplier select and meal type select', async ({ page }) => {
@@ -197,8 +197,8 @@ test.describe('007: Dish log modal', () => {
     await expect(page.getByText('High-Protein Breakfast Bowl').first()).toBeVisible({ timeout: 10000 });
     await page.getByText('High-Protein Breakfast Bowl').first().click();
 
-    await expect(page.getByTestId('dish-multiplier-select')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByTestId('dish-meal-type-select')).toBeVisible();
+    await expect(page.getByTestId('quantity-input')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('meal-type-select')).toBeVisible();
   });
 });
 

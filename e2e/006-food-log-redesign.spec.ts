@@ -19,6 +19,14 @@ test.describe('006: Food Log Screen Redesign', () => {
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   }
 
+  async function openFoodModal(page: import('@playwright/test').Page, foodLogPage: FoodLogPage) {
+    await foodLogPage.goto();
+    await foodLogPage.searchFood('chicken');
+    await foodLogPage.selectFirstResult();
+    await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByTestId('add-food-button')).toBeVisible({ timeout: 8000 });
+  }
+
   test.describe('Layout & Structure', () => {
     test('page heading is "Meal Planner & Daily Intake"', async ({ page }) => {
       await loginAsTestUser(page);
@@ -179,10 +187,10 @@ test.describe('006: Food Log Screen Redesign', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      await expect(page.getByRole('heading', { name: 'Breakfast' })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Lunch' })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Dinner' })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Snack' })).toBeVisible();
+      await expect(page.getByTestId('meal-section-breakfast')).toBeVisible();
+      await expect(page.getByTestId('meal-section-lunch')).toBeVisible();
+      await expect(page.getByTestId('meal-section-dinner')).toBeVisible();
+      await expect(page.getByTestId('meal-section-snack')).toBeVisible();
     });
 
     test('empty meal placeholders appear for unlogged meals (fresh user)', async ({ page }) => {
@@ -190,9 +198,12 @@ test.describe('006: Food Log Screen Redesign', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      // At least one meal type should have an empty placeholder
-      const placeholders = page.locator('[data-testid^="meal-empty-placeholder-"]');
-      await expect(placeholders.first()).toBeVisible({ timeout: 10000 });
+      // Empty sections start collapsed — expand breakfast to see its placeholder
+      await expect(page.getByTestId('meal-section-breakfast')).toBeVisible({ timeout: 10000 });
+      await page.getByTestId('meal-toggle-breakfast').click();
+
+      const placeholder = page.getByTestId('meal-empty-placeholder-breakfast');
+      await expect(placeholder).toBeVisible({ timeout: 5000 });
     });
 
     test('food items show in logged meal sections (seeded user)', async ({ page }) => {
@@ -242,6 +253,154 @@ test.describe('006: Food Log Screen Redesign', () => {
 
       // Search input should be pre-filled with the food name
       await expect(foodLogPage.searchInput).toHaveValue(foodName?.trim() ?? '');
+    });
+  });
+
+  test.describe('Food Add Modal', () => {
+    test('modal opens with close button and footer buttons', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await expect(page.getByTestId('food-add-modal')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Close' })).toBeVisible();
+      await expect(foodLogPage.cancelButton).toBeVisible();
+      await expect(foodLogPage.addFoodButton).toBeVisible();
+    });
+
+    test('Escape key closes modal', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await page.keyboard.press('Escape');
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 3000 });
+    });
+
+    test('Cancel button closes modal', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.cancelButton.click();
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 3000 });
+    });
+
+    test('Close button (header X) closes modal', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await page.getByRole('button', { name: 'Close' }).click();
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 3000 });
+    });
+
+    test('MealTypeSelect shows all meal options', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.mealTypeSelect.click();
+      for (const label of ['Breakfast', 'Lunch', 'Dinner', 'Snack']) {
+        await expect(page.getByRole('option', { name: new RegExp(`^${label}$`, 'i') })).toBeVisible();
+      }
+      await page.keyboard.press('Escape');
+    });
+
+    test('MealTypeSelect value changes when option selected', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.selectMealType('lunch');
+      await expect(foodLogPage.mealTypeSelect).toContainText('Lunch');
+    });
+
+    test('DateNavigator is visible with prev/next/display', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await expect(foodLogPage.dateNavigator).toBeVisible();
+      await expect(foodLogPage.dateNavPrev).toBeVisible();
+      await expect(foodLogPage.dateNavNext).toBeVisible();
+      await expect(foodLogPage.dateNavDisplay).toBeVisible();
+    });
+
+    test('DateNavigator prev/next arrows change the displayed date', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      const initialDate = await foodLogPage.dateNavDisplay.textContent();
+      await foodLogPage.navigateModalDate('prev');
+      const prevDate = await foodLogPage.dateNavDisplay.textContent();
+      expect(prevDate).not.toBe(initialDate);
+
+      await foodLogPage.navigateModalDate('next');
+      const restoredDate = await foodLogPage.dateNavDisplay.textContent();
+      expect(restoredDate).toBe(initialDate);
+    });
+
+    test('DateNavigator center click opens calendar popover', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.dateNavDisplay.click();
+      await expect(page.getByRole('grid').first()).toBeVisible({ timeout: 3000 });
+    });
+
+    test('quantity input and slider are visible', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await expect(foodLogPage.quantityInput).toBeVisible();
+      await expect(foodLogPage.quantitySlider).toBeVisible();
+    });
+
+    test('typing in quantity input updates macros', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      const calsBefore = await foodLogPage.getMacroCalories();
+      await foodLogPage.quantityInput.fill('200');
+      await page.keyboard.press('Tab');
+      const calsAfter = await foodLogPage.getMacroCalories();
+      expect(calsAfter).not.toBe(calsBefore);
+    });
+
+    test('macros section shows calories, protein, carbs, fat', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await expect(foodLogPage.macroCalories).toBeVisible();
+      await expect(foodLogPage.macroProtein).toBeVisible();
+      await expect(foodLogPage.macroCarbs).toBeVisible();
+      await expect(foodLogPage.macroFat).toBeVisible();
+    });
+
+    test('submitting food log closes modal', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.addFoodButton.click();
+      await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 8000 });
+    });
+
+    test('existing test IDs are preserved (food-add-modal, quantity-input, meal-type-select, add-food-button)', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await expect(page.getByTestId('food-add-modal')).toBeVisible();
+      await expect(page.getByTestId('quantity-input')).toBeVisible();
+      await expect(page.getByTestId('meal-type-select')).toBeVisible();
+      await expect(page.getByTestId('add-food-button')).toBeVisible();
     });
   });
 });

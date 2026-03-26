@@ -18,6 +18,12 @@ function toNumber(value: string | number | null | undefined) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
+function roundToMealMinute(date: Date) {
+  const d = new Date(date);
+  d.setSeconds(0, 0);
+  return d;
+}
+
 // GET - Fetch a specific food log entry
 export async function GET(
   request: NextRequest,
@@ -259,25 +265,58 @@ export async function PATCH(
       }
 
       if (updateData.mealType !== undefined || updateData.consumedAt !== undefined) {
-        const mealUpdateData: {
-          mealType?: typeof foodLogMeals.$inferInsert.mealType;
-          consumedAt?: Date;
-          updatedAt?: Date;
-        } = {};
+        const currentMealId = existingItemLog[0].mealId;
 
-        if (updateData.mealType !== undefined) {
-          mealUpdateData.mealType = updateData.mealType;
-        }
-        if (updateData.consumedAt !== undefined) {
-          mealUpdateData.consumedAt = updateData.consumedAt;
-        }
+        // Fetch the current meal to know its existing date/type
+        const [currentMeal] = await db
+          .select({
+            id: foodLogMeals.id,
+            mealType: foodLogMeals.mealType,
+            consumedAt: foodLogMeals.consumedAt,
+          })
+          .from(foodLogMeals)
+          .where(eq(foodLogMeals.id, currentMealId));
 
-        if (Object.keys(mealUpdateData).length > 0) {
-          mealUpdateData.updatedAt = new Date();
+        const newMealType = (updateData.mealType ?? currentMeal.mealType) as typeof foodLogMeals.$inferInsert.mealType;
+        const newConsumedAt = updateData.consumedAt ?? currentMeal.consumedAt;
+
+        // Count how many items share the current meal
+        const siblingsResult = await db
+          .select({ id: foodLogItems.id })
+          .from(foodLogItems)
+          .where(eq(foodLogItems.mealId, currentMealId));
+
+        if (siblingsResult.length <= 1) {
+          // This is the only item — safe to update the meal row directly
           await db
             .update(foodLogMeals)
-            .set(mealUpdateData)
-            .where(eq(foodLogMeals.id, existingItemLog[0].mealId));
+            .set({ mealType: newMealType, consumedAt: newConsumedAt, updatedAt: new Date() })
+            .where(eq(foodLogMeals.id, currentMealId));
+        } else {
+          // Other items share this meal — find or create the target meal and move just this item
+          const normalizedConsumedAt = roundToMealMinute(newConsumedAt);
+
+          const existingTargetMeal = await db.query.foodLogMeals.findFirst({
+            where: and(
+              eq(foodLogMeals.userId, user.id),
+              eq(foodLogMeals.mealType, newMealType),
+              eq(foodLogMeals.consumedAt, normalizedConsumedAt),
+            ),
+          });
+
+          let targetMealId = existingTargetMeal?.id;
+          if (!targetMealId) {
+            const [newMeal] = await db
+              .insert(foodLogMeals)
+              .values({ userId: user.id, mealType: newMealType, consumedAt: normalizedConsumedAt })
+              .returning();
+            targetMealId = newMeal.id;
+          }
+
+          await db
+            .update(foodLogItems)
+            .set({ mealId: targetMealId, updatedAt: new Date() })
+            .where(eq(foodLogItems.id, logId));
         }
       }
 

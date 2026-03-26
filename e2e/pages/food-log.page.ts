@@ -18,6 +18,18 @@ export class FoodLogPage {
   readonly pulseMacroCarbs: Locator;
   readonly pulseMacroFat: Locator;
   readonly quickAddButtons: Locator;
+  // New modal UI locators
+  readonly dateNavigator: Locator;
+  readonly dateNavPrev: Locator;
+  readonly dateNavNext: Locator;
+  readonly dateNavDisplay: Locator;
+  readonly quantitySlider: Locator;
+  readonly measureSelect: Locator;
+  readonly macroCalories: Locator;
+  readonly macroProtein: Locator;
+  readonly macroCarbs: Locator;
+  readonly macroFat: Locator;
+  readonly cancelButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -36,6 +48,18 @@ export class FoodLogPage {
     this.pulseMacroCarbs = page.getByTestId('pulse-macro-carbs');
     this.pulseMacroFat = page.getByTestId('pulse-macro-fat');
     this.quickAddButtons = page.getByTestId('quick-add-recent');
+    // New modal UI locators
+    this.dateNavigator = page.getByTestId('date-navigator');
+    this.dateNavPrev = page.getByTestId('date-nav-prev');
+    this.dateNavNext = page.getByTestId('date-nav-next');
+    this.dateNavDisplay = page.getByTestId('date-nav-display');
+    this.quantitySlider = page.getByTestId('quantity-slider');
+    this.measureSelect = page.getByTestId('measure-select');
+    this.macroCalories = page.getByTestId('macros-calories');
+    this.macroProtein = page.getByTestId('macros-protein');
+    this.macroCarbs = page.getByTestId('macros-carbs');
+    this.macroFat = page.getByTestId('macros-fat');
+    this.cancelButton = page.getByTestId('food-modal-cancel');
   }
 
   async goto() {
@@ -50,7 +74,7 @@ export class FoodLogPage {
   }
 
   async selectFirstResult() {
-    const firstResult = this.page.getByTestId('food-result-0');
+    const firstResult = this.page.getByTestId('food-result-item').first();
     await firstResult.click();
   }
 
@@ -142,5 +166,25 @@ export class FoodLogPage {
       if (text) names.push(text.trim());
     }
     return names;
+  }
+
+  /** Select a measure unit by label text in the modal */
+  async setMeasure(label: string) {
+    await this.measureSelect.click();
+    await this.page.getByRole('option', { name: new RegExp(label, 'i') }).click();
+  }
+
+  /** Click the prev or next date arrow in the modal's DateNavigator */
+  async navigateModalDate(direction: 'prev' | 'next') {
+    if (direction === 'prev') {
+      await this.dateNavPrev.click();
+    } else {
+      await this.dateNavNext.click();
+    }
+  }
+
+  /** Returns the calories text from the macros summary in the modal */
+  async getMacroCalories(): Promise<string> {
+    return (await this.macroCalories.textContent()) ?? '';
   }
 }

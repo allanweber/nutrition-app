@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { SearchInput } from './input';
 import { Dropdown } from './dropdown';
 import { HistoryList } from './history-list';
@@ -93,6 +93,11 @@ export function FoodSearchField({
     },
     [state.results, highlightedIndex, handleSelect, onQueryChange],
   );
+
+  // Open dropdown when query is set externally (e.g. quick add)
+  useEffect(() => {
+    if (state.query.length > 0) setDropdownOpen(true);
+  }, [state.query]);
 
   const handleRetry = useCallback(() => {
     onQueryChange(state.query);

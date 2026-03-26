@@ -105,6 +105,10 @@ Emotional goal: Users should feel in control. Competent. Like the data is workin
 
 **Shared nutrition components**:
 - `src/components/meal-type-label.tsx` — `<MealTypeLabel>` colored badge for meal types
+- `src/components/meal-type-select.tsx` — `<MealTypeSelect>` controlled select for meal types; accepts `value/onChange/error/id`
+- `src/components/date-navigator.tsx` — `<DateNavigator>` date row with prev/next arrows + calendar popover; accepts `value/onChange`
+- `src/components/quantity-unit-input.tsx` — `<QuantityUnitInput>` combined numeric input + unit dropdown + slider; accepts `measures[]`, `selectedMeasureId`, `quantity`, `onMeasureChange`, `onQuantityChange`
+- `src/components/food-modal.tsx` — `<FoodModal>` unified modal for log-food / log-dish / ingredient modes; controlled by `open`, discriminated union `mode` prop, `onClose`
 
 **Rule**: macro and meal-type colors always come from `nutrition-constants.ts`. Never redeclare inline.
 

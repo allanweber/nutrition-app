@@ -67,6 +67,7 @@ interface CreateFoodLogData {
   altMeasureId?: string | null
   quantity: string
   mealType: string
+  consumedAt?: string
 }
 
 export function useCreateFoodLogMutation() {
@@ -93,6 +94,37 @@ export function useCreateFoodLogMutation() {
       // Also invalidate analytics since they depend on logs
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       // Invalidate nutrition summary so sidebar updates
+      queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
+    },
+  })
+}
+
+interface UpdateFoodLogData {
+  logId: string
+  altMeasureId?: string | null
+  quantity?: number
+  mealType?: string
+  consumedAt?: string
+}
+
+export function useUpdateFoodLogMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ logId, ...data }: UpdateFoodLogData): Promise<void> => {
+      const response = await fetch(`/api/food-logs/${logId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update food log')
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['food-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
       queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
     },
   })
