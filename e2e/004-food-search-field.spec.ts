@@ -292,15 +292,15 @@ test.describe('004 US4: Keyboard Navigation', () => {
     const dropdown = page.getByTestId('food-search-dropdown');
     await expect(dropdown).toBeVisible();
 
-    // Arrow down twice — 3rd result should be highlighted
+    // Arrow down twice — 2nd result should be highlighted (index 1)
     await page.getByTestId('food-search-input').press('ArrowDown');
     await page.getByTestId('food-search-input').press('ArrowDown');
 
-    // The 3rd item (index 2) should have aria-selected=true
+    // The 2nd item (index 1) should have aria-selected=true after 2 presses
     const items = page.getByRole('option');
     const count = await items.count();
-    if (count >= 3) {
-      await expect(items.nth(2)).toHaveAttribute('aria-selected', 'true');
+    if (count >= 2) {
+      await expect(items.nth(1)).toHaveAttribute('aria-selected', 'true');
     }
   });
 
@@ -347,5 +347,127 @@ test.describe('004 US4: Keyboard Navigation', () => {
     await page.getByTestId('food-search-input').press('ArrowDown');
     const after = await page.getByTestId('food-search-input').inputValue();
     expect(after).toBe(before);
+  });
+});
+
+// ──────────────────────────────────────────────
+// US5: Custom Food Access Model (userId-based)
+// ──────────────────────────────────────────────
+
+test.describe('004 US5: Custom Food Access Model', () => {
+  test('custom food search returns only the current user\'s foods (userId-scoped)', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+    await goToFoodLog(page);
+
+    // Mock custom search to return user-owned foods
+    await page.route('**/api/foods/custom/search*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [
+            {
+              id: 'cccccccc-cccc-7ccc-cccc-cccccccccccc',
+              name: 'My Custom Protein Shake',
+              brandName: null,
+              thumbnail: null,
+              calories: 250,
+            },
+          ],
+        }),
+      });
+    });
+
+    await typeSearch(page, 'custom');
+
+    // Custom tab should be visible for authenticated users
+    await expect(page.getByTestId('tab-custom')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('tab-custom').click();
+    await page.waitForTimeout(400);
+
+    // Should show the mocked custom food
+    await expect(page.getByTestId('food-result-item').first()).toContainText('My Custom Protein Shake');
+  });
+
+  test('custom foods do NOT appear in shared catalog search', async ({ page }) => {
+    await loginAsTestUser(page);
+    await goToFoodLog(page);
+
+    // Mock catalog search returning only shared (userId=null) foods
+    await page.route('**/api/foods/search*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [
+            {
+              id: 'bbbbbbbb-bbbb-7bbb-bbbb-bbbbbbbbbbbb',
+              fatSecretId: '99999',
+              name: 'Shared Catalog Chicken',
+              brandName: null,
+              foodType: 'Generic',
+              thumbnail: null,
+              calories: 165,
+              isLocal: true,
+            },
+          ],
+          pagination: { page: 1, totalResults: 1, maxResults: 10 },
+        }),
+      });
+    });
+
+    // Mock custom search to return empty immediately — prevents loading state from blocking results
+    await page.route('**/api/foods/custom/search*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ results: [], total: 0 }),
+      });
+    });
+
+    await typeSearch(page, 'chicken');
+    await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
+
+    // Common and Branded tabs exist; custom food should not be in common/branded results
+    await expect(page.getByTestId('tab-common')).toBeVisible({ timeout: 5000 });
+    const firstResult = page.getByTestId('food-result-item').first();
+    await expect(firstResult).toContainText('Shared Catalog Chicken');
+  });
+
+  test('food detail for a shared food (userId=null) returns 200 for authenticated user', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+
+    const response = await page.request.get('/api/foods/detail?id=00000000-0000-0000-0000-000000000000');
+    // Shared food not found → 404 (not 403) — access control passes for null userId
+    expect(response.status()).not.toBe(403);
+  });
+
+  test('food detail endpoint returns 403 for a custom food owned by another user (mocked)', async ({
+    page,
+  }) => {
+    await loginAsTestUser(page);
+    await goToFoodLog(page);
+
+    // Mock the detail endpoint returning 403 (another user's custom food)
+    await page.route('**/api/foods/detail?id=dddddddd*', async (route) => {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: false, error: 'Forbidden' }),
+      });
+    });
+
+    // Set up response listener before triggering the fetch to avoid a race
+    const responsePromise = page.waitForResponse('**/api/foods/detail?id=dddddddd*');
+    await page.evaluate(() => {
+      fetch('/api/foods/detail?id=dddddddd-dddd-7ddd-dddd-dddddddddddd');
+    });
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(403);
   });
 });

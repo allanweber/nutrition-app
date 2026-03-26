@@ -141,7 +141,7 @@ A single logged meal or activity for the current day.
 | Field | Type | Source | Notes |
 |-------|------|--------|-------|
 | `id` | `string` | `food_log_meals.id` | UUID7 |
-| `name` | `string` | First `food_log_items.food_name` in the meal | Or meal type label if no items |
+| `name` | `string` | First `foods.name` (joined via `food_log_items.food_id`) in the meal | Or meal type label if no items |
 | `time` | `string` | `food_log_meals.consumed_at` formatted | e.g., "08:00 AM" |
 | `timeGroup` | `"morning" \| "midday" \| "evening"` | Derived from `consumed_at` hour | See mapping below |
 | `calories` | `number` | SUM of items in this meal | kcal |

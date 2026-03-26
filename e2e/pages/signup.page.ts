@@ -24,13 +24,13 @@ export class SignupPage {
     this.googleButton = page.getByTestId('google-button');
     this.errorMessage = page.getByTestId('error-message');
     this.nameError = page
-      .locator('[data-testid="name-input"] + div')
+      .locator('[data-testid="name-input"] + p')
       .filter({ hasText: /.+/ });
     this.emailError = page
-      .locator('[data-testid="email-input"] + div')
+      .locator('[data-testid="email-input"] + p')
       .filter({ hasText: /.+/ });
     this.passwordError = page
-      .locator('[data-testid="password-input"] + div')
+      .locator('[data-testid="password-input"] + p')
       .filter({ hasText: /.+/ });
     this.loginLink = page.getByRole('link', { name: 'Sign in' });
   }

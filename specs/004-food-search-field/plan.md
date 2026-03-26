@@ -34,7 +34,7 @@ Replace the monolithic `FoodSearch` component with a unified `FoodSearchField` c
 | FatSecret fire-and-forget persistence | ✅ | Existing service unchanged (FR-022) |
 | Graceful error handling | ✅ | All error states have user-friendly fallback UI |
 | Public endpoint protection | ✅ | Rate limiting added to `src/proxy.ts` for `/foods/**` and `/api/foods/search` |
-| No DB schema changes | ✅ | `isCustom` and `userId` fields already exist |
+| No DB schema changes | ✅ | `userId` field drives custom food scoping (`null` = shared catalog, set = user-owned) |
 | Authentication via BetterAuth | ✅ | Custom food endpoint checks session; proxy.ts handles auth |
 
 ## Project Structure
@@ -107,7 +107,7 @@ src/
 See [research.md](research.md) for full rationale. Key decisions:
 
 1. **Custom foods endpoint**: New `/api/foods/custom/search` — existing service excludes custom foods; separation keeps FR-022 intact
-2. **Tab mapping**: `Generic` → Common, `Brand` → Branded, `isCustom` → Custom; mapping is a display concern in the component
+2. **Tab mapping**: `Generic` → Common, `Brand` → Branded, `userId IS NOT NULL` → Custom; mapping is a display concern in the component
 3. **Rate limiting**: In-memory sliding-window added to `src/proxy.ts` (Next.js 16 uses `proxy.ts` instead of `middleware.ts`); 60 req/min per IP on `/foods/**` and `/api/foods/search`; no new packages required
 4. **Food details URL**: `/foods/[fatSecretId]` — canonical, stable for SEO; DB-first then FatSecret API fallback
 5. **Query placement**: `useFoodSearch()` hook owned by pages and `SearchSection` client wrapper; `FoodSearchField` is purely prop-driven

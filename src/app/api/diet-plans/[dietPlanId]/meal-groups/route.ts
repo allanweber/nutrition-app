@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/session';
 import { validateRequestBody } from '@/lib/api-validation';
 import { db } from '@/server/db';
 import {
-  dietPlanMealGroups,
+  dietPlanMeals,
   dietPlanMealItems,
   dietPlans,
   foodPhotos,
@@ -32,8 +32,8 @@ const createMealGroupSchema = z.object({
     .array(
       z.object({
         foodId: z.string().uuid(),
-        quantity: z.number().positive().max(10000),
-        servingUnit: z.string().min(1).max(100).optional(),
+        quantity: z.number().positive().max(100000),
+        altMeasureId: z.string().uuid().optional().nullable(),
       }),
     )
     .min(1)
@@ -73,32 +73,30 @@ export async function GET(
 
     const rows = await db
       .select({
-        groupId: dietPlanMealGroups.id,
-        mealType: dietPlanMealGroups.mealType,
-        dayOfWeek: dietPlanMealGroups.dayOfWeek,
-        scheduledAt: dietPlanMealGroups.scheduledAt,
-        createdAt: dietPlanMealGroups.createdAt,
+        groupId: dietPlanMeals.id,
+        mealType: dietPlanMeals.mealType,
+        dayOfWeek: dietPlanMeals.dayOfWeek,
+        scheduledAt: dietPlanMeals.scheduledAt,
+        createdAt: dietPlanMeals.createdAt,
         itemId: dietPlanMealItems.id,
         quantity: dietPlanMealItems.quantity,
-        servingUnit: dietPlanMealItems.servingUnit,
-        foodId: dietPlanMealItems.foodId,
-        foodName: dietPlanMealItems.foodName,
-        brandName: dietPlanMealItems.brandName,
-        calories: dietPlanMealItems.calories,
-        protein: dietPlanMealItems.protein,
-        carbs: dietPlanMealItems.carbs,
-        fat: dietPlanMealItems.fat,
-        fiber: dietPlanMealItems.fiber,
-        sugar: dietPlanMealItems.sugar,
-        sodium: dietPlanMealItems.sodium,
-        servingQty: dietPlanMealItems.servingQty,
-        servingUnitSnapshot: dietPlanMealItems.servingUnitSnapshot,
+        foodId: foods.id,
+        foodName: foods.name,
+        brandName: foods.brandName,
+        calories: foods.calories,
+        protein: foods.protein,
+        carbs: foods.carbs,
+        fat: foods.fat,
+        fiber: foods.fiber,
+        sugar: foods.sugar,
+        sodium: foods.sodium,
         photoThumb: foodPhotos.thumb,
       })
-      .from(dietPlanMealGroups)
-      .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMealGroups.id))
+      .from(dietPlanMeals)
+      .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
+      .leftJoin(foods, eq(dietPlanMealItems.foodId, foods.id))
       .leftJoin(foodPhotos, eq(dietPlanMealItems.foodId, foodPhotos.foodId))
-      .where(eq(dietPlanMealGroups.dietPlanId, dietPlanId));
+      .where(eq(dietPlanMeals.dietPlanId, dietPlanId));
 
     const grouped = new Map<string, {
       id: string;
@@ -109,7 +107,6 @@ export async function GET(
       items: Array<{
         id: string;
         quantity: number;
-        servingUnit: string | null;
         food: {
           id: string | null;
           name: string;
@@ -121,8 +118,6 @@ export async function GET(
           fiber: number;
           sugar: number;
           sodium: number;
-          servingQty: number;
-          servingUnit: string | null;
           photoUrl: string | null;
         };
       }>;
@@ -144,7 +139,6 @@ export async function GET(
         grouped.get(row.groupId)?.items.push({
           id: row.itemId,
           quantity: Number(row.quantity),
-          servingUnit: row.servingUnit,
           food: {
             id: row.foodId,
             name: row.foodName || 'Unknown food',
@@ -156,8 +150,6 @@ export async function GET(
             fiber: Number(row.fiber || 0),
             sugar: Number(row.sugar || 0),
             sodium: Number(row.sodium || 0),
-            servingQty: Number(row.servingQty || 0),
-            servingUnit: row.servingUnitSnapshot,
             photoUrl: row.photoThumb || null,
           },
         });
@@ -207,14 +199,7 @@ export async function POST(
 
     const payload = validation.data;
 
-    const foodsById = new Map<
-      string,
-      {
-        food: Awaited<ReturnType<typeof db.query.foods.findFirst>>;
-        photoThumb: string | null;
-      }
-    >();
-
+    // Validate all foods exist
     for (const item of payload.items) {
       const existingFood = await db.query.foods.findFirst({
         where: eq(foods.id, item.foodId),
@@ -230,20 +215,11 @@ export async function POST(
           { status: 400 },
         );
       }
-
-      const photo = await db.query.foodPhotos.findFirst({
-        where: eq(foodPhotos.foodId, item.foodId),
-      });
-
-      foodsById.set(item.foodId, {
-        food: existingFood,
-        photoThumb: photo?.thumb || null,
-      });
     }
 
     const created = await db.transaction(async (tx) => {
       const [group] = await tx
-        .insert(dietPlanMealGroups)
+        .insert(dietPlanMeals)
         .values({
           dietPlanId,
           mealType: payload.mealType,
@@ -255,29 +231,12 @@ export async function POST(
       const insertedItems = await tx
         .insert(dietPlanMealItems)
         .values(
-          payload.items.map((item) => {
-            const foodRef = foodsById.get(item.foodId)!;
-            const food = foodRef.food!;
-            return {
-              groupId: group.id,
-              foodId: food.id,
-              quantity: item.quantity.toString(),
-              servingUnit: item.servingUnit || food.servingUnit,
-              foodName: food.name,
-              brandName: food.brandName || null,
-              calories: food.calories,
-              protein: food.protein,
-              carbs: food.carbs,
-              fat: food.fat,
-              fiber: food.fiber,
-              sugar: food.sugar,
-              sodium: food.sodium,
-              servingQty: food.servingQty,
-              servingUnitSnapshot: food.servingUnit,
-              servingWeightGrams: food.servingWeightGrams,
-              photoThumbSnapshot: foodRef.photoThumb,
-            };
-          }),
+          payload.items.map((item) => ({
+            groupId: group.id,
+            foodId: item.foodId,
+            quantity: item.quantity.toString(),
+            altMeasureId: item.altMeasureId ?? null,
+          })),
         )
         .returning();
 

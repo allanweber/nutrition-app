@@ -14,9 +14,11 @@ export function FoodSearchField({
   onLoadMore,
   onSelect,
   showCustomTab = true,
+  preferCustomTab = false,
   placeholder,
   className,
   size = 'default',
+  inputTestId,
 }: FoodSearchFieldProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -120,6 +122,7 @@ export function FoodSearchField({
         onFocus={handleFocus}
         placeholder={placeholder}
         size={size}
+        inputTestId={inputTestId}
       />
       <Dropdown
         open={dropdownOpen}
@@ -130,6 +133,7 @@ export function FoodSearchField({
         error={state.error}
         hasMore={state.hasMore}
         showCustomTab={showCustomTab}
+        preferCustomTab={preferCustomTab}
         highlightedIndex={highlightedIndex}
         onSelect={handleSelect}
         onLoadMore={onLoadMore}

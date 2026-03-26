@@ -64,6 +64,11 @@ export async function GET(request: NextRequest) {
     }
 
     const food = rows[0].food;
+
+    if (food.userId !== null && food.userId !== session.user.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     const photo = rows[0].photo ?? null;
     const altMeasures = rows
       .map((r) => r.altMeasure)

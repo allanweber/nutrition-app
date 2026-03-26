@@ -14,6 +14,7 @@ interface DropdownProps {
   error: string | null;
   hasMore: boolean;
   showCustomTab: boolean;
+  preferCustomTab?: boolean;
   highlightedIndex: number;
   onSelect: (item: UnifiedFoodSearchResultItem) => void;
   onLoadMore: () => void;
@@ -33,6 +34,7 @@ export function Dropdown({
   error,
   hasMore,
   showCustomTab,
+  preferCustomTab = false,
   highlightedIndex,
   onSelect,
   onLoadMore,
@@ -99,6 +101,7 @@ export function Dropdown({
                 results={results}
                 query={query}
                 showCustomTab={showCustomTab}
+                preferCustomTab={preferCustomTab}
                 highlightedIndex={highlightedIndex}
                 hasMore={hasMore}
                 isLoadingMore={isLoadingMore}

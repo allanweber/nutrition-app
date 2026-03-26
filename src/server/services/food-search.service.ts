@@ -1,4 +1,4 @@
-import { and, eq, ilike } from 'drizzle-orm';
+import { and, eq, ilike, isNull } from 'drizzle-orm';
 import db from '@/server/db';
 import {
   foodAltMeasures,
@@ -50,7 +50,7 @@ async function searchLocalFoods(keyword: string) {
     .leftJoin(foodPhotos, eq(foodPhotos.foodId, foods.id))
     .where(
       and(
-        eq(foods.source, 'fatsecret'),
+        isNull(foods.userId),
         ilike(foods.name, `%${keyword}%`),
       ),
     )
@@ -129,7 +129,6 @@ async function saveFatSecretFoodsAsync(
           sodium: baseServing.sodium ?? null,
           fullNutrients,
           isRaw: false,
-          isCustom: false,
           userId: null,
         })
         .onConflictDoNothing()

@@ -21,6 +21,7 @@ import postgres from 'postgres';
 import { and, eq } from 'drizzle-orm';
 import * as schema from './schema';
 import { subDays, startOfDay, setHours } from 'date-fns';
+import { uuidv7 } from 'uuidv7';
 
 const connectionString = process.env.DATABASE_URL;
 const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
@@ -48,6 +49,7 @@ const sampleFoods = [
     fiber: '4.4',
     sugar: '19',
     sodium: '2',
+    fullNutrients: { saturatedFat: 0.05, polyunsaturatedFat: 0.09, monounsaturatedFat: 0.01, cholesterol: 0, potassium: 195, vitaminA: 5, vitaminC: 8.4, calcium: 11, iron: 0.22 },
   },
   {
     sourceId: 'seed-banana',
@@ -63,6 +65,7 @@ const sampleFoods = [
     fiber: '3.1',
     sugar: '14',
     sodium: '1',
+    fullNutrients: { saturatedFat: 0.13, polyunsaturatedFat: 0.06, monounsaturatedFat: 0.04, cholesterol: 0, potassium: 422, vitaminA: 4, vitaminC: 10.3, calcium: 6, iron: 0.31 },
   },
   {
     sourceId: 'seed-chicken-breast',
@@ -78,6 +81,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '0',
     sodium: '104',
+    fullNutrients: { saturatedFat: 1.01, polyunsaturatedFat: 0.55, monounsaturatedFat: 0.98, cholesterol: 146, potassium: 616, vitaminA: 10, vitaminC: 0, calcium: 15, iron: 1.03 },
   },
   {
     sourceId: 'seed-brown-rice',
@@ -93,6 +97,7 @@ const sampleFoods = [
     fiber: '3.5',
     sugar: '0.7',
     sodium: '10',
+    fullNutrients: { saturatedFat: 0.36, polyunsaturatedFat: 0.64, monounsaturatedFat: 0.64, cholesterol: 0, potassium: 154, vitaminA: 0, vitaminC: 0, calcium: 20, iron: 1.03 },
   },
   {
     sourceId: 'seed-eggs',
@@ -108,6 +113,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '2',
     sodium: '342',
+    fullNutrients: { saturatedFat: 4.38, polyunsaturatedFat: 1.57, monounsaturatedFat: 4.68, cholesterol: 418, potassium: 163, vitaminA: 152, vitaminC: 0.3, calcium: 78, iron: 1.83 },
   },
   {
     sourceId: 'seed-oatmeal',
@@ -123,6 +129,7 @@ const sampleFoods = [
     fiber: '4',
     sugar: '1.1',
     sodium: '115',
+    fullNutrients: { saturatedFat: 0.51, polyunsaturatedFat: 1.22, monounsaturatedFat: 1.01, cholesterol: 0, potassium: 164, vitaminA: 0, vitaminC: 0, calcium: 21, iron: 2.11 },
   },
   {
     sourceId: 'seed-salmon',
@@ -138,6 +145,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '0',
     sodium: '86',
+    fullNutrients: { saturatedFat: 2.13, polyunsaturatedFat: 4.0, monounsaturatedFat: 3.5, cholesterol: 109, potassium: 628, vitaminA: 14, vitaminC: 0, calcium: 17, iron: 0.62 },
   },
   {
     sourceId: 'seed-salad',
@@ -153,6 +161,7 @@ const sampleFoods = [
     fiber: '3',
     sugar: '4',
     sodium: '280',
+    fullNutrients: { saturatedFat: 1.1, polyunsaturatedFat: 3.2, monounsaturatedFat: 2.9, cholesterol: 0, potassium: 320, vitaminA: 200, vitaminC: 25, calcium: 60, iron: 1.2 },
   },
   {
     sourceId: 'seed-greek-yogurt',
@@ -168,6 +177,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '4',
     sodium: '65',
+    fullNutrients: { saturatedFat: 0.15, polyunsaturatedFat: 0.02, monounsaturatedFat: 0.05, cholesterol: 8, potassium: 240, vitaminA: 0, vitaminC: 0, calcium: 187, iron: 0.1 },
   },
   {
     sourceId: 'seed-almonds',
@@ -183,6 +193,7 @@ const sampleFoods = [
     fiber: '3.5',
     sugar: '1.2',
     sodium: '0',
+    fullNutrients: { saturatedFat: 1.07, polyunsaturatedFat: 3.44, monounsaturatedFat: 8.77, cholesterol: 0, potassium: 200, vitaminA: 0, vitaminC: 0, calcium: 76, iron: 1.05 },
   },
   {
     sourceId: 'seed-pasta',
@@ -198,6 +209,7 @@ const sampleFoods = [
     fiber: '6.3',
     sugar: '0.8',
     sodium: '4',
+    fullNutrients: { saturatedFat: 0.14, polyunsaturatedFat: 0.29, monounsaturatedFat: 0.06, cholesterol: 0, potassium: 145, vitaminA: 0, vitaminC: 0, calcium: 21, iron: 1.68 },
   },
   {
     sourceId: 'seed-avocado',
@@ -213,6 +225,7 @@ const sampleFoods = [
     fiber: '10',
     sugar: '1',
     sodium: '11',
+    fullNutrients: { saturatedFat: 3.19, polyunsaturatedFat: 2.69, monounsaturatedFat: 14.68, cholesterol: 0, potassium: 728, vitaminA: 12, vitaminC: 15, calcium: 18, iron: 0.86 },
   },
   {
     sourceId: 'seed-toast',
@@ -228,6 +241,7 @@ const sampleFoods = [
     fiber: '4',
     sugar: '3',
     sodium: '320',
+    fullNutrients: { saturatedFat: 2.8, polyunsaturatedFat: 0.5, monounsaturatedFat: 2.2, cholesterol: 15, potassium: 120, vitaminA: 60, vitaminC: 0, calcium: 50, iron: 1.2 },
   },
   {
     sourceId: 'seed-coffee',
@@ -243,6 +257,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '3',
     sodium: '15',
+    fullNutrients: { saturatedFat: 0.8, polyunsaturatedFat: 0.05, monounsaturatedFat: 0.3, cholesterol: 4, potassium: 110, vitaminA: 12, vitaminC: 0, calcium: 40, iron: 0.05 },
   },
   {
     sourceId: 'seed-protein-shake',
@@ -258,6 +273,7 @@ const sampleFoods = [
     fiber: '0',
     sugar: '1',
     sodium: '50',
+    fullNutrients: { saturatedFat: 0.5, polyunsaturatedFat: 0.1, monounsaturatedFat: 0.2, cholesterol: 50, potassium: 160, vitaminA: 0, vitaminC: 0, calcium: 100, iron: 0.7 },
   },
 ];
 
@@ -412,8 +428,123 @@ const sampleUserDefs = {
   ],
 };
 
+// Custom foods per seed user (inserted with userId after user creation)
+// Cleanup is automatic via cascade delete when users are deleted
+const customFoodsByEmail: Record<string, Array<{
+  sourceId: string;
+  source: string;
+  name: string;
+  servingQty: string;
+  servingUnit: string;
+  servingWeightGrams: string;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+  fiber: string;
+  sugar: string;
+  sodium: string;
+}>> = {
+  'user.weight-loss@example.com': [
+    {
+      sourceId: 'custom-green-smoothie',
+      source: 'user_custom',
+      name: "Alex's Green Smoothie",
+      servingQty: '1',
+      servingUnit: 'glass (350ml)',
+      servingWeightGrams: '350',
+      calories: '185',
+      protein: '6',
+      carbs: '35',
+      fat: '3',
+      fiber: '5',
+      sugar: '22',
+      sodium: '80',
+    },
+    {
+      sourceId: 'custom-chicken-wrap',
+      source: 'user_custom',
+      name: 'Homemade Chicken Wrap',
+      servingQty: '1',
+      servingUnit: 'wrap',
+      servingWeightGrams: '220',
+      calories: '380',
+      protein: '35',
+      carbs: '30',
+      fat: '12',
+      fiber: '4',
+      sugar: '3',
+      sodium: '520',
+    },
+    {
+      sourceId: 'custom-overnight-oats',
+      source: 'user_custom',
+      name: 'Overnight Oats with Berries',
+      servingQty: '1',
+      servingUnit: 'jar (300g)',
+      servingWeightGrams: '300',
+      calories: '320',
+      protein: '14',
+      carbs: '52',
+      fat: '7',
+      fiber: '8',
+      sugar: '18',
+      sodium: '120',
+    },
+  ],
+  'user.muscle-gain@example.com': [
+    {
+      sourceId: 'custom-mass-shake',
+      source: 'user_custom',
+      name: "Chris's Mass Builder Shake",
+      servingQty: '1',
+      servingUnit: 'shake (500ml)',
+      servingWeightGrams: '550',
+      calories: '680',
+      protein: '45',
+      carbs: '85',
+      fat: '15',
+      fiber: '6',
+      sugar: '30',
+      sodium: '200',
+    },
+    {
+      sourceId: 'custom-protein-bowl',
+      source: 'user_custom',
+      name: 'Post-Workout Protein Bowl',
+      servingQty: '1',
+      servingUnit: 'bowl (400g)',
+      servingWeightGrams: '400',
+      calories: '520',
+      protein: '45',
+      carbs: '55',
+      fat: '12',
+      fiber: '7',
+      sugar: '8',
+      sodium: '380',
+    },
+  ],
+  'user.maintenance@example.com': [
+    {
+      sourceId: 'custom-family-stew',
+      source: 'user_custom',
+      name: "Jordan's Family Beef Stew",
+      servingQty: '1',
+      servingUnit: 'bowl (350g)',
+      servingWeightGrams: '350',
+      calories: '420',
+      protein: '28',
+      carbs: '40',
+      fat: '14',
+      fiber: '5',
+      sugar: '6',
+      sodium: '680',
+    },
+  ],
+};
+
 // Goal type for food log generation
-type GoalVariant = 
+type GoalVariant =
   | 'weight_loss'
   | 'maintenance'
   | 'weight_gain'
@@ -432,7 +563,6 @@ function generateFoodLogs(
     userId: string;
     foodId: string;
     quantity: string;
-    servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     consumedAt: Date;
   }> = [];
@@ -519,8 +649,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'breakfast',
           consumedAt: setHours(date, breakfastHour + i * 0.1),
         });
@@ -534,8 +663,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'lunch',
           consumedAt: setHours(date, lunchHour + i * 0.1),
         });
@@ -549,8 +677,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[foodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'dinner',
           consumedAt: setHours(date, dinnerHour + i * 0.1),
         });
@@ -565,8 +692,7 @@ function generateFoodLogs(
         logs.push({
           userId,
           foodId: foodIds[snackFoodIndex],
-          quantity: '1',
-          servingUnit: null,
+          quantity: '100',
           mealType: 'snack',
           consumedAt: setHours(date, snackHour),
         });
@@ -577,20 +703,12 @@ function generateFoodLogs(
   return logs;
 }
 
-function toStringOrNull(value: string | number | null | undefined) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  return String(value);
-}
-
 async function insertGroupedFoodLogs(
   userId: string,
   logs: Array<{
     userId: string;
     foodId: string;
     quantity: string;
-    servingUnit: string | null;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     consumedAt: Date;
   }>,
@@ -622,36 +740,11 @@ async function insertGroupedFoodLogs(
         mealId = newMeal.id;
       }
 
-      const food = await tx.query.foods.findFirst({
-        where: eq(schema.foods.id, log.foodId),
-      });
-
-      if (!food) {
-        continue;
-      }
-
-      const photo = await tx.query.foodPhotos.findFirst({
-        where: eq(schema.foodPhotos.foodId, log.foodId),
-      });
-
       await tx.insert(schema.foodLogItems).values({
         mealId,
         foodId: log.foodId,
         quantity: log.quantity,
-        servingUnit: log.servingUnit,
-        foodName: food.name,
-        brandName: food.brandName,
-        calories: toStringOrNull(food.calories),
-        protein: toStringOrNull(food.protein),
-        carbs: toStringOrNull(food.carbs),
-        fat: toStringOrNull(food.fat),
-        fiber: toStringOrNull(food.fiber),
-        sugar: toStringOrNull(food.sugar),
-        sodium: toStringOrNull(food.sodium),
-        servingQty: toStringOrNull(food.servingQty),
-        servingUnitSnapshot: food.servingUnit,
-        servingWeightGrams: toStringOrNull(food.servingWeightGrams),
-        photoThumbSnapshot: photo?.thumb || null,
+        altMeasureId: null,
       });
     }
   });
@@ -695,6 +788,67 @@ async function createUserViaApi(
     console.error(`  Error creating user ${email}:`, error);
     return null;
   }
+}
+
+// Seed dishes + favorites for a given user
+// foodIds: [Apple=0, Banana=1, Chicken=2, BrownRice=3, Eggs=4, Oatmeal=5, Salmon=6, Salad=7, GreekYogurt=8, Almonds=9, ...]
+async function seedDishesAndFavorites(
+  userId: string,
+  foodIds: string[],
+  dbInstance: typeof db,
+) {
+  // dish 1: High-Protein Breakfast Bowl (eggs 150g + greek yogurt 100g + almonds 15g)
+  const dish1Id = uuidv7();
+  await dbInstance.insert(schema.customDishes).values({
+    id: dish1Id,
+    userId,
+    name: 'High-Protein Breakfast Bowl',
+    description: 'A nutritious breakfast with eggs, yogurt and almonds',
+  });
+  await dbInstance.insert(schema.customDishIngredients).values([
+    { dishId: dish1Id, foodId: foodIds[4], quantity: '150', seq: 1 }, // Eggs
+    { dishId: dish1Id, foodId: foodIds[8], quantity: '100', seq: 2 }, // Greek Yogurt
+    { dishId: dish1Id, foodId: foodIds[9], quantity: '15',  seq: 3 }, // Almonds
+  ]);
+
+  // dish 2: Post-Workout Plate (chicken 200g + brown rice 150g + salad 100g)
+  const dish2Id = uuidv7();
+  await dbInstance.insert(schema.customDishes).values({
+    id: dish2Id,
+    userId,
+    name: 'Post-Workout Plate',
+    description: 'High protein recovery meal with rice and salad',
+  });
+  await dbInstance.insert(schema.customDishIngredients).values([
+    { dishId: dish2Id, foodId: foodIds[2], quantity: '200', seq: 1 }, // Chicken Breast
+    { dishId: dish2Id, foodId: foodIds[3], quantity: '150', seq: 2 }, // Brown Rice
+    { dishId: dish2Id, foodId: foodIds[7], quantity: '100', seq: 3 }, // Salad
+  ]);
+
+  // Placeholder photos for dishes
+  await dbInstance.insert(schema.dishPhotos).values([
+    {
+      dishId: dish1Id,
+      thumb: 'https://placehold.co/300x300.jpg',
+      highres: 'https://placehold.co/900x900.jpg',
+    },
+    {
+      dishId: dish2Id,
+      thumb: 'https://placehold.co/300x300.jpg',
+      highres: 'https://placehold.co/900x900.jpg',
+    },
+  ]);
+
+  // 4 favorites: Apple (food), Chicken Breast (food), Banana (food), High-Protein Breakfast Bowl (dish)
+  await dbInstance.insert(schema.favorites).values([
+    { userId, foodId: foodIds[0] },  // Apple
+    { userId, foodId: foodIds[2] },  // Chicken Breast
+    { userId, foodId: foodIds[1] },  // Banana
+    { userId, dishId: dish1Id },     // High-Protein Breakfast Bowl
+  ]);
+
+  console.log('    - Dishes: 2 (High-Protein Breakfast Bowl, Post-Workout Plate)');
+  console.log('    - Favorites: 4 (Apple, Chicken Breast, Banana, dish)');
 }
 
 async function seed() {
@@ -774,6 +928,19 @@ async function seed() {
         isActive: true,
       });
 
+      // Insert custom foods for this user (cascade-deleted on user removal)
+      const customFoods = customFoodsByEmail[userDef.email];
+      if (customFoods && customFoods.length > 0) {
+        await db.insert(schema.foods).values(
+          customFoods.map((food) => ({ ...food, userId }))
+        );
+      }
+
+      // Insert dishes + favorites for weight-loss user
+      if (userDef.email === 'user.weight-loss@example.com') {
+        await seedDishesAndFavorites(userId, foodIds, db);
+      }
+
       // Generate and insert food logs
       const foodLogs = generateFoodLogs(
         userId,
@@ -786,6 +953,7 @@ async function seed() {
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);
       console.log(`    - Role: ${userDef.role}`);
       console.log(`    - Goal: ${userDef.goal.goalType}`);
+      console.log(`    - Custom foods: ${customFoods?.length ?? 0} entries`);
       console.log(`    - Food logs: ${foodLogs.length} entries`);
     }
 

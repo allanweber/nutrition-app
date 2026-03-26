@@ -16,8 +16,7 @@ Relevant fields for this feature:
 - `name: string`
 - `brandName: string | null`
 - `foodType: string | null` — `'Generic'` or `'Brand'` for FatSecret foods
-- `isCustom: boolean` — `true` for user-created foods
-- `userId: string | null` — owner of custom foods; `null` for catalog foods
+- `userId: string | null` — owner of custom foods; `null` for shared catalog foods (accessible to all users)
 - `calories: string | null`
 - `thumbnail` — via `foodPhotos` join
 

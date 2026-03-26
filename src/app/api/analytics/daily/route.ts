@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { foodLogItems, foodLogMeals } from '@/server/db/schema';
+import { foodLogItems, foodLogMeals, foods } from '@/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 import { dateSchema, validateApiInput } from '@/lib/api-validation';
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const targetDate = new Date(dateValidation.data);
     const { start, end } = getDayRange(targetDate);
 
-    // Get food logs for the day with snapshot food data
+    // Get food logs for the day — join foods for live nutrition data
     const dayLogs = await db
       .select({
         id: foodLogItems.id,
@@ -52,19 +52,20 @@ export async function GET(request: NextRequest) {
         mealType: foodLogMeals.mealType,
         consumedAt: foodLogMeals.consumedAt,
         food: {
-          id: foodLogItems.foodId,
-          name: foodLogItems.foodName,
-          calories: foodLogItems.calories,
-          protein: foodLogItems.protein,
-          carbs: foodLogItems.carbs,
-          fat: foodLogItems.fat,
-          fiber: foodLogItems.fiber,
-          sugar: foodLogItems.sugar,
-          sodium: foodLogItems.sodium,
+          id: foods.id,
+          name: foods.name,
+          calories: foods.calories,
+          protein: foods.protein,
+          carbs: foods.carbs,
+          fat: foods.fat,
+          fiber: foods.fiber,
+          sugar: foods.sugar,
+          sodium: foods.sodium,
         }
       })
       .from(foodLogItems)
       .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+      .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
       .where(
         and(
           eq(foodLogMeals.userId, user.id),
@@ -74,28 +75,18 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(foodLogMeals.consumedAt));
 
-    // Calculate totals
+    // Calculate totals — nutrients are per 100g, quantity is in grams
     const totals = dayLogs.reduce(
       (acc, log) => {
-        const multiplier = log.quantity;
-        const baseValues = {
-          calories: Number(log.food?.calories || 0),
-          protein: Number(log.food?.protein || 0),
-          carbs: Number(log.food?.carbs || 0),
-          fat: Number(log.food?.fat || 0),
-          fiber: Number(log.food?.fiber || 0),
-          sugar: Number(log.food?.sugar || 0),
-          sodium: Number(log.food?.sodium || 0),
-        };
-
+        const quantity = Number(log.quantity);
         return {
-          calories: acc.calories + (baseValues.calories * Number(multiplier)),
-          protein: acc.protein + (baseValues.protein * Number(multiplier)),
-          carbs: acc.carbs + (baseValues.carbs * Number(multiplier)),
-          fat: acc.fat + (baseValues.fat * Number(multiplier)),
-          fiber: acc.fiber + (baseValues.fiber * Number(multiplier)),
-          sugar: acc.sugar + (baseValues.sugar * Number(multiplier)),
-          sodium: acc.sodium + (baseValues.sodium * Number(multiplier)),
+          calories: acc.calories + (Number(log.food?.calories || 0) / 100) * quantity,
+          protein: acc.protein + (Number(log.food?.protein || 0) / 100) * quantity,
+          carbs: acc.carbs + (Number(log.food?.carbs || 0) / 100) * quantity,
+          fat: acc.fat + (Number(log.food?.fat || 0) / 100) * quantity,
+          fiber: acc.fiber + (Number(log.food?.fiber || 0) / 100) * quantity,
+          sugar: acc.sugar + (Number(log.food?.sugar || 0) / 100) * quantity,
+          sodium: acc.sodium + (Number(log.food?.sodium || 0) / 100) * quantity,
           foodCount: acc.foodCount + 1,
         };
       },

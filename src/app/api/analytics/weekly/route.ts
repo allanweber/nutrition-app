@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { foodLogItems, foodLogMeals } from '@/server/db/schema';
+import { foodLogItems, foodLogMeals, foods } from '@/server/db/schema';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/session';
 import { daysSchema, validateApiInput } from '@/lib/api-validation';
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const days = daysValidation.data;
-    
+
     // Get date range for the last N days
     const endDate = new Date();
     const startDate = new Date();
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
 
-    // Get food logs for the date range from the grouped snapshot model
+    // Get food logs for the date range — join foods for live nutrition data
     const logs = await db
       .select({
         id: foodLogItems.id,
@@ -42,19 +42,20 @@ export async function GET(request: NextRequest) {
         mealType: foodLogMeals.mealType,
         consumedAt: foodLogMeals.consumedAt,
         food: {
-          id: foodLogItems.foodId,
-          name: foodLogItems.foodName,
-          calories: foodLogItems.calories,
-          protein: foodLogItems.protein,
-          carbs: foodLogItems.carbs,
-          fat: foodLogItems.fat,
-          fiber: foodLogItems.fiber,
-          sugar: foodLogItems.sugar,
-          sodium: foodLogItems.sodium,
+          id: foods.id,
+          name: foods.name,
+          calories: foods.calories,
+          protein: foods.protein,
+          carbs: foods.carbs,
+          fat: foods.fat,
+          fiber: foods.fiber,
+          sugar: foods.sugar,
+          sodium: foods.sodium,
         }
       })
       .from(foodLogItems)
       .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+      .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
       .where(
         and(
           eq(foodLogMeals.userId, user.id),
@@ -64,13 +65,13 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(desc(foodLogMeals.consumedAt));
 
-    // Group by day and calculate totals
+    // Group by day and calculate totals — nutrients are per 100g, quantity is in grams
     const dailyMap = new Map<string, { date: string; calories: number; protein: number; carbs: number; fat: number; fiber: number; sugar: number; sodium: number; foodCount: number }>();
 
     logs.forEach(log => {
       const dateKey = log.consumedAt.toISOString().split('T')[0];
-      const multiplier = Number(log.quantity);
-      
+      const quantity = Number(log.quantity);
+
       if (!dailyMap.has(dateKey)) {
         dailyMap.set(dateKey, {
           date: dateKey,
@@ -87,29 +88,19 @@ export async function GET(request: NextRequest) {
 
       const day = dailyMap.get(dateKey);
       if (!day) return;
-      
-      const baseValues = {
-        calories: Number(log.food?.calories || 0),
-        protein: Number(log.food?.protein || 0),
-        carbs: Number(log.food?.carbs || 0),
-        fat: Number(log.food?.fat || 0),
-        fiber: Number(log.food?.fiber || 0),
-        sugar: Number(log.food?.sugar || 0),
-        sodium: Number(log.food?.sodium || 0),
-      };
 
-      day.calories += baseValues.calories * multiplier;
-      day.protein += baseValues.protein * multiplier;
-      day.carbs += baseValues.carbs * multiplier;
-      day.fat += baseValues.fat * multiplier;
-      day.fiber += baseValues.fiber * multiplier;
-      day.sugar += baseValues.sugar * multiplier;
-      day.sodium += baseValues.sodium * multiplier;
+      day.calories += (Number(log.food?.calories || 0) / 100) * quantity;
+      day.protein += (Number(log.food?.protein || 0) / 100) * quantity;
+      day.carbs += (Number(log.food?.carbs || 0) / 100) * quantity;
+      day.fat += (Number(log.food?.fat || 0) / 100) * quantity;
+      day.fiber += (Number(log.food?.fiber || 0) / 100) * quantity;
+      day.sugar += (Number(log.food?.sugar || 0) / 100) * quantity;
+      day.sodium += (Number(log.food?.sodium || 0) / 100) * quantity;
       day.foodCount += 1;
     });
 
     // Convert to array and sort by date
-    const weeklyData = Array.from(dailyMap.values()).sort((a, b) => 
+    const weeklyData = Array.from(dailyMap.values()).sort((a, b) =>
       a.date.localeCompare(b.date)
     );
 

@@ -44,6 +44,18 @@ TypeScript 5.x, Node.js 20: Follow standard conventions
 - DB migration needed: add `medium` column to `food_photos` table
 - Feature flag: `FATSECRET_ENABLED` env var (default: enabled)
 - See `specs/003-fatsecret-food-retrieval/` for full plan, data-model, and contracts
+## Food Log Data Model (redesign-food-log branch)
+
+`foodLogItems` and `dietPlanMealItems` no longer store nutrition snapshots. All nutrition data is read via FK joins:
+
+- `foodId uuid NOT NULL` → `foods.id` (`onDelete: cascade`) — log item cannot exist without a food
+- `altMeasureId uuid nullable` → `food_alt_measures.id` (`onDelete: set null`) — display only (e.g. "2 cups"); null means quantity is raw grams
+- `quantity` is always stored in **grams**
+- Removed columns: `foodName`, `brandName`, `calories`, `protein`, `carbs`, `fat`, `fiber`, `sugar`, `sodium`, `servingQty`, `servingUnitSnapshot`, `servingWeightGrams`, `photoThumbSnapshot`, `servingUnit`
+
+**Unified calculation everywhere**: `nutrient = (foods.nutrient / 100) * quantity_grams`
+
+**POST `/api/food-logs`** now accepts `{ foodId: uuid, altMeasureId?: uuid, quantity: number, mealType, consumedAt }` — no more `foodName`/`servingUnit` strings.
 <!-- MANUAL ADDITIONS END -->
 
 ## Design Context
@@ -95,3 +107,11 @@ Emotional goal: Users should feel in control. Competent. Like the data is workin
 - `src/components/meal-type-label.tsx` — `<MealTypeLabel>` colored badge for meal types
 
 **Rule**: macro and meal-type colors always come from `nutrition-constants.ts`. Never redeclare inline.
+
+**Form pattern** — all forms use TanStack Form + Zod validation:
+- All Zod schemas live in `src/lib/form-validation.ts`. Add new schemas there, never inline.
+- Use the `zodValidator(schema.shape.fieldName)` helper (exported from `form-validation.ts`) for `validators.onChange` — do NOT write inline validator functions.
+- All form components are `'use client'` components in `src/components/forms/`. Pages import and render these; pages do not contain form logic.
+- For CRUD entities (food, dish), use a single unified component: optional `entityId` + `initialEntity` props determine create vs. edit mode. `useEffect` resets the form when data loads.
+- Field error pattern: `border-destructive` on the input/SelectTrigger + `<p className="text-sm text-destructive">` below field.
+- Photo uploaders and dynamic lists (ingredient arrays) live **outside** the TanStack Form tree.

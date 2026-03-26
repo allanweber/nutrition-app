@@ -1,12 +1,10 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
 import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
 
+import { ForgotPasswordForm } from '@/components/forms/forgot-password-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useApiError, ValidationError } from '@/lib/api-error';
 import { useRequestPasswordResetCodeMutation } from '@/queries/auth-codes';
 
@@ -28,35 +26,8 @@ export default function ForgotPasswordPage({
   }, [cooldownSecondsLeft]);
 
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
-  const {
-    error,
-    handleError,
-    clearError,
-    isSubmitting,
-    startSubmitting,
-    finishSubmitting,
-  } = useApiError();
-
+  const { error, handleError, clearError } = useApiError();
   const requestMutation = useRequestPasswordResetCodeMutation();
-
-  const form = useForm({
-    defaultValues: {
-      email: defaultEmail,
-    },
-    onSubmit: async ({ value }) => {
-      clearError();
-      startSubmitting();
-      try {
-        await requestMutation.mutateAsync({ email: value.email });
-        setSubmittedEmail(value.email);
-      } catch (e) {
-        handleError(e);
-        throw e;
-      } finally {
-        finishSubmitting();
-      }
-    },
-  });
 
   const handleResend = async () => {
     if (!submittedEmail) return;
@@ -75,7 +46,6 @@ export default function ForgotPasswordPage({
     }
   };
 
-  const isBusy = isSubmitting || requestMutation.isPending;
   const isResendDisabled = requestMutation.isPending || cooldownSecondsLeft > 0;
 
   return (
@@ -84,7 +54,7 @@ export default function ForgotPasswordPage({
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Forgot your password?</h1>
           <p className="text-sm text-muted-foreground">
-            Enter your email and we’ll send you a 6-digit reset code.
+            Enter your email and we&apos;ll send you a 6-digit reset code.
           </p>
         </div>
 
@@ -118,7 +88,7 @@ export default function ForgotPasswordPage({
                 disabled={isResendDisabled}
               >
                 {requestMutation.isPending
-                  ? 'Sending…'
+                  ? 'Sending\u2026'
                   : cooldownSecondsLeft > 0
                     ? `Resend in ${cooldownSecondsLeft}s`
                     : 'Resend code'}
@@ -134,71 +104,12 @@ export default function ForgotPasswordPage({
             </div>
           </div>
         ) : (
-          <form
-            className="mt-6 space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              void form.handleSubmit();
-            }}
-          >
-            <form.Field
-              name="email"
-              validators={{
-                onChange: ({ value }) => {
-                  const trimmed = value.trim();
-                  if (!trimmed) return 'Email is required';
-                  // simple email check
-                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed))
-                    return 'Please enter a valid email address';
-                  return undefined;
-                },
-              }}
-            >
-              {(field) => (
-                <div className='space-y-2'>
-                  <Label htmlFor={field.name}>Email</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="you@example.com"
-                    className={
-                      field.state.meta.errors.length > 0 ||
-                      error?.field === 'email'
-                        ? 'border-red-500 focus-visible:ring-red-500'
-                        : ''
-                    }
-                  />
-                  {field.state.meta.errors.length > 0 ? (
-                    <div className="text-sm text-red-600 dark:text-red-400 mt-1">
-                      {field.state.meta.errors[0]}
-                    </div>
-                  ) : (
-                    <ValidationError error={error} field="email" />
-                  )}
-                </div>
-              )}
-            </form.Field>
-
-            <ValidationError error={error} />
-
-            <Button type="submit" className="w-full" disabled={isBusy}>
-              {isBusy ? 'Sending…' : 'Send reset code'}
-            </Button>
-
-            <div className="text-center">
-              <Link
-                href="/login"
-                className="text-sm text-primary hover:underline"
-              >
-                Back to login
-              </Link>
-            </div>
-          </form>
+          <div className="mt-6">
+            <ForgotPasswordForm
+              defaultEmail={defaultEmail}
+              onSuccess={(email) => setSubmittedEmail(email)}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# local dev uploads (served from public/uploads, not committed)
+/public/uploads/
+
 # production
 /build
 
