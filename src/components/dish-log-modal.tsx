@@ -10,7 +10,7 @@ interface DishLogModalProps {
   dishId: string | null;
   dishName?: string;
   onClose: () => void;
-  onLogged: () => void;
+  onLogged: (mealType: MealType) => void;
   defaultMealType?: MealType;
   defaultDate?: Date;
 }

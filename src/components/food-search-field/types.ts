@@ -28,7 +28,7 @@ export interface FoodSearchFieldProps {
   onLoadMore: () => void;
   onSelect: (item: UnifiedFoodSearchResultItem) => void;
   showCustomTab?: boolean;
-  preferCustomTab?: boolean;
+
   placeholder?: string;
   className?: string;
   size?: 'default' | 'small';
@@ -41,6 +41,6 @@ export interface FoodAddModalProps {
   foodDetail: import('@/queries/food-detail').FoodDetailResponse | null;
   isDetailLoading?: boolean;
   onClose: () => void;
-  onAdded: () => void;
+  onAdded: (mealType: import('@/lib/nutrition-constants').MealType) => void;
   defaultDate?: Date;
 }

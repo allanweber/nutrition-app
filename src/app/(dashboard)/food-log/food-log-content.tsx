@@ -42,6 +42,7 @@ export function FoodLogContent() {
   const [modalOpen, setModalOpen] = useState(false);
 
   // Edit modal state
+  const [lastAdded, setLastAdded] = useState<{ mealType: MealType; seq: number } | null>(null);
   const [editingLog, setEditingLog] = useState<FoodLogEntry | null>(null);
   const editFoodSelection: FoodSelection | null = editingLog ? { id: editingLog.food.id } : null;
   const editDetailQuery = useFoodDetailQuery(editFoodSelection);
@@ -84,7 +85,8 @@ export function FoodLogContent() {
     setSelectedFood(null);
   };
 
-  const handleFoodAdded = () => {
+  const handleFoodAdded = (mealType: MealType) => {
+    setLastAdded((prev) => ({ mealType, seq: (prev?.seq ?? 0) + 1 }));
     setModalOpen(false);
     setSelectedFood(null);
     foodSearch.setQuery('');
@@ -96,7 +98,8 @@ export function FoodLogContent() {
     setSelectedDishName(undefined);
   };
 
-  const handleDishLogged = () => {
+  const handleDishLogged = (mealType: MealType) => {
+    setLastAdded((prev) => ({ mealType, seq: (prev?.seq ?? 0) + 1 }));
     setDishModalOpen(false);
     setSelectedDishId(null);
     setSelectedDishName(undefined);
@@ -176,7 +179,7 @@ export function FoodLogContent() {
           onLoadMore={foodSearch.loadMore}
           onSelect={handleSelect}
           showCustomTab={true}
-          preferCustomTab={foodSearch.hasCustomResults}
+
           placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
         />
 
@@ -197,6 +200,7 @@ export function FoodLogContent() {
           onDeleteLog={handleDeleteLog}
           onDeleteDishGroup={handleDeleteDishGroup}
           onEdit={handleEditLog}
+          lastAdded={lastAdded}
         />
       </div>
 

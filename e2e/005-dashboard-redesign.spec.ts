@@ -143,7 +143,7 @@ test.describe('005: Dashboard Redesign', () => {
     expect(await ring.getAttribute('aria-label')).toMatch(/\d+%/);
 
     // Goal denominator rendered as "/ X kcal"
-    await expect(page.getByText(/\/\s*[\d,]+ kcal/)).toBeVisible();
+    await expect(page.getByText(/\/\s*[\d,.]+\s*kcal/)).toBeVisible();
 
     // Percentage consumed sentence
     await expect(page.getByText(/% of your daily target/)).toBeVisible();

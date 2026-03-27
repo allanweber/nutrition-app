@@ -9,7 +9,7 @@ import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown } from 'lucide-r
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 
 import { FoodLogEntry } from '@/types/food';
-import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, type MealType } from '@/lib/nutrition-constants';
 
 interface Totals {
   calories: number;
@@ -31,6 +31,7 @@ interface FoodLogClientProps {
   onDeleteLog: (logId: string) => Promise<void>;
   onDeleteDishGroup?: (dishLogGroupId: string) => Promise<void>;
   onEdit?: (log: FoodLogEntry) => void;
+  lastAdded?: { mealType: MealType; seq: number } | null;
 }
 
 // Dot color for each meal type used in the header
@@ -87,6 +88,7 @@ export default function FoodLogClient({
   isLoading = false,
   onDeleteLog,
   onDeleteDishGroup,
+  lastAdded,
 }: FoodLogClientProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -102,6 +104,22 @@ export default function FoodLogClient({
       MEAL_TYPE_ORDER.filter((mt) => !logsByMeal[mt] || logsByMeal[mt].length === 0)
     ));
   }, [isLoading, logsByMeal]);
+
+  useEffect(() => {
+    if (!lastAdded) return;
+    const { mealType } = lastAdded;
+    setCollapsedMeals((prev) => {
+      if (!prev.has(mealType)) return prev;
+      const next = new Set(prev);
+      next.delete(mealType);
+      return next;
+    });
+    const timer = setTimeout(() => {
+      document.querySelector(`[data-testid="meal-section-${mealType}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [lastAdded]);
 
   const handleDeleteRequest = (id: string) => {
     setConfirmingDelete(id);

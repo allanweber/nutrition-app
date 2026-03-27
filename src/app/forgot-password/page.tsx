@@ -72,9 +72,8 @@ export default function ForgotPasswordPage({
             <p className="text-xs text-muted-foreground">
               You can request another code after 60 seconds (limit ~5/hour).
             </p>
-            <ValidationError error={error} />
             <div className="flex gap-2">
-              <Button asChild className="w-full">
+              <Button asChild className="flex-1">
                 <Link
                   href={`/reset-password?email=${encodeURIComponent(submittedEmail)}`}
                 >
@@ -84,6 +83,7 @@ export default function ForgotPasswordPage({
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1"
                 onClick={handleResend}
                 disabled={isResendDisabled}
               >
@@ -94,6 +94,7 @@ export default function ForgotPasswordPage({
                     : 'Resend code'}
               </Button>
             </div>
+            <ValidationError error={error} />
             <div className="text-center">
               <Link
                 href="/login"

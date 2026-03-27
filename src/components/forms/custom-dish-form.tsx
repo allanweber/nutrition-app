@@ -331,7 +331,6 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
             onQueryChange={foodSearch.setQuery}
             onLoadMore={foodSearch.loadMore}
             onSelect={handleAddIngredient}
-            preferCustomTab
             placeholder="Search foods to add as ingredient…"
             inputTestId="ingredient-search"
           />

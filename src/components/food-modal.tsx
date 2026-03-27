@@ -57,7 +57,7 @@ export type FoodModalMode =
       foodDetail: FoodDetailResponse;
       initialMealType?: MealType;
       initialDate?: Date;
-      onAdded: () => void;
+      onAdded: (mealType: MealType) => void;
     }
   | {
       kind: 'edit-food';
@@ -75,7 +75,7 @@ export type FoodModalMode =
       dishTotals: { calories: number; protein: number; carbs: number; fat: number };
       initialMealType?: MealType;
       initialDate?: Date;
-      onLogged: () => void;
+      onLogged: (mealType: MealType) => void;
     }
   | {
       kind: 'ingredient';
@@ -222,7 +222,7 @@ export function FoodModal({
           mealType,
           consumedAt: format(date, 'yyyy-MM-dd'),
         });
-        mode.onAdded();
+        mode.onAdded(mealType);
       } else if (mode.kind === 'edit-food') {
         const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
         const grams = selectedMeasureId === 'base' ? quantity : quantity * measure.weightGrams;
@@ -242,7 +242,7 @@ export function FoodModal({
           mealType,
           consumedAt: format(date, 'yyyy-MM-dd'),
         });
-        mode.onLogged();
+        mode.onLogged(mealType);
       } else {
         const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
         const grams = selectedMeasureId === 'base' ? quantity : quantity * measure.weightGrams;

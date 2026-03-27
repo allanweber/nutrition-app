@@ -16,7 +16,6 @@ interface TabsProps {
   results: UnifiedFoodSearchResultItem[];
   query: string;
   showCustomTab: boolean;
-  preferCustomTab?: boolean;
   highlightedIndex: number;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -28,7 +27,6 @@ export function Tabs({
   results,
   query,
   showCustomTab,
-  preferCustomTab = false,
   highlightedIndex,
   hasMore,
   isLoadingMore,
@@ -60,13 +58,6 @@ export function Tabs({
     setActiveTab(tab);
   };
 
-  // Auto-switch to Custom tab when preferCustomTab becomes true (and user hasn't manually switched)
-  React.useEffect(() => {
-    if (preferCustomTab && showCustomTab && !userHasManuallySelectedTab.current && customItems.length > 0) {
-      setActiveTab('Custom');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferCustomTab, customItems.length]);
 
   // Switch to a tab that has items when results change (initial load / query change)
   React.useEffect(() => {
