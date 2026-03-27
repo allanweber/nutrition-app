@@ -39,6 +39,12 @@ const MEAL_DOT_COLORS: Record<string, string> = {
   lunch: 'bg-sky-500',
   dinner: 'bg-violet-500',
   snack: 'bg-emerald-500',
+  morning_snack: 'bg-amber-500',
+  afternoon_snack: 'bg-orange-500',
+  evening_snack: 'bg-indigo-500',
+  pre_workout: 'bg-lime-500',
+  post_workout: 'bg-teal-500',
+  other: 'bg-muted-foreground',
 };
 
 
@@ -457,7 +463,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
           )}
           <p className="text-xs text-on-surface-variant">
             {log.altMeasure
-              ? `${log.altMeasure.qty} ${log.altMeasure.description}`
+              ? `${log.altMeasure.description}`
               : `${log.quantity}g`}
           </p>
           <div className="flex items-center gap-1 mt-1 flex-wrap">

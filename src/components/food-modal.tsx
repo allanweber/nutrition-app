@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, UtensilsCrossed, X } from 'lucide-react';
 
 import { MealTypeSelect } from '@/components/meal-type-select';
 import { DateNavigator } from '@/components/date-navigator';
@@ -279,7 +279,9 @@ export function FoodModal({
               unoptimized
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent" />
+            <div className="absolute inset-0 bg-surface-container-highest flex items-center justify-center">
+              <UtensilsCrossed className="h-10 w-10 text-on-surface-variant/30" />
+            </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-3">
             {subtitle && (
@@ -321,12 +323,14 @@ export function FoodModal({
                       onChange={setMealType}
                       id="food-modal-meal-type"
                     />
-                    <div>
-                      <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1 ml-1">
-                        Date
-                      </label>
-                      <DateNavigator value={date} onChange={setDate} />
-                    </div>
+                    {mode.kind !== 'edit-food' && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1 ml-1">
+                          Date
+                        </label>
+                        <DateNavigator value={date} onChange={setDate} />
+                      </div>
+                    )}
                   </div>
                 </section>
               )}

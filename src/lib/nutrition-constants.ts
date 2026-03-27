@@ -40,16 +40,16 @@ export const MEAL_TYPE_COLORS: Record<string, string> = {
 
 /** Tailwind bg classes for macro progress bars and UI elements */
 export const MACRO_COLORS = {
-  protein: 'bg-rose-500',
-  carbs: 'bg-amber-500',
-  fat: 'bg-sky-500',
+  protein: 'bg-rose-500', //#FFEBEC
+  carbs: 'bg-amber-500',  //#FEF6D4
+  fat: 'bg-sky-500',      //#DFF2FE
 } as const;
 
 /** Tailwind text classes for macro values and labels */
 export const MACRO_TEXT_COLORS = {
-  protein: 'text-rose-500',
-  carbs: 'text-amber-500',
-  fat: 'text-sky-500',
+  protein: 'text-rose-500', //#D54069
+  carbs: 'text-amber-500',  //#CC7A40
+  fat: 'text-sky-500',      //#408FBE
 } as const;
 
 /** Hex values for charts that cannot use Tailwind utility classes */
