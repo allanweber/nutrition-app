@@ -13,6 +13,15 @@ import { WeeklyCalendarStrip } from '@/components/food-log/weekly-calendar-strip
 import { useFoodLogsQuery, useDeleteFoodLogMutation } from '@/queries/food-logs';
 import { useDeleteDishGroupMutation } from '@/queries/dishes';
 import { useFoodDetailQuery, type FoodSelection } from '@/queries/food-detail';
+import { FoodModal } from '@/components/food-modal';
+import type { MealType } from '@/lib/nutrition-constants';
+import type { FoodLogEntry } from '@/types/food';
+
+const EMPTY_FOOD_DETAIL: import('@/queries/food-detail').FoodDetailResponse = {
+  id: '', name: '', brandName: null, foodType: 'Generic', foodUrl: null,
+  baseServing: { calories: 0, protein: 0, carbs: 0, fat: 0, saturatedFat: null, fiber: null, sugar: null, sodium: null, potassium: null, vitaminA: null, vitaminC: null, calcium: null, iron: null },
+  servings: [], images: null,
+};
 import { useFoodSearch } from '@/hooks/use-food-search';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 import type { FavoriteItem } from '@/types/favorites';
@@ -31,6 +40,11 @@ export function FoodLogContent() {
   });
   const [selectedFood, setSelectedFood] = useState<UnifiedFoodSearchResultItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Edit modal state
+  const [editingLog, setEditingLog] = useState<FoodLogEntry | null>(null);
+  const editFoodSelection: FoodSelection | null = editingLog ? { id: editingLog.food.id } : null;
+  const editDetailQuery = useFoodDetailQuery(editFoodSelection);
 
   // Dish modal state
   const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
@@ -88,6 +102,10 @@ export function FoodLogContent() {
     setSelectedDishName(undefined);
     foodSearch.setQuery('');
   };
+
+  const handleEditLog = (log: FoodLogEntry) => setEditingLog(log);
+  const handleEditModalClose = () => setEditingLog(null);
+  const handleFoodUpdated = () => setEditingLog(null);
 
   const handleDeleteLog = async (logId: string) => {
     await deleteMutation.mutateAsync(logId);
@@ -164,6 +182,7 @@ export function FoodLogContent() {
 
         {/* Food log */}
         <FoodLogClient
+          key={dateStr}
           logs={logsQuery.data?.logs || []}
           logsByMeal={logsQuery.data?.logsByMeal || {}}
           totals={
@@ -177,6 +196,7 @@ export function FoodLogContent() {
           onDateChange={handleDateChange}
           onDeleteLog={handleDeleteLog}
           onDeleteDishGroup={handleDeleteDishGroup}
+          onEdit={handleEditLog}
         />
       </div>
 
@@ -196,7 +216,34 @@ export function FoodLogContent() {
         isDetailLoading={detailQuery.isLoading}
         onClose={handleModalClose}
         onAdded={handleFoodAdded}
+        defaultDate={selectedDate}
       />
+
+      {editingLog && (
+        <FoodModal
+          open={true}
+          onClose={handleEditModalClose}
+          isLoading={editDetailQuery.isLoading || !editDetailQuery.data}
+          name={editingLog.food.name}
+          subtitle={editingLog.food.brandName ?? undefined}
+          imageUrl={
+            editDetailQuery.data?.food.images?.highres ??
+            editDetailQuery.data?.food.images?.thumb ??
+            editingLog.food.photoUrl ??
+            undefined
+          }
+          mode={{
+            kind: 'edit-food',
+            logId: editingLog.id,
+            foodDetail: editDetailQuery.data?.food ?? EMPTY_FOOD_DETAIL,
+            initialMealType: editingLog.mealType as MealType,
+            initialDate: new Date(editingLog.consumedAt),
+            initialQuantityGrams: editingLog.quantity,
+            initialAltMeasureId: editingLog.altMeasure?.id ?? null,
+            onUpdated: handleFoodUpdated,
+          }}
+        />
+      )}
 
       <DishLogModal
         open={dishModalOpen}
@@ -204,7 +251,7 @@ export function FoodLogContent() {
         dishName={selectedDishName}
         onClose={handleDishModalClose}
         onLogged={handleDishLogged}
-        consumedAt={new Date().toISOString()}
+        defaultDate={selectedDate}
       />
     </div>
   );

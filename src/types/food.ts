@@ -75,7 +75,7 @@ export interface FoodLogEntryAltMeasure {
 export interface FoodLogEntry {
   id: string;
   quantity: number;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType: string;
   consumedAt: Date;
   food: FoodLogEntryFood;
   altMeasure?: FoodLogEntryAltMeasure | null;

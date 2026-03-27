@@ -337,6 +337,8 @@ test.describe('Phase 2: Food Logging', () => {
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
+      const initialCount = await foodLogPage.getFoodLogCount();
+
       // Add apple to breakfast
       await foodLogPage.searchInput.fill('apple');
       await page.waitForTimeout(600);
@@ -369,11 +371,11 @@ test.describe('Phase 2: Food Logging', () => {
       await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
 
       // Verify both meals are shown
-      await expect(page.getByRole('heading', { name: /breakfast/i })).toBeVisible();
-      await expect(page.getByRole('heading', { name: /lunch/i })).toBeVisible();
+      await expect(page.getByTestId('meal-section-breakfast')).toBeVisible();
+      await expect(page.getByTestId('meal-section-lunch')).toBeVisible();
 
-      // Verify food count is 2
-      await expect.poll(async () => await foodLogPage.getFoodLogCount(), { timeout: 10000 }).toBe(2);
+      // Verify food count increased by 2
+      await expect.poll(async () => await foodLogPage.getFoodLogCount(), { timeout: 10000 }).toBe(initialCount + 2);
     });
   });
 });

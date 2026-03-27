@@ -127,6 +127,7 @@ export function Tabs({
           return (
             <button
               key={tab}
+              type="button"
               role="tab"
               aria-selected={activeTab === tab}
               onClick={() => handleTabClick(tab)}

@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2, Trash2 } from 'lucide-react';
 
 import { FoodSearchField } from '@/components/food-search-field';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
+import { FoodModal } from '@/components/food-modal';
 import { PhotoUploader } from '@/components/photo-uploader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ import { useFoodSearch } from '@/hooks/use-food-search';
 import { customDishFormSchema, zodValidator } from '@/lib/form-validation';
 import type { CustomDishFormData } from '@/lib/form-validation';
 import { useCreateDishMutation, useUpdateDishMutation } from '@/queries/dishes';
+import { useFoodDetailQuery, type FoodDetailResponse } from '@/queries/food-detail';
 import type { DishDetail } from '@/types/dish';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -111,6 +113,16 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
   );
   const [ingredientError, setIngredientError] = useState<string | null>(null);
 
+  // ── ingredient FoodModal state ──
+  const [pendingIngredientItem, setPendingIngredientItem] =
+    useState<UnifiedFoodSearchResultItem | null>(null);
+  const [ingredientModalOpen, setIngredientModalOpen] = useState(false);
+
+  const ingredientFoodSelection = pendingIngredientItem?.id
+    ? { id: pendingIngredientItem.id, fatSecretId: pendingIngredientItem.fatSecretId ?? undefined }
+    : null;
+  const ingredientDetailQuery = useFoodDetailQuery(ingredientFoodSelection);
+
   const form = useForm({
     defaultValues: {
       name: initialDish?.name ?? '',
@@ -170,15 +182,37 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
   const handleAddIngredient = useCallback(
     (item: UnifiedFoodSearchResultItem) => {
       if (!item.id || item.itemKind === 'dish') return;
-      setIngredients((prev) => [
-        ...prev,
-        { key: `${item.id}-${Date.now()}`, foodId: item.id!, foodName: item.name, thumbnail: item.thumbnail ?? null, quantity: '100' },
-      ]);
+      setPendingIngredientItem(item);
+      setIngredientModalOpen(true);
       foodSearch.setQuery('');
-      setIngredientError(null);
     },
     [foodSearch],
   );
+
+  const handleIngredientSelect = useCallback(
+    (data: { foodId: string; altMeasureId: string | null; quantityGrams: number }) => {
+      if (!pendingIngredientItem) return;
+      setIngredients((prev) => [
+        ...prev,
+        {
+          key: `${data.foodId}-${Date.now()}`,
+          foodId: data.foodId,
+          foodName: pendingIngredientItem.name,
+          thumbnail: pendingIngredientItem.thumbnail ?? null,
+          quantity: String(Math.round(data.quantityGrams * 10) / 10),
+        },
+      ]);
+      setIngredientError(null);
+      setIngredientModalOpen(false);
+      setPendingIngredientItem(null);
+    },
+    [pendingIngredientItem],
+  );
+
+  const handleIngredientModalClose = () => {
+    setIngredientModalOpen(false);
+    setPendingIngredientItem(null);
+  };
 
   const handleRemove = (key: string) => {
     setIngredients((prev) => prev.filter((i) => i.key !== key));
@@ -187,6 +221,9 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
   const handleQuantityChange = (key: string, q: string) => {
     setIngredients((prev) => prev.map((i) => (i.key === key ? { ...i, quantity: q } : i)));
   };
+
+  const ingredientDetail: FoodDetailResponse | null =
+    ingredientDetailQuery.data?.food ?? null;
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
@@ -340,6 +377,30 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
           </Button>
         </div>
       </form>
+
+      {/* Ingredient quantity modal */}
+      {pendingIngredientItem && ingredientDetail && (
+        <FoodModal
+          open={ingredientModalOpen}
+          onClose={handleIngredientModalClose}
+          isLoading={ingredientDetailQuery.isLoading}
+          name={pendingIngredientItem.name}
+          subtitle={pendingIngredientItem.brandName ?? undefined}
+          imageUrl={
+            ingredientDetail.images?.highres ??
+            ingredientDetail.images?.medium ??
+            ingredientDetail.images?.thumb ??
+            pendingIngredientItem.thumbnail ??
+            undefined
+          }
+          submitLabel="Add Ingredient"
+          mode={{
+            kind: 'ingredient',
+            foodDetail: ingredientDetail,
+            onSelect: handleIngredientSelect,
+          }}
+        />
+      )}
     </div>
   );
 }

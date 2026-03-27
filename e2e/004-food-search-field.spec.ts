@@ -62,7 +62,7 @@ test.describe('004 US1: Food Log Search & Add to Diary', () => {
 
     // Modal should have meal type and serving selectors
     await expect(page.getByTestId('meal-type-select')).toBeVisible();
-    await expect(page.getByTestId('serving-select')).toBeVisible();
+    await expect(page.getByTestId('measure-select')).toBeVisible();
     await expect(page.getByTestId('quantity-input')).toBeVisible();
 
     // Add to log

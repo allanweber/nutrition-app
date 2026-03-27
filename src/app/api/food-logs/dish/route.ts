@@ -14,7 +14,7 @@ const logDishSchema = z.object({
   multiplier: z.number().refine((v) => (VALID_MULTIPLIERS as readonly number[]).includes(v), {
     message: 'multiplier must be one of 0.25, 0.5, 1, 1.5, 2, 3',
   }),
-  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack', 'morning_snack', 'afternoon_snack', 'evening_snack', 'pre_workout', 'post_workout', 'other']),
   consumedAt: z.string().optional().transform((v) => (v ? new Date(v) : new Date())),
 });
 
