@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useFoodSearch } from '@/hooks/use-food-search';
 import { customDishFormSchema, zodValidator } from '@/lib/form-validation';
 import type { CustomDishFormData } from '@/lib/form-validation';
+import { resizeForUpload } from '@/lib/image-resize';
 import { useCreateDishMutation, useUpdateDishMutation } from '@/queries/dishes';
 import { useFoodDetailQuery, type FoodDetailResponse } from '@/queries/food-detail';
 import type { DishDetail } from '@/types/dish';
@@ -112,6 +113,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
     })) ?? [],
   );
   const [ingredientError, setIngredientError] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   // ── ingredient FoodModal state ──
   const [pendingIngredientItem, setPendingIngredientItem] =
@@ -149,11 +151,23 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
           ingredients: ingredientPayload,
         });
       } else {
-        await createMutation.mutateAsync({
+        const result = await createMutation.mutateAsync({
           name: value.name,
           description: value.description || null,
           ingredients: ingredientPayload,
         });
+
+        if (pendingImageFile) {
+          try {
+            const resized = await resizeForUpload(pendingImageFile);
+            const fd = new FormData();
+            fd.append('thumb', resized.thumb, 'thumb.jpg');
+            fd.append('display', resized.display, 'display.jpg');
+            await fetch(`/api/dishes/${result.dish.id}/photo`, { method: 'POST', body: fd });
+          } catch {
+            // image upload is non-blocking; dish was created successfully
+          }
+        }
       }
 
       router.push('/my-foods?tab=dishes');
@@ -251,20 +265,18 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
         }}
         className="space-y-6"
       >
-        {/* Photo — edit mode only, outside TanStack Form */}
-        {isEdit && dishId && (
-          <div className="rounded-xl border border-outline-variant/20 p-5 bg-surface-container-lowest">
-            <h2 className="text-sm font-bold text-foreground mb-4">Photo</h2>
-            <PhotoUploader
-              currentThumb={initialDish?.photo?.thumb ?? null}
-              uploadUrl={`/api/dishes/${dishId}/photo`}
-              label="Dish Photo"
-              onUploaded={() => qc.invalidateQueries({ queryKey: ['dishes'] })}
-              onDeleted={() => qc.invalidateQueries({ queryKey: ['dishes'] })}
-              disabled={mutation.isPending}
-            />
-          </div>
-        )}
+        {/* Photo — always shown, outside TanStack Form */}
+        <div className="rounded-xl border border-outline-variant/20 p-5 bg-surface-container-lowest">
+          <h2 className="text-sm font-bold text-foreground mb-4">Photo</h2>
+          <PhotoUploader
+            currentThumb={isEdit ? (initialDish?.photo?.thumb ?? null) : null}
+            uploadUrl={isEdit && dishId ? `/api/dishes/${dishId}/photo` : undefined}
+            onFileSelected={!isEdit ? (file) => setPendingImageFile(file) : undefined}
+            onUploaded={isEdit ? () => qc.invalidateQueries({ queryKey: ['dishes'] }) : undefined}
+            onDeleted={isEdit ? () => qc.invalidateQueries({ queryKey: ['dishes'] }) : undefined}
+            disabled={mutation.isPending}
+          />
+        </div>
 
         {/* Name + description */}
         <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-surface-container-lowest">
