@@ -1,18 +1,20 @@
 'use client';
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { ImageIcon, Upload, X, Loader2 } from 'lucide-react';
+import { UploadCloud, Trash2, Loader2 } from 'lucide-react';
 import { resizeForUpload } from '@/lib/image-resize';
 
 export interface PhotoUploaderProps {
   /** Current thumbnail URL to display (from the server) */
   currentThumb?: string | null;
-  /** API endpoint to POST/DELETE photo — e.g. '/api/foods/custom/abc/photo' */
-  uploadUrl: string;
+  /** API endpoint to POST/DELETE photo — omit in create mode */
+  uploadUrl?: string;
   /** Called after a successful upload with the new thumb + highres URLs */
-  onUploaded: (thumb: string, highres: string) => void;
+  onUploaded?: (thumb: string, highres: string) => void;
   /** Called after a successful delete */
-  onDeleted: () => void;
+  onDeleted?: () => void;
+  /** Called in create mode instead of uploading — receives the file (or null on clear) */
+  onFileSelected?: (file: File | null) => void;
   /** Disable all interactions */
   disabled?: boolean;
   /** Label shown above the drop zone */
@@ -26,14 +28,16 @@ export function PhotoUploader({
   uploadUrl,
   onUploaded,
   onDeleted,
+  onFileSelected,
   disabled = false,
-  label = 'Photo',
+  label,
 }: PhotoUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<UploaderState>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [localFileName, setLocalFileName] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Clean up preview object URL on unmount or when it changes
@@ -58,10 +62,18 @@ export function PhotoUploader({
         if (prev) URL.revokeObjectURL(prev);
         return localPreview;
       });
-
+      setLocalFileName(file.name);
       setState('processing');
       setErrorMsg(null);
 
+      if (!uploadUrl) {
+        // Create mode: hold file locally, notify parent
+        setState('idle');
+        onFileSelected?.(file);
+        return;
+      }
+
+      // Edit mode: resize + upload immediately
       let resized: Awaited<ReturnType<typeof resizeForUpload>>;
       try {
         resized = await resizeForUpload(file);
@@ -72,7 +84,6 @@ export function PhotoUploader({
       }
 
       setState('uploading');
-
       try {
         const formData = new FormData();
         formData.append('thumb', resized.thumb, 'thumb.jpg');
@@ -85,15 +96,16 @@ export function PhotoUploader({
         }
 
         const data = (await res.json()) as { thumb: string; highres: string };
-        setPreviewUrl(null); // clear local preview; parent will pass new currentThumb
+        setPreviewUrl(null);
+        setLocalFileName(null);
         setState('idle');
-        onUploaded(data.thumb, data.highres);
+        onUploaded?.(data.thumb, data.highres);
       } catch (err) {
         setState('error');
         setErrorMsg(err instanceof Error ? err.message : 'Upload failed. Please try again.');
       }
     },
-    [disabled, uploadUrl, onUploaded],
+    [disabled, uploadUrl, onUploaded, onFileSelected],
   );
 
   // --- Event handlers ---
@@ -101,7 +113,6 @@ export function PhotoUploader({
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) void processFile(file);
-    // Reset input so the same file can be re-selected after delete
     e.target.value = '';
   };
 
@@ -116,7 +127,6 @@ export function PhotoUploader({
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only leave if the pointer actually left the drop zone
     if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) {
       setState('idle');
     }
@@ -142,7 +152,6 @@ export function PhotoUploader({
     [disabled, processFile],
   );
 
-  // Register global paste listener when the drop zone is focused or hovered
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
@@ -150,14 +159,26 @@ export function PhotoUploader({
 
   const handleDelete = async () => {
     if (disabled || isDeleting) return;
+
+    if (!uploadUrl) {
+      // Create mode: clear local state only
+      setPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+      setLocalFileName(null);
+      setState('idle');
+      setErrorMsg(null);
+      onFileSelected?.(null);
+      return;
+    }
+
     setIsDeleting(true);
     try {
       const res = await fetch(uploadUrl, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete photo');
       setPreviewUrl(null);
+      setLocalFileName(null);
       setState('idle');
       setErrorMsg(null);
-      onDeleted();
+      onDeleted?.();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Failed to delete photo');
     } finally {
@@ -170,96 +191,151 @@ export function PhotoUploader({
   const displaySrc = previewUrl ?? currentThumb ?? null;
   const isBusy = state === 'processing' || state === 'uploading' || isDeleting;
   const isDragging = state === 'dragging';
+  const badgeLabel = localFileName ?? 'Uploaded';
+
+  // Shared drag/drop props
+  const dropHandlers = {
+    onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
+    onDrop: handleDrop,
+  };
+
+  const DropZone = ({ compact }: { compact: boolean }) => (
+    <div
+      ref={dropZoneRef}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={displaySrc ? 'Replace photo' : 'Upload photo'}
+      onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+      {...dropHandlers}
+      className={[
+        'relative flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer select-none rounded-2xl border-2 border-dashed',
+        compact ? 'p-6' : 'p-8 md:p-12',
+        isDragging
+          ? 'border-primary bg-primary/10'
+          : 'border-outline-variant/60 bg-[#FBFBFB]/50 hover:bg-[#FBFBFB]',
+        disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '',
+      ].join(' ')}
+    >
+      {/* Spinner when busy with no preview yet */}
+      {!displaySrc && isBusy ? (
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">
+            {state === 'processing' ? 'Processing…' : 'Uploading…'}
+          </span>
+        </div>
+      ) : (
+        <>
+          <div className={[
+            'rounded-full bg-primary/10 flex items-center justify-center mb-3',
+            compact ? 'w-10 h-10' : 'w-14 h-14',
+          ].join(' ')}>
+            <UploadCloud className={['text-primary', compact ? 'h-5 w-5' : 'h-7 w-7'].join(' ')} />
+          </div>
+
+          <h2 className={[
+            'font-bold font-headline text-on-surface mb-2',
+            compact ? 'text-base' : 'text-xl',
+          ].join(' ')}>
+            Drag &amp; drop files here
+          </h2>
+
+          {!compact && (
+            <p className="text-on-surface-variant text-sm max-w-xs mx-auto mb-5">
+              Upload images of your meals, ingredient lists, or clinical results for AI processing.
+            </p>
+          )}
+
+          <div className={['flex items-center gap-3 justify-center', compact ? 'mb-3' : 'mb-4'].join(' ')}>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleClick(); }}
+              className={[
+                'bg-primary text-white font-bold font-headline rounded-xl hover:brightness-110 active:scale-95 transition-all duration-200 shadow-md shadow-primary/20',
+                compact ? 'px-4 py-2 text-sm' : 'px-7 py-2.5 text-base',
+              ].join(' ')}
+            >
+              Browse Files
+            </button>
+            <div className="flex items-center gap-1.5">
+              <span className="text-on-surface-variant text-xs uppercase tracking-wider">or</span>
+              <div className="flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-lg border border-outline-variant/40 shadow-sm">
+                <span className="text-xs text-on-surface-variant font-medium">Paste</span>
+                <div className="flex items-center gap-0.5">
+                  <kbd className="font-sans bg-gray-100 px-1.5 py-0.5 rounded text-[10px] border border-outline-variant/30 text-on-surface">Ctrl</kbd>
+                  <span className="text-[10px] text-on-surface-variant">+</span>
+                  <kbd className="font-sans bg-gray-100 px-1.5 py-0.5 rounded text-[10px] border border-outline-variant/30 text-on-surface">V</kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-on-surface-variant/60 font-medium">
+            Supports JPG, PNG, WebP · max 10 MB
+          </p>
+        </>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-1.5">
-      <span className="text-xs font-semibold text-foreground">{label}</span>
+    <div className="space-y-2">
+      {label && <span className="text-xs font-semibold text-foreground">{label}</span>}
 
-      <div className="flex items-start gap-4">
-        {/* Drop zone / preview area */}
-        <div
-          ref={dropZoneRef}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
-          aria-label={displaySrc ? 'Replace photo' : 'Upload photo'}
-          onClick={handleClick}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={[
-            'relative flex items-center justify-center w-28 h-28 rounded-xl overflow-hidden cursor-pointer select-none transition-colors',
-            'border-2 border-dashed',
-            isDragging
-              ? 'border-primary bg-primary/10'
-              : 'border-outline-variant/40 bg-surface-container-lowest hover:border-primary/60 hover:bg-muted/40',
-            disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '',
-          ].join(' ')}
-        >
-          {/* Current photo */}
-          {displaySrc && !isBusy && (
-            // eslint-disable-next-line @next/next/no-img-element
+      {displaySrc ? (
+        // With-image: side-by-side layout
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Image panel — left */}
+          <div className="flex-1 relative rounded-2xl overflow-hidden min-h-55 border border-outline-variant/20">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={displaySrc}
               alt="Uploaded photo"
               className="w-full h-full object-cover"
             />
-          )}
 
-          {/* Busy overlay */}
-          {isBusy && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 gap-1">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-[10px] text-muted-foreground">
-                {state === 'processing' ? 'Processing…' : isDeleting ? 'Removing…' : 'Uploading…'}
-              </span>
+            {/* Busy overlay */}
+            {isBusy && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <span className="text-xs text-white font-medium">
+                  {isDeleting ? 'Removing…' : state === 'processing' ? 'Processing…' : 'Uploading…'}
+                </span>
+              </div>
+            )}
+
+            {/* Top-right filename badge */}
+            <div className="absolute top-3 right-3 bg-white/90 px-2 py-1 rounded-md text-[10px] font-bold text-primary shadow-sm uppercase tracking-tight max-w-40 truncate">
+              {badgeLabel}
             </div>
-          )}
 
-          {/* Empty state */}
-          {!displaySrc && !isBusy && (
-            <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2">
-              <ImageIcon className="h-6 w-6" />
-              <Upload className="h-3 w-3" />
-            </div>
-          )}
-
-          {/* Hover replace overlay when photo exists */}
-          {displaySrc && !isBusy && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
-              <span className="text-[10px] font-medium text-white text-center px-1">
-                Replace
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Right-side hints + delete */}
-        <div className="flex flex-col justify-between h-28 py-0.5">
-          <div className="space-y-0.5">
-            <p className="text-xs text-muted-foreground leading-snug">
-              Drop image, paste&nbsp;
-              <kbd className="text-[10px] font-mono border border-border rounded px-0.5">⌘V</kbd>
-              , or click to browse
-            </p>
-            <p className="text-[10px] text-muted-foreground">JPEG, PNG, WebP · max 10 MB</p>
+            {/* Bottom-right delete button */}
+            {!isBusy && (
+              <button
+                type="button"
+                aria-label="Delete image"
+                disabled={disabled || isDeleting}
+                onClick={(e) => { e.stopPropagation(); void handleDelete(); }}
+                className="absolute bottom-3 right-3 w-9 h-9 bg-white/90 hover:bg-white rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 border border-outline-variant/20 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4 text-[#717a6d]" />
+              </button>
+            )}
           </div>
 
-          {displaySrc && !isBusy && (
-            <button
-              type="button"
-              disabled={disabled || isDeleting}
-              onClick={(e) => { e.stopPropagation(); void handleDelete(); }}
-              className="inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
-            >
-              <X className="h-3 w-3" />
-              Remove photo
-            </button>
-          )}
+          {/* Drop zone (compact) — right */}
+          <div className="flex-1">
+            <DropZone compact />
+          </div>
         </div>
-      </div>
+      ) : (
+        // Empty state: full-width drop zone
+        <DropZone compact={false} />
+      )}
 
-      {errorMsg && <p className="text-xs text-destructive mt-1">{errorMsg}</p>}
+      {errorMsg && <p className="text-xs text-destructive">{errorMsg}</p>}
 
       <input
         ref={fileInputRef}

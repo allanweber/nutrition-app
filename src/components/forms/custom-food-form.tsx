@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { PhotoUploader } from '@/components/photo-uploader';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { customFoodFormSchema, zodValidator } from '@/lib/form-validation';
 import type { CustomFoodFormData } from '@/lib/form-validation';
+import { resizeForUpload } from '@/lib/image-resize';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // ─── types ───────────────────────────────────────────────────────────────────
@@ -83,10 +84,9 @@ function NumberField({
 
 function useCustomFoodMutation(foodId: string | undefined) {
   const qc = useQueryClient();
-  const router = useRouter();
 
   return useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
+    mutationFn: async (data: Record<string, unknown>): Promise<{ food: { id: string } }> => {
       const url = foodId ? `/api/foods/custom/${foodId}` : '/api/foods/custom';
       const method = foodId ? 'PATCH' : 'POST';
       const res = await fetch(url, {
@@ -102,7 +102,6 @@ function useCustomFoodMutation(foodId: string | undefined) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['foods', 'custom'] });
-      router.push('/my-foods');
     },
   });
 }
@@ -111,8 +110,10 @@ function useCustomFoodMutation(foodId: string | undefined) {
 
 export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
   const isEdit = Boolean(foodId);
+  const router = useRouter();
   const qc = useQueryClient();
   const mutation = useCustomFoodMutation(foodId);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   const toStr = (v: number | null | undefined) => (v != null ? String(v) : '');
 
@@ -154,7 +155,21 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
       const sodium = parseFloat(String(value.sodium));
       if (!Number.isNaN(sodium)) payload.sodium = sodium;
 
-      await mutation.mutateAsync(payload);
+      const result = await mutation.mutateAsync(payload);
+
+      if (!isEdit && pendingImageFile) {
+        try {
+          const resized = await resizeForUpload(pendingImageFile);
+          const fd = new FormData();
+          fd.append('thumb', resized.thumb, 'thumb.jpg');
+          fd.append('display', resized.display, 'display.jpg');
+          await fetch(`/api/foods/custom/${result.food.id}/photo`, { method: 'POST', body: fd });
+        } catch {
+          // image upload is non-blocking; food was created successfully
+        }
+      }
+
+      router.push('/my-foods');
     },
   });
 
@@ -206,20 +221,18 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
         }}
         className="space-y-6"
       >
-        {/* Photo — edit mode only, outside TanStack Form */}
-        {isEdit && foodId && (
-          <div className="rounded-xl border border-outline-variant/20 p-5 bg-surface-container-lowest">
-            <h2 className="text-sm font-bold text-foreground mb-4">Photo</h2>
-            <PhotoUploader
-              currentThumb={initialFood?.images?.thumb ?? null}
-              uploadUrl={`/api/foods/custom/${foodId}/photo`}
-              label="Food Photo"
-              onUploaded={() => qc.invalidateQueries({ queryKey: ['foods', 'custom'] })}
-              onDeleted={() => qc.invalidateQueries({ queryKey: ['foods', 'custom'] })}
-              disabled={mutation.isPending}
-            />
-          </div>
-        )}
+        {/* Photo — always shown, outside TanStack Form */}
+        <div className="rounded-xl border border-outline-variant/20 p-5 bg-surface-container-lowest">
+          <h2 className="text-sm font-bold text-foreground mb-4">Photo</h2>
+          <PhotoUploader
+            currentThumb={isEdit ? (initialFood?.images?.thumb ?? null) : null}
+            uploadUrl={isEdit && foodId ? `/api/foods/custom/${foodId}/photo` : undefined}
+            onFileSelected={!isEdit ? (file) => setPendingImageFile(file) : undefined}
+            onUploaded={isEdit ? () => qc.invalidateQueries({ queryKey: ['foods', 'custom'] }) : undefined}
+            onDeleted={isEdit ? () => qc.invalidateQueries({ queryKey: ['foods', 'custom'] }) : undefined}
+            disabled={mutation.isPending}
+          />
+        </div>
 
         {/* Basic info */}
         <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-surface-container-lowest">
