@@ -7,24 +7,23 @@ import { MacronutrientsSection } from '@/components/dashboard/macronutrients/mac
 import { HydrationSection } from '@/components/dashboard/hydration/hydration-section';
 import { WeeklyMomentumSection } from '@/components/dashboard/weekly-momentum/weekly-momentum-section';
 import { DailyScheduleSection } from '@/components/dashboard/daily-schedule/daily-schedule-section';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
   const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="space-y-6 py-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-headline font-extrabold text-foreground">
-          Today
-        </h1>
-        <Link
-          href="/food-log"
-          className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors"
-        >
-          Log Activity
-        </Link>
-      </div>
+      <PageHeader
+        overline="Daily Overview"
+        title="Today"
+        subtitle="Your nutrition snapshot for the day"
+      >
+        <Button asChild>
+          <Link href="/food-log">Log Activity</Link>
+        </Button>
+      </PageHeader>
 
       {/* Bento grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

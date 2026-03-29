@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Custom Foods and Dishes - Vitalis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "error": "#ba1a1a",
+                "tertiary": "#702141",
+                "on-secondary": "#ffffff",
+                "on-error-container": "#93000a",
+                "surface-variant": "#e0e4db",
+                "on-tertiary-fixed": "#3e001d",
+                "on-primary": "#ffffff",
+                "surface-container-low": "#f2f5ec",
+                "on-primary-fixed": "#002203",
+                "outline": "#717a6d",
+                "secondary-fixed-dim": "#b1cfa9",
+                "inverse-primary": "#92d78a",
+                "inverse-on-surface": "#eff2e9",
+                "on-surface-variant": "#41493e",
+                "on-background": "#191d17",
+                "on-secondary-container": "#516b4c",
+                "primary-fixed-dim": "#92d78a",
+                "surface-container-highest": "#e0e4db",
+                "surface-container-high": "#e6e9e0",
+                "on-tertiary": "#ffffff",
+                "on-error": "#ffffff",
+                "primary": "#19985E",
+                "surface-bright": "#f7fbf1",
+                "on-secondary-fixed": "#082009",
+                "tertiary-fixed": "#ffd9e2",
+                "surface-container-lowest": "#ffffff",
+                "surface": "#f7fbf1",
+                "primary-container": "#19985E",
+                "background": "#FBFBFB",
+                "tertiary-container": "#8d3858",
+                "outline-variant": "#c0c9ba",
+                "on-primary-fixed-variant": "#0c5215",
+                "on-tertiary-container": "#ffb7cc",
+                "surface-container": "#ecefe6",
+                "secondary-container": "#cdebc4",
+                "on-surface": "#191d17",
+                "on-primary-container": "#96dc8e",
+                "secondary": "#4b6547",
+                "tertiary-fixed-dim": "#ffb1c8",
+                "primary-fixed": "#adf4a4",
+                "on-tertiary-fixed-variant": "#7a2949",
+                "on-secondary-fixed-variant": "#344d31",
+                "secondary-fixed": "#cdebc4",
+                "surface-dim": "#d8dbd2",
+                "inverse-surface": "#2d322c",
+                "surface-tint": "#19985E",
+                "error-container": "#ffdad6"
+              },
+              fontFamily: {
+                "headline": ["Manrope", "sans-serif"],
+                "body": ["Inter", "sans-serif"],
+                "label": ["Inter", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .vitalis-btn {
+            background-color: #19985E;
+        }
+        .data-cell-protein { background: #FFEBEC; }
+        tr:hover .data-cell-protein { background: #ffd9db; }
+        .text-protein { color: #D54069; }
+        .bg-protein-track { background-color: #FFEBEC; }
+        .bg-protein-fill { background-color: #D54069; }
+        .data-cell-carbs { background: #FEF6D4; }
+        tr:hover .data-cell-carbs { background: #fdf0ba; }
+        .text-carbs { color: #CC7A40; }
+        .bg-carbs-track { background-color: #FEF6D4; }
+        .bg-carbs-fill { background-color: #CC7A40; }
+        .data-cell-fats { background: #DFF2FE; }
+        tr:hover .data-cell-fats { background: #cce9fd; }
+        .text-fats { color: #408FBE; }
+        .bg-fats-track { background-color: #DFF2FE; }
+        .bg-fats-fill { background-color: #408FBE; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c0c9ba; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#FBFBFB] text-on-background font-body antialiased min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-[#FBFBFB] overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-l-4 border-[#19985E] pl-6">
+<div>
+<p class="text-[#19985E] font-bold uppercase tracking-[0.2em] text-xs mb-2">System Analytics</p>
+<h1 class="text-on-background font-headline text-5xl font-extrabold leading-tight tracking-tighter">Custom Foods and Dishes</h1>
+<p class="text-on-surface-variant mt-2 max-w-lg">Manage your own foods and custom dishes with several ingredients</p>
+</div>
+<div class="flex gap-3">
+<button class="vitalis-btn text-on-primary flex items-center justify-center rounded-xl h-12 px-8 font-label text-sm font-bold uppercase tracking-widest shadow-xl hover:shadow-[#19985E]/20 hover:scale-[1.02] active:scale-95 transition-all">
+<span class="material-symbols-outlined mr-2">add_circle</span> Add Entry
+            </button>
+</div>
+</div>
+<div class="mb-6 flex flex-col md:flex-row gap-4 items-center">
+<div class="flex flex-wrap items-center gap-4">
+<div class="inline-flex bg-surface-container p-1 rounded-xl">
+<button class="bg-surface-container-lowest text-[#19985E] px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm">Custom Foods</button>
+<button class="text-outline hover:text-on-surface px-6 py-2.5 rounded-lg text-sm font-bold transition-colors">Custom Dishes</button>
+</div>
+<div class="flex items-center gap-2 bg-white/50 px-4 py-3 rounded-xl border border-outline-variant">
+<span class="size-2 rounded-full bg-[#19985E]"></span>
+<span class="text-xs font-bold text-outline uppercase tracking-wider whitespace-nowrap">10 Items View</span>
+</div>
+</div>
+<div class="relative flex-1 md:max-w-md">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-surface-container-lowest rounded-2xl border border-outline-variant focus:ring-2 focus:ring-[#19985E] focus:border-[#19985E] transition-all text-sm font-medium outline-none" placeholder="Filter by Item Name..." type="text"/>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead class="sticky top-0 z-20">
+<tr class="bg-[#F5F5F5]">
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-outline">
+<div class="flex items-center gap-1 cursor-pointer hover:text-[#19985E] transition-colors">
+                                Item Name <span class="material-symbols-outlined text-[14px]">unfold_more</span>
+</div>
+</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-outline text-right">
+<div class="flex items-center justify-end gap-1 cursor-pointer hover:text-[#19985E] transition-colors">
+                                Energy (kcal) <span class="material-symbols-outlined text-[14px]">arrow_drop_down</span>
+</div>
+</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-protein bg-[#FFEBEC]">
+<div class="flex items-center gap-1 cursor-pointer">
+                                Protein <span class="text-[10px] lowercase font-medium opacity-80">/100g</span>
+</div>
+</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-carbs bg-[#FEF6D4]">
+<div class="flex items-center gap-1 cursor-pointer">
+                                Carbs <span class="text-[10px] lowercase font-medium opacity-80">/100g</span>
+</div>
+</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-fats bg-[#DFF2FE]">
+<div class="flex items-center gap-1 cursor-pointer">
+                                Fats <span class="text-[10px] lowercase font-medium opacity-80">/100g</span>
+</div>
+</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-outline">Fiber</th>
+<th class="px-6 py-5 text-[11px] font-extrabold uppercase tracking-[0.15em] text-outline text-center min-w-[140px]">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg overflow-hidden flex-shrink-0 border border-outline-variant shadow-sm">
+<img alt="" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGR66jw0oj2UK_AOXVwTdKmfBV1nBx8AssVXu0C7XcI7KQnysroDnMGCJI5aLBTJ9Nr9x2IDxwmUpkmTBrpGD8NwdzRUIiB8I3jjSzFZaNjxcSjRfC3Nal7IUmVLND74xmFxxotcMRark2DGNxARxJ7a02XIeJdRwNSA9SlhMu7x5H4J4A2NIW3TT5n5hkZMELyAoOzQv2Ihh934BEOSqMP47ObV4v4KLDNmqJJRXkaJcmzdK8DBTinHSJl3VMvbZy5-T0A8R0xi14"/>
+</div>
+<div>
+<span class="font-headline font-bold text-on-surface block">Homemade Almond Butter</span>
+<span class="text-[10px] text-outline uppercase tracking-tighter">Nut &amp; Seed Butters</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">614</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">21.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 42%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">21.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 25%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">50.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 85%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">12.5g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg overflow-hidden flex-shrink-0 border border-outline-variant shadow-sm">
+<img alt="" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvPjSJse-HRGHxYMIyWQDlNQp8o6Fm5vqrbEBjEZ_c0uNu70ucZqxv5KtKw47O9s1KoHOW_g8vPH7KNSWyzWs-KBHEf4FCWeAXc32WzACpaBH5kq1RcigTXENxvXThKm8ujB98Aefr1M-erPVthbn91noT64kq1YdTiUwB9l_t5tMoRIGKBR5jGbRk_GU2YamwTAgcQRmoZL0Fa01Xb9GQAH1NE6EsTSbC1qEL3xAXDcJJ17gd7Bgh7BR0e04SQefepHPLeZluqI87"/>
+</div>
+<div><span class="font-headline font-bold text-on-surface block">Quinoa Salad</span><span class="text-[10px] text-outline uppercase tracking-tighter">Plant-based Bowls</span></div>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">368</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">14.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 28%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">64.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 75%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">6.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 12%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">7.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg overflow-hidden flex-shrink-0 border border-outline-variant shadow-sm">
+<img alt="" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYl3W-d_MDdhxQH9sL7biOxTJPBmxcATC_RG-eaqB9USo1E_B0cprTNPhodkQEmED9yxcfMo-H93_AzV2Xth1T0s_1iPEIRhAuRsiLmIN_Dnlgr0TNT9K5CikcENoVCkVRpps7N-PaJ1zjNDdm3hs5nfxmKVYJB4gK7X1tWfLYph7537Fgkm30i42pM1xGc6hGAJ5Zg-AHjoEBni-d7gVg1F4F8171xaltp16pGAea_JkwwSKux6RAgmbb7qvQsx02BvEa1y_J9fas"/>
+</div>
+<div><span class="font-headline font-bold text-on-surface block">Avocado Toast</span><span class="text-[10px] text-outline uppercase tracking-tighter">Breakfast &amp; Brunch</span></div>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">320</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">8.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 16%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">25.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 35%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">22.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 45%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">9.2g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">restaurant</span></div><div><span class="font-headline font-bold text-on-surface block">Greek Yogurt 2%</span><span class="text-[10px] text-outline uppercase tracking-tighter">Dairy &amp; Alternatives</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">150</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">10.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 20%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">4.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 8%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">2.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 4%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">0.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">eco</span></div><div><span class="font-headline font-bold text-on-surface block">Steel Cut Oats</span><span class="text-[10px] text-outline uppercase tracking-tighter">Grains &amp; Cereals</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">375</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">13.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 26%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">68.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 78%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">7.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 14%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">10.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">bakery_dining</span></div><div><span class="font-headline font-bold text-on-surface block">Sourdough Bread</span><span class="text-[10px] text-outline uppercase tracking-tighter">Bakery</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">250</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">8.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 16%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">49.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 55%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">1.5g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 3%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">2.4g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">egg</span></div><div><span class="font-headline font-bold text-on-surface block">Organic Large Egg</span><span class="text-[10px] text-outline uppercase tracking-tighter">Protein &amp; Eggs</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">155</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">13.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 26%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">1.1g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 2%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">11.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 22%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">0.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">set_meal</span></div><div><span class="font-headline font-bold text-on-surface block">Wild Caught Salmon</span><span class="text-[10px] text-outline uppercase tracking-tighter">Seafood</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">208</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">20.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 40%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">0.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 0%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">13.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 26%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">0.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">nutrition</span></div><div><span class="font-headline font-bold text-on-surface block">Chia Seeds</span><span class="text-[10px] text-outline uppercase tracking-tighter">Seeds</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">486</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">17.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 34%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">42.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 48%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">31.0g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 62%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">34.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+<tr class="group hover:bg-surface-container-low/40 transition-colors duration-150">
+<td class="px-6 py-4"><div class="flex items-center gap-4"><div class="size-10 rounded-lg bg-surface-container border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-outline">lunch_dining</span></div><div><span class="font-headline font-bold text-on-surface block">Grilled Chicken Breast</span><span class="text-[10px] text-outline uppercase tracking-tighter">Poultry</span></div></div></td>
+<td class="px-6 py-4 text-right font-mono text-sm font-semibold text-on-surface">165</td>
+<td class="px-6 py-4 data-cell-protein"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-protein">31.0g</span><div class="w-12 h-1.5 bg-protein-track rounded-full overflow-hidden"><div class="h-full bg-protein-fill" style="width: 62%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-carbs"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-carbs">0.0g</span><div class="w-12 h-1.5 bg-carbs-track rounded-full overflow-hidden"><div class="h-full bg-carbs-fill" style="width: 0%"></div></div></div></td>
+<td class="px-6 py-4 data-cell-fats"><div class="flex items-center justify-between"><span class="font-mono text-sm font-bold text-fats">3.6g</span><div class="w-12 h-1.5 bg-fats-track rounded-full overflow-hidden"><div class="h-full bg-fats-fill" style="width: 7%"></div></div></div></td>
+<td class="px-6 py-4 font-mono text-sm text-outline">0.0g</td>
+<td class="px-6 py-4 min-w-[140px]"><div class="flex justify-center gap-2"><button class="p-2 hover:bg-[#19985E]/10 rounded-lg text-outline hover:text-[#19985E] transition-colors"><span class="material-symbols-outlined text-[20px]">edit_note</span></button><button class="p-2 hover:bg-error/10 rounded-lg text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex flex-col sm:flex-row items-center justify-between px-6 py-6 bg-[#F5F5F5] gap-4">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-outline uppercase tracking-widest whitespace-nowrap">Rows per page</span>
+<div class="relative group">
+<select class="appearance-none bg-white border border-outline-variant rounded-xl pl-4 pr-10 py-2 text-sm font-bold text-on-surface outline-none focus:ring-2 focus:ring-[#19985E]/20 focus:border-[#19985E] cursor-pointer transition-all hover:bg-surface-container-low">
+<option selected="">10</option>
+<option>25</option>
+<option>50</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-xl group-hover:text-[#19985E] transition-colors">expand_more</span>
+</div>
+</div>
+<span class="text-xs font-semibold text-outline">Showing <span class="text-on-surface font-bold">1-10</span> of <span class="text-on-surface font-bold">42</span> entries</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1 px-4 py-2 rounded-xl border border-outline-variant bg-white text-outline hover:text-[#19985E] hover:border-[#19985E] hover:bg-[#19985E]/5 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-outline-variant disabled:hover:text-outline group" disabled="">
+<span class="material-symbols-outlined text-xl transition-transform group-hover:-translate-x-0.5">chevron_left</span>
+<span class="text-xs font-bold uppercase tracking-wider pr-1">Previous</span>
+</button>
+<div class="flex items-center gap-5 px-4">
+<button class="flex items-center justify-center size-10 rounded-xl bg-[#19985E] text-on-primary text-sm font-bold shadow-lg shadow-[#19985E]/20 hover:scale-105 active:scale-95 transition-all">1</button>
+<button class="flex items-center justify-center size-10 rounded-xl text-outline hover:bg-[#19985E]/5 hover:text-[#19985E] text-sm font-bold transition-all hover:scale-105">2</button>
+<button class="flex items-center justify-center size-10 rounded-xl text-outline hover:bg-[#19985E]/5 hover:text-[#19985E] text-sm font-bold transition-all hover:scale-105">3</button>
+<span class="flex items-center justify-center size-10 text-outline font-bold opacity-40">...</span>
+<button class="flex items-center justify-center size-10 rounded-xl text-outline hover:bg-[#19985E]/5 hover:text-[#19985E] text-sm font-bold transition-all hover:scale-105">9</button>
+</div>
+<button class="flex items-center gap-1 px-4 py-2 rounded-xl border border-outline-variant bg-white text-outline hover:text-[#19985E] hover:border-[#19985E] hover:bg-[#19985E]/5 transition-all group">
+<span class="text-xs font-bold uppercase tracking-wider pl-1">Next</span>
+<span class="material-symbols-outlined text-xl transition-transform group-hover:translate-x-0.5">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html>
