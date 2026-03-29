@@ -14,6 +14,7 @@ import { useFoodLogsQuery, useDeleteFoodLogMutation } from '@/queries/food-logs'
 import { useDeleteDishGroupMutation } from '@/queries/dishes';
 import { useFoodDetailQuery, type FoodSelection } from '@/queries/food-detail';
 import { FoodModal } from '@/components/food-modal';
+import { PageHeader } from '@/components/page-header';
 import type { MealType } from '@/lib/nutrition-constants';
 import type { FoodLogEntry } from '@/types/food';
 
@@ -150,24 +151,15 @@ export function FoodLogContent() {
     <div className="grid lg:grid-cols-12 gap-8 items-start pt-6">
       {/* Left column */}
       <div className="lg:col-span-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1
-              className="text-4xl font-headline font-bold text-foreground"
-              data-testid="food-log-heading"
-            >
-              Meal Planner &amp; Daily Intake
-            </h1>
-            <p className="text-on-surface-variant mt-1">
-              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 pt-1">
-            <CreatePlanButton />
-            <CreateFoodButton />
-          </div>
-        </div>
+        <PageHeader
+          overline="Food Log"
+          title="Meal Planner & Daily Intake"
+          subtitle={format(selectedDate, 'EEEE, MMMM d, yyyy')}
+          data-testid="food-log-heading"
+        >
+          <CreatePlanButton />
+          <CreateFoodButton />
+        </PageHeader>
 
         {/* Weekly calendar strip */}
         <WeeklyCalendarStrip selectedDate={selectedDate} onDateChange={handleDateChange} />

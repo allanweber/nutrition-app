@@ -1,13 +1,17 @@
 import { Dumbbell } from 'lucide-react';
 import { CreateExerciseButton } from '@/components/create-action-buttons';
+import { PageHeader } from '@/components/page-header';
 
 export default function ExerciseLibraryPage() {
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <div className="mb-8">
-        <h1 className="text-4xl font-headline font-bold text-foreground">Exercise Library</h1>
-        <p className="text-on-surface-variant mt-1">Your personal exercise and workout catalog</p>
-      </div>
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <PageHeader
+        overline="My Library"
+        title="Exercise Library"
+        subtitle="Your personal exercise and workout catalog"
+      >
+        <CreateExerciseButton />
+      </PageHeader>
 
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center">

@@ -58,3 +58,27 @@ export const MACRO_HEX_COLORS = {
   carbs: '#f59e0b',   // amber-500
   fat: '#0ea5e9',     // sky-500
 } as const;
+
+//Background kcal #e6f4ee, protein #FFEBEC, carbs #FEF6D4, fat #DFF2FE
+//Text kcal #008d4d, protein #D54069, carbs #CC7A40, fat #408FBE
+
+/** Light-tinted cell background classes for macro table columns */
+export const MACRO_CELL_BG = {
+  protein: 'bg-[#FFEBEC] dark:bg-rose-950/40',
+  carbs:   'bg-[#FEF6D4] dark:bg-amber-950/40',
+  fat:     'bg-[#DFF2FE] dark:bg-sky-950/40',
+} as const;
+
+/** Text color classes for macro values inside colored table cells */
+export const MACRO_CELL_TEXT = {
+  protein: 'text-[#D54069] dark:text-rose-400',
+  carbs:   'text-[#CC7A40] dark:text-amber-400',
+  fat:     'text-[#408FBE] dark:text-sky-400',
+} as const;
+
+/** Progress bar fill color classes for macro table cells */
+export const MACRO_CELL_FILL = {
+  protein: 'bg-[#D54069] dark:bg-rose-400',
+  carbs:   'bg-[#CC7A40] dark:bg-amber-400',
+  fat:     'bg-[#408FBE] dark:bg-sky-400',
+} as const;

@@ -4,18 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GoalsForm } from '@/components/forms/goals-form';
 import { Target } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 
 export default function GoalsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Nutrition Goals
-        </h1>
-        <p className="text-muted-foreground">
-          Set your daily nutrition targets to track your progress
-        </p>
-      </div>
+      <PageHeader
+        overline="Targets"
+        title="Nutrition Goals"
+        subtitle="Set your daily nutrition targets to track your progress"
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

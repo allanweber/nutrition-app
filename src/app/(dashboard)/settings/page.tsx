@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/session';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/page-header';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -11,10 +12,11 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage your application preferences</p>
-      </div>
+      <PageHeader
+        overline="Preferences"
+        title="Settings"
+        subtitle="Manage your application preferences"
+      />
 
       <Card>
         <CardHeader>
