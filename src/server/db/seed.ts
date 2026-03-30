@@ -1265,9 +1265,29 @@ async function seed() {
       // Insert custom foods for this user (cascade-deleted on user removal)
       const customFoods = customFoodsByEmail[userDef.email];
       if (customFoods && customFoods.length > 0) {
-        await db.insert(schema.foods).values(
+        const insertedCustomFoods = await db.insert(schema.foods).values(
           customFoods.map((food) => ({ ...food, userId }))
-        );
+        ).returning();
+
+        // Insert alt measures for custom foods that have serving info
+        const altMeasureValues = insertedCustomFoods
+          .map((food) => {
+            if (!food.servingWeightGrams || !food.servingUnit) return null;
+            const qty = food.servingQty ? parseFloat(food.servingQty) : 1;
+            const label = qty !== 1 ? `${qty} ${food.servingUnit}` : food.servingUnit;
+            return {
+              foodId: food.id,
+              measure: label,
+              servingWeight: food.servingWeightGrams,
+              qty: qty.toString(),
+              seq: 1,
+            };
+          })
+          .filter((v): v is NonNullable<typeof v> => v !== null);
+
+        if (altMeasureValues.length > 0) {
+          await db.insert(schema.foodAltMeasures).values(altMeasureValues);
+        }
       }
 
       // Insert dishes + favorites for weight-loss user

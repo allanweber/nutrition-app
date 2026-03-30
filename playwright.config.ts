@@ -6,10 +6,10 @@ const TEST_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://localhost:${TES
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: 1,
+  workers: process.env.CI ? 2 : 3,
   reporter: 'html',
   timeout: 60000,
   use: {

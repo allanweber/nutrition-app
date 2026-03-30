@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
-import { foods, foodPhotos } from '@/server/db/schema';
+import { foods, foodPhotos, foodAltMeasures } from '@/server/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { validateRequestBody } from '@/lib/api-validation';
 
@@ -114,6 +114,28 @@ export async function PATCH(
   if (data.sodium !== undefined) updates.sodium = data.sodium.toString();
 
   await db.update(foods).set(updates).where(eq(foods.id, foodId));
+
+  // Re-sync alt measure if any serving field changed
+  const servingChanged =
+    data.servingWeightGrams !== undefined ||
+    data.servingUnit !== undefined ||
+    data.servingQty !== undefined;
+  if (servingChanged) {
+    // Fetch latest food record to get current serving values
+    const updated = await db.query.foods.findFirst({ where: eq(foods.id, foodId) });
+    await db.delete(foodAltMeasures).where(eq(foodAltMeasures.foodId, foodId));
+    if (updated?.servingWeightGrams && updated?.servingUnit) {
+      const qty = updated.servingQty ? parseFloat(updated.servingQty) : 1;
+      const label = qty !== 1 ? `${qty} ${updated.servingUnit}` : updated.servingUnit;
+      await db.insert(foodAltMeasures).values({
+        foodId,
+        measure: label,
+        servingWeight: updated.servingWeightGrams,
+        qty: qty.toString(),
+        seq: 1,
+      });
+    }
+  }
 
   return NextResponse.json({ success: true });
 }

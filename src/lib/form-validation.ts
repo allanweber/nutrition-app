@@ -130,6 +130,11 @@ export const goalsFormSchema = z.object({
 // CUSTOM FOOD SCHEMA — mirrors: foods table
 // ============================================
 
+export const SERVING_UNIT_VALUES = [
+  'g', 'oz', 'mL', 'c', 'fl oz', 'container', 'scoop', 'piece', 'unit',
+] as const satisfies [string, ...string[]];
+export type ServingUnit = typeof SERVING_UNIT_VALUES[number];
+
 export const customFoodFormSchema = z.object({
   // Basic info
   name: z
@@ -144,10 +149,7 @@ export const customFoodFormSchema = z.object({
     (v) => (v === '' || v == null ? undefined : v),
     z.coerce.number().min(0, 'Must be 0 or more').optional(),
   ),
-  servingUnit: z
-    .string()
-    .max(50, 'Serving unit must be at most 50 characters')
-    .optional(),
+  servingUnit: z.enum(SERVING_UNIT_VALUES).optional(),
   servingWeightGrams: z.preprocess(
     (v) => (v === '' || v == null ? undefined : v),
     z.coerce.number().min(0, 'Must be 0 or more').optional(),

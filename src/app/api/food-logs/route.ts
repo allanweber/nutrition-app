@@ -190,6 +190,8 @@ export async function GET(request: NextRequest) {
           id: foods.id,
           name: foods.name,
           brandName: foods.brandName,
+          source: foods.source,
+          servingWeightGrams: foods.servingWeightGrams,
           calories: foods.calories,
           protein: foods.protein,
           carbs: foods.carbs,
@@ -220,7 +222,12 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(foodLogMeals.consumedAt), desc(foodLogItems.createdAt))
       .limit(200);
 
-    const transformedLogs = mealItemLogs.map((log) => ({
+    const transformedLogs = mealItemLogs.map((log) => {
+      const normFactor =
+        log.food.source === 'user_custom' && log.food.servingWeightGrams
+          ? 100 / toNumber(log.food.servingWeightGrams)
+          : 1;
+      return {
       id: log.id,
       quantity: toNumber(log.quantity),
       dishLogGroupId: log.dishLogGroupId ?? null,
@@ -231,13 +238,13 @@ export async function GET(request: NextRequest) {
         id: log.food.id,
         name: log.food.name,
         brandName: log.food.brandName,
-        calories: toNumber(log.food.calories),
-        protein: toNumber(log.food.protein),
-        carbs: toNumber(log.food.carbs),
-        fat: toNumber(log.food.fat),
-        fiber: toNumber(log.food.fiber),
-        sugar: toNumber(log.food.sugar),
-        sodium: toNumber(log.food.sodium),
+        calories: toNumber(log.food.calories) * normFactor,
+        protein: toNumber(log.food.protein) * normFactor,
+        carbs: toNumber(log.food.carbs) * normFactor,
+        fat: toNumber(log.food.fat) * normFactor,
+        fiber: toNumber(log.food.fiber) * normFactor,
+        sugar: toNumber(log.food.sugar) * normFactor,
+        sodium: toNumber(log.food.sodium) * normFactor,
         fullNutrients: (log.food.fullNutrients as Record<string, unknown>) ?? {},
         photoUrl: log.photoThumb ?? null,
       },
@@ -249,7 +256,8 @@ export async function GET(request: NextRequest) {
             qty: toNumber(log.altMeasureQty),
           }
         : null,
-    }));
+    };
+    });
 
     const totalsData = transformedLogs.reduce(
       (acc, log) => {

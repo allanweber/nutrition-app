@@ -82,3 +82,10 @@ export const MACRO_CELL_FILL = {
   carbs:   'bg-[#CC7A40] dark:bg-amber-400',
   fat:     'bg-[#408FBE] dark:bg-sky-400',
 } as const;
+
+/** Left border color classes for macro cards */
+export const MACRO_CELL_BORDER = {
+  protein: 'border-l-[#D54069] dark:border-l-rose-400',
+  carbs:   'border-l-[#CC7A40] dark:border-l-amber-400',
+  fat:     'border-l-[#408FBE] dark:border-l-sky-400',
+} as const;

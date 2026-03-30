@@ -46,7 +46,7 @@ function buildFoodMeasures(servings: FoodDetailResponse['servings']): QuantityMe
     sliderStep: 0.25,
     weightGrams: s.weightGrams,
   }));
-  return [base, ...alt];
+  return [...alt, base];
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -137,21 +137,26 @@ export function FoodModal({
       setSelectedMeasureId('serving');
       setQuantity(1);
     } else if (mode.kind === 'edit-food') {
-      setSelectedMeasureId(mode.initialAltMeasureId ?? 'base');
       if (mode.initialAltMeasureId) {
         const serving = mode.foodDetail.servings.find((s) => s.id === mode.initialAltMeasureId);
+        setSelectedMeasureId(mode.initialAltMeasureId);
         setQuantity(serving ? mode.initialQuantityGrams / serving.weightGrams : mode.initialQuantityGrams);
       } else {
+        setSelectedMeasureId('base');
         setQuantity(mode.initialQuantityGrams);
       }
     } else {
-      setSelectedMeasureId('base');
-      setQuantity(100);
+      const servings = (mode.kind === 'log-food' || mode.kind === 'ingredient')
+        ? mode.foodDetail.servings
+        : [];
+      const measures = buildFoodMeasures(servings);
+      setSelectedMeasureId(measures[0].id);
+      setQuantity(measures[0].defaultQty);
     }
     setSubmitError(null);
     setIsSubmitting(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, 'foodDetail' in mode ? mode.foodDetail.id : '']);
 
   // Escape key
   useEffect(() => {

@@ -56,6 +56,8 @@ export async function GET(
           id: foods.id,
           name: foods.name,
           brandName: foods.brandName,
+          source: foods.source,
+          servingWeightGrams: foods.servingWeightGrams,
           calories: foods.calories,
           protein: foods.protein,
           carbs: foods.carbs,
@@ -78,6 +80,10 @@ export async function GET(
       .where(and(eq(foodLogItems.id, logId), eq(foodLogMeals.userId, user.id)));
 
     if (itemLog) {
+      const normFactor =
+        itemLog.food.source === 'user_custom' && itemLog.food.servingWeightGrams
+          ? 100 / toNumber(itemLog.food.servingWeightGrams)
+          : 1;
       return NextResponse.json({
         log: {
           id: itemLog.id,
@@ -89,13 +95,13 @@ export async function GET(
             id: itemLog.food.id,
             name: itemLog.food.name,
             brandName: itemLog.food.brandName,
-            calories: toNumber(itemLog.food.calories),
-            protein: toNumber(itemLog.food.protein),
-            carbs: toNumber(itemLog.food.carbs),
-            fat: toNumber(itemLog.food.fat),
-            fiber: toNumber(itemLog.food.fiber),
-            sugar: toNumber(itemLog.food.sugar),
-            sodium: toNumber(itemLog.food.sodium),
+            calories: toNumber(itemLog.food.calories) * normFactor,
+            protein: toNumber(itemLog.food.protein) * normFactor,
+            carbs: toNumber(itemLog.food.carbs) * normFactor,
+            fat: toNumber(itemLog.food.fat) * normFactor,
+            fiber: toNumber(itemLog.food.fiber) * normFactor,
+            sugar: toNumber(itemLog.food.sugar) * normFactor,
+            sodium: toNumber(itemLog.food.sodium) * normFactor,
             photoUrl: itemLog.photoThumb ?? null,
           },
           altMeasure: itemLog.altMeasureId

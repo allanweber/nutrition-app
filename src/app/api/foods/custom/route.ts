@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
-import { foods, foodPhotos } from '@/server/db/schema';
+import { foods, foodPhotos, foodAltMeasures } from '@/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { validateRequestBody } from '@/lib/api-validation';
 
@@ -105,6 +105,18 @@ export async function POST(request: NextRequest) {
       sodium: data.sodium?.toString(),
     })
     .returning();
+
+  if (data.servingWeightGrams && data.servingUnit) {
+    const qty = data.servingQty ?? 1;
+    const label = qty !== 1 ? `${qty} ${data.servingUnit}` : data.servingUnit;
+    await db.insert(foodAltMeasures).values({
+      foodId: food.id,
+      measure: label,
+      servingWeight: data.servingWeightGrams.toString(),
+      qty: qty.toString(),
+      seq: 1,
+    });
+  }
 
   return NextResponse.json({ success: true, food: { id: food.id, name: food.name } }, { status: 201 });
 }

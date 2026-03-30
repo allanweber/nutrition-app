@@ -60,6 +60,10 @@ test.describe('007: Create custom food', () => {
 
     const uniqueName = `E2E Test Food ${Date.now()}`;
     await page.getByTestId('field-name').fill(uniqueName);
+    await page.getByTestId('field-servingQty').fill('1');
+    await page.locator('#servingUnit').click();
+    await page.getByRole('option', { name: 'Scoop' }).click();
+    await page.getByTestId('field-servingWeightGrams').fill('30');
     await page.getByTestId('field-calories').fill('200');
     await page.getByTestId('field-protein').fill('20');
     await page.getByTestId('field-carbs').fill('15');
