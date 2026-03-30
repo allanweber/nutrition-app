@@ -150,18 +150,3 @@ NutritionX - Nutrition database and API.
 Samsung Food Recipe Nutrition Calculator - Nutrition calculator for recipes.
 Documenu - Restaurant menu API.
 TheMealDB - Small meal and recipe database and API.
-
-## Speckit flow
-
-Before running `/speckit.specify`, save your feature description to `.specify/prompts/<id>-<slug>.md`
-(e.g. `.specify/prompts/003-diet-plan-management.md`). This is your permanent record of the original
-intent and lets you reproduce or audit the SpecKit run later.
-
-1. Write prompt → `.specify/prompts/<id>-<slug>.md`
-2. /speckit.specify
-3. /speckit.clarify
-4. /speckit.plan
-5. /speckit.checklist - avoid
-6. /speckit.tasks
-7. /speckit.analyze
-8. /speckit.implement
