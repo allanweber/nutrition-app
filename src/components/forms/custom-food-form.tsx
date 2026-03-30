@@ -6,13 +6,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { PageHeader } from '@/components/page-header';
 import { PhotoUploader } from '@/components/photo-uploader';
+import { ServingUnitSelect } from '@/components/serving-unit-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { customFoodFormSchema, zodValidator } from '@/lib/form-validation';
-import type { CustomFoodFormData } from '@/lib/form-validation';
+import type { CustomFoodFormData, ServingUnit } from '@/lib/form-validation';
 import { resizeForUpload } from '@/lib/image-resize';
+import { cn } from '@/lib/utils';
+import {
+  MACRO_CELL_BG,
+  MACRO_CELL_BORDER,
+  MACRO_CELL_TEXT,
+} from '@/lib/nutrition-constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // ─── types ───────────────────────────────────────────────────────────────────
@@ -80,6 +88,62 @@ function NumberField({
   );
 }
 
+// ─── macro card helper ────────────────────────────────────────────────────────
+
+function MacroCard({
+  label,
+  name,
+  fieldApi,
+  unit,
+  bgClass,
+  textClass,
+  borderClass,
+}: {
+  label: string;
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fieldApi: any;
+  unit: string;
+  bgClass?: string;
+  textClass?: string;
+  borderClass?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border p-5 flex flex-col gap-3',
+        bgClass ?? 'bg-surface-container-lowest border-outline-variant/20',
+        borderClass && 'border-l-4',
+        borderClass,
+      )}
+    >
+      <span className={cn('text-[11px] font-bold uppercase tracking-wider', textClass ?? 'text-muted-foreground')}>
+        {label}
+      </span>
+      <div className="flex items-center gap-2">
+        <Input
+          id={name}
+          type="number"
+          min="0"
+          step="0.1"
+          value={fieldApi.state.value}
+          onChange={(e) => fieldApi.handleChange(e.target.value)}
+          onBlur={fieldApi.handleBlur}
+          className={cn(
+            'text-2xl font-bold h-12 bg-white',
+            fieldApi.state.meta.errors.length > 0 ? 'border-destructive' : 'border-outline-variant/30',
+          )}
+          data-testid={`field-${name}`}
+        />
+        <span className="text-sm font-semibold text-muted-foreground shrink-0">{unit}</span>
+      </div>
+      {fieldApi.state.meta.errors.length > 0 && (
+        <p className="text-sm text-destructive">{fieldApi.state.meta.errors[0]}</p>
+      )}
+    </div>
+  );
+}
+
 // ─── mutations ────────────────────────────────────────────────────────────────
 
 function useCustomFoodMutation(foodId: string | undefined) {
@@ -106,6 +170,16 @@ function useCustomFoodMutation(foodId: string | undefined) {
   });
 }
 
+// ─── step label ───────────────────────────────────────────────────────────────
+
+function StepLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">
+      {children}
+    </p>
+  );
+}
+
 // ─── component ───────────────────────────────────────────────────────────────
 
 export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
@@ -121,7 +195,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
     name: initialFood?.name ?? '',
     brandName: initialFood?.brandName ?? '',
     servingQty: (initialFood?.servingQty ?? '') as unknown as number,
-    servingUnit: initialFood?.servingUnit ?? '',
+    servingUnit: (initialFood?.servingUnit as ServingUnit | undefined) ?? undefined,
     servingWeightGrams: (initialFood?.servingWeightGrams ?? '') as unknown as number,
     calories: (initialFood?.calories != null ? String(initialFood.calories) : '') as unknown as number,
     protein: (initialFood?.protein != null ? String(initialFood.protein) : '') as unknown as number,
@@ -180,7 +254,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
       name: initialFood.name ?? '',
       brandName: initialFood.brandName ?? '',
       servingQty: (initialFood.servingQty != null ? String(initialFood.servingQty) : '') as unknown as number,
-      servingUnit: initialFood.servingUnit ?? '',
+      servingUnit: (initialFood.servingUnit as ServingUnit | undefined) ?? undefined,
       servingWeightGrams: (initialFood.servingWeightGrams != null ? String(initialFood.servingWeightGrams) : '') as unknown as number,
       calories: (initialFood.calories != null ? String(initialFood.calories) : '') as unknown as number,
       protein: (initialFood.protein != null ? String(initialFood.protein) : '') as unknown as number,
@@ -194,24 +268,26 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
   }, [initialFood]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-      <div className="mb-8">
-        <Link
-          href="/my-foods"
-          className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-foreground transition-colors mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          My Foods
-        </Link>
-        <h1 className="text-4xl font-headline font-bold text-foreground">
-          {isEdit ? 'Edit Food' : 'Create Food'}
-        </h1>
-        <p className="text-on-surface-variant mt-1">
-          {isEdit
-            ? 'Update nutrition values (per 100g)'
-            : 'Define a custom food with your own nutrition values (per 100g)'}
-        </p>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16">
+      {/* Back link */}
+      <Link
+        href="/my-foods"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        My Foods
+      </Link>
+
+      {/* Page header */}
+      <PageHeader
+        title={isEdit ? (initialFood?.name ?? 'Edit Food') : 'Create Food'}
+        subtitle={
+          isEdit
+            ? (initialFood?.brandName ?? 'Update nutrition values (per 100g)')
+            : 'Define a custom food with your own nutrition values (per 100g)'
+        }
+        className="mb-5"
+      />
 
       <form
         onSubmit={(e) => {
@@ -219,11 +295,11 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           e.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-6"
+        className="space-y-10"
       >
-        {/* Photo — always shown, outside TanStack Form */}
-        <div className="rounded-xl border border-outline-variant/20 p-5 bg-surface-container-lowest">
-          <h2 className="text-sm font-bold text-foreground mb-4">Photo</h2>
+        {/* Step 1: Photo */}
+        <section>
+          <StepLabel>Step 1: Food Photo</StepLabel>
           <PhotoUploader
             currentThumb={isEdit ? (initialFood?.images?.thumb ?? null) : null}
             uploadUrl={isEdit && foodId ? `/api/foods/custom/${foodId}/photo` : undefined}
@@ -232,157 +308,204 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
             onDeleted={isEdit ? () => qc.invalidateQueries({ queryKey: ['foods', 'custom'] }) : undefined}
             disabled={mutation.isPending}
           />
-        </div>
+        </section>
 
-        {/* Basic info */}
-        <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-surface-container-lowest">
-          <h2 className="text-sm font-bold text-foreground">Basic Information</h2>
-
-          <form.Field
-            name="name"
-            validators={{ onChange: zodValidator(customFoodFormSchema.shape.name), onSubmit: zodValidator(customFoodFormSchema.shape.name) }}
-          >
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-xs font-semibold">Name *</Label>
-                <Input
-                  id="name"
-                  value={field.state.value as string}
-                  onChange={(e) => field.handleChange(e.target.value as never)}
-                  onBlur={field.handleBlur}
-                  placeholder="e.g., Homemade Granola"
-                  className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
-                  data-testid="field-name"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+        {/* Step 2: General Info */}
+        <section>
+          <StepLabel>Step 2: General Info</StepLabel>
+          <div className="rounded-xl border border-outline-variant/20 p-6 bg-surface-container-lowest space-y-6">
+            {/* Name + Brand */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form.Field
+                name="name"
+                validators={{ onChange: zodValidator(customFoodFormSchema.shape.name), onSubmit: zodValidator(customFoodFormSchema.shape.name) }}
+              >
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-xs font-semibold">Food Name *</Label>
+                    <Input
+                      id="name"
+                      value={field.state.value as string}
+                      onChange={(e) => field.handleChange(e.target.value as never)}
+                      onBlur={field.handleBlur}
+                      placeholder="e.g., Homemade Granola"
+                      className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
+                      data-testid="field-name"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </form.Field>
+              </form.Field>
 
-          <form.Field
-            name="brandName"
-            validators={{ onChange: zodValidator(customFoodFormSchema.shape.brandName) }}
-          >
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="brandName" className="text-xs font-semibold">Brand Name</Label>
-                <Input
-                  id="brandName"
-                  value={field.state.value as string}
-                  onChange={(e) => field.handleChange(e.target.value as never)}
-                  onBlur={field.handleBlur}
-                  placeholder="Optional"
-                  className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
-                  data-testid="field-brandName"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+              <form.Field
+                name="brandName"
+                validators={{ onChange: zodValidator(customFoodFormSchema.shape.brandName) }}
+              >
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="brandName" className="text-xs font-semibold">
+                      Brand Name <span className="font-normal text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id="brandName"
+                      value={field.state.value as string}
+                      onChange={(e) => field.handleChange(e.target.value as never)}
+                      onBlur={field.handleBlur}
+                      placeholder="e.g., Chobani"
+                      className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
+                      data-testid="field-brandName"
+                    />
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </form.Field>
+              </form.Field>
+            </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <form.Field
-              name="servingQty"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingQty) }}
-            >
-              {(field) => <NumberField label="Serving Qty" name="servingQty" fieldApi={field} />}
-            </form.Field>
+            {/* Serving fields */}
+            <div className="grid grid-cols-3 gap-4">
+              <form.Field
+                name="servingQty"
+                validators={{
+                  onChange: zodValidator(customFoodFormSchema.shape.servingQty),
+                  onSubmit: ({ value }) => (!value && value !== 0 ? 'Serving qty is required' : undefined),
+                }}
+              >
+                {(field) => <NumberField label="Serving Qty" name="servingQty" fieldApi={field} required />}
+              </form.Field>
 
-            <form.Field
-              name="servingUnit"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingUnit) }}
-            >
-              {(field) => (
-                <div className="space-y-1.5">
-                  <Label htmlFor="servingUnit" className="text-xs font-semibold">Serving Unit</Label>
-                  <Input
-                    id="servingUnit"
-                    value={field.state.value as string}
-                    onChange={(e) => field.handleChange(e.target.value as never)}
-                    onBlur={field.handleBlur}
-                    placeholder="g, cup, tbsp…"
-                    className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
-                    data-testid="field-servingUnit"
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-sm text-destructive">{field.state.meta.errors[0]}</p>
-                  )}
-                </div>
-              )}
-            </form.Field>
+              <form.Field
+                name="servingUnit"
+                validators={{
+                  onChange: zodValidator(customFoodFormSchema.shape.servingUnit),
+                  onSubmit: ({ value }) => (!value ? 'Serving unit is required' : undefined),
+                }}
+              >
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="servingUnit" className="text-xs font-semibold">Serving Unit *</Label>
+                    <ServingUnitSelect
+                      id="servingUnit"
+                      value={field.state.value as string}
+                      onChange={(v) => field.handleChange(v as never)}
+                      error={field.state.meta.errors[0] as string | undefined}
+                      disabled={mutation.isPending}
+                    />
+                  </div>
+                )}
+              </form.Field>
 
-            <form.Field
-              name="servingWeightGrams"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.servingWeightGrams) }}
-            >
-              {(field) => <NumberField label="Serving Weight" name="servingWeightGrams" fieldApi={field} unit="g" />}
-            </form.Field>
+              <form.Field
+                name="servingWeightGrams"
+                validators={{
+                  onChange: zodValidator(customFoodFormSchema.shape.servingWeightGrams),
+                  onSubmit: ({ value }) => (!value && value !== 0 ? 'Weight is required' : undefined),
+                }}
+              >
+                {(field) => <NumberField label="Weight" name="servingWeightGrams" fieldApi={field} required unit="g" />}
+              </form.Field>
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* Macros */}
-        <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-surface-container-lowest">
-          <h2 className="text-sm font-bold text-foreground">
-            Macros <span className="font-normal text-muted-foreground">(per 100g)</span>
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
+        {/* Step 3: Nutrition Details */}
+        <section>
+          <StepLabel>Step 3: Nutrition Details (per 100g)</StepLabel>
+
+          {/* Macro cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <form.Field
               name="calories"
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.calories), onSubmit: zodValidator(customFoodFormSchema.shape.calories) }}
             >
-              {(field) => <NumberField label="Calories" name="calories" fieldApi={field} required unit="kcal" />}
+              {(field) => (
+                <MacroCard label="Calories" name="calories" fieldApi={field} unit="kcal" />
+              )}
             </form.Field>
+
             <form.Field
               name="protein"
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.protein), onSubmit: zodValidator(customFoodFormSchema.shape.protein) }}
             >
-              {(field) => <NumberField label="Protein" name="protein" fieldApi={field} required unit="g" />}
+              {(field) => (
+                <MacroCard
+                  label="Protein"
+                  name="protein"
+                  fieldApi={field}
+                  unit="g"
+                  bgClass={cn(MACRO_CELL_BG.protein, 'border-outline-variant/20')}
+                  textClass={MACRO_CELL_TEXT.protein}
+                  borderClass={MACRO_CELL_BORDER.protein}
+                />
+              )}
             </form.Field>
+
             <form.Field
               name="carbs"
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.carbs), onSubmit: zodValidator(customFoodFormSchema.shape.carbs) }}
             >
-              {(field) => <NumberField label="Carbohydrates" name="carbs" fieldApi={field} required unit="g" />}
+              {(field) => (
+                <MacroCard
+                  label="Carbs"
+                  name="carbs"
+                  fieldApi={field}
+                  unit="g"
+                  bgClass={cn(MACRO_CELL_BG.carbs, 'border-outline-variant/20')}
+                  textClass={MACRO_CELL_TEXT.carbs}
+                  borderClass={MACRO_CELL_BORDER.carbs}
+                />
+              )}
             </form.Field>
+
             <form.Field
               name="fat"
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.fat), onSubmit: zodValidator(customFoodFormSchema.shape.fat) }}
             >
-              {(field) => <NumberField label="Fat" name="fat" fieldApi={field} required unit="g" />}
+              {(field) => (
+                <MacroCard
+                  label="Fat"
+                  name="fat"
+                  fieldApi={field}
+                  unit="g"
+                  bgClass={cn(MACRO_CELL_BG.fat, 'border-outline-variant/20')}
+                  textClass={MACRO_CELL_TEXT.fat}
+                  borderClass={MACRO_CELL_BORDER.fat}
+                />
+              )}
             </form.Field>
           </div>
-        </div>
 
-        {/* Optional nutrients */}
-        <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-surface-container-lowest">
-          <h2 className="text-sm font-bold text-foreground">
-            Additional Nutrients <span className="font-normal text-muted-foreground">(optional, per 100g)</span>
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <form.Field
-              name="fiber"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.fiber) }}
-            >
-              {(field) => <NumberField label="Fiber" name="fiber" fieldApi={field} unit="g" />}
-            </form.Field>
-            <form.Field
-              name="sugar"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.sugar) }}
-            >
-              {(field) => <NumberField label="Sugar" name="sugar" fieldApi={field} unit="g" />}
-            </form.Field>
-            <form.Field
-              name="sodium"
-              validators={{ onChange: zodValidator(customFoodFormSchema.shape.sodium) }}
-            >
-              {(field) => <NumberField label="Sodium" name="sodium" fieldApi={field} unit="mg" />}
-            </form.Field>
+          {/* Additional nutrients */}
+          <div className="rounded-xl border border-outline-variant/20 p-6 bg-surface-container-lowest mt-4">
+            <div className="flex items-baseline gap-2 mb-4">
+              <p className="text-sm font-bold text-foreground">Additional Nutrients</p>
+              <span className="text-xs text-muted-foreground">(optional)</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <form.Field
+                name="fiber"
+                validators={{ onChange: zodValidator(customFoodFormSchema.shape.fiber) }}
+              >
+                {(field) => <NumberField label="Fiber" name="fiber" fieldApi={field} unit="g" />}
+              </form.Field>
+              <form.Field
+                name="sugar"
+                validators={{ onChange: zodValidator(customFoodFormSchema.shape.sugar) }}
+              >
+                {(field) => <NumberField label="Sugar" name="sugar" fieldApi={field} unit="g" />}
+              </form.Field>
+              <form.Field
+                name="sodium"
+                validators={{ onChange: zodValidator(customFoodFormSchema.shape.sodium) }}
+              >
+                {(field) => <NumberField label="Sodium" name="sodium" fieldApi={field} unit="mg" />}
+              </form.Field>
+            </div>
           </div>
-        </div>
+        </section>
 
         {mutation.error && (
           <p className="text-sm text-destructive">
@@ -390,12 +513,17 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           </p>
         )}
 
-        <div className="flex gap-3">
+        {/* Footer actions */}
+        <div className="flex gap-3 pt-2">
+          <Button variant="outline" asChild>
+            <Link href="/my-foods">Cancel</Link>
+          </Button>
           <form.Subscribe selector={(state) => [state.isSubmitting]}>
             {([isSubmitting]) => (
               <Button
                 type="submit"
                 disabled={isSubmitting || mutation.isPending}
+                className="flex-1"
                 data-testid={isEdit ? 'submit-edit-food' : 'submit-create-food'}
               >
                 {isSubmitting || mutation.isPending
@@ -404,9 +532,6 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               </Button>
             )}
           </form.Subscribe>
-          <Button variant="outline" asChild>
-            <Link href="/my-foods">Cancel</Link>
-          </Button>
         </div>
       </form>
     </div>
