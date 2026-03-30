@@ -24,7 +24,7 @@ export default function LegalLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 py-4">
@@ -42,7 +42,7 @@ export default function LegalLayout({
       </div>
 
       {/* Main Content */}
-      <main>
+      <main className="flex-1">
         {children}
       </main>
 

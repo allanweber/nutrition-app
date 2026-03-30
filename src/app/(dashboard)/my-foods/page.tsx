@@ -141,7 +141,7 @@ export default function MyFoodsPage() {
   };
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
       <PageHeader
         overline="My Library"
         title="Custom Foods and Dishes"
