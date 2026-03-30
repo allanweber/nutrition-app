@@ -481,7 +481,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
           )}
           <p className="text-xs text-on-surface-variant">
             {log.altMeasure
-              ? `${log.altMeasure.description}`
+              ? `${+(log.quantity / log.altMeasure.weightGrams).toFixed(2)} ${log.altMeasure.description}`
               : `${log.quantity}g`}
           </p>
           <div className="flex items-center gap-1 mt-1 flex-wrap">

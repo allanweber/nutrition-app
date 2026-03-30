@@ -74,13 +74,20 @@ export async function GET(request: NextRequest) {
       .map((r) => r.altMeasure)
       .filter((m): m is NonNullable<typeof m> => m !== null);
 
-    const baseCalories = parseFloat(food.calories!);
-    const baseProtein = parseFloat(food.protein ?? '0');
-    const baseCarbs = parseFloat(food.carbs ?? '0');
-    const baseFat = parseFloat(food.fat ?? '0');
-    const baseFiber = food.fiber ? parseFloat(food.fiber) : null;
-    const baseSugar = food.sugar ? parseFloat(food.sugar) : null;
-    const baseSodium = food.sodium ? parseFloat(food.sodium) : null;
+    // Custom foods store nutrition per-serving; normalize to per-100g so all
+    // downstream calculations (baseServing display, serving synthesis) are consistent.
+    const normFactor =
+      food.source === 'user_custom' && food.servingWeightGrams
+        ? 100 / parseFloat(food.servingWeightGrams)
+        : 1;
+
+    const baseCalories = parseFloat(food.calories!) * normFactor;
+    const baseProtein = parseFloat(food.protein ?? '0') * normFactor;
+    const baseCarbs = parseFloat(food.carbs ?? '0') * normFactor;
+    const baseFat = parseFloat(food.fat ?? '0') * normFactor;
+    const baseFiber = food.fiber ? parseFloat(food.fiber) * normFactor : null;
+    const baseSugar = food.sugar ? parseFloat(food.sugar) * normFactor : null;
+    const baseSodium = food.sodium ? parseFloat(food.sodium) * normFactor : null;
 
     function round(value: number, decimals = 2): number {
       return parseFloat(value.toFixed(decimals));
