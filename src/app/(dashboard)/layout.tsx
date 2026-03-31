@@ -31,7 +31,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
       <DashboardNav
         user={{
           name: user.name,
@@ -41,7 +41,7 @@ export default async function DashboardLayout({
       />
 
       {/* Main content */}
-      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-6">
+      <main className="flex-1 max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-16 pb-6">
         {children}
       </main>
 

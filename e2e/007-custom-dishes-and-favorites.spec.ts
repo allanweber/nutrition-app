@@ -145,7 +145,7 @@ test.describe('007: Edit dish', () => {
     await expect(page).toHaveURL(/\/my-foods\/dishes\/[\w-]+\/edit/);
 
     // Should show ingredient count > 0 (the seeded dish has 3 ingredients)
-    await expect(page.getByText(/\(3\)/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/3 items/)).toBeVisible({ timeout: 10000 });
   });
 });
 

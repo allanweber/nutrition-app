@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
   SortingState,
@@ -92,6 +93,7 @@ export function NutritionItemsTable<T>({
   emptyDescription = 'Add your first entry to get started.',
   searchPlaceholder = 'Filter by name...',
 }: NutritionItemsTableProps<T>) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -189,7 +191,7 @@ export function NutritionItemsTable<T>({
           : `confirm-delete-${id}`;
 
         return (
-          <div className="flex justify-center items-center gap-1">
+          <div className="flex justify-center items-center gap-1" onClick={(e) => e.stopPropagation()}>
             <Button
               variant="ghost"
               size="icon"
@@ -376,7 +378,8 @@ export function NutritionItemsTable<T>({
                     <TableRow
                       key={row.id}
                       data-testid={rowTestId}
-                      className="group hover:bg-surface-container-low/40 transition-colors duration-150"
+                      className="group hover:bg-surface-container-low/40 transition-colors duration-150 cursor-pointer"
+                      onClick={() => router.push(config.getEditHref(row.original))}
                     >
                       {row.getVisibleCells().map((cell) => {
                         const macro = config.macros.find(

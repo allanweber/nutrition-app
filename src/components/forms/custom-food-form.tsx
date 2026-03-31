@@ -515,7 +515,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
 
         {/* Footer actions */}
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="flex-1">
             <Link href="/my-foods">Cancel</Link>
           </Button>
           <form.Subscribe selector={(state) => [state.isSubmitting]}>
@@ -523,7 +523,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               <Button
                 type="submit"
                 disabled={isSubmitting || mutation.isPending}
-                className="flex-1"
+                className="flex-2"
                 data-testid={isEdit ? 'submit-edit-food' : 'submit-create-food'}
               >
                 {isSubmitting || mutation.isPending

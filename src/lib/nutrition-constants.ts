@@ -89,3 +89,10 @@ export const MACRO_CELL_BORDER = {
   carbs:   'border-l-[#CC7A40] dark:border-l-amber-400',
   fat:     'border-l-[#408FBE] dark:border-l-sky-400',
 } as const;
+
+/** Background, text, and fill color classes for fiber, sugar, and sodium */
+export const NUTRIENT_COLORS = {
+  fiber:  { bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', fill: 'bg-[#7E22CE]' },
+  sugar:  { bg: 'bg-[#FFF1F2]', text: 'text-[#E11D48]', fill: 'bg-[#E11D48]' },
+  sodium: { bg: 'bg-[#F1F5F9]', text: 'text-[#475569]', fill: 'bg-[#475569]' },
+} as const;
