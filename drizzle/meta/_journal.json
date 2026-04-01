@@ -8,6 +8,13 @@
       "when": 1775029490626,
       "tag": "0000_empty_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775031634915,
+      "tag": "0001_left_bastion",
+      "breakpoints": true
     }
   ]
 }

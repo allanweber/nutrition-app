@@ -230,6 +230,34 @@ export const dishLogFormSchema = z.object({
 })
 
 // ============================================
+// DIET PLAN SCHEMA — mirrors: dietPlans table
+// ============================================
+
+export const dietPlanFormSchema = z.object({
+  name: z.string().min(1, 'Plan name is required').max(255, 'Name must be at most 255 characters'),
+  description: z.string().optional(),
+  targetCalories: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : Number(v)),
+    z.number({ error: 'Calories are required' }).positive('Must be positive'),
+  ),
+  targetProtein: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : Number(v)),
+    z.number({ error: 'Protein is required' }).positive('Must be positive'),
+  ),
+  targetCarbs: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : Number(v)),
+    z.number({ error: 'Carbs are required' }).positive('Must be positive'),
+  ),
+  targetFat: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : Number(v)),
+    z.number({ error: 'Fat is required' }).positive('Must be positive'),
+  ),
+  startDate: z.coerce.date({ error: 'Start date is required' }),
+  endDate: z.coerce.date().optional(),
+  status: z.enum(['active', 'draft', 'archived']),
+})
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -243,3 +271,4 @@ export type CustomFoodFormData = z.infer<typeof customFoodFormSchema>
 export type CustomDishFormData = z.infer<typeof customDishFormSchema>
 export type FoodLogFormData = z.infer<typeof foodLogFormSchema>
 export type DishLogFormData = z.infer<typeof dishLogFormSchema>
+export type DietPlanFormData = z.infer<typeof dietPlanFormSchema>

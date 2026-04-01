@@ -1,30 +1,17 @@
-import { CalendarDays } from 'lucide-react';
-import { CreatePlanButton } from '@/components/create-action-buttons';
-import { PageHeader } from '@/components/page-header';
+import { MealPlannerClient } from '@/components/meal-planner/meal-planner-client';
 
-export default function MealPlannerPage() {
+export default async function MealPlannerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ planId?: string; day?: string }>
+}) {
+  const { planId, day } = await searchParams;
+  const initialDay = day ? parseInt(day, 10) : 1;
+
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
-      <PageHeader
-        overline="Planning"
-        title="Meal Planner"
-        subtitle="Plan your meals for the week ahead"
-      >
-        <CreatePlanButton variant="primary" />
-      </PageHeader>
-
-      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center">
-          <CalendarDays className="h-8 w-8 text-on-surface-variant/40" />
-        </div>
-        <h2 className="text-xl font-bold text-foreground">No meal plans yet</h2>
-        <p className="text-sm text-on-surface-variant max-w-sm">
-          Build weekly meal plans, track nutritional targets, and stay consistent with your diet goals.
-        </p>
-        <div className="mt-2">
-          <CreatePlanButton variant="primary" />
-        </div>
-      </div>
-    </div>
+    <MealPlannerClient
+      initialPlanId={planId ?? null}
+      initialDay={isNaN(initialDay) || initialDay < 1 || initialDay > 7 ? 1 : initialDay}
+    />
   );
 }

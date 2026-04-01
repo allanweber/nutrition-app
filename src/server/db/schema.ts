@@ -444,7 +444,7 @@ export const dietPlanMeals = pgTable(
       .notNull()
       .references(() => dietPlans.id, { onDelete: 'cascade' }),
     mealType: mealTypeEnum('meal_type').notNull(),
-    dayOfWeek: integer('day_of_week'),
+    dayOfWeek: integer('day_of_week').notNull(),
     scheduledAt: timestamp('scheduled_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

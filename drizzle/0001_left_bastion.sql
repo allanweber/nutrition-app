@@ -1,0 +1,1 @@
+ALTER TABLE "diet_plan_meals" ALTER COLUMN "day_of_week" SET NOT NULL;
