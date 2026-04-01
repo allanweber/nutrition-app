@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vitalis Pro | Weekly Macro Balancer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface": "#191c1d",
+                        "inverse-primary": "#91d78a",
+                        "on-secondary-fixed": "#071e27",
+                        "inverse-on-surface": "#eff1f2",
+                        "on-surface-variant": "#40493d",
+                        "surface-container": "#eceeef",
+                        "on-secondary-container": "#526772",
+                        "primary": "#206223",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#ffd9e2",
+                        "outline": "#707a6c",
+                        "tertiary-container": "#b14b6f",
+                        "tertiary": "#923357",
+                        "surface-dim": "#d8dadb",
+                        "primary-container": "#3a7b3a",
+                        "tertiary-fixed-dim": "#ffb1c7",
+                        "on-primary-fixed-variant": "#0c5216",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#354a53",
+                        "on-primary-fixed": "#002203",
+                        "surface-variant": "#e1e3e4",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1d",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#2a6b2c",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#cfe6f2",
+                        "secondary-fixed-dim": "#b4cad6",
+                        "on-tertiary-fixed-variant": "#7f2448",
+                        "surface-container-high": "#e6e8e9",
+                        "outline-variant": "#bfcaba",
+                        "on-tertiary-container": "#ffedf0",
+                        "surface-container-low": "#f2f4f5",
+                        "surface": "#f8fafb",
+                        "primary-fixed": "#acf4a4",
+                        "on-primary-container": "#cbffc2",
+                        "inverse-surface": "#2e3132",
+                        "secondary-fixed": "#cfe6f2",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8fafb",
+                        "surface-container-highest": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#91d78a",
+                        "secondary": "#4c616c",
+                        "on-tertiary-fixed": "#3f001c",
+                        "surface-bright": "#f8fafb"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased overflow-hidden">
+<div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+<div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[921px]">
+<header class="px-8 py-6 border-b border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<div>
+<h2 class="font-headline text-xl font-extrabold leading-tight">Create Meal</h2>
+<div class="relative mt-1">
+<select class="appearance-none bg-transparent border-none p-0 pr-6 text-sm font-black text-primary uppercase tracking-[0.2em] focus:ring-0 cursor-pointer">
+<option>Breakfast</option>
+<option>Lunch</option>
+<option>Dinner</option>
+<option>Snack</option>
+</select>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-primary text-xs pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-outline">close</span>
+</button>
+</header>
+<div class="flex-1 overflow-y-auto p-8 space-y-8 hide-scrollbar bg-white">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-2 border-transparent focus:border-primary/20 focus:bg-white focus:ring-0 rounded-xl font-medium transition-all text-on-surface placeholder:text-outline/50" placeholder="Search for a food item..." type="text"/>
+</div>
+<div class="space-y-4">
+<h3 class="text-[10px] font-black text-outline uppercase tracking-widest px-1">Selected Items</h3>
+<div class="space-y-3">
+<div class="group flex items-center justify-between p-4 bg-white border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all shadow-sm">
+<div class="flex items-center gap-4 flex-1">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center text-primary overflow-hidden">
+<span class="material-symbols-outlined text-2xl">flatware</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Smoothie Bowl</h4>
+<p class="text-[11px] text-outline font-semibold uppercase tracking-wider mb-2">Original Acai Blend</p>
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-outline/60 uppercase leading-none">kcal</span>
+<span class="text-xs font-bold text-on-surface">240</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-primary/60 uppercase leading-none">prot</span>
+<span class="text-xs font-bold text-primary">8g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-secondary/60 uppercase leading-none">carb</span>
+<span class="text-xs font-bold text-secondary">42g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-tertiary/60 uppercase leading-none">fat</span>
+<span class="text-xs font-bold text-tertiary">4g</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-16 h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary text-center" type="number" value="1"/>
+<select class="w-[140px] h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary pr-8">
+<option>bowl (350g)</option>
+<option>grams</option>
+<option>ounces</option>
+</select>
+<button class="w-10 h-10 flex items-center justify-center text-outline/40 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-4 bg-white border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all shadow-sm">
+<div class="flex items-center gap-4 flex-1">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center text-primary overflow-hidden">
+<span class="material-symbols-outlined text-2xl">eco</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Spinach</h4>
+<p class="text-[11px] text-outline font-semibold uppercase tracking-wider mb-2">Organic Baby Leaves</p>
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-outline/60 uppercase leading-none">kcal</span>
+<span class="text-xs font-bold text-on-surface">15</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-primary/60 uppercase leading-none">prot</span>
+<span class="text-xs font-bold text-primary">1g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-secondary/60 uppercase leading-none">carb</span>
+<span class="text-xs font-bold text-secondary">2g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-tertiary/60 uppercase leading-none">fat</span>
+<span class="text-xs font-bold text-tertiary">0g</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-16 h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary text-center" type="number" value="50"/>
+<select class="w-[140px] h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary pr-8">
+<option>grams</option>
+<option>cups</option>
+<option>servings</option>
+</select>
+<button class="w-10 h-10 flex items-center justify-center text-outline/40 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-4 bg-white border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all shadow-sm">
+<div class="flex items-center gap-4 flex-1">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center text-primary overflow-hidden">
+<span class="material-symbols-outlined text-2xl">egg</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Whey Protein</h4>
+<p class="text-[11px] text-outline font-semibold uppercase tracking-wider mb-2">Vanilla Isolate</p>
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-outline/60 uppercase leading-none">kcal</span>
+<span class="text-xs font-bold text-on-surface">115</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-primary/60 uppercase leading-none">prot</span>
+<span class="text-xs font-bold text-primary">24g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-secondary/60 uppercase leading-none">carb</span>
+<span class="text-xs font-bold text-secondary">3g</span>
+</div>
+<div class="w-px h-4 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[8px] font-black text-tertiary/60 uppercase leading-none">fat</span>
+<span class="text-xs font-bold text-tertiary">2g</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-16 h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary text-center" type="number" value="1"/>
+<select class="w-[140px] h-10 border-outline-variant/30 rounded-lg text-sm font-bold focus:ring-primary focus:border-primary pr-8">
+<option>scoop (30g)</option>
+<option>grams</option>
+</select>
+<button class="w-10 h-10 flex items-center justify-center text-outline/40 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<div class="bg-surface-container-highest/50 px-8 py-6 rounded-2xl border border-outline-variant/30 flex items-center justify-between shadow-sm">
+<div>
+<p class="text-[10px] font-black text-outline-variant uppercase tracking-[0.2em] mb-3">Total Meal Summary</p>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-black text-on-surface">370</span>
+<span class="text-xs font-bold text-outline uppercase tracking-widest">Total Kcal</span>
+</div>
+</div>
+<div class="flex gap-8 text-base font-black">
+<div class="flex flex-col items-end">
+<span class="text-[9px] font-black text-primary/60 uppercase tracking-widest mb-1">Protein</span>
+<span class="text-primary flex items-baseline gap-1 text-xl">33<span class="text-[11px] opacity-70">g</span></span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[9px] font-black text-secondary/60 uppercase tracking-widest mb-1">Carbs</span>
+<span class="text-secondary flex items-baseline gap-1 text-xl">47<span class="text-[11px] opacity-70">g</span></span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[9px] font-black text-tertiary/60 uppercase tracking-widest mb-1">Fats</span>
+<span class="text-tertiary flex items-baseline gap-1 text-xl">6<span class="text-[11px] opacity-70">g</span></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="px-8 py-8 bg-surface-container-low/40 border-t border-outline-variant/20 flex items-center justify-between">
+<button class="px-10 py-4 rounded-xl font-bold text-on-surface-variant border-2 border-outline-variant focus:ring-2 focus:ring-primary/20 hover:bg-surface-container hover:border-outline transition-all">
+                Cancel
+            </button>
+<button class="px-12 py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                Save Meal
+            </button>
+</footer>
+</div>
+</div>
+<main class="py-12 px-6 blur-md pointer-events-none">
+<div class="max-w-[1600px] mx-auto space-y-8">
+<section class="bg-primary-fixed p-8 rounded-xl shadow-sm flex flex-col lg:flex-row items-center gap-12 border border-primary/10">
+<div class="lg:w-1/4 text-center lg:text-left">
+<div class="flex items-center justify-center lg:justify-start gap-3 mb-2 text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<h2 class="font-headline text-2xl font-black">Daily Balance</h2>
+</div>
+<div class="mt-4 flex flex-col items-center lg:items-start">
+<span class="text-xs font-bold text-on-primary-fixed opacity-60 uppercase tracking-widest">Total Progress</span>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-black text-on-primary-fixed">2,350</span>
+<span class="text-sm font-bold text-on-primary-fixed/60">/ 2,500 kcal</span>
+</div>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+<div class="bg-white/40 backdrop-blur-sm p-6 rounded-xl border border-white/50">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-black uppercase tracking-widest text-primary">Protein</span>
+<span class="text-xs font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full">-30g</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="text-2xl font-black text-on-primary-fixed">150g</span>
+<span class="text-lg font-medium text-on-primary-fixed/40">/ 180g</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+
+</body></html>
