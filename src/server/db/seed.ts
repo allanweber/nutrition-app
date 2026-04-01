@@ -2,8 +2,9 @@
  * Database Seed Script
  *
  * Creates sample data for development:
- * - 2 individual users with food logs and nutrition goals
+ * - Individual users with food logs, nutrition goals, and (for 3 users) diet plans
  * - 2 professional users (dietitians)
+ * - Diet plans: weight-loss, muscle-gain, performance users each get active/draft/archived plans
  *
  * Run with: npm run db:seed
  *
@@ -20,7 +21,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { and, eq } from 'drizzle-orm';
 import * as schema from './schema';
-import { subDays, startOfDay, setHours } from 'date-fns';
+import { subDays, addDays, startOfDay, setHours } from 'date-fns';
 import { uuidv7 } from 'uuidv7';
 
 const connectionString = process.env.DATABASE_URL;
@@ -1185,6 +1186,396 @@ async function seedDishesAndFavorites(
   console.log('    - Favorites: 4 (Apple, Chicken Breast, Banana, dish)');
 }
 
+// foodIds index reference:
+// 0=Apple, 1=Banana, 2=Chicken Breast, 3=Brown Rice, 4=Eggs, 5=Oatmeal,
+// 6=Salmon, 7=Salad, 8=Greek Yogurt, 9=Almonds, 10=Pasta, 11=Avocado,
+// 12=Toast, 13=Coffee, 14=Protein Shake
+async function seedDietPlans(
+  userId: string,
+  foodIds: string[],
+  variant: 'weight_loss' | 'muscle_gain' | 'performance',
+  dbInstance: typeof db,
+) {
+  const now = new Date();
+
+  if (variant === 'weight_loss') {
+    // ── ACTIVE: full week, breakfast/morning_snack/lunch/afternoon_snack/dinner ──
+    const [activePlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Balanced Weight Loss — Full Week',
+      description: 'Structured full-week plan with balanced macros for sustainable fat loss.',
+      targetCalories: '1800',
+      targetProtein: '140',
+      targetCarbs: '180',
+      targetFat: '60',
+      startDate: subDays(now, 30),
+      endDate: addDays(now, 60),
+      status: 'active',
+    }).returning();
+
+    for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+      // Breakfast — Sunday is left empty (no items)
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      if (day !== 0) {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: bf.id, foodId: foodIds[4], quantity: '150' },  // Eggs 150g
+          { groupId: bf.id, foodId: foodIds[5], quantity: '200' },  // Oatmeal 200g
+          { groupId: bf.id, foodId: foodIds[13], quantity: '250' }, // Coffee 250g
+        ]);
+      }
+
+      // Morning snack — weekdays only, with items
+      if (day >= 1 && day <= 5) {
+        const [ms] = await dbInstance.insert(schema.dietPlanMeals).values({
+          dietPlanId: activePlan.id, mealType: 'morning_snack', dayOfWeek: day,
+        }).returning();
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: ms.id, foodId: foodIds[0], quantity: '182' }, // Apple
+          { groupId: ms.id, foodId: foodIds[8], quantity: '170' }, // Greek Yogurt
+        ]);
+      }
+
+      // Lunch — all days, with items
+      const [lunch] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'lunch', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: lunch.id, foodId: foodIds[2], quantity: '172' }, // Chicken Breast
+        { groupId: lunch.id, foodId: foodIds[3], quantity: '195' }, // Brown Rice
+        { groupId: lunch.id, foodId: foodIds[7], quantity: '200' }, // Salad
+      ]);
+
+      // Afternoon snack — Mon/Wed/Fri only, almonds
+      if ([1, 3, 5].includes(day)) {
+        const [as] = await dbInstance.insert(schema.dietPlanMeals).values({
+          dietPlanId: activePlan.id, mealType: 'afternoon_snack', dayOfWeek: day,
+        }).returning();
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: as.id, foodId: foodIds[9], quantity: '28' }, // Almonds
+        ]);
+      }
+
+      // Dinner — alternating fish vs pasta
+      const [dinner] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'dinner', dayOfWeek: day,
+      }).returning();
+      if (day % 2 === 0) {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: dinner.id, foodId: foodIds[6], quantity: '154' },  // Salmon
+          { groupId: dinner.id, foodId: foodIds[7], quantity: '200' },  // Salad
+          { groupId: dinner.id, foodId: foodIds[11], quantity: '75' },  // Avocado
+        ]);
+      } else {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: dinner.id, foodId: foodIds[10], quantity: '140' }, // Pasta
+          { groupId: dinner.id, foodId: foodIds[2], quantity: '150' },  // Chicken
+        ]);
+      }
+    }
+
+    // ── DRAFT: Mon–Fri only, breakfast/lunch/dinner; lunch slots left empty ──
+    const [draftPlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Low Carb Experiment',
+      description: 'Draft testing a lower-carb approach on weekdays. Lunch TBD.',
+      targetCalories: '1600',
+      targetProtein: '160',
+      targetCarbs: '100',
+      targetFat: '70',
+      startDate: addDays(now, 61),
+      endDate: addDays(now, 120),
+      status: 'draft',
+    }).returning();
+
+    for (const day of [1, 2, 3, 4, 5]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[4], quantity: '200' },  // Eggs
+        { groupId: bf.id, foodId: foodIds[11], quantity: '75' },  // Avocado
+        { groupId: bf.id, foodId: foodIds[12], quantity: '60' },  // Toast
+      ]);
+
+      // Lunch — no items (placeholder slot)
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'lunch', dayOfWeek: day,
+      });
+
+      const [dinner] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'dinner', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: dinner.id, foodId: foodIds[6], quantity: '154' }, // Salmon
+        { groupId: dinner.id, foodId: foodIds[7], quantity: '200' }, // Salad
+      ]);
+    }
+
+    // ── ARCHIVED: Mon/Wed/Fri, basic 3-meal; lunch and dinner slots empty ──
+    const [archivedPlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Initial Starter Plan',
+      description: 'Original starting plan — archived after first month.',
+      targetCalories: '2000',
+      targetProtein: '120',
+      targetCarbs: '220',
+      targetFat: '70',
+      startDate: subDays(now, 90),
+      endDate: subDays(now, 31),
+      status: 'archived',
+    }).returning();
+
+    for (const day of [1, 3, 5]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[5], quantity: '234' }, // Oatmeal
+        { groupId: bf.id, foodId: foodIds[1], quantity: '118' }, // Banana
+      ]);
+
+      // Lunch and dinner left empty
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'lunch', dayOfWeek: day,
+      });
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'dinner', dayOfWeek: day,
+      });
+    }
+  }
+
+  if (variant === 'muscle_gain') {
+    // ── ACTIVE: Mon–Fri, 5 meal types incl pre/post workout ──
+    const [activePlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Muscle Building — Weekday Split',
+      description: 'High-protein weekday plan with pre and post-workout meals.',
+      targetCalories: '2800',
+      targetProtein: '210',
+      targetCarbs: '280',
+      targetFat: '80',
+      startDate: subDays(now, 14),
+      endDate: addDays(now, 76),
+      status: 'active',
+    }).returning();
+
+    for (const day of [1, 2, 3, 4, 5]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[4], quantity: '200' },  // Eggs
+        { groupId: bf.id, foodId: foodIds[5], quantity: '234' },  // Oatmeal
+        { groupId: bf.id, foodId: foodIds[1], quantity: '118' },  // Banana
+      ]);
+
+      // Pre-workout — protein shake + banana
+      const [pre] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'pre_workout', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: pre.id, foodId: foodIds[14], quantity: '30' },  // Protein Shake
+        { groupId: pre.id, foodId: foodIds[1], quantity: '118' },  // Banana
+      ]);
+
+      // Lunch — chicken + rice + salad
+      const [lunch] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'lunch', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: lunch.id, foodId: foodIds[2], quantity: '200' }, // Chicken
+        { groupId: lunch.id, foodId: foodIds[3], quantity: '195' }, // Brown Rice
+        { groupId: lunch.id, foodId: foodIds[7], quantity: '150' }, // Salad
+      ]);
+
+      // Post-workout — protein shake only (empty on Wed)
+      const [post] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'post_workout', dayOfWeek: day,
+      }).returning();
+      if (day !== 3) {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: post.id, foodId: foodIds[14], quantity: '30' }, // Protein Shake
+        ]);
+      }
+
+      // Dinner
+      const [dinner] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'dinner', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: dinner.id, foodId: foodIds[6], quantity: '200' },  // Salmon
+        { groupId: dinner.id, foodId: foodIds[3], quantity: '195' },  // Brown Rice
+        { groupId: dinner.id, foodId: foodIds[11], quantity: '100' }, // Avocado
+      ]);
+    }
+
+    // ── DRAFT: 3 days (Mon/Wed/Fri), heavier calorie bulk variation ──
+    const [draftPlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Aggressive Bulk Draft',
+      description: 'Higher calorie draft for faster mass gain phase. Under review.',
+      targetCalories: '3200',
+      targetProtein: '240',
+      targetCarbs: '360',
+      targetFat: '100',
+      startDate: addDays(now, 77),
+      status: 'draft',
+    }).returning();
+
+    for (const day of [1, 3, 5]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[4], quantity: '250' },  // Eggs
+        { groupId: bf.id, foodId: foodIds[5], quantity: '300' },  // Oatmeal
+        { groupId: bf.id, foodId: foodIds[14], quantity: '30' },  // Protein Shake
+      ]);
+
+      // Lunch — no items yet (TBD)
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'lunch', dayOfWeek: day,
+      });
+
+      const [snack] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'afternoon_snack', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: snack.id, foodId: foodIds[9], quantity: '56' },  // Almonds x2
+        { groupId: snack.id, foodId: foodIds[8], quantity: '170' }, // Greek Yogurt
+      ]);
+
+      // Dinner — no items yet (TBD)
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: draftPlan.id, mealType: 'dinner', dayOfWeek: day,
+      });
+    }
+
+    // ── ARCHIVED: full week, basic 3 meals, minimal items ──
+    const [archivedPlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Off-Season Base Plan',
+      description: 'General maintenance plan used during off-season. Now archived.',
+      targetCalories: '2400',
+      targetProtein: '180',
+      targetCarbs: '240',
+      targetFat: '80',
+      startDate: subDays(now, 120),
+      endDate: subDays(now, 15),
+      status: 'archived',
+    }).returning();
+
+    for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[4], quantity: '150' }, // Eggs
+        { groupId: bf.id, foodId: foodIds[5], quantity: '234' }, // Oatmeal
+      ]);
+
+      // Lunch — no items
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'lunch', dayOfWeek: day,
+      });
+
+      // Dinner — no items
+      await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: archivedPlan.id, mealType: 'dinner', dayOfWeek: day,
+      });
+    }
+  }
+
+  if (variant === 'performance') {
+    // ── ACTIVE: Mon–Sat, varied meals; some days have snacks ──
+    const [activePlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Performance Nutrition Plan',
+      description: 'Sport-focused plan with emphasis on fueling and recovery.',
+      targetCalories: '2500',
+      targetProtein: '180',
+      targetCarbs: '300',
+      targetFat: '75',
+      startDate: subDays(now, 7),
+      endDate: addDays(now, 83),
+      status: 'active',
+    }).returning();
+
+    for (const day of [1, 2, 3, 4, 5, 6]) {
+      const [bf] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'breakfast', dayOfWeek: day,
+      }).returning();
+      await dbInstance.insert(schema.dietPlanMealItems).values([
+        { groupId: bf.id, foodId: foodIds[5], quantity: '234' }, // Oatmeal
+        { groupId: bf.id, foodId: foodIds[1], quantity: '118' }, // Banana
+        { groupId: bf.id, foodId: foodIds[8], quantity: '170' }, // Greek Yogurt
+      ]);
+
+      // Pre-workout only on training days (Mon/Wed/Fri/Sat)
+      if ([1, 3, 5, 6].includes(day)) {
+        const [pre] = await dbInstance.insert(schema.dietPlanMeals).values({
+          dietPlanId: activePlan.id, mealType: 'pre_workout', dayOfWeek: day,
+        }).returning();
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: pre.id, foodId: foodIds[14], quantity: '30' }, // Protein Shake
+          { groupId: pre.id, foodId: foodIds[0], quantity: '182' }, // Apple
+        ]);
+      }
+
+      // Lunch
+      const [lunch] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'lunch', dayOfWeek: day,
+      }).returning();
+      if (day <= 3) {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: lunch.id, foodId: foodIds[2], quantity: '172' },  // Chicken
+          { groupId: lunch.id, foodId: foodIds[3], quantity: '195' },  // Brown Rice
+          { groupId: lunch.id, foodId: foodIds[11], quantity: '75' },  // Avocado
+        ]);
+      } else {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: lunch.id, foodId: foodIds[10], quantity: '140' }, // Pasta
+          { groupId: lunch.id, foodId: foodIds[7], quantity: '200' },  // Salad
+        ]);
+      }
+
+      // Dinner — no items on Sat (rest day, flexible)
+      const [dinner] = await dbInstance.insert(schema.dietPlanMeals).values({
+        dietPlanId: activePlan.id, mealType: 'dinner', dayOfWeek: day,
+      }).returning();
+      if (day !== 6) {
+        await dbInstance.insert(schema.dietPlanMealItems).values([
+          { groupId: dinner.id, foodId: foodIds[6], quantity: '154' },  // Salmon
+          { groupId: dinner.id, foodId: foodIds[3], quantity: '195' },  // Brown Rice
+        ]);
+      }
+    }
+
+    // ── DRAFT: 3-day split, multiple meal types, no items yet ──
+    const [draftPlan] = await dbInstance.insert(schema.dietPlans).values({
+      clientId: userId,
+      name: 'Competition Prep Draft',
+      description: 'Stricter plan being designed for competition season. Incomplete.',
+      targetCalories: '2200',
+      targetProtein: '200',
+      targetCarbs: '220',
+      targetFat: '65',
+      startDate: addDays(now, 84),
+      status: 'draft',
+    }).returning();
+
+    for (const day of [1, 3, 5]) {
+      for (const mealType of ['breakfast', 'lunch', 'post_workout', 'dinner'] as const) {
+        await dbInstance.insert(schema.dietPlanMeals).values({
+          dietPlanId: draftPlan.id, mealType, dayOfWeek: day,
+        });
+      }
+    }
+  }
+}
+
 async function seed() {
   console.log('Starting database seed...\n');
   console.log(`Using auth API at: ${baseUrl}`);
@@ -1295,6 +1686,15 @@ async function seed() {
         await seedDishesAndFavorites(userId, foodIds, db);
       }
 
+      // Insert diet plans for selected users
+      if (userDef.email === 'user.weight-loss@example.com') {
+        await seedDietPlans(userId, foodIds, 'weight_loss', db);
+      } else if (userDef.email === 'user.muscle-gain@example.com') {
+        await seedDietPlans(userId, foodIds, 'muscle_gain', db);
+      } else if (userDef.email === 'user.performance@example.com') {
+        await seedDietPlans(userId, foodIds, 'performance', db);
+      }
+
       // Generate and insert food logs
       const foodLogs = generateFoodLogs(
         userId,
@@ -1304,11 +1704,13 @@ async function seed() {
 
       await insertGroupedFoodLogs(userId, foodLogs);
 
+      const hasDietPlans = ['user.weight-loss@example.com', 'user.muscle-gain@example.com', 'user.performance@example.com'].includes(userDef.email);
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);
       console.log(`    - Role: ${userDef.role}`);
       console.log(`    - Goal: ${userDef.goal.goalType}`);
       console.log(`    - Custom foods: ${customFoods?.length ?? 0} entries`);
       console.log(`    - Food logs: ${foodLogs.length} entries`);
+      if (hasDietPlans) console.log(`    - Diet plans: 3 (active, draft, archived)`);
     }
 
     // 4. Create professional users via API

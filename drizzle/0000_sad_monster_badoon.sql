@@ -1,3 +1,4 @@
+CREATE TYPE "public"."diet_plan_status" AS ENUM('active', 'draft', 'archived');--> statement-breakpoint
 CREATE TYPE "public"."goal_type" AS ENUM('weight_loss', 'maintenance', 'weight_gain', 'muscle_gain', 'fat_loss', 'performance', 'general_health');--> statement-breakpoint
 CREATE TYPE "public"."meal_type" AS ENUM('breakfast', 'lunch', 'dinner', 'snack', 'morning_snack', 'afternoon_snack', 'evening_snack', 'pre_workout', 'post_workout', 'other');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('individual', 'professional', 'admin');--> statement-breakpoint
@@ -82,7 +83,7 @@ CREATE TABLE "diet_plans" (
 	"target_fat" numeric(10, 2),
 	"start_date" timestamp NOT NULL,
 	"end_date" timestamp,
-	"is_active" boolean DEFAULT true,
+	"status" "diet_plan_status" DEFAULT 'draft' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -319,6 +320,7 @@ CREATE INDEX "diet_plan_meal_items_food_id_idx" ON "diet_plan_meal_items" USING 
 CREATE INDEX "diet_plan_meals_diet_plan_id_idx" ON "diet_plan_meals" USING btree ("diet_plan_id");--> statement-breakpoint
 CREATE INDEX "diet_plan_meals_plan_day_meal_type_idx" ON "diet_plan_meals" USING btree ("diet_plan_id","day_of_week","meal_type");--> statement-breakpoint
 CREATE INDEX "diet_plans_client_id_idx" ON "diet_plans" USING btree ("client_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "diet_plans_one_active_per_client" ON "diet_plans" USING btree ("client_id") WHERE "diet_plans"."status" = 'active';--> statement-breakpoint
 CREATE INDEX "dish_photos_dish_id_idx" ON "dish_photos" USING btree ("dish_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_user_id_idx" ON "email_verification_challenge" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "email_verification_challenge_email_idx" ON "email_verification_challenge" USING btree ("email");--> statement-breakpoint

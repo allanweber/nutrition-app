@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -48,6 +49,11 @@ export const verificationStatusEnum = pgEnum('verification_status', [
   'pending',
   'verified',
   'rejected',
+]);
+export const dietPlanStatusEnum = pgEnum('diet_plan_status', [
+  'active',
+  'draft',
+  'archived',
 ]);
 
 export const users = pgTable(
@@ -419,12 +425,13 @@ export const dietPlans = pgTable(
     targetFat: decimal('target_fat', { precision: 10, scale: 2 }),
     startDate: timestamp('start_date').notNull(),
     endDate: timestamp('end_date'),
-    isActive: boolean('is_active').default(true),
+    status: dietPlanStatusEnum('status').default('draft').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
     index('diet_plans_client_id_idx').on(table.clientId),
+    uniqueIndex('diet_plans_one_active_per_client').on(table.clientId).where(sql`${table.status} = 'active'`),
   ],
 );
 

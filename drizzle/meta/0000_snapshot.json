@@ -1,5 +1,5 @@
 {
-  "id": "5644f6dc-7fff-47d9-955b-6dc43c5559ad",
+  "id": "47703d5f-760d-4bec-acbc-d30df7740aa4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -838,12 +838,13 @@
           "primaryKey": false,
           "notNull": false
         },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
+        "status": {
+          "name": "status",
+          "type": "diet_plan_status",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": true
+          "notNull": true,
+          "default": "'draft'"
         },
         "created_at": {
           "name": "created_at",
@@ -872,6 +873,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "diet_plans_one_active_per_client": {
+          "name": "diet_plans_one_active_per_client",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"diet_plans\".\"status\" = 'active'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2707,6 +2724,15 @@
     }
   },
   "enums": {
+    "public.diet_plan_status": {
+      "name": "diet_plan_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "draft",
+        "archived"
+      ]
+    },
     "public.goal_type": {
       "name": "goal_type",
       "schema": "public",
