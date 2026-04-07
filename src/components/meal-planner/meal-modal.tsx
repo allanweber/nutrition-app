@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Utensils } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,15 +9,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { FoodSearchField } from '@/components/food-search-field';
-import { MealTypeSelect } from '@/components/meal-type-select';
 import { MealItemEditor, type LocalMealItem } from './meal-item-editor';
 import { useFoodSearch } from '@/hooks/use-food-search';
 import { useFoodDetailQuery, type FoodDetailResponse } from '@/queries/food-detail';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 import type { QuantityMeasure } from '@/components/quantity-unit-input';
-import type { MealType } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants';
 import {
   useCreateMealMutation,
   useUpdateMealMutation,
@@ -43,7 +49,7 @@ interface MealModalProps {
 function buildFoodMeasures(servings: FoodDetailResponse['servings']): QuantityMeasure[] {
   const base: QuantityMeasure = {
     id: 'base',
-    label: 'g',
+    label: 'grams',
     defaultQty: 100,
     sliderMin: 10,
     sliderMax: 500,
@@ -96,7 +102,6 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
   const foodSearch = useFoodSearch({ includeCustom: true });
 
-  // Load detail for the pending (just-selected) food
   const pendingSelection = pendingFood
     ? pendingFood.id !== null
       ? { id: pendingFood.id, fatSecretId: pendingFood.fatSecretId ?? undefined }
@@ -104,7 +109,6 @@ export function MealModal({ state, onClose }: MealModalProps) {
     : null;
   const detailQuery = useFoodDetailQuery(pendingSelection);
 
-  // When detail loads for pending food, add it to items
   useEffect(() => {
     if (!pendingFood || !detailQuery.data) return;
     const newItem = buildLocalItem(pendingFood, detailQuery.data.food);
@@ -114,14 +118,13 @@ export function MealModal({ state, onClose }: MealModalProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailQuery.data]);
 
-  // In edit mode, initialise items from the existing meal (grams only)
   useEffect(() => {
     if (!isEdit) return;
     const meal = (state as { mode: 'edit'; planId: string; meal: DietPlanMealDTO }).meal;
     const initialItems: LocalMealItem[] = meal.items.map((item) => {
       const baseMeasure: QuantityMeasure = {
         id: 'base',
-        label: 'g',
+        label: 'grams',
         defaultQty: 100,
         sliderMin: 10,
         sliderMax: 1000,
@@ -170,14 +173,12 @@ export function MealModal({ state, onClose }: MealModalProps) {
     setIsSaving(true);
     try {
       if (state.mode === 'create') {
-        // 1. Create the meal row
         const mealRes = await createMealMutation.mutateAsync({
           planId: state.planId,
           mealType,
           dayOfWeek: state.day,
         });
         const mealId = mealRes.meal.id;
-        // 2. Add all items in parallel
         await Promise.all(
           items.map((item) =>
             addItemMutation.mutateAsync({
@@ -194,32 +195,25 @@ export function MealModal({ state, onClose }: MealModalProps) {
         const originalIds = new Set(meal.items.map((i) => i.id));
         const currentIds = new Set(items.filter((i) => i.id).map((i) => i.id!));
 
-        // Items removed
         const removedIds = [...originalIds].filter((id) => !currentIds.has(id));
-        // Items added (no id)
         const newItems = items.filter((i) => !i.id);
-        // Items modified (have id + exist in original)
         const modifiedItems = items.filter((i) => {
           if (!i.id) return false;
           const orig = meal.items.find((o) => o.id === i.id);
           if (!orig) return false;
           return (
             Math.abs(i.quantityGrams - orig.quantity) > 0.01 ||
-            (i.selectedMeasureId === 'base' ? null : i.selectedMeasureId) !==
-              orig.altMeasureId
+            (i.selectedMeasureId === 'base' ? null : i.selectedMeasureId) !== orig.altMeasureId
           );
         });
 
         await Promise.all([
-          // Patch meal type if changed
           mealType !== meal.mealType
             ? updateMealMutation.mutateAsync({ planId: state.planId, mealId: meal.id, mealType })
             : Promise.resolve(),
-          // Delete removed items
           ...removedIds.map((id) =>
             deleteItemMutation.mutateAsync({ planId: state.planId, mealId: meal.id, itemId: id }),
           ),
-          // Add new items
           ...newItems.map((item) =>
             addItemMutation.mutateAsync({
               planId: state.planId,
@@ -229,7 +223,6 @@ export function MealModal({ state, onClose }: MealModalProps) {
               quantity: item.quantityGrams,
             }),
           ),
-          // Update modified items
           ...modifiedItems.map((item) =>
             updateItemMutation.mutateAsync({
               planId: state.planId,
@@ -247,7 +240,6 @@ export function MealModal({ state, onClose }: MealModalProps) {
     }
   }
 
-  // Totals
   const totalKcal = items.reduce((s, i) => s + (i.caloriesPer100g / 100) * i.quantityGrams, 0);
   const totalProtein = items.reduce((s, i) => s + (i.proteinPer100g / 100) * i.quantityGrams, 0);
   const totalCarbs = items.reduce((s, i) => s + (i.carbsPer100g / 100) * i.quantityGrams, 0);
@@ -255,43 +247,66 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+      {/* <DialogContent className="max-w-lg max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden"> */}
+      <DialogContent className="md:min-w-2xl min-h-[55vh] flex flex-col">
+
+        {/* ── Header ── */}
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Meal' : 'Add Meal'}</DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0">
+              <Utensils className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-xl font-bold leading-tight">
+                {isEdit ? 'Edit Meal' : 'Create Meal'}
+              </DialogTitle>
+              <Select value={mealType} onValueChange={(v) => setMealType(v as MealType)}>
+                <SelectTrigger className="h-auto w-auto border-none p-0 shadow-none bg-transparent focus:ring-0 gap-1 [&>svg]:hidden">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+                    <SelectValue />
+                  </span>
+                  <span className="text-primary text-[11px] font-bold">››</span>
+                </SelectTrigger>
+                <SelectContent>
+                  {MEAL_TYPE_ORDER.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {MEAL_TYPE_LABELS[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {/* Meal type */}
-          <MealTypeSelect value={mealType} onChange={setMealType} id="meal-modal-type" />
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 space-y-4 pb-2">
 
-          {/* Food search */}
+          {/* Search */}
           <div>
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5 ml-1">
-              Add Food
-            </p>
             <FoodSearchField
               state={foodSearch}
               onQueryChange={foodSearch.setQuery}
               onLoadMore={foodSearch.loadMore}
               onSelect={handleFoodSelect}
-              placeholder="Search foods…"
+              placeholder="Search for a food item..."
               size="small"
             />
             {detailQuery.isLoading && pendingFood && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-on-surface-variant">
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Loading food details…
               </div>
             )}
           </div>
 
-          {/* Item list */}
+          {/* Selected items */}
           {items.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1 ml-1">
-                Items
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Selected Items
               </p>
-              <div className="rounded-xl border bg-background">
+              <div className="space-y-2">
                 {items.map((item, index) => (
                   <MealItemEditor
                     key={item.id ?? `new-${index}`}
@@ -306,36 +321,68 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
           {/* Empty hint */}
           {items.length === 0 && !detailQuery.isLoading && (
-            <p className="text-sm text-on-surface-variant text-center py-4">
+            <p className="text-sm text-muted-foreground text-center py-6">
               Search and select foods to add them to this meal.
             </p>
           )}
         </div>
 
-        {/* Totals footer */}
-        {items.length > 0 && (
-          <div className="border-t pt-3 flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">{Math.round(totalKcal)} kcal total</span>
-            <div className="flex gap-3 text-xs text-on-surface-variant">
-              <span className="text-rose-500 font-medium">{Math.round(totalProtein)}g P</span>
-              <span className="text-amber-500 font-medium">{Math.round(totalCarbs)}g C</span>
-              <span className="text-sky-500 font-medium">{Math.round(totalFat)}g F</span>
+        {/* ── Summary + Footer ── */}
+        <div className="px-6 pb-6 pt-3 space-y-4">
+          {items.length > 0 && (
+            <div className="rounded-xl bg-muted/60 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Total Meal Summary
+                </p>
+                <p className="text-2xl font-bold text-foreground mt-0.5 leading-none">
+                  {Math.round(totalKcal)}{' '}
+                  <span className="text-sm font-semibold text-muted-foreground">Total Kcal</span>
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <div className="text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Protein</p>
+                  <p className="text-base font-bold text-rose-500 leading-tight">
+                    {Math.round(totalProtein)}<span className="text-xs font-semibold">g</span>
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Carbs</p>
+                  <p className="text-base font-bold text-amber-500 leading-tight">
+                    {Math.round(totalCarbs)}<span className="text-xs font-semibold">g</span>
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fats</p>
+                  <p className="text-base font-bold text-sky-500 leading-tight">
+                    {Math.round(totalFat)}<span className="text-xs font-semibold">g</span>
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || items.length === 0}
-          >
-            {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {isEdit ? 'Save Changes' : 'Add Meal'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="gap-3 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || items.length === 0}
+              className="flex-1 bg-foreground text-background hover:bg-foreground/90"
+            >
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isEdit ? 'Save Changes' : 'Save Meal'}
+            </Button>
+          </DialogFooter>
+        </div>
+
       </DialogContent>
     </Dialog>
   );

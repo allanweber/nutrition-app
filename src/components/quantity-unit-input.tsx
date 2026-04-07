@@ -53,12 +53,12 @@ export function QuantityUnitInput({
 
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider ml-1">
+      <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">
         Quantity &amp; Serving Size
       </label>
 
       {/* Number input + unit select */}
-      <div className="flex items-center rounded-lg border border-outline-variant bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+      <div className="flex items-center rounded-lg border border-border bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
         <input
           type="number"
           min={measure.sliderMin}
@@ -66,15 +66,15 @@ export function QuantityUnitInput({
           step={measure.sliderStep}
           value={quantity}
           onChange={(e) => handleNumberChange(e.target.value)}
-          className="flex-1 bg-transparent border-none px-3 py-2 font-bold text-on-surface focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="flex-1 bg-transparent border-none px-3 py-2 font-bold text-foreground focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           data-testid="quantity-input"
           aria-label="Quantity"
         />
-        <div className="h-5 w-px bg-outline-variant shrink-0" />
+        <div className="h-5 w-px bg-border shrink-0" />
         <div className="min-w-20">
           <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
             <SelectTrigger
-              className="w-full border-none bg-transparent shadow-none font-bold text-on-surface focus:ring-0 pl-2 pr-6 py-2 rounded-none"
+              className="w-full border-none bg-transparent shadow-none font-bold text-foreground focus:ring-0 pl-2 pr-6 py-2 rounded-none"
               data-testid="measure-select"
             >
               <SelectValue />
@@ -99,7 +99,7 @@ export function QuantityUnitInput({
           step={measure.sliderStep}
           value={quantity}
           onChange={(e) => handleSliderChange(e.target.value)}
-          className="w-full h-1 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary"
+          className="w-full h-1 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
           data-testid="quantity-slider"
           aria-label="Quantity slider"
         />

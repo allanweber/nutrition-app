@@ -38,7 +38,7 @@ export function DishLogModal({
   if (isLoading || !dish) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-        <div className="w-full max-w-[340px] bg-surface-container-lowest rounded-2xl border border-outline-variant flex items-center justify-center py-16">
+        <div className="w-full max-w-[340px] bg-background rounded-2xl border border-border flex items-center justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       </div>

@@ -270,7 +270,7 @@ export function FoodModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
       data-testid="food-add-modal"
     >
-      <div className="relative w-full max-w-[340px] bg-surface-container-lowest rounded-2xl shadow-2xl flex flex-col border border-outline-variant overflow-hidden max-h-[90vh]">
+      <div className="relative w-full max-w-[340px] bg-background rounded-2xl shadow-2xl flex flex-col border border-border overflow-hidden max-h-[90vh]">
 
         {/* ── Header (image or green gradient fallback) ── */}
         <div className="relative h-24 overflow-hidden shrink-0">
@@ -284,8 +284,8 @@ export function FoodModal({
               unoptimized
             />
           ) : (
-            <div className="absolute inset-0 bg-surface-container-highest flex items-center justify-center">
-              <UtensilsCrossed className="h-10 w-10 text-on-surface-variant/30" />
+            <div className="absolute inset-0 bg-muted flex items-center justify-center">
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-3">
@@ -303,10 +303,10 @@ export function FoodModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-2 right-2 z-[60] size-7 flex items-center justify-center rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors border border-outline-variant"
+            className="absolute top-2 right-2 z-[60] size-7 flex items-center justify-center rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors border border-border"
             aria-label="Close"
           >
-            <X className="h-3.5 w-3.5 text-on-surface" />
+            <X className="h-3.5 w-3.5 text-foreground" />
           </button>
         </div>
 
@@ -330,7 +330,7 @@ export function FoodModal({
                     />
                     {mode.kind !== 'edit-food' && (
                       <div>
-                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1 ml-1">
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 ml-1">
                           Date
                         </label>
                         <DateNavigator value={date} onChange={setDate} />
@@ -350,12 +350,12 @@ export function FoodModal({
               />
 
               {/* Macros summary */}
-              <section className="space-y-2 pt-1 border-t border-outline-variant/30">
+              <section className="space-y-2 pt-1 border-t border-border/30">
                 <h3 className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground text-center">
                   Macros for current amount
                 </h3>
                 <div className="space-y-2">
-                  <div className="text-center p-3 bg-surface-container-low rounded-lg border border-outline-variant/20">
+                  <div className="text-center p-3 bg-muted rounded-lg border border-border/20">
                     <p className="text-[10px] font-bold uppercase text-muted-foreground mb-0.5">Calories</p>
                     <p
                       className="text-xl font-headline font-bold text-primary"
@@ -365,7 +365,7 @@ export function FoodModal({
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-2 bg-surface-container-low rounded-lg border border-outline-variant/20">
+                    <div className="text-center p-2 bg-muted rounded-lg border border-border/20">
                       <p className="text-[10px] font-bold uppercase text-muted-foreground">Protein</p>
                       <p
                         className={`text-xl font-headline font-bold ${MACRO_TEXT_COLORS.protein}`}
@@ -374,7 +374,7 @@ export function FoodModal({
                         {macros.protein}g
                       </p>
                     </div>
-                    <div className="text-center p-2 bg-surface-container-low rounded-lg border border-outline-variant/20">
+                    <div className="text-center p-2 bg-muted rounded-lg border border-border/20">
                       <p className="text-[10px] font-bold uppercase text-muted-foreground">Carbs</p>
                       <p
                         className={`text-xl font-headline font-bold ${MACRO_TEXT_COLORS.carbs}`}
@@ -383,7 +383,7 @@ export function FoodModal({
                         {macros.carbs}g
                       </p>
                     </div>
-                    <div className="text-center p-2 bg-surface-container-low rounded-lg border border-outline-variant/20">
+                    <div className="text-center p-2 bg-muted rounded-lg border border-border/20">
                       <p className="text-[10px] font-bold uppercase text-muted-foreground">Fats</p>
                       <p
                         className={`text-xl font-headline font-bold ${MACRO_TEXT_COLORS.fat}`}
@@ -404,11 +404,11 @@ export function FoodModal({
         </div>
 
         {/* ── Footer ── */}
-        <div className="p-3 bg-surface-container-high border-t border-outline-variant flex gap-2 shrink-0">
+        <div className="p-3 bg-secondary border-t border-border flex gap-2 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-lg border border-outline-variant bg-background font-bold text-md text-on-surface-variant hover:bg-surface-container-low transition-colors"
+            className="px-4 py-2.5 rounded-lg border border-border bg-background font-bold text-md text-muted-foreground hover:bg-secondary transition-colors"
             data-testid="food-modal-cancel"
           >
             Cancel

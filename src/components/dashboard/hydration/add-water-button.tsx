@@ -18,7 +18,7 @@ export function AddWaterButton() {
       onClick={handleClick}
       disabled={isPending}
       aria-label="Add 250ml water"
-      className="flex items-center gap-2 bg-surface-container border border-outline-variant px-4 py-2.5 rounded-full hover:bg-surface-container-high transition-colors disabled:opacity-60 disabled:cursor-not-allowed group"
+      className="flex items-center gap-2 bg-muted border border-border px-4 py-2.5 rounded-full hover:bg-secondary transition-colors disabled:opacity-60 disabled:cursor-not-allowed group"
     >
       {isPending ? (
         <Loader2 className="h-5 w-5 animate-spin text-blue-600" />

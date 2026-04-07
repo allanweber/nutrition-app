@@ -36,7 +36,7 @@ export function CircularProgress({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--surface-container-high)"
+          stroke="var(--border)"
           strokeWidth={strokeWidth}
         />
         {/* Fill */}
@@ -58,7 +58,7 @@ export function CircularProgress({
         <span className="text-2xl font-headline font-black tabular-nums leading-none text-foreground">
           {value}
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant mt-0.5">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mt-0.5">
           {label}
         </span>
       </div>

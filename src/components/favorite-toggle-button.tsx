@@ -50,7 +50,7 @@ export function FavoriteToggleButton({ foodId, dishId, className = '' }: Favorit
       className={`p-1 rounded transition-colors ${
         isFavorite
           ? 'text-amber-500 hover:text-amber-600'
-          : 'text-on-surface-variant/40 hover:text-amber-500'
+          : 'text-muted-foreground/40 hover:text-amber-500'
       } ${className}`}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       data-testid={`favorite-toggle-${foodId ?? dishId}`}

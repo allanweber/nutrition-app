@@ -40,7 +40,7 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1">
-        <p className="text-xs text-on-surface-variant px-2 py-1 font-medium">Copy meals from</p>
+        <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Copy meals from</p>
         {daysWithMeals.map((day) => (
           <button
             key={day}

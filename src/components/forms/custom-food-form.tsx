@@ -21,6 +21,7 @@ import {
   MACRO_CELL_BORDER,
   MACRO_CELL_TEXT,
 } from '@/lib/nutrition-constants';
+import { MacroInputCard } from '@/components/macro-input-card';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // ─── types ───────────────────────────────────────────────────────────────────
@@ -81,62 +82,6 @@ function NumberField({
         className={fieldApi.state.meta.errors.length > 0 ? 'border-destructive' : ''}
         data-testid={`field-${name}`}
       />
-      {fieldApi.state.meta.errors.length > 0 && (
-        <p className="text-sm text-destructive">{fieldApi.state.meta.errors[0]}</p>
-      )}
-    </div>
-  );
-}
-
-// ─── macro card helper ────────────────────────────────────────────────────────
-
-function MacroCard({
-  label,
-  name,
-  fieldApi,
-  unit,
-  bgClass,
-  textClass,
-  borderClass,
-}: {
-  label: string;
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fieldApi: any;
-  unit: string;
-  bgClass?: string;
-  textClass?: string;
-  borderClass?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        'rounded-xl border p-5 flex flex-col gap-3',
-        bgClass ?? 'bg-surface-container-lowest border-outline-variant/20',
-        borderClass && 'border-l-4',
-        borderClass,
-      )}
-    >
-      <span className={cn('text-[11px] font-bold uppercase tracking-wider', textClass ?? 'text-muted-foreground')}>
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
-        <Input
-          id={name}
-          type="number"
-          min="0"
-          step="0.1"
-          value={fieldApi.state.value}
-          onChange={(e) => fieldApi.handleChange(e.target.value)}
-          onBlur={fieldApi.handleBlur}
-          className={cn(
-            'text-2xl font-bold h-12 bg-white',
-            fieldApi.state.meta.errors.length > 0 ? 'border-destructive' : 'border-outline-variant/30',
-          )}
-          data-testid={`field-${name}`}
-        />
-        <span className="text-sm font-semibold text-muted-foreground shrink-0">{unit}</span>
-      </div>
       {fieldApi.state.meta.errors.length > 0 && (
         <p className="text-sm text-destructive">{fieldApi.state.meta.errors[0]}</p>
       )}
@@ -313,7 +258,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
         {/* Step 2: General Info */}
         <section>
           <StepLabel>Step 2: General Info</StepLabel>
-          <div className="rounded-xl border border-outline-variant/20 p-6 bg-surface-container-lowest space-y-6">
+          <div className="rounded-xl border border-border/20 p-6 bg-background space-y-6">
             {/* Name + Brand */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <form.Field
@@ -422,7 +367,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.calories), onSubmit: zodValidator(customFoodFormSchema.shape.calories) }}
             >
               {(field) => (
-                <MacroCard label="Calories" name="calories" fieldApi={field} unit="kcal" />
+                <MacroInputCard label="Calories" name="calories" fieldApi={field} unit="kcal" />
               )}
             </form.Field>
 
@@ -431,12 +376,12 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.protein), onSubmit: zodValidator(customFoodFormSchema.shape.protein) }}
             >
               {(field) => (
-                <MacroCard
+                <MacroInputCard
                   label="Protein"
                   name="protein"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.protein, 'border-outline-variant/20')}
+                  bgClass={cn(MACRO_CELL_BG.protein, 'border-border/20')}
                   textClass={MACRO_CELL_TEXT.protein}
                   borderClass={MACRO_CELL_BORDER.protein}
                 />
@@ -448,12 +393,12 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.carbs), onSubmit: zodValidator(customFoodFormSchema.shape.carbs) }}
             >
               {(field) => (
-                <MacroCard
+                <MacroInputCard
                   label="Carbs"
                   name="carbs"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.carbs, 'border-outline-variant/20')}
+                  bgClass={cn(MACRO_CELL_BG.carbs, 'border-border/20')}
                   textClass={MACRO_CELL_TEXT.carbs}
                   borderClass={MACRO_CELL_BORDER.carbs}
                 />
@@ -465,12 +410,12 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
               validators={{ onChange: zodValidator(customFoodFormSchema.shape.fat), onSubmit: zodValidator(customFoodFormSchema.shape.fat) }}
             >
               {(field) => (
-                <MacroCard
+                <MacroInputCard
                   label="Fat"
                   name="fat"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.fat, 'border-outline-variant/20')}
+                  bgClass={cn(MACRO_CELL_BG.fat, 'border-border/20')}
                   textClass={MACRO_CELL_TEXT.fat}
                   borderClass={MACRO_CELL_BORDER.fat}
                 />
@@ -479,7 +424,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           </div>
 
           {/* Additional nutrients */}
-          <div className="rounded-xl border border-outline-variant/20 p-6 bg-surface-container-lowest mt-4">
+          <div className="rounded-xl border border-border/20 p-6 bg-background mt-4">
             <div className="flex items-baseline gap-2 mb-4">
               <p className="text-sm font-bold text-foreground">Additional Nutrients</p>
               <span className="text-xs text-muted-foreground">(optional)</span>

@@ -97,7 +97,7 @@ function IngredientRow({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-outline-variant/20 bg-card px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border/20 bg-card px-4 py-3">
       {/* Row 1: thumbnail + name + badges */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {ingredient.thumbnail ? (
@@ -250,7 +250,7 @@ function DishNutritionSummary({
   const kcalPct = kcalGoal > 0 ? Math.round((totals.calories / kcalGoal) * 100) : 0;
 
   return (
-    <div className="bg-card rounded-[2rem] p-8 border border-outline-variant/30 shadow-xl overflow-hidden">
+    <div className="bg-card rounded-[2rem] p-8 border border-border/30 shadow-xl overflow-hidden">
       <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
         {/* Header — always visible */}
         <div className="flex items-start justify-between mb-8">
@@ -576,7 +576,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
           {/* Form fields */}
           <div className="space-y-6">
             {/* Photo */}
-            <div className="rounded-xl border border-outline-variant/20 p-5 bg-card">
+            <div className="rounded-xl border border-border/20 p-5 bg-card">
               <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Photo</h2>
               <PhotoUploader
                 currentThumb={isEdit ? (initialDish?.photo?.thumb ?? null) : null}
@@ -589,7 +589,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
             </div>
 
             {/* Name + Description */}
-            <div className="rounded-xl border border-outline-variant/20 p-5 space-y-4 bg-card">
+            <div className="rounded-xl border border-border/20 p-5 space-y-4 bg-card">
               <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Dish Details</h2>
 
               <form.Field

@@ -31,15 +31,16 @@ interface PlanCardProps {
   plan: DietPlanDTO;
   isSelected: boolean;
   onSelect: () => void;
+  onDeleted?: (planId: string) => void;
 }
 
 function progressLabel(plan: DietPlanDTO): string {
   if (plan.status === 'archived') return 'Overall Completion';
-  if ((plan.completeness ?? 0) === 0) return 'Setup Incomplete';
+  if (plan.status === 'draft') return 'Setup Incomplete';
   return 'Weekly Progress';
 }
 
-export function PlanCard({ plan, isSelected, onSelect }: PlanCardProps) {
+export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const plansQuery = useDietPlansQuery();
   const updateMutation = useUpdateDietPlanMutation();
@@ -64,6 +65,7 @@ export function PlanCard({ plan, isSelected, onSelect }: PlanCardProps) {
   async function handleDelete() {
     await deleteMutation.mutateAsync(plan.id);
     setDeleteDialogOpen(false);
+    onDeleted?.(plan.id);
   }
 
   return (
@@ -71,8 +73,8 @@ export function PlanCard({ plan, isSelected, onSelect }: PlanCardProps) {
       <div
         onClick={onSelect}
         className={cn(
-          'relative flex flex-col gap-4 p-5 rounded-2xl border cursor-pointer transition-all select-none w-[320px] shrink-0',
-          isSelected && 'bg-[#C1F0B1] dark:bg-surface-container text-white',
+          'plan-card relative flex flex-col gap-4 p-5 rounded-2xl border cursor-pointer transition-all select-none w-[320px] shrink-0',
+          isSelected && 'bg-[#C1F0B1] dark:bg-secondary text-white',
         )}
       >
         {/* Status badge + menu */}
@@ -129,19 +131,12 @@ export function PlanCard({ plan, isSelected, onSelect }: PlanCardProps) {
               {plan.targetCalories ? `${Math.round(plan.targetCalories).toLocaleString()} kcal` : '—'}
             </p>
           </div>
-          {plan.status === 'archived' ? (
-            <div className="text-right">
-              <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground mb-0.5">Status</p>
-              <p className="text-sm font-semibold text-foreground">Completed</p>
-            </div>
-          ) : (
-            <div className="text-right">
+          <div className="text-right">
               <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground mb-0.5">Daily Average</p>
               <p className="text-sm font-semibold text-foreground tabular-nums">
                 {plan.avgDailyCalories ? `${Math.round(plan.avgDailyCalories).toLocaleString()} kcal` : '0 kcal'}
               </p>
             </div>
-          )}
         </div>
 
         {/* Macros */}

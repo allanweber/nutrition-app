@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -27,6 +26,8 @@ import type { DietPlanFormData } from '@/lib/form-validation';
 import { useCreateDietPlanMutation } from '@/queries/diet-plans';
 import { useActivatePlan } from '@/hooks/use-activate-plan';
 import type { DietPlanDTO } from '@/server/services/diet-plan.service';
+import { MACRO_CELL_BG, MACRO_CELL_BORDER, MACRO_CELL_TEXT } from '@/lib/nutrition-constants';
+import { MacroInputCard } from '@/components/macro-input-card';
 
 interface NutritionGoalDefaults {
   targetCalories: number | null;
@@ -41,6 +42,20 @@ interface NewPlanModalProps {
   nutritionGoalDefaults: NutritionGoalDefaults | null;
   onClose: () => void;
   onCreated: (planId: string) => void;
+}
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      {children}
+      {required && <span className="text-destructive ml-0.5">*</span>}
+    </Label>
+  );
+}
+
+function FieldError({ errors }: { errors: unknown[] }) {
+  if (!errors.length) return null;
+  return <p className="text-xs text-destructive mt-1">{String(errors[0])}</p>;
 }
 
 export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCreated }: NewPlanModalProps) {
@@ -90,9 +105,9 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="md:min-w-2xl">
           <DialogHeader>
-            <DialogTitle>New Meal Plan</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Create New Diet Plan</DialogTitle>
           </DialogHeader>
 
           <form
@@ -101,27 +116,25 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               e.stopPropagation();
               form.handleSubmit();
             }}
-            className="space-y-4"
+            className="space-y-5 px-6"
           >
-            {/* Name */}
+            {/* Plan Name */}
             <form.Field
               name="name"
               validators={{ onChange: zodValidator(dietPlanFormSchema.shape.name) }}
             >
               {(field) => (
                 <div className="space-y-1.5">
-                  <Label htmlFor={field.name}>Plan name *</Label>
+                  <FieldLabel required>Plan Name</FieldLabel>
                   <Input
                     id={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="e.g. Cutting Phase"
-                    className={field.state.meta.errors.length ? 'border-destructive' : ''}
+                    placeholder="e.g., Summer Shred 2024"
+                    className={`${field.state.meta.errors.length ? 'border-destructive' : ''}`}
                   />
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                  )}
+                  <FieldError errors={field.state.meta.errors} />
                 </div>
               )}
             </form.Field>
@@ -130,180 +143,172 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
             <form.Field name="description">
               {(field) => (
                 <div className="space-y-1.5">
-                  <Label htmlFor={field.name}>Description</Label>
-                  <Input
+                  <FieldLabel>Description</FieldLabel>
+                  <textarea
                     id={field.name}
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Optional notes"
+                    placeholder="Briefly describe the objectives of this plan..."
+                    rows={3}
+                    className="border-input placeholder:text-muted-foreground w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none resize-y transition-[color,box-shadow] focus:border-ring focus:ring-[3px] focus:ring-ring/50"
                   />
                 </div>
               )}
             </form.Field>
 
             {/* Macro targets */}
+            <div>
+              <FieldLabel required>Daily Targets</FieldLabel>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1.5">
+                <form.Field
+                  name="targetCalories"
+                  validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetCalories) }}
+                >
+                  {(field) => (
+                    <MacroInputCard
+                      label="Calories"
+                      name={field.name}
+                      fieldApi={field}
+                      unit="kcal"
+                    />
+                  )}
+                </form.Field>
+
+                <form.Field
+                  name="targetProtein"
+                  validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetProtein) }}
+                >
+                  {(field) => (
+                    <MacroInputCard
+                      label="Protein"
+                      name={field.name}
+                      fieldApi={field}
+                      unit="g"
+                      bgClass={`${MACRO_CELL_BG.protein} border-border/20`}
+                      textClass={MACRO_CELL_TEXT.protein}
+                      borderClass={MACRO_CELL_BORDER.protein}
+                    />
+                  )}
+                </form.Field>
+
+                <form.Field
+                  name="targetCarbs"
+                  validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetCarbs) }}
+                >
+                  {(field) => (
+                    <MacroInputCard
+                      label="Carbs"
+                      name={field.name}
+                      fieldApi={field}
+                      unit="g"
+                      bgClass={`${MACRO_CELL_BG.carbs} border-border/20`}
+                      textClass={MACRO_CELL_TEXT.carbs}
+                      borderClass={MACRO_CELL_BORDER.carbs}
+                    />
+                  )}
+                </form.Field>
+
+                <form.Field
+                  name="targetFat"
+                  validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetFat) }}
+                >
+                  {(field) => (
+                    <MacroInputCard
+                      label="Fat"
+                      name={field.name}
+                      fieldApi={field}
+                      unit="g"
+                      bgClass={`${MACRO_CELL_BG.fat} border-border/20`}
+                      textClass={MACRO_CELL_TEXT.fat}
+                      borderClass={MACRO_CELL_BORDER.fat}
+                    />
+                  )}
+                </form.Field>
+              </div>
+            </div>
+
+            {/* Dates */}
             <div className="grid grid-cols-2 gap-3">
               <form.Field
-                name="targetCalories"
-                validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetCalories) }}
+                name="startDate"
+                validators={{ onChange: zodValidator(dietPlanFormSchema.shape.startDate) }}
               >
                 {(field) => (
                   <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Calories (kcal) *</Label>
+                    <FieldLabel required>Start Date</FieldLabel>
                     <Input
                       id={field.name}
-                      type="number"
-                      min={0}
-                      value={field.state.value as unknown as string}
-                      onChange={(e) => field.handleChange(e.target.value as unknown as number)}
+                      type="date"
+                      value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
+                      onChange={(e) => field.handleChange(new Date(e.target.value))}
                       onBlur={field.handleBlur}
                       className={field.state.meta.errors.length ? 'border-destructive' : ''}
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
+                    <FieldError errors={field.state.meta.errors} />
                   </div>
                 )}
               </form.Field>
 
-              <form.Field
-                name="targetProtein"
-                validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetProtein) }}
-              >
+              <form.Field name="endDate">
                 {(field) => (
                   <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Protein (g) *</Label>
+                    <FieldLabel>End Date (Optional)</FieldLabel>
                     <Input
                       id={field.name}
-                      type="number"
-                      min={0}
-                      value={field.state.value as unknown as string}
-                      onChange={(e) => field.handleChange(e.target.value as unknown as number)}
-                      onBlur={field.handleBlur}
-                      className={field.state.meta.errors.length ? 'border-destructive' : ''}
+                      type="date"
+                      value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
+                      onChange={(e) => field.handleChange(e.target.value ? new Date(e.target.value) : undefined)}
                     />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Field
-                name="targetCarbs"
-                validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetCarbs) }}
-              >
-                {(field) => (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Carbs (g) *</Label>
-                    <Input
-                      id={field.name}
-                      type="number"
-                      min={0}
-                      value={field.state.value as unknown as string}
-                      onChange={(e) => field.handleChange(e.target.value as unknown as number)}
-                      onBlur={field.handleBlur}
-                      className={field.state.meta.errors.length ? 'border-destructive' : ''}
-                    />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Field
-                name="targetFat"
-                validators={{ onChange: zodValidator(dietPlanFormSchema.shape.targetFat) }}
-              >
-                {(field) => (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Fat (g) *</Label>
-                    <Input
-                      id={field.name}
-                      type="number"
-                      min={0}
-                      value={field.state.value as unknown as string}
-                      onChange={(e) => field.handleChange(e.target.value as unknown as number)}
-                      onBlur={field.handleBlur}
-                      className={field.state.meta.errors.length ? 'border-destructive' : ''}
-                    />
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                    )}
                   </div>
                 )}
               </form.Field>
             </div>
 
-            {/* Start date */}
-            <form.Field
-              name="startDate"
-              validators={{ onChange: zodValidator(dietPlanFormSchema.shape.startDate) }}
-            >
-              {(field) => (
-                <div className="space-y-1.5">
-                  <Label htmlFor={field.name}>Start date *</Label>
-                  <Input
-                    id={field.name}
-                    type="date"
-                    value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
-                    onChange={(e) => field.handleChange(new Date(e.target.value))}
-                    onBlur={field.handleBlur}
-                    className={field.state.meta.errors.length ? 'border-destructive' : ''}
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-                  )}
-                </div>
-              )}
-            </form.Field>
-
-            {/* Status */}
+            {/* Initial Status */}
             <form.Field name="status">
               {(field) => (
-                <div className="flex items-center gap-3">
-                  <Label>Start as</Label>
+                <div className="space-y-1.5">
+                  <FieldLabel required>Initial Status</FieldLabel>
                   <div className="flex gap-2">
-                    {(['draft', 'active'] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => field.handleChange(s)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                          field.state.value === s
-                            ? s === 'active'
-                              ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
-                              : 'bg-muted text-muted-foreground border-border'
-                            : 'border-border text-on-surface-variant hover:bg-muted/50'
-                        }`}
-                      >
-                        {s === 'draft' ? 'Draft' : 'Active'}
-                      </button>
-                    ))}
+                    {(['active', 'draft', 'archived'] as const).map((s) => {
+                      const selected = field.state.value === s;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => field.handleChange(s)}
+                          className={`flex-1 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest transition-colors ${
+                            selected
+                              ? 'border-2 border-primary text-primary bg-white'
+                              : 'border border-border text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </form.Field>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+            <div className="flex gap-3 pt-2 pb-6">
+              <Button type="button" variant="outline" onClick={onClose} className="w-[30%] font-medium bg-background">
                 Cancel
               </Button>
               <form.Subscribe selector={(s) => s.isSubmitting}>
                 {(isSubmitting) => (
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <Button type="submit" disabled={isSubmitting} className="flex-1">
+                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                     Create Plan
                   </Button>
                 )}
               </form.Subscribe>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Active plan conflict */}
       {conflict && (
         <AlertDialog open>
           <AlertDialogContent>

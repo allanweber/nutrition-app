@@ -7,13 +7,13 @@ export default function CreateExercisePage() {
       <div className="mb-8">
         <Link
           href="/exercise-library"
-          className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-foreground transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
           Exercise Library
         </Link>
         <h1 className="text-4xl font-headline font-bold text-foreground">Create Exercise</h1>
-        <p className="text-on-surface-variant mt-1">Add a new exercise to your library</p>
+        <p className="text-muted-foreground mt-1">Add a new exercise to your library</p>
       </div>
 
       <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
@@ -21,7 +21,7 @@ export default function CreateExercisePage() {
           <span className="text-2xl">🏋️</span>
         </div>
         <h2 className="text-xl font-bold text-foreground">Coming soon</h2>
-        <p className="text-sm text-on-surface-variant max-w-sm">
+        <p className="text-sm text-muted-foreground max-w-sm">
           The exercise creator is under development.
         </p>
       </div>

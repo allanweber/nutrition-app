@@ -19,12 +19,19 @@ interface DayMealsViewProps {
 
 export function DayMealsView({ plan, meals, selectedDay, isLoading, onAddMeal, onEditMeal }: DayMealsViewProps) {
   const dayMeals = meals.filter((m) => m.dayOfWeek === selectedDay);
+  const dayName = DAY_NAMES[selectedDay - 1];
 
   return (
-    <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">{DAY_NAMES[selectedDay - 1]}</h2>
+    <div className="mt-6 rounded-2xl border bg-background p-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-0.5">
+            Detailed Editor •
+          </p>
+          <h2 className="text-2xl font-bold text-foreground">{dayName}&apos;s Meals</h2>
+        </div>
         <div className="flex items-center gap-2">
           <CopyDayPopover planId={plan.id} currentDay={selectedDay} meals={meals} />
           <Button size="sm" className="gap-1.5" onClick={() => onAddMeal(selectedDay)}>
@@ -36,32 +43,33 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, onAddMeal, o
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
+            <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
           ))}
         </div>
       )}
 
-      {/* Meal cards */}
-      {!isLoading && dayMeals.length > 0 && (
-        <div className="space-y-3">
+      {/* Meal grid + add-another card */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {dayMeals.map((meal) => (
             <MealCard key={meal.id} meal={meal} onEdit={() => onEditMeal(meal)} />
           ))}
-        </div>
-      )}
 
-      {/* Empty state */}
-      {!isLoading && dayMeals.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center border border-dashed rounded-2xl">
-          <p className="text-sm text-on-surface-variant">No meals planned for this day</p>
-          <Button size="sm" variant="outline" onClick={() => onAddMeal(selectedDay)}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Add first meal
-          </Button>
+          {/* Add another meal card */}
+          <button
+            onClick={() => onAddMeal(selectedDay)}
+            className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors min-h-48 cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <Plus className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">Add another meal to {dayName}</p>
+          </button>
         </div>
       )}
+    </div>
     </div>
   );
 }

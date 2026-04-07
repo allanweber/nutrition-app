@@ -13,9 +13,10 @@ interface PlanCarouselProps {
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
   onAddNew: () => void;
+  onPlanDeleted: (planId: string) => void;
 }
 
-export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, onAddNew }: PlanCarouselProps) {
+export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, onAddNew, onPlanDeleted }: PlanCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -26,9 +27,11 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 8);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
-    // Approximate active index by scroll position
-    const cardWidth = 280 + 16; // card width + gap
-    setActiveIndex(Math.round(el.scrollLeft / cardWidth));
+    // Track active plan card index (skip the Add New Plan card at the start)
+    const addCardWidth = 180 + 16; // Add New Plan card width + gap
+    const planCardWidth = 320 + 16; // plan card width + gap
+    const planScrollLeft = Math.max(0, el.scrollLeft - addCardWidth);
+    setActiveIndex(Math.round(planScrollLeft / planCardWidth));
   }
 
   useEffect(() => {
@@ -51,7 +54,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
     el.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
   }
 
-  const totalItems = plans.length + 1; // +1 for add card
+  const totalItems = plans.length;
   const showArrows = canScrollLeft || canScrollRight;
   const showDots =  canScrollLeft || canScrollRight;
 
@@ -83,12 +86,12 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
           {/* Add New Plan card */}
           <button
             onClick={onAddNew}
-            className="flex flex-col items-center justify-center gap-2 min-w-[180px] h-[158px] rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors shrink-0"
+            className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors shrink-0"
           >
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
               <Plus className="h-5 w-5 text-primary" />
             </div>
-            <span className="text-sm font-medium text-on-surface-variant">Add New Plan</span>
+            <span className="text-sm font-medium text-muted-foreground">Add New Plan</span>
           </button>
 
           {/* Skeleton cards while loading */}
@@ -105,6 +108,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
                   plan={plan}
                   isSelected={plan.id === selectedPlanId}
                   onSelect={() => onSelectPlan(plan.id)}
+                  onDeleted={onPlanDeleted}
                 />
               </div>
             ))}

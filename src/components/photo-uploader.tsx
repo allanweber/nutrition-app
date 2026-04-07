@@ -214,7 +214,7 @@ export function PhotoUploader({
         compact ? 'p-6' : 'p-8 md:p-12',
         isDragging
           ? 'border-primary bg-primary/10'
-          : 'border-outline-variant/60 bg-muted/30 hover:bg-muted/50',
+          : 'border-border/60 bg-muted/30 hover:bg-muted/50',
         disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '',
       ].join(' ')}
     >
@@ -236,14 +236,14 @@ export function PhotoUploader({
           </div>
 
           <h2 className={[
-            'font-bold font-headline text-on-surface mb-2',
+            'font-bold font-headline text-foreground mb-2',
             compact ? 'text-base' : 'text-xl',
           ].join(' ')}>
             Drag &amp; drop files here
           </h2>
 
           {!compact && (
-            <p className="text-on-surface-variant text-sm max-w-xs mx-auto mb-5">
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-5">
               Upload images of your meals, ingredient lists, or clinical results for AI processing.
             </p>
           )}
@@ -260,19 +260,19 @@ export function PhotoUploader({
               Browse Files
             </button>
             <div className="flex items-center gap-1.5">
-              <span className="text-on-surface-variant text-xs uppercase tracking-wider">or</span>
-              <div className="flex items-center gap-1 bg-background px-2.5 py-1.5 rounded-lg border border-outline-variant/40 shadow-sm">
-                <span className="text-xs text-on-surface-variant font-medium">Paste</span>
+              <span className="text-muted-foreground text-xs uppercase tracking-wider">or</span>
+              <div className="flex items-center gap-1 bg-background px-2.5 py-1.5 rounded-lg border border-border/40 shadow-sm">
+                <span className="text-xs text-muted-foreground font-medium">Paste</span>
                 <div className="flex items-center gap-0.5">
-                  <kbd className="font-sans bg-muted px-1.5 py-0.5 rounded text-[10px] border border-outline-variant/30 text-on-surface">Ctrl</kbd>
-                  <span className="text-[10px] text-on-surface-variant">+</span>
-                  <kbd className="font-sans bg-muted px-1.5 py-0.5 rounded text-[10px] border border-outline-variant/30 text-on-surface">V</kbd>
+                  <kbd className="font-sans bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border/30 text-foreground">Ctrl</kbd>
+                  <span className="text-[10px] text-muted-foreground">+</span>
+                  <kbd className="font-sans bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border/30 text-foreground">V</kbd>
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="text-[11px] text-on-surface-variant/60 font-medium">
+          <p className="text-[11px] text-muted-foreground/60 font-medium">
             Supports JPG, PNG, WebP · max 10 MB
           </p>
         </>
@@ -288,7 +288,7 @@ export function PhotoUploader({
         // With-image: side-by-side layout
         <div className="flex flex-row gap-4">
           {/* Image panel — left */}
-          <div className="flex-1 relative rounded-2xl overflow-hidden min-h-55 border border-outline-variant/20">
+          <div className="flex-1 relative rounded-2xl overflow-hidden min-h-55 border border-border/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={displaySrc}
@@ -318,7 +318,7 @@ export function PhotoUploader({
                 aria-label="Delete image"
                 disabled={disabled || isDeleting}
                 onClick={(e) => { e.stopPropagation(); void handleDelete(); }}
-                className="absolute bottom-3 right-3 w-9 h-9 bg-background/90 hover:bg-background rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 border border-outline-variant/20 disabled:opacity-50"
+                className="absolute bottom-3 right-3 w-9 h-9 bg-background/90 hover:bg-background rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 border border-border/20 disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4 text-[#717a6d]" />
               </button>

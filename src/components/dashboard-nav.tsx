@@ -46,7 +46,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-outline-variant"
+      className="fixed top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border"
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,7 +113,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div id="mobile-nav-menu" className="md:hidden border-t border-outline-variant bg-background/95">
+        <div id="mobile-nav-menu" className="md:hidden border-t border-border bg-background/95">
           <div className="py-2 max-w-screen-2xl mx-auto px-4">
             {navigation.map((item) => {
               const active = isActive(item.href);

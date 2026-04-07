@@ -64,30 +64,34 @@ export const MACRO_HEX_COLORS = {
 
 /** Light-tinted cell background classes for macro table columns */
 export const MACRO_CELL_BG = {
-  protein: 'bg-[#FFEBEC] dark:bg-rose-950/40',
-  carbs:   'bg-[#FEF6D4] dark:bg-amber-950/40',
-  fat:     'bg-[#DFF2FE] dark:bg-sky-950/40',
+  calories: 'bg-[#e6f4ee] dark:bg-emerald-950/40',
+  protein:  'bg-[#FFEBEC] dark:bg-rose-950/40',
+  carbs:    'bg-[#FEF6D4] dark:bg-amber-950/40',
+  fat:      'bg-[#DFF2FE] dark:bg-sky-950/40',
 } as const;
 
 /** Text color classes for macro values inside colored table cells */
 export const MACRO_CELL_TEXT = {
-  protein: 'text-[#D54069] dark:text-rose-400',
-  carbs:   'text-[#CC7A40] dark:text-amber-400',
-  fat:     'text-[#408FBE] dark:text-sky-400',
+  calories: 'text-[#008d4d] dark:text-emerald-400',
+  protein:  'text-[#D54069] dark:text-rose-400',
+  carbs:    'text-[#CC7A40] dark:text-amber-400',
+  fat:      'text-[#408FBE] dark:text-sky-400',
 } as const;
 
 /** Progress bar fill color classes for macro table cells */
 export const MACRO_CELL_FILL = {
-  protein: 'bg-[#D54069] dark:bg-rose-400',
-  carbs:   'bg-[#CC7A40] dark:bg-amber-400',
-  fat:     'bg-[#408FBE] dark:bg-sky-400',
+  calories: 'bg-[#008d4d] dark:bg-emerald-400',
+  protein:  'bg-[#D54069] dark:bg-rose-400',
+  carbs:    'bg-[#CC7A40] dark:bg-amber-400',
+  fat:      'bg-[#408FBE] dark:bg-sky-400',
 } as const;
 
 /** Left border color classes for macro cards */
 export const MACRO_CELL_BORDER = {
-  protein: 'border-l-[#D54069] dark:border-l-rose-400',
-  carbs:   'border-l-[#CC7A40] dark:border-l-amber-400',
-  fat:     'border-l-[#408FBE] dark:border-l-sky-400',
+  calories: 'border-l-[#008d4d] dark:border-l-emerald-400',
+  protein:  'border-l-[#D54069] dark:border-l-rose-400',
+  carbs:    'border-l-[#CC7A40] dark:border-l-amber-400',
+  fat:      'border-l-[#408FBE] dark:border-l-sky-400',
 } as const;
 
 /** Background, text, and fill color classes for fiber, sugar, and sodium */

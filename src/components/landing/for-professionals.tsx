@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 const clients = [
   { name: 'Marcus Aurelius', avatar: 'MA', color: 'bg-blue-200', status: 'Over Calorie Limit', statusClass: 'bg-destructive/10 text-destructive' },
-  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-primary-fixed text-on-primary-fixed' },
+  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-secondary text-secondary-foreground' },
   { name: 'Arthur Morgan', avatar: 'AM', color: 'bg-orange-200', status: 'Logged 2h ago', statusClass: 'bg-muted text-muted-foreground' },
 ];
 
@@ -18,7 +18,7 @@ const features = [
 
 export default function ForProfessionals() {
   return (
-    <section id="for-professionals" className="py-24 px-6 bg-surface-container-low">
+    <section id="for-professionals" className="py-24 px-6 bg-muted">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
 
         {/* Left — Text Content */}
@@ -37,7 +37,7 @@ export default function ForProfessionals() {
             Powerful Tools for Nutrition Professionals
           </h2>
 
-          <p className="text-on-surface-variant text-lg leading-relaxed max-w-lg">
+          <p className="text-muted-foreground text-lg leading-relaxed max-w-lg">
             Manage hundreds of clients with clinical precision. HIPAA-compliant dashboards, real-time logging alerts, and direct messaging built for RDs and Health Coaches.
           </p>
 
@@ -47,7 +47,7 @@ export default function ForProfessionals() {
                 <feature.icon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <span className="font-bold block text-foreground">{feature.title}</span>
-                  <span className="text-sm text-on-surface-variant">{feature.description}</span>
+                  <span className="text-sm text-muted-foreground">{feature.description}</span>
                 </div>
               </div>
             ))}
@@ -82,14 +82,14 @@ export default function ForProfessionals() {
           viewport={{ once: true }}
           className="flex-1 w-full max-w-md"
         >
-          <div className="bg-card rounded-3xl shadow-2xl p-6 border border-outline-variant/10">
+          <div className="bg-card rounded-3xl shadow-2xl p-6 border border-border/10">
             {/* Dashboard Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">RD</div>
+                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-primary font-bold">RD</div>
                 <div>
                   <h4 className="font-headline font-bold text-foreground">Sarah Jenkins, RD</h4>
-                  <span className="text-xs px-2 py-0.5 bg-primary-fixed text-on-primary-fixed rounded-full font-bold">8 Active Clients</span>
+                  <span className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full font-bold">8 Active Clients</span>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-full">
@@ -107,7 +107,7 @@ export default function ForProfessionals() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                   viewport={{ once: true }}
-                  className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl"
+                  className="flex items-center justify-between p-4 bg-muted rounded-xl"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full ${client.color} flex items-center justify-center text-xs font-bold text-gray-700`}>
@@ -127,7 +127,7 @@ export default function ForProfessionals() {
               <button className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-primary/90 transition-colors">
                 + Add Client
               </button>
-              <button className="flex-1 bg-surface-container-low border border-border text-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-surface-container transition-colors">
+              <button className="flex-1 bg-muted border border-border text-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-secondary transition-colors">
                 Create Plan
               </button>
             </div>

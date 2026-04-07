@@ -55,11 +55,11 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
 
   return (
     <div
-      className="bg-surface-container-lowest dark:bg-surface-container rounded-2xl p-6 border border-outline-variant/30 shadow-sm relative"
+      className="bg-background dark:bg-secondary rounded-2xl p-6 border border-border/30 shadow-sm relative"
       data-testid="weekly-calendar-strip"
     >
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           Weekly Overview
         </span>
 
@@ -99,7 +99,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
       <div className="flex items-center gap-1">
         <button
           onClick={handlePrevWeek}
-          className="p-1.5 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-foreground shrink-0"
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
           aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -122,12 +122,12 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                     isSelected
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : isDisabled
-                        ? 'opacity-30 cursor-not-allowed text-on-surface'
-                        : 'hover:bg-surface-container-low cursor-pointer text-on-surface',
+                        ? 'opacity-30 cursor-not-allowed text-foreground'
+                        : 'hover:bg-muted cursor-pointer text-foreground',
                   ].join(' ')}
                 >
                   <span
-                    className={`text-xs font-bold mb-1 ${isSelected ? 'opacity-80' : 'text-on-surface-variant'}`}
+                    className={`text-xs font-bold mb-1 ${isSelected ? 'opacity-80' : 'text-muted-foreground'}`}
                   >
                     {DAY_LABELS[i]}
                   </span>
@@ -140,7 +140,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
         <button
           onClick={handleNextWeek}
           disabled={weekOffset >= 0}
-          className="p-1.5 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
           aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />
