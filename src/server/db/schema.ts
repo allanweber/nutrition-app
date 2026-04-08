@@ -471,12 +471,16 @@ export const dietPlanMealItems = pgTable(
       .references(() => foods.id, { onDelete: 'cascade' }),
     altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
+    dishGroupId: uuid('dish_group_id'), // nullable, no FK — correlator for dish plan events
+    dishNameSnapshot: varchar('dish_name_snapshot', { length: 500 }), // dish name at plan time
+    dishSourceId: uuid('dish_source_id').references(() => customDishes.id, { onDelete: 'set null' }), // original dish FK for multiplier editing
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
     index('diet_plan_meal_items_group_id_idx').on(table.groupId),
     index('diet_plan_meal_items_food_id_idx').on(table.foodId),
+    index('diet_plan_meal_items_dish_group_id_idx').on(table.dishGroupId),
   ],
 );
 

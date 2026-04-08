@@ -1,4 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { uuidv7 } from 'uuidv7';
 import { db } from '@/server/db';
 import {
   dietPlanMealItems,
@@ -29,6 +31,13 @@ export interface DietPlanDTO {
   completeness: number;
 }
 
+export interface FoodMeasureDTO {
+  id: string;
+  label: string;
+  weightGrams: number;
+  defaultQty: number;
+}
+
 export interface MealItemDTO {
   id: string;
   foodId: string;
@@ -37,11 +46,24 @@ export interface MealItemDTO {
   thumbnail: string | null;
   altMeasureId: string | null;
   altMeasureLabel: string | null;
+  /** Stored display quantity (measure units, not grams) */
   quantity: number;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
+  /** Per-100g values from the food record */
+  caloriesPer100g: number;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  /** All available measures for this food */
+  foodMeasures: FoodMeasureDTO[];
+  /** Groups items that came from the same dish addition */
+  dishGroupId: string | null;
+  dishNameSnapshot: string | null;
+  /** Original dish FK — set when the group was added from a custom dish */
+  dishSourceId: string | null;
 }
 
 export interface DietPlanMealDTO {
@@ -166,6 +188,9 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
   });
   if (!plan) return [];
 
+  const selectedMeasure = alias(foodAltMeasures, 'selected_measure');
+  const allMeasures = alias(foodAltMeasures, 'all_measures');
+
   const rows = await db
     .select({
       mealId: dietPlanMeals.id,
@@ -174,6 +199,9 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
       dayOfWeek: dietPlanMeals.dayOfWeek,
       itemId: dietPlanMealItems.id,
       quantity: dietPlanMealItems.quantity,
+      dishGroupId: dietPlanMealItems.dishGroupId,
+      dishNameSnapshot: dietPlanMealItems.dishNameSnapshot,
+      dishSourceId: dietPlanMealItems.dishSourceId,
       foodId: foods.id,
       foodName: foods.name,
       brandName: foods.brandName,
@@ -182,20 +210,43 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
       foodCarbs: foods.carbs,
       foodFat: foods.fat,
       thumbnail: foodPhotos.thumb,
-      altMeasureId: foodAltMeasures.id,
-      altMeasureMeasure: foodAltMeasures.measure,
-      altMeasureServingWeight: foodAltMeasures.servingWeight,
-      altMeasureQty: foodAltMeasures.qty,
+      altMeasureId: selectedMeasure.id,
+      altMeasureMeasure: selectedMeasure.measure,
+      altMeasureServingWeight: selectedMeasure.servingWeight,
+      altMeasureQty: selectedMeasure.qty,
+      measureId: allMeasures.id,
+      measureFoodId: allMeasures.foodId,
+      measureLabel: allMeasures.measure,
+      measureQty: allMeasures.qty,
+      measureServingWeight: allMeasures.servingWeight,
     })
     .from(dietPlanMeals)
     .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
     .leftJoin(foods, eq(dietPlanMealItems.foodId, foods.id))
     .leftJoin(foodPhotos, eq(dietPlanMealItems.foodId, foodPhotos.foodId))
-    .leftJoin(foodAltMeasures, eq(dietPlanMealItems.altMeasureId, foodAltMeasures.id))
+    .leftJoin(selectedMeasure, eq(dietPlanMealItems.altMeasureId, selectedMeasure.id))
+    .leftJoin(allMeasures, eq(foods.id, allMeasures.foodId))
     .where(eq(dietPlanMeals.dietPlanId, dietPlanId));
 
-  // Group rows into meal DTOs
+  // Build measures map from joined rows
+  const measuresByFoodId = new Map<string, FoodMeasureDTO[]>();
+  for (const row of rows) {
+    if (!row.measureId || !row.measureFoodId) continue;
+    if (!measuresByFoodId.has(row.measureFoodId)) measuresByFoodId.set(row.measureFoodId, []);
+    const existing = measuresByFoodId.get(row.measureFoodId)!;
+    if (!existing.some((m) => m.id === row.measureId)) {
+      existing.push({
+        id: row.measureId,
+        label: row.measureLabel!,
+        weightGrams: toNumber(row.measureServingWeight),
+        defaultQty: toNumber(row.measureQty),
+      });
+    }
+  }
+
+  // Group rows into meal DTOs — track seen itemIds to avoid duplicates from the allMeasures join
   const mealsMap = new Map<string, DietPlanMealDTO>();
+  const seenItemIds = new Set<string>();
 
   for (const row of rows) {
     if (!mealsMap.has(row.mealId)) {
@@ -212,7 +263,9 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
       });
     }
 
-    if (row.itemId && row.foodId) {
+    if (row.itemId && row.foodId && !seenItemIds.has(row.itemId)) {
+      seenItemIds.add(row.itemId);
+
       const qGrams = row.altMeasureServingWeight
         ? toNumber(row.quantity) * toNumber(row.altMeasureServingWeight)
         : toNumber(row.quantity);
@@ -237,6 +290,14 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
         altMeasureLabel,
         quantity: toNumber(row.quantity),
         ...macros,
+        caloriesPer100g: toNumber(row.foodCalories),
+        proteinPer100g: toNumber(row.foodProtein),
+        carbsPer100g: toNumber(row.foodCarbs),
+        fatPer100g: toNumber(row.foodFat),
+        foodMeasures: measuresByFoodId.get(row.foodId) ?? [],
+        dishGroupId: row.dishGroupId ?? null,
+        dishNameSnapshot: row.dishNameSnapshot ?? null,
+        dishSourceId: row.dishSourceId ?? null,
       });
 
       meal.totalCalories = Math.round((meal.totalCalories + macros.calories) * 10) / 10;
@@ -332,17 +393,30 @@ export async function copyDay(
     mealIdMap[src.id] = newMeals[i].id;
   });
 
-  // Create new items
+  // Create new items — re-map dish group IDs so each day has independent groups
   if (sourceItems.length > 0) {
+    const dishGroupIdMap = new Map<string, string>();
     await dbInstance
       .insert(dietPlanMealItems)
       .values(
-        sourceItems.map((item) => ({
-          groupId: mealIdMap[item.groupId],
-          foodId: item.foodId,
-          altMeasureId: item.altMeasureId,
-          quantity: item.quantity,
-        })),
+        sourceItems.map((item) => {
+          let newDishGroupId: string | null = null;
+          if (item.dishGroupId) {
+            if (!dishGroupIdMap.has(item.dishGroupId)) {
+              dishGroupIdMap.set(item.dishGroupId, uuidv7());
+            }
+            newDishGroupId = dishGroupIdMap.get(item.dishGroupId)!;
+          }
+          return {
+            groupId: mealIdMap[item.groupId],
+            foodId: item.foodId,
+            altMeasureId: item.altMeasureId,
+            quantity: item.quantity,
+            dishGroupId: newDishGroupId,
+            dishNameSnapshot: item.dishNameSnapshot,
+            dishSourceId: item.dishSourceId,
+          };
+        }),
       );
   }
 

@@ -13,11 +13,13 @@ interface DayMealsViewProps {
   meals: DietPlanMealDTO[];
   selectedDay: number;
   isLoading: boolean;
+  deletingMealId: string | null;
   onAddMeal: (day: number) => void;
   onEditMeal: (meal: DietPlanMealDTO) => void;
+  onDeleteMeal: (meal: DietPlanMealDTO) => void;
 }
 
-export function DayMealsView({ plan, meals, selectedDay, isLoading, onAddMeal, onEditMeal }: DayMealsViewProps) {
+export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMealId, onAddMeal, onEditMeal, onDeleteMeal }: DayMealsViewProps) {
   const dayMeals = meals.filter((m) => m.dayOfWeek === selectedDay);
   const dayName = DAY_NAMES[selectedDay - 1];
 
@@ -34,7 +36,7 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, onAddMeal, o
         </div>
         <div className="flex items-center gap-2">
           <CopyDayPopover planId={plan.id} currentDay={selectedDay} meals={meals} />
-          <Button size="sm" className="gap-1.5" onClick={() => onAddMeal(selectedDay)}>
+          <Button className="gap-1.5" onClick={() => onAddMeal(selectedDay)}>
             <Plus className="h-3.5 w-3.5" />
             Add Meal
           </Button>
@@ -54,7 +56,13 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, onAddMeal, o
       {!isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {dayMeals.map((meal) => (
-            <MealCard key={meal.id} meal={meal} onEdit={() => onEditMeal(meal)} />
+            <MealCard
+              key={meal.id}
+              meal={meal}
+              isDeleting={deletingMealId === meal.id}
+              onEdit={() => onEditMeal(meal)}
+              onDelete={() => onDeleteMeal(meal)}
+            />
           ))}
 
           {/* Add another meal card */}

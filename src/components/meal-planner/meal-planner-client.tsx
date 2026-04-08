@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarDays } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { useDietPlansQuery, useDietPlanMealsQuery } from '@/queries/diet-plans';
+import { useDietPlansQuery, useDietPlanMealsQuery, useDeleteMealMutation } from '@/queries/diet-plans';
 import { PlanCarousel } from './plan-carousel';
 import { DaySelector } from './day-selector';
 import { DayMealsView } from './day-meals-view';
@@ -25,10 +25,12 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
   const [selectedDay, setSelectedDay] = useState(initialDay);
   const [newPlanModalOpen, setNewPlanModalOpen] = useState(false);
   const [mealModalState, setMealModalState] = useState<MealModalState | null>(null);
+  const [deletingMealId, setDeletingMealId] = useState<string | null>(null);
   const hasAutoSelected = useRef(false);
 
   const plansQuery = useDietPlansQuery();
   const mealsQuery = useDietPlanMealsQuery(selectedPlanId);
+  const deleteMealMutation = useDeleteMealMutation();
 
   const plans: DietPlanDTO[] = plansQuery.data?.plans ?? [];
   const meals: DietPlanMealDTO[] = mealsQuery.data?.meals ?? [];
@@ -80,6 +82,16 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
     updateUrl(selectedPlanId, day);
   }
 
+  async function handleDeleteMeal(meal: DietPlanMealDTO) {
+    if (!selectedPlanId) return;
+    setDeletingMealId(meal.id);
+    try {
+      await deleteMealMutation.mutateAsync({ planId: selectedPlanId, mealId: meal.id });
+    } finally {
+      setDeletingMealId(null);
+    }
+  }
+
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) ?? null;
 
   return (
@@ -129,12 +141,19 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
             meals={meals}
             selectedDay={selectedDay}
             isLoading={mealsQuery.isLoading}
+            deletingMealId={deletingMealId}
             onAddMeal={(day) =>
-              setMealModalState({ mode: 'create', planId: selectedPlan.id, day })
+              setMealModalState({
+                mode: 'create',
+                planId: selectedPlan.id,
+                day,
+                existingMeals: meals.filter((m) => m.dayOfWeek === day),
+              })
             }
             onEditMeal={(meal) =>
               setMealModalState({ mode: 'edit', planId: selectedPlan.id, meal })
             }
+            onDeleteMeal={handleDeleteMeal}
           />
         </>
       )}

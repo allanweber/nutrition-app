@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy } from 'lucide-react';
+import { Copy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCopyDayMutation } from '@/queries/diet-plans';
@@ -17,6 +17,7 @@ interface CopyDayPopoverProps {
 
 export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProps) {
   const [open, setOpen] = useState(false);
+  const [copyingFromDay, setCopyingFromDay] = useState<number | null>(null);
   const copyMutation = useCopyDayMutation();
 
   // Days that have at least one meal, excluding the current day
@@ -27,15 +28,22 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
   if (daysWithMeals.length === 0) return null;
 
   async function handleCopy(fromDay: number) {
-    await copyMutation.mutateAsync({ planId, fromDay, toDay: currentDay });
-    setOpen(false);
+    setCopyingFromDay(fromDay);
+    try {
+      await copyMutation.mutateAsync({ planId, fromDay, toDay: currentDay });
+      setOpen(false);
+    } finally {
+      setCopyingFromDay(null);
+    }
   }
 
+  const isPending = copyMutation.isPending;
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(v) => { if (!isPending) setOpen(v); }}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Copy className="h-3.5 w-3.5" />
+        <Button variant="outline" className="gap-1.5" disabled={isPending}>
+          {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
           Copy Day
         </Button>
       </PopoverTrigger>
@@ -45,10 +53,11 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
           <button
             key={day}
             onClick={() => handleCopy(day)}
-            disabled={copyMutation.isPending}
-            className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted transition-colors disabled:opacity-50"
+            disabled={isPending}
+            className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted transition-colors disabled:opacity-50 flex items-center justify-between"
           >
             {DAY_NAMES[day - 1]}
+            {copyingFromDay === day && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
           </button>
         ))}
       </PopoverContent>

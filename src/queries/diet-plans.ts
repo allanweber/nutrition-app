@@ -159,7 +159,7 @@ export function useCreateMealMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },
   })
@@ -201,7 +201,7 @@ export function useDeleteMealMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },
   })
@@ -234,7 +234,7 @@ export function useAddMealItemMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },
   })
@@ -281,7 +281,56 @@ export function useDeleteMealItemMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
+    },
+  })
+}
+
+export function useAddDishToMealMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ planId, mealId, dishId, multiplier = 1 }: {
+      planId: string
+      mealId: string
+      dishId: string
+      multiplier?: number
+    }) => {
+      const res = await fetch(`/api/diet-plans/${planId}/meals/${mealId}/dish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dishId, multiplier }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to add dish')
+      }
+      return res.json() as Promise<{ success: boolean; dishGroupId: string; itemCount: number }>
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
+    },
+  })
+}
+
+export function useDeleteDishGroupFromMealMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ planId, mealId, dishGroupId }: {
+      planId: string
+      mealId: string
+      dishGroupId: string
+    }) => {
+      const res = await fetch(`/api/diet-plans/${planId}/meals/${mealId}/dish-group/${dishGroupId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to delete dish group')
+      }
+      return res.json()
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },
   })
@@ -307,7 +356,7 @@ export function useCopyDayMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },
   })

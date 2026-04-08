@@ -25,6 +25,10 @@ interface QuantityUnitInputProps {
   quantity: number;
   onMeasureChange: (id: string, newQty: number) => void;
   onQuantityChange: (qty: number) => void;
+  /** Whether to show the range slider. Defaults to true. */
+  showSlider?: boolean;
+  /** Whether to show the "Quantity & Serving Size" label. Defaults to true. */
+  showLabel?: boolean;
 }
 
 export function QuantityUnitInput({
@@ -33,6 +37,8 @@ export function QuantityUnitInput({
   quantity,
   onMeasureChange,
   onQuantityChange,
+  showSlider = true,
+  showLabel = true,
 }: QuantityUnitInputProps) {
   const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
 
@@ -52,13 +58,15 @@ export function QuantityUnitInput({
   };
 
   return (
-    <div className="space-y-2">
-      <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">
-        Quantity &amp; Serving Size
-      </label>
+    <div className="space-y-1.5 min-w-0">
+      {showLabel && (
+        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">
+          Quantity &amp; Serving Size
+        </label>
+      )}
 
-      {/* Number input + unit select */}
-      <div className="flex items-center rounded-lg border border-border bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+      {/* Number input + unit select — matches app's h-9 / text-sm input style */}
+      <div className="flex items-center h-9 rounded-md border border-input bg-transparent shadow-xs overflow-hidden transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
         <input
           type="number"
           min={measure.sliderMin}
@@ -66,48 +74,48 @@ export function QuantityUnitInput({
           step={measure.sliderStep}
           value={quantity}
           onChange={(e) => handleNumberChange(e.target.value)}
-          className="flex-1 bg-transparent border-none px-3 py-2 font-bold text-foreground focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="flex-1 min-w-0 bg-transparent border-none px-3 py-1 text-sm font-medium text-foreground focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           data-testid="quantity-input"
           aria-label="Quantity"
         />
-        <div className="h-5 w-px bg-border shrink-0" />
-        <div className="min-w-20">
-          <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
-            <SelectTrigger
-              className="w-full border-none bg-transparent shadow-none font-bold text-foreground focus:ring-0 pl-2 pr-6 py-2 rounded-none"
-              data-testid="measure-select"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {measures.map((m) => (
-                <SelectItem key={m.id} value={m.id} className="text-xs">
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="h-4 w-px bg-border shrink-0" />
+        <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
+          <SelectTrigger
+            className="h-full border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-7 rounded-none w-auto min-w-20 max-w-36"
+            data-testid="measure-select"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {measures.map((m) => (
+              <SelectItem key={m.id} value={m.id} className="text-sm">
+                {m.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Slider */}
-      <div className="px-1">
-        <input
-          type="range"
-          min={measure.sliderMin}
-          max={measure.sliderMax}
-          step={measure.sliderStep}
-          value={quantity}
-          onChange={(e) => handleSliderChange(e.target.value)}
-          className="w-full h-1 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-          data-testid="quantity-slider"
-          aria-label="Quantity slider"
-        />
-        <div className="flex justify-between mt-1">
-          <span className="text-[10px] font-bold text-muted-foreground tabular-nums">{measure.sliderMin}</span>
-          <span className="text-[10px] font-bold text-muted-foreground tabular-nums">{measure.sliderMax}</span>
+      {showSlider && (
+        <div className="px-1">
+          <input
+            type="range"
+            min={measure.sliderMin}
+            max={measure.sliderMax}
+            step={measure.sliderStep}
+            value={quantity}
+            onChange={(e) => handleSliderChange(e.target.value)}
+            className="w-full h-1 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+            data-testid="quantity-slider"
+            aria-label="Quantity slider"
+          />
+          <div className="flex justify-between mt-1">
+            <span className="text-[10px] font-bold text-muted-foreground tabular-nums">{measure.sliderMin}</span>
+            <span className="text-[10px] font-bold text-muted-foreground tabular-nums">{measure.sliderMax}</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

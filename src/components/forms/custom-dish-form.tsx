@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useForm } from '@tanstack/react-form';
 import { ArrowLeft, BarChart2, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react';
@@ -12,6 +12,7 @@ import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import { FoodSearchField } from '@/components/food-search-field';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 import { PageHeader } from '@/components/page-header';
+import { QuantityUnitInput, type QuantityMeasure } from '@/components/quantity-unit-input';
 import { PhotoUploader } from '@/components/photo-uploader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,11 +31,11 @@ import {
 } from '@/lib/nutrition-constants';
 import { cn } from '@/lib/utils';
 import { useCreateDishMutation, useUpdateDishMutation } from '@/queries/dishes';
-import { useFoodDetailQuery } from '@/queries/food-detail';
+import { useFoodDetailQuery, type FoodDetailResponse } from '@/queries/food-detail';
 import { useGoalsQuery } from '@/queries/goals';
 import type { NutritionGoals } from '@/types/goals';
 import type { DishDetail } from '@/types/dish';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQueries } from '@tanstack/react-query';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,10 @@ interface Ingredient {
   foodId: string;
   foodName: string;
   thumbnail?: string | null;
-  quantity: number;           // grams
+  quantity: number;           // grams (always)
+  displayQty: number;         // display value in selected measure
+  measures: QuantityMeasure[];
+  selectedMeasureId: string;
   caloriesPer100g: number;
   proteinPer100g: number;     // g per 100g food
   carbsPer100g: number;       // g per 100g food
@@ -62,24 +66,44 @@ interface CustomDishFormProps {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function clamp(val: number, min: number, max: number) {
-  return Math.min(Math.max(val, min), max);
-}
-
 function round1(n: number) {
   return Math.round(n * 10) / 10;
 }
 
 // ─── ingredient row ───────────────────────────────────────────────────────────
 
+function buildIngredientMeasures(servings: { id: string; description: string; weightGrams: number }[]): QuantityMeasure[] {
+  const base: QuantityMeasure = {
+    id: 'base',
+    label: 'grams',
+    defaultQty: 100,
+    sliderMin: 1,
+    sliderMax: 500,
+    sliderStep: 1,
+    weightGrams: 1,
+  };
+  const alt: QuantityMeasure[] = servings.map((s) => ({
+    id: s.id,
+    label: s.description,
+    defaultQty: 1,
+    sliderMin: 0.25,
+    sliderMax: 10,
+    sliderStep: 0.25,
+    weightGrams: s.weightGrams,
+  }));
+  return [...alt, base];
+}
+
 function IngredientRow({
   ingredient,
   onRemove,
   onQuantityChange,
+  onMeasureChange,
 }: {
   ingredient: Ingredient;
   onRemove: () => void;
-  onQuantityChange: (q: number) => void;
+  onQuantityChange: (displayQty: number, grams: number) => void;
+  onMeasureChange: (measureId: string, displayQty: number, grams: number) => void;
 }) {
   const q = ingredient.quantity;
   const kcal = round1((ingredient.caloriesPer100g / 100) * q);
@@ -87,96 +111,82 @@ function IngredientRow({
   const carbs = round1((ingredient.carbsPer100g / 100) * q);
   const fat = round1((ingredient.fatPer100g / 100) * q);
 
-  const handleSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onQuantityChange(clamp(Number(e.target.value), 1, 500));
-  };
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = parseFloat(e.target.value);
-    if (!isNaN(v)) onQuantityChange(clamp(v, 1, 500));
-  };
-
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border/20 bg-card px-4 py-3">
-      {/* Row 1: thumbnail + name + badges */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {ingredient.thumbnail ? (
-          <Image
-            src={ingredient.thumbnail}
-            alt=""
-            width={44}
-            height={44}
-            className="rounded-lg shrink-0 object-cover"
-          />
-        ) : (
-          <div className="w-11 h-11 rounded-lg bg-muted shrink-0" />
-        )}
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight truncate">{ingredient.foodName}</p>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {ingredient.isLoadingNutrition ? (
-              <>
-                <div className="animate-pulse rounded-full bg-muted h-4 w-12" />
-                <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
-                <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
-                <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
-              </>
-            ) : (
-              <>
-                <Badge variant="outline" className="border-transparent bg-primary/10 text-primary text-[10px] px-1.5 py-0">
-                  {kcal} kcal
-                </Badge>
-                <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.protein, MACRO_TEXT_COLORS.protein)}>
-                  P: {protein}g
-                </Badge>
-                <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.carbs, MACRO_TEXT_COLORS.carbs)}>
-                  C: {carbs}g
-                </Badge>
-                <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.fat, MACRO_TEXT_COLORS.fat)}>
-                  F: {fat}g
-                </Badge>
-              </>
-            )}
-          </div>
+    <div className="rounded-xl border border-border/20 bg-card px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      {/* Thumbnail */}
+      {ingredient.thumbnail ? (
+        <Image
+          src={ingredient.thumbnail}
+          alt=""
+          width={44}
+          height={44}
+          className="rounded-lg shrink-0 object-cover"
+        />
+      ) : (
+        <div className="w-11 h-11 rounded-lg bg-muted shrink-0" />
+      )}
+
+      {/* Name + badges — grows to fill space */}
+      <div className="min-w-32 flex-1">
+        <p className="text-sm font-semibold text-foreground leading-tight truncate">{ingredient.foodName}</p>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {ingredient.isLoadingNutrition ? (
+            <>
+              <div className="animate-pulse rounded-full bg-muted h-4 w-12" />
+              <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
+              <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
+              <div className="animate-pulse rounded-full bg-muted h-4 w-10" />
+            </>
+          ) : (
+            <>
+              <Badge variant="outline" className="border-transparent bg-primary/10 text-primary text-[10px] px-1.5 py-0">
+                {kcal} kcal
+              </Badge>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.protein, MACRO_TEXT_COLORS.protein)}>
+                P: {protein}g
+              </Badge>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.carbs, MACRO_TEXT_COLORS.carbs)}>
+                C: {carbs}g
+              </Badge>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.fat, MACRO_TEXT_COLORS.fat)}>
+                F: {fat}g
+              </Badge>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Row 2 (small) / same row (large): slider + input + remove */}
-      <div className="flex items-center gap-1.5 w-full sm:w-auto">
-        <span className="text-[10px] text-muted-foreground shrink-0">1G</span>
-        <input
-          type="range"
-          min={1}
-          max={500}
-          step={1}
-          value={q}
-          onChange={handleSlider}
-          className="flex-1 sm:w-28 accent-primary h-1.5"
-          aria-label={`Quantity slider for ${ingredient.foodName}`}
-        />
-        <span className="text-[10px] text-muted-foreground shrink-0">500G</span>
-        <div className="flex items-center shrink-0 rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring overflow-hidden">
-          <Input
-            type="number"
-            min={1}
-            max={500}
-            value={q}
-            onChange={handleInput}
-            className="w-14 text-right text-sm border-0 focus-visible:ring-0 shadow-none pr-1"
-            aria-label={`Quantity in grams for ${ingredient.foodName}`}
+      {/* Quantity + measure — fixed width, wraps to new line on small screens */}
+      {!ingredient.isLoadingNutrition && (
+        <div className="w-56 shrink-0">
+          <QuantityUnitInput
+            measures={ingredient.measures}
+            selectedMeasureId={ingredient.selectedMeasureId}
+            quantity={ingredient.displayQty}
+            onMeasureChange={(id, newQty) => {
+              const measure = ingredient.measures.find((m) => m.id === id) ?? ingredient.measures[0];
+              onMeasureChange(id, newQty, newQty * measure.weightGrams);
+            }}
+            onQuantityChange={(qty) => {
+              const measure = ingredient.measures.find((m) => m.id === ingredient.selectedMeasureId) ?? ingredient.measures[0];
+              onQuantityChange(qty, qty * measure.weightGrams);
+            }}
+            showSlider={false}
+            showLabel={false}
           />
-          <span className="text-xs text-muted-foreground pr-2 select-none">g</span>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={onRemove}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      )}
+
+      {/* Remove button */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+        onClick={onRemove}
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
@@ -362,6 +372,88 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
 
   const foodSearch = useFoodSearch({ includeCustom: true });
 
+  // ── edit-mode hydration ──
+  // Stable queue (set once at mount) of ingredients that need food-detail hydration
+  const editHydrationQueueRef = useRef(
+    initialDish?.ingredients.map((ing) => ({
+      key: ing.id,
+      foodId: ing.foodId,
+      altMeasureId: ing.altMeasureId,
+      savedGrams: ing.quantity,
+    })) ?? [],
+  );
+  const hydratedKeysRef = useRef(new Set<string>());
+
+  const editHydrationQueries = useQueries({
+    queries: editHydrationQueueRef.current.map(({ foodId }) => ({
+      queryKey: ['foods', 'detail', foodId, null],
+      queryFn: async (): Promise<{ food: FoodDetailResponse }> => {
+        const resp = await fetch(`/api/foods/detail?id=${foodId}`);
+        if (!resp.ok) throw new Error('Failed to load food details');
+        return resp.json();
+      },
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  // Update ingredients once each food detail arrives (restores saved measure + full measures list)
+  useEffect(() => {
+    const queue = editHydrationQueueRef.current;
+    for (let i = 0; i < editHydrationQueries.length; i++) {
+      const result = editHydrationQueries[i];
+      const queueItem = queue[i];
+      if (!result.data || hydratedKeysRef.current.has(queueItem.key)) continue;
+
+      hydratedKeysRef.current.add(queueItem.key);
+      const detail = result.data.food;
+      const measures = buildIngredientMeasures(detail.servings);
+      const base = detail.baseServing;
+
+      const selectedMeasure = queueItem.altMeasureId
+        ? (measures.find((m) => m.id === queueItem.altMeasureId) ??
+           measures.find((m) => m.id === 'base') ??
+           measures[0])
+        : (measures.find((m) => m.id === 'base') ?? measures[0]);
+
+      const displayQty =
+        selectedMeasure.id === 'base'
+          ? queueItem.savedGrams
+          : Math.round((queueItem.savedGrams / selectedMeasure.weightGrams) * 100) / 100;
+
+      setIngredients((prev) =>
+        prev.map((ing) =>
+          ing.key === queueItem.key
+            ? {
+                ...ing,
+                measures,
+                selectedMeasureId: selectedMeasure.id,
+                displayQty,
+                quantity: queueItem.savedGrams,
+                caloriesPer100g: base.calories,
+                proteinPer100g: base.protein,
+                carbsPer100g: base.carbs,
+                fatPer100g: base.fat,
+                fiberPer100g: base.fiber ?? 0,
+                sugarPer100g: base.sugar ?? 0,
+                sodiumMgPer100g: base.sodium ?? 0,
+              }
+            : ing,
+        ),
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editHydrationQueries]);
+
+  const baseGramsMeasure: QuantityMeasure = {
+    id: 'base',
+    label: 'grams',
+    defaultQty: 100,
+    sliderMin: 1,
+    sliderMax: 500,
+    sliderStep: 1,
+    weightGrams: 1,
+  };
+
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initialDish?.ingredients.map((ing) => ({
       key: ing.id,
@@ -369,6 +461,9 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
       foodName: ing.foodName,
       thumbnail: ing.thumbnail ?? null,
       quantity: ing.quantity,
+      displayQty: ing.quantity,
+      measures: [baseGramsMeasure],
+      selectedMeasureId: 'base',
       caloriesPer100g: ing.quantity > 0 ? (ing.calories / ing.quantity) * 100 : 0,
       proteinPer100g:  ing.quantity > 0 ? (ing.protein  / ing.quantity) * 100 : 0,
       carbsPer100g:    ing.quantity > 0 ? (ing.carbs    / ing.quantity) * 100 : 0,
@@ -400,19 +495,27 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
     const detail = ingredientDetailQuery.data?.food;
     if (!detail || !pendingIngredientKey) return;
     const base = detail.baseServing;
+    const measures = buildIngredientMeasures(detail.servings);
+    const firstMeasure = measures[0];
+    const displayQty = firstMeasure.defaultQty;
+    const quantityGrams = displayQty * firstMeasure.weightGrams;
     setIngredients((prev) =>
       prev.map((ing) =>
         ing.key === pendingIngredientKey
           ? {
               ...ing,
-              foodId:           detail.id,   // use local DB UUID from detail response
-              caloriesPer100g:  base.calories,
-              proteinPer100g:   base.protein,
-              carbsPer100g:     base.carbs,
-              fatPer100g:       base.fat,
-              fiberPer100g:     base.fiber  ?? 0,
-              sugarPer100g:     base.sugar  ?? 0,
-              sodiumMgPer100g:  base.sodium ?? 0,
+              foodId:             detail.id,
+              caloriesPer100g:    base.calories,
+              proteinPer100g:     base.protein,
+              carbsPer100g:       base.carbs,
+              fatPer100g:         base.fat,
+              fiberPer100g:       base.fiber  ?? 0,
+              sugarPer100g:       base.sugar  ?? 0,
+              sodiumMgPer100g:    base.sodium ?? 0,
+              measures,
+              selectedMeasureId:  firstMeasure.id,
+              displayQty,
+              quantity:           quantityGrams,
               isLoadingNutrition: false,
             }
           : ing,
@@ -441,6 +544,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
 
       const ingredientPayload = ingredients.map((ing, i) => ({
         foodId: ing.foodId,
+        altMeasureId: ing.selectedMeasureId !== 'base' ? ing.selectedMeasureId : null,
         quantity: ing.quantity,
         seq: i + 1,
       }));
@@ -479,6 +583,8 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
   // Reset form when initialDish loads (edit mode)
   useEffect(() => {
     if (!initialDish) return;
+    // Allow re-hydration after form reset (e.g. after a save + refetch)
+    hydratedKeysRef.current.clear();
     form.reset({
       name: initialDish.name ?? '',
       description: initialDish.description ?? '',
@@ -490,6 +596,9 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
         foodName: ing.foodName,
         thumbnail: ing.thumbnail ?? null,
         quantity: ing.quantity,
+        displayQty: ing.quantity,
+        measures: [baseGramsMeasure],
+        selectedMeasureId: 'base',
         caloriesPer100g: ing.quantity > 0 ? (ing.calories / ing.quantity) * 100 : 0,
         proteinPer100g:  ing.quantity > 0 ? (ing.protein  / ing.quantity) * 100 : 0,
         carbsPer100g:    ing.quantity > 0 ? (ing.carbs    / ing.quantity) * 100 : 0,
@@ -514,6 +623,9 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
           foodName: item.name,
           thumbnail: item.thumbnail ?? null,
           quantity: 100,
+          displayQty: 100,
+          measures: [baseGramsMeasure],
+          selectedMeasureId: 'base',
           caloriesPer100g: 0,
           proteinPer100g:  0,
           carbsPer100g:    0,
@@ -529,6 +641,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
       setIngredientError(null);
       foodSearch.setQuery('');
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [foodSearch],
   );
 
@@ -536,8 +649,18 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
     setIngredients((prev) => prev.filter((i) => i.key !== key));
   };
 
-  const handleQuantityChange = (key: string, q: number) => {
-    setIngredients((prev) => prev.map((i) => (i.key === key ? { ...i, quantity: q } : i)));
+  const handleQuantityChange = (key: string, displayQty: number, grams: number) => {
+    setIngredients((prev) =>
+      prev.map((i) => (i.key === key ? { ...i, displayQty, quantity: grams } : i)),
+    );
+  };
+
+  const handleMeasureChange = (key: string, measureId: string, displayQty: number, grams: number) => {
+    setIngredients((prev) =>
+      prev.map((i) =>
+        i.key === key ? { ...i, selectedMeasureId: measureId, displayQty, quantity: grams } : i,
+      ),
+    );
   };
 
   return (
@@ -674,7 +797,8 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
                       key={ing.key}
                       ingredient={ing}
                       onRemove={() => handleRemove(ing.key)}
-                      onQuantityChange={(q) => handleQuantityChange(ing.key, q)}
+                      onQuantityChange={(displayQty, grams) => handleQuantityChange(ing.key, displayQty, grams)}
+                      onMeasureChange={(measureId, displayQty, grams) => handleMeasureChange(ing.key, measureId, displayQty, grams)}
                     />
                   ))}
                 </div>

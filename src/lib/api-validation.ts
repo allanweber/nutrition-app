@@ -165,13 +165,26 @@ export const updateDietPlanSchema = z.object({
   status: z.enum(['active', 'draft', 'archived']).optional(),
 });
 
+export const mealTypeSchema = z.enum([
+  'breakfast',
+  'lunch',
+  'dinner',
+  'snack',
+  'morning_snack',
+  'afternoon_snack',
+  'evening_snack',
+  'pre_workout',
+  'post_workout',
+  'other',
+]);
+
 export const createDietPlanMealSchema = z.object({
-  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  mealType: mealTypeSchema,
   dayOfWeek: dayOfWeekSchema,
 });
 
 export const updateDietPlanMealSchema = z.object({
-  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
+  mealType: mealTypeSchema.optional(),
   dayOfWeek: dayOfWeekSchema.optional(),
 });
 
