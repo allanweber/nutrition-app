@@ -1,5 +1,5 @@
 {
-  "id": "f8b6ce82-c187-4eb3-a9a2-4d42e694dea2",
+  "id": "52751052-7898-4946-9817-8ff637528e21",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -565,6 +565,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "dish_group_id": {
+          "name": "dish_group_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_name_snapshot": {
+          "name": "dish_name_snapshot",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_source_id": {
+          "name": "dish_source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -601,6 +619,21 @@
           "columns": [
             {
               "expression": "food_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "diet_plan_meal_items_dish_group_id_idx": {
+          "name": "diet_plan_meal_items_dish_group_id_idx",
+          "columns": [
+            {
+              "expression": "dish_group_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -651,6 +684,19 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "diet_plan_meal_items_dish_source_id_custom_dishes_id_fk": {
+          "name": "diet_plan_meal_items_dish_source_id_custom_dishes_id_fk",
+          "tableFrom": "diet_plan_meal_items",
+          "tableTo": "custom_dishes",
+          "columnsFrom": [
+            "dish_source_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -686,7 +732,7 @@
           "name": "day_of_week",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "scheduled_at": {
           "name": "scheduled_at",
