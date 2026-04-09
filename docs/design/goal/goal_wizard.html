@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Personal Nutrition Plan | Vitalis Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#206223",
+                        "on-primary": "#ffffff",
+                        "surface": "#f8fafb",
+                        "on-surface": "#191c1d",
+                        "outline": "#707a6c",
+                        "outline-variant": "#bfcaba",
+                        "surface-container": "#eceeef",
+                        "surface-container-low": "#f2f4f5",
+                        "surface-container-highest": "#e1e3e4",
+                        "macro-protein": "#D54069",
+                        "macro-carbs": "#CC7A40",
+                        "macro-fat": "#408FBE"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "2xl": "1rem", "3xl": "1.5rem"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+        input[type=range] {
+            @apply h-2 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary;
+        }
+        .macro-card {
+            @apply p-5 rounded-2xl bg-white border border-outline-variant/30 shadow-sm transition-all;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col items-center justify-center p-4">
+<div class="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl shadow-primary/10 overflow-hidden border border-outline-variant/10">
+<div class="px-8 pt-8 pb-4 hidden" id="progress-container">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-black uppercase tracking-widest text-primary" id="step-label">Step 1 of 6</span>
+<button class="text-outline hover:text-on-surface transition-colors flex items-center gap-1 text-sm font-bold" id="back-btn" onclick="goBack()">
+<span class="material-symbols-outlined text-sm">arrow_back</span> Back
+                </button>
+</div>
+<div class="w-full h-1.5 bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-primary transition-all duration-500" id="progress-bar" style="width: 16%"></div>
+</div>
+</div>
+<form class="p-8 md:p-12" onsubmit="return false;">
+<div class="step-content active text-center space-y-8" id="step0">
+<div class="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-primary text-5xl">auto_awesome</span>
+</div>
+<div class="space-y-4">
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight">Let’s personalize your nutrition plan</h1>
+<p class="text-xl text-outline font-medium max-w-md mx-auto">Take a quick moment to discover the perfect fuel for your unique body and lifestyle.</p>
+</div>
+<button class="w-full bg-primary text-white py-6 rounded-2xl text-xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all" onclick="goToStep(1)">
+                    Start My Journey
+                </button>
+</div>
+<div class="step-content space-y-8" id="step1">
+<div class="space-y-3">
+<h2 class="text-3xl md:text-4xl font-headline font-extrabold">Tell us a bit about yourself</h2>
+<p class="text-outline text-lg">Every journey is unique! We use these details to find your perfect daily balance.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-3">
+<label class="text-sm font-black uppercase tracking-widest text-outline">Age</label>
+<input class="w-full bg-surface-container-low border-none rounded-2xl px-6 py-4 text-xl font-bold focus:ring-4 focus:ring-primary/10 transition-all" placeholder="25" type="number"/>
+</div>
+<div class="space-y-3">
+<label class="text-sm font-black uppercase tracking-widest text-outline">Gender</label>
+<div class="flex gap-2">
+<button class="flex-1 py-4 border-2 border-outline-variant/30 rounded-2xl font-bold hover:border-primary/40 focus:border-primary transition-all">Male</button>
+<button class="flex-1 py-4 border-2 border-outline-variant/30 rounded-2xl font-bold hover:border-primary/40 focus:border-primary transition-all">Female</button>
+</div>
+</div>
+<div class="md:col-span-2 space-y-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-black uppercase tracking-widest text-outline">Current Weight</label>
+<span class="text-xl font-bold text-primary">75 kg</span>
+</div>
+<input class="w-full" max="200" min="40" type="range" value="75"/>
+</div>
+</div>
+<button class="w-full bg-primary text-white py-5 rounded-2xl text-xl font-black transition-all" onclick="goToStep(2)">Continue</button>
+</div>
+<div class="step-content space-y-8" id="step2">
+<div class="space-y-3 text-center">
+<h2 class="text-3xl md:text-4xl font-headline font-extrabold">What's your main goal?</h2>
+<p class="text-outline text-lg">Focusing on one goal helps us create a clearer map for your progress.</p>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<label class="relative flex items-center p-6 border-2 border-outline-variant/30 rounded-[1.5rem] cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+<input class="hidden" name="goal" type="radio"/>
+<div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mr-5 shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">filter_tilt_shift</span>
+</div>
+<div class="flex-1">
+<h3 class="font-black text-xl">Lose weight</h3>
+<p class="text-sm text-outline font-medium">Sustainable fat loss with vibrant energy.</p>
+</div>
+</label>
+<label class="relative flex items-center p-6 border-2 border-outline-variant/30 rounded-[1.5rem] cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+<input class="hidden" name="goal" type="radio"/>
+<div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mr-5 shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">balance</span>
+</div>
+<div class="flex-1">
+<h3 class="font-black text-xl">Maintain weight</h3>
+<p class="text-sm text-outline font-medium">Fuel your lifestyle and feel your best.</p>
+</div>
+</label>
+<label class="relative flex items-center p-6 border-2 border-outline-variant/30 rounded-[1.5rem] cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+<input class="hidden" name="goal" type="radio"/>
+<div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mr-5 shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">fitness_center</span>
+</div>
+<div class="flex-1">
+<h3 class="font-black text-xl">Gain muscle</h3>
+<p class="text-sm text-outline font-medium">Build strength and lean muscle mass.</p>
+</div>
+</label>
+</div>
+<button class="w-full bg-primary text-white py-5 rounded-2xl text-xl font-black transition-all" onclick="goToStep(3)">Next</button>
+</div>
+<div class="step-content space-y-8" id="step3">
+<div class="space-y-3">
+<h2 class="text-3xl md:text-4xl font-headline font-extrabold">How active is your lifestyle?</h2>
+<p class="text-outline text-lg">Understanding your daily movement helps us find your calorie 'sweet spot'.</p>
+</div>
+<div class="space-y-3">
+<button class="w-full p-5 border-2 border-outline-variant/30 rounded-2xl text-left hover:border-primary/40 flex items-center gap-5 transition-all">
+<div class="w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">chair</span>
+</div>
+<div>
+<p class="font-black text-lg">Sedentary</p>
+<p class="text-sm text-outline font-medium">Desk job, little intentional exercise</p>
+</div>
+</button>
+<button class="w-full p-5 border-2 border-outline-variant/30 rounded-2xl text-left hover:border-primary/40 flex items-center gap-5 transition-all">
+<div class="w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">directions_walk</span>
+</div>
+<div>
+<p class="font-black text-lg">Lightly Active</p>
+<p class="text-sm text-outline font-medium">Active hobby, 1–3 workouts/week</p>
+</div>
+</button>
+<button class="w-full p-5 border-2 border-primary rounded-2xl text-left flex items-center gap-5 transition-all bg-primary/5">
+<div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">sprint</span>
+</div>
+<div>
+<p class="font-black text-lg text-primary">Moderately Active</p>
+<p class="text-sm text-outline font-medium">Moving often, 3–5 workouts/week</p>
+</div>
+</button>
+</div>
+<button class="w-full bg-primary text-white py-5 rounded-2xl text-xl font-black transition-all" onclick="goToStep(4)">Almost there!</button>
+</div>
+<div class="step-content space-y-8" id="step4">
+<div class="space-y-3">
+<h2 class="text-3xl md:text-4xl font-headline font-extrabold">Any personal preferences?</h2>
+<p class="text-outline text-lg">Choose a style that feels natural and sustainable for you.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="p-5 border-2 border-outline-variant/30 rounded-2xl font-bold hover:border-primary/40 transition-all text-sm">High Protein</button>
+<button class="p-5 border-2 border-primary rounded-2xl font-bold transition-all text-sm bg-primary/5">Balanced</button>
+<button class="p-5 border-2 border-outline-variant/30 rounded-2xl font-bold hover:border-primary/40 transition-all text-sm">Low Carb</button>
+<button class="p-5 border-2 border-outline-variant/30 rounded-2xl font-bold hover:border-primary/40 transition-all text-sm">Keto</button>
+</div>
+<div class="pt-6 space-y-4 border-t border-outline-variant/20">
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="font-bold text-lg group-hover:text-primary transition-colors">Vegetarian / Vegan</span>
+<div class="w-14 h-7 bg-surface-container-highest rounded-full relative transition-colors group-hover:bg-primary/20"><div class="absolute right-1 top-1 w-5 h-5 bg-white rounded-full shadow-sm"></div></div>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="font-bold text-lg group-hover:text-primary transition-colors">Low Sodium focus</span>
+<div class="w-14 h-7 bg-surface-container-highest rounded-full relative transition-colors group-hover:bg-primary/20"><div class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow-sm"></div></div>
+</label>
+</div>
+<div class="flex gap-4">
+<button class="flex-1 py-5 border-2 border-outline-variant/30 rounded-2xl font-black text-outline hover:text-on-surface transition-all" onclick="goToStep(5)">Skip</button>
+<button class="flex-[2] bg-primary text-white py-5 rounded-2xl text-xl font-black transition-all" onclick="goToStep(5)">Review Plan</button>
+</div>
+</div>
+<div class="step-content space-y-8 text-center" id="step5">
+<div class="space-y-3">
+<h2 class="text-3xl md:text-4xl font-headline font-extrabold">Ready for your results?</h2>
+<p class="text-outline text-lg">We've gathered everything we need to build your custom path.</p>
+</div>
+<div class="bg-surface-container-low rounded-[2rem] p-8 text-left space-y-5">
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/60">flag</span>
+<span class="text-outline font-medium">Your Goal</span>
+</div>
+<span class="font-black text-primary uppercase tracking-wider">Lose Weight</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/60">bolt</span>
+<span class="text-outline font-medium">Activity</span>
+</div>
+<span class="font-black uppercase tracking-wider">Moderate</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/60">person</span>
+<span class="text-outline font-medium">Details</span>
+</div>
+<span class="font-black uppercase tracking-wider">25y, 75kg</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary/60">restaurant</span>
+<span class="text-outline font-medium">Preference</span>
+</div>
+<span class="font-black uppercase tracking-wider">Balanced</span>
+</div>
+</div>
+<button class="w-full bg-primary text-white py-6 rounded-2xl text-xl font-black shadow-xl shadow-primary/30 transition-all hover:scale-[1.02]" onclick="goToStep(6)">
+                    Calculate my plan
+                </button>
+</div>
+<div class="step-content space-y-10" id="step6">
+<div class="text-center space-y-3">
+<div class="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest mb-2">
+<span class="material-symbols-outlined text-sm">stars</span> Personalized for you
+                    </div>
+<h2 class="text-4xl font-headline font-black">Your Custom Daily Plan</h2>
+<p class="text-outline text-lg font-medium max-w-sm mx-auto">A balanced blueprint designed to help you reach your goals sustainably.</p>
+</div>
+<div class="bg-primary/5 border border-primary/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
+<div class="absolute top-0 right-0 p-10 opacity-5 rotate-12">
+<span class="material-symbols-outlined text-[120px]">nutrition</span>
+</div>
+<span class="text-xs font-black uppercase tracking-[0.25em] text-primary/70">Estimated Daily Energy</span>
+<div class="flex items-baseline justify-center gap-2 mt-3">
+<span class="text-8xl font-headline font-black text-on-surface tracking-tighter">2,200</span>
+<span class="text-2xl font-black text-outline">kcal</span>
+</div>
+<div class="mt-6 inline-flex items-center gap-2 text-primary font-bold bg-white px-6 py-2 rounded-full shadow-sm border border-primary/5">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                        Moderate Deficit for Fat Loss
+                    </div>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between px-2">
+<h3 class="font-black text-xl flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">pie_chart</span>
+                            Macro Distribution
+                        </h3>
+<span class="text-xs font-bold text-outline">Customize these targets below</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="macro-card flex flex-col items-center text-center">
+<div class="w-12 h-12 rounded-full border-4 border-macro-protein/20 flex items-center justify-center mb-3">
+<span class="text-[10px] font-black text-macro-protein">30%</span>
+</div>
+<span class="text-xs font-black uppercase tracking-widest text-outline mb-1">Protein</span>
+<div class="text-3xl font-black text-on-surface">150g</div>
+<p class="text-[10px] mt-3 font-medium text-outline leading-tight">Essential for repairing muscle and keeping you satisfied.</p>
+</div>
+<div class="macro-card flex flex-col items-center text-center">
+<div class="w-12 h-12 rounded-full border-4 border-macro-carbs/20 flex items-center justify-center mb-3">
+<span class="text-[10px] font-black text-macro-carbs">45%</span>
+</div>
+<span class="text-xs font-black uppercase tracking-widest text-outline mb-1">Carbs</span>
+<div class="text-3xl font-black text-on-surface">250g</div>
+<p class="text-[10px] mt-3 font-medium text-outline leading-tight">Your body's preferred fuel source for energy and focus.</p>
+</div>
+<div class="macro-card flex flex-col items-center text-center">
+<div class="w-12 h-12 rounded-full border-4 border-macro-fat/20 flex items-center justify-center mb-3">
+<span class="text-[10px] font-black text-macro-fat">25%</span>
+</div>
+<span class="text-xs font-black uppercase tracking-widest text-outline mb-1">Fats</span>
+<div class="text-3xl font-black text-on-surface">70g</div>
+<p class="text-[10px] mt-3 font-medium text-outline leading-tight">Vital for nutrient absorption and hormone balance.</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-low rounded-3xl p-6 flex items-start gap-4">
+<div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-blue-600">water_drop</span>
+</div>
+<div class="space-y-1">
+<span class="block text-xs font-black uppercase tracking-widest text-outline">Daily Hydration</span>
+<span class="text-2xl font-black block">2.5 Liters</span>
+<p class="text-xs text-outline font-medium leading-relaxed">Staying hydrated boosts metabolism and helps manage hunger cues effectively.</p>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-3xl p-6 flex items-start gap-4">
+<div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-emerald-600">eco</span>
+</div>
+<div class="space-y-1">
+<span class="block text-xs font-black uppercase tracking-widest text-outline">Fiber Goal</span>
+<span class="text-2xl font-black block">30 Grams</span>
+<p class="text-xs text-outline font-medium leading-relaxed">Fiber supports digestive health and keeps your energy levels stable all day.</p>
+</div>
+</div>
+</div>
+<div class="space-y-4 pt-4">
+<button class="w-full bg-primary text-white py-6 rounded-2xl text-xl font-black shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-100">
+                        Start Tracking My Plan
+                    </button>
+<div class="flex gap-4">
+<button class="flex-1 py-5 rounded-2xl border-2 border-outline-variant/30 text-base font-black text-on-surface hover:bg-surface-container-low transition-all flex items-center justify-center gap-2" onclick="goToStep(4)">
+<span class="material-symbols-outlined text-lg">tune</span> Refine My Plan
+                        </button>
+<button class="flex-1 py-5 rounded-2xl border-2 border-outline-variant/30 text-base font-black text-on-surface hover:bg-surface-container-low transition-all flex items-center justify-center gap-2" onclick="goToStep(0)">
+<span class="material-symbols-outlined text-lg">restart_alt</span> Start Over
+                        </button>
+</div>
+</div>
+</div>
+</form>
+</div>
+<script>
+        let currentStep = 0;
+        const totalStepsCount = 5; // Internal steps for labeling
+        function goToStep(step) {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+            const progressContainer = document.getElementById('progress-container');
+            if (step === 0 || step === 6) {
+                progressContainer.classList.add('hidden');
+            } else {
+                progressContainer.classList.remove('hidden');
+                document.getElementById('step-label').innerText = `Step ${step} of ${totalStepsCount}`;
+                document.getElementById('progress-bar').style.width = `${(step/totalStepsCount) * 100}%`;
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        function goBack() {
+            if (currentStep > 0) goToStep(currentStep - 1);
+        }
+    </script>
+
+</body></html>
