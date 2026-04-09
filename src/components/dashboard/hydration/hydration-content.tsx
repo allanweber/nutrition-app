@@ -13,7 +13,7 @@ export function HydrationContent({ data }: HydrationContentProps) {
     <div className="flex flex-col h-full gap-6">
       {/* Two-tier header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
           Hydration
         </p>
         <h2 className="text-2xl font-extrabold font-headline text-foreground">
@@ -26,12 +26,12 @@ export function HydrationContent({ data }: HydrationContentProps) {
         <span className="text-5xl font-headline font-black tabular-nums text-blue-600 leading-none">
           {totalMl}
         </span>
-        <span className="text-base font-bold text-on-surface-variant">ml</span>
+        <span className="text-base font-bold text-muted-foreground">ml</span>
       </div>
 
       {/* Progress */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+        <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <span>Progress</span>
           <span>{totalMl} / {goalMl} ml</span>
         </div>
@@ -41,7 +41,7 @@ export function HydrationContent({ data }: HydrationContentProps) {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Water intake"
-          className="h-3 w-full rounded-full bg-surface-container overflow-hidden"
+          className="h-3 w-full rounded-full bg-secondary overflow-hidden"
         >
           <div
             className="h-full bg-blue-500 rounded-full transition-all duration-500"

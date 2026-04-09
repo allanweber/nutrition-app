@@ -91,7 +91,7 @@ export default function FinalCTA() {
               </p>
               <Button
                 size="lg"
-                className="w-full bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed/90 font-black rounded-xl"
+                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 font-black rounded-xl"
                 asChild
               >
                 <Link href="/signup?type=professional">Start 14-Day Trial</Link>

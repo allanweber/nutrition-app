@@ -41,12 +41,12 @@ export function Tabs({
     ? ['Common', 'Branded', 'Custom']
     : ['Common', 'Branded'];
 
-  // Find which tab has content to determine a good default
+  // Find which non-custom tab has content to determine a good default
   const defaultTab =
     availableTabs.find((t) => {
+      if (t === 'Custom') return false;
       if (t === 'Common') return commonItems.length > 0;
       if (t === 'Branded') return brandedItems.length > 0;
-      if (t === 'Custom') return customItems.length > 0;
       return false;
     }) ?? 'Common';
 
@@ -59,16 +59,16 @@ export function Tabs({
   };
 
 
-  // Switch to a tab that has items when results change (initial load / query change)
+  // Switch to a non-custom tab that has items when results change (initial load / query change)
   React.useEffect(() => {
     const current = activeTab;
     const currentItems =
       current === 'Common' ? commonItems : current === 'Branded' ? brandedItems : customItems;
     if (currentItems.length === 0) {
       const nextTab = availableTabs.find((t) => {
+        if (t === 'Custom') return false;
         if (t === 'Common') return commonItems.length > 0;
         if (t === 'Branded') return brandedItems.length > 0;
-        if (t === 'Custom') return customItems.length > 0;
         return false;
       });
       if (nextTab) setActiveTab(nextTab);
@@ -88,7 +88,8 @@ export function Tabs({
       const currentCount = activeTab === 'Common' ? commonItems.length : activeTab === 'Branded' ? brandedItems.length : customItems.length;
       if (currentCount === prevCountsRef.current[activeTab]) {
         const nextTab = availableTabs.find((t) => {
-          const curr = t === 'Common' ? commonItems.length : t === 'Branded' ? brandedItems.length : customItems.length;
+          if (t === 'Custom') return false;
+          const curr = t === 'Common' ? commonItems.length : brandedItems.length;
           return curr > prevCountsRef.current[t];
         });
         if (nextTab) setActiveTab(nextTab);

@@ -173,7 +173,7 @@ export default function FoodLogClient({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16 text-on-surface-variant">
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         Loading meals…
       </div>
@@ -235,7 +235,7 @@ export default function FoodLogClient({
           <div
             key={mealType}
             data-testid={`meal-section-${mealType}`}
-            className="rounded-2xl border border-outline-variant/20 hover:border-primary/20 transition-all shadow-sm bg-surface-container-lowest dark:bg-surface-container-low overflow-hidden"
+            className="rounded-2xl border border-border/20 hover:border-primary/20 transition-all shadow-sm bg-background dark:bg-muted overflow-hidden"
           >
             {/* Meal header */}
             <button
@@ -243,7 +243,7 @@ export default function FoodLogClient({
               onClick={toggleMeal}
               aria-expanded={!isMealCollapsed}
               data-testid={`meal-toggle-${mealType}`}
-              className={`w-full flex items-center justify-between px-5 py-4 text-left group transition-colors hover:bg-surface-container/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-outline-variant/10' : ''}`}
+              className={`w-full flex items-center justify-between px-5 py-4 text-left group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-border/10' : ''}`}
             >
               <div>
                 <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export default function FoodLogClient({
                   </span>
                 </div>
                 {latestLoggedTime && (
-                  <p className="text-xs text-on-surface-variant mt-0.5 ml-[18px]">
+                  <p className="text-xs text-muted-foreground mt-0.5 ml-[18px]">
                     Logged at {latestLoggedTime}
                   </p>
                 )}
@@ -272,9 +272,9 @@ export default function FoodLogClient({
                     {mealTotals.calories} kcal
                   </span>
                 )}
-                <span className="flex items-center justify-center h-5 w-5 rounded-full bg-outline-variant/20 group-hover:bg-outline-variant/40 transition-colors">
+                <span className="flex items-center justify-center h-5 w-5 rounded-full bg-border/20 group-hover:bg-border/40 transition-colors">
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-on-surface-variant transition-transform duration-200 ${isMealCollapsed ? '-rotate-90' : ''}`}
+                    className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${isMealCollapsed ? '-rotate-90' : ''}`}
                     aria-hidden
                   />
                 </span>
@@ -287,14 +287,14 @@ export default function FoodLogClient({
                 data-testid={`meal-empty-placeholder-${mealType}`}
               >
                 <div className="flex flex-col items-center gap-2 text-center">
-                  <UtensilsCrossed className="h-6 w-6 text-on-surface-variant/30" aria-hidden />
-                  <p className="text-sm text-on-surface-variant">
+                  <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
+                  <p className="text-sm text-muted-foreground">
                     No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
                   </p>
                 </div>
               </div>
             ) : !isMealCollapsed ? (
-              <div className="divide-y divide-outline-variant/10">
+              <div className="divide-y divide-border/10">
                 {grouped.map((entry) => {
                   if (isDishGroup(entry)) {
                     const groupKey = `group:${entry.dishLogGroupId}`;
@@ -314,7 +314,7 @@ export default function FoodLogClient({
                     };
 
                     return (
-                      <div key={entry.dishLogGroupId} className="bg-surface-container/30">
+                      <div key={entry.dishLogGroupId} className="bg-secondary/30">
                         {/* Dish group header */}
                         <div className="flex items-center justify-between px-5 py-2 bg-violet-50/50 dark:bg-violet-900/10 border-b border-violet-100/50 dark:border-violet-800/20">
                           <button
@@ -421,7 +421,7 @@ export default function FoodLogClient({
 
       {logs.length === 0 && (
         <div className="text-center py-4" data-testid="empty-state">
-          <p className="text-sm text-on-surface-variant">
+          <p className="text-sm text-muted-foreground">
             Search for foods above to start logging your meals.
           </p>
         </div>
@@ -469,17 +469,17 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
             className="w-12 h-12 rounded-lg object-cover shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-lg bg-surface-container-high shrink-0 flex items-center justify-center">
-            <UtensilsCrossed className="h-5 w-5 text-on-surface-variant/30" aria-hidden />
+          <div className="w-12 h-12 rounded-lg bg-secondary shrink-0 flex items-center justify-center">
+            <UtensilsCrossed className="h-5 w-5 text-muted-foreground/30" aria-hidden />
           </div>
         )}
 
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
           {log.food.brandName && (
-            <p className="text-xs text-on-surface-variant truncate">{log.food.brandName}</p>
+            <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
           )}
-          <p className="text-xs text-on-surface-variant">
+          <p className="text-xs text-muted-foreground">
             {log.altMeasure
               ? `${+(log.quantity / log.altMeasure.weightGrams).toFixed(2)} ${log.altMeasure.description}`
               : `${log.quantity}g`}
@@ -527,7 +527,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
           size="icon"
           onClick={() => onDeleteRequest(log.id)}
           disabled={deleting === log.id}
-          className="text-on-surface-variant hover:text-destructive hover:bg-destructive/10 shrink-0"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
           aria-label={`Remove ${log.food.name} from log`}
           data-testid={`delete-log-${log.id}`}
         >

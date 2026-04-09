@@ -136,6 +136,75 @@ export const foodLogIdSchema = z
   .uuid('Food log ID must be a valid UUID');
 
 // ============================================
+// DIET PLAN API SCHEMAS
+// ============================================
+
+const dayOfWeekSchema = z.number().int().min(1).max(7);
+
+export const createDietPlanSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+  targetCalories: z.number().positive(),
+  targetProtein: z.number().positive(),
+  targetCarbs: z.number().positive(),
+  targetFat: z.number().positive(),
+  startDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  endDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().nullable(),
+  status: z.enum(['active', 'draft', 'archived']).default('draft'),
+});
+
+export const updateDietPlanSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().optional().nullable(),
+  targetCalories: z.number().positive().optional(),
+  targetProtein: z.number().positive().optional(),
+  targetCarbs: z.number().positive().optional(),
+  targetFat: z.number().positive().optional(),
+  startDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
+  endDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional().nullable(),
+  status: z.enum(['active', 'draft', 'archived']).optional(),
+});
+
+export const mealTypeSchema = z.enum([
+  'breakfast',
+  'lunch',
+  'dinner',
+  'snack',
+  'morning_snack',
+  'afternoon_snack',
+  'evening_snack',
+  'pre_workout',
+  'post_workout',
+  'other',
+]);
+
+export const createDietPlanMealSchema = z.object({
+  mealType: mealTypeSchema,
+  dayOfWeek: dayOfWeekSchema,
+});
+
+export const updateDietPlanMealSchema = z.object({
+  mealType: mealTypeSchema.optional(),
+  dayOfWeek: dayOfWeekSchema.optional(),
+});
+
+export const addMealItemSchema = z.object({
+  foodId: z.string().uuid(),
+  altMeasureId: z.string().uuid().optional().nullable(),
+  quantity: z.number().positive(),
+});
+
+export const updateMealItemSchema = z.object({
+  altMeasureId: z.string().uuid().optional().nullable(),
+  quantity: z.number().positive().optional(),
+});
+
+export const copyDaySchema = z.object({
+  fromDay: dayOfWeekSchema,
+  toDay: dayOfWeekSchema,
+});
+
+// ============================================
 // TRANSFORMATION HELPERS
 // ============================================
 // Convert API input format to database format for final validation

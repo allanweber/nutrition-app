@@ -111,19 +111,19 @@ export function NutritionItemsTable<T>({
         const thumb = config.getThumbnail(item);
         return (
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-lg overflow-hidden shrink-0 border border-outline-variant/30 bg-surface-container">
+            <div className="size-10 rounded-lg overflow-hidden shrink-0 border border-border/30 bg-secondary">
               {thumb ? (
                 <Image src={thumb} alt="" width={40} height={40} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <UtensilsCrossed className="h-4 w-4 text-on-surface-variant/40" />
+                  <UtensilsCrossed className="h-4 w-4 text-muted-foreground/40" />
                 </div>
               )}
             </div>
             <div>
-              <span className="font-headline font-bold text-on-surface block text-sm">{name}</span>
+              <span className="font-headline font-bold text-foreground block text-sm">{name}</span>
               {subtitle && (
-                <span className="text-[10px] text-on-surface-variant uppercase tracking-tight">{subtitle}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{subtitle}</span>
               )}
             </div>
           </div>
@@ -135,7 +135,7 @@ export function NutritionItemsTable<T>({
       header: () => <div className="text-right">Energy (kcal)</div>,
       accessorFn: (row) => config.getEnergy(row),
       cell: ({ row }) => (
-        <div className="text-right font-mono text-sm font-semibold text-on-surface tabular-nums">
+        <div className="text-right font-mono text-sm font-semibold text-foreground tabular-nums">
           {Math.round(config.getEnergy(row.original))}
         </div>
       ),
@@ -169,7 +169,7 @@ export function NutritionItemsTable<T>({
       header: config.extraCol.label,
       accessorFn: (row) => parseFloat(config.extraCol.getValue(row)) || 0,
       cell: ({ row }) => (
-        <span className="font-mono text-sm text-on-surface-variant tabular-nums">
+        <span className="font-mono text-sm text-muted-foreground tabular-nums">
           {config.extraCol.getValue(row.original)}
         </span>
       ),
@@ -196,7 +196,7 @@ export function NutritionItemsTable<T>({
               variant="ghost"
               size="icon"
               asChild
-              className="h-8 w-8 text-on-surface-variant hover:text-primary hover:bg-primary/10"
+              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
             >
               <Link href={config.getEditHref(item)} aria-label={`Edit ${name}`}>
                 <Pencil className="h-4 w-4" />
@@ -222,7 +222,7 @@ export function NutritionItemsTable<T>({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-on-surface-variant hover:text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 onClick={() => meta.setConfirmDelete(id)}
                 aria-label={`Delete ${name}`}
                 data-testid={deleteTestId}
@@ -283,14 +283,14 @@ export function NutritionItemsTable<T>({
     <div className="flex flex-col gap-4">
       {/* Controls bar */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 bg-background/50 px-4 py-2.5 rounded-xl border border-outline-variant/40">
+        <div className="flex items-center gap-2 bg-background/50 px-4 py-2.5 rounded-xl border border-border/40">
           <span className="size-2 rounded-full bg-primary shrink-0" />
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
             {filteredCount} {filteredCount === 1 ? 'Item' : 'Items'} View
           </span>
         </div>
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-on-surface-variant/60 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
           <input
             type="text"
             value={search}
@@ -299,7 +299,7 @@ export function NutritionItemsTable<T>({
               setPagination((p) => ({ ...p, pageIndex: 0 }));
             }}
             placeholder={searchPlaceholder}
-            className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest rounded-xl border border-outline-variant/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium outline-none"
+            className="w-full pl-10 pr-4 py-2.5 bg-background rounded-xl border border-border/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium outline-none"
           />
         </div>
         <div className="ml-auto">
@@ -310,7 +310,7 @@ export function NutritionItemsTable<T>({
                 setSearch('');
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-outline-variant/40 bg-background text-xs font-bold text-on-surface-variant uppercase tracking-wider hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/40 bg-background text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset
@@ -320,7 +320,7 @@ export function NutritionItemsTable<T>({
       </div>
 
       {/* Table card */}
-      <div className="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden border border-outline-variant/20">
+      <div className="bg-background rounded-2xl shadow-sm overflow-hidden border border-border/20">
         <div className="overflow-x-auto">
           <Table className="min-w-225 border-collapse">
             <TableHeader>
@@ -336,7 +336,7 @@ export function NutritionItemsTable<T>({
                       <TableHead
                         key={header.id}
                         className={`px-6 py-4 text-[11px] font-extrabold uppercase tracking-[0.15em] ${
-                          macro ? `${macro.text} ${macro.bg}` : 'text-on-surface-variant'
+                          macro ? `${macro.text} ${macro.bg}` : 'text-muted-foreground'
                         }`}
                       >
                         {canSort ? (
@@ -356,16 +356,16 @@ export function NutritionItemsTable<T>({
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody className="divide-y divide-outline-variant/15">
+            <TableBody className="divide-y divide-border/15">
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow className="hover:bg-transparent border-0">
                   <TableCell colSpan={columns.length} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center">
-                        <UtensilsCrossed className="h-7 w-7 text-on-surface-variant/40" />
+                      <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                        <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
                       </div>
                       <p className="text-base font-bold text-foreground">{emptyTitle}</p>
-                      <p className="text-sm text-on-surface-variant max-w-xs">{emptyDescription}</p>
+                      <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -378,7 +378,7 @@ export function NutritionItemsTable<T>({
                     <TableRow
                       key={row.id}
                       data-testid={rowTestId}
-                      className="group hover:bg-surface-container-low/40 transition-colors duration-150 cursor-pointer"
+                      className="group hover:bg-muted/40 transition-colors duration-150 cursor-pointer"
                       onClick={() => router.push(config.getEditHref(row.original))}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -403,10 +403,10 @@ export function NutritionItemsTable<T>({
         </div>
 
         {/* Footer / Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-muted gap-4 border-t border-outline-variant/15">
+        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-muted gap-4 border-t border-border/15">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                 Rows per page
               </span>
               <select
@@ -415,18 +415,18 @@ export function NutritionItemsTable<T>({
                   table.setPageSize(Number(e.target.value));
                   table.setPageIndex(0);
                 }}
-                className="appearance-none bg-background border border-outline-variant/40 rounded-lg pl-3 pr-7 py-1.5 text-sm font-bold text-on-surface outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-all hover:bg-muted"
+                className="appearance-none bg-background border border-border/40 rounded-lg pl-3 pr-7 py-1.5 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-all hover:bg-muted"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
             </div>
-            <span className="text-xs font-semibold text-on-surface-variant">
+            <span className="text-xs font-semibold text-muted-foreground">
               Showing{' '}
-              <span className="text-on-surface font-bold">{start}–{end}</span>
+              <span className="text-foreground font-bold">{start}–{end}</span>
               {' '}of{' '}
-              <span className="text-on-surface font-bold">{filteredCount}</span>
+              <span className="text-foreground font-bold">{filteredCount}</span>
               {' '}entries
             </span>
           </div>
@@ -436,7 +436,7 @@ export function NutritionItemsTable<T>({
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-background text-on-surface-variant hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
@@ -446,7 +446,7 @@ export function NutritionItemsTable<T>({
                   btn === 'ellipsis' ? (
                     <span
                       key={`ellipsis-${i}`}
-                      className="flex items-center justify-center w-8 h-8 text-on-surface-variant/50 font-bold text-sm"
+                      className="flex items-center justify-center w-8 h-8 text-muted-foreground/50 font-bold text-sm"
                     >
                       …
                     </span>
@@ -457,7 +457,7 @@ export function NutritionItemsTable<T>({
                       className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-all ${
                         btn === pageIndex + 1
                           ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-on-surface-variant hover:bg-primary/10 hover:text-primary'
+                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
                       }`}
                     >
                       {btn}
@@ -468,7 +468,7 @@ export function NutritionItemsTable<T>({
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-background text-on-surface-variant hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

@@ -21,7 +21,7 @@ function RetryUI({ minHeight, onReset }: RetryUIProps) {
 
   return (
     <div
-      className={`rounded-[24px] bg-surface-container-low border border-outline-variant shadow-sm p-8 flex flex-col items-center justify-center gap-3 ${minHeight}`}
+      className={`rounded-[24px] bg-muted border border-border shadow-sm p-8 flex flex-col items-center justify-center gap-3 ${minHeight}`}
     >
       <AlertCircle className="h-5 w-5 text-muted-foreground" />
       <p className="text-sm text-muted-foreground">Something went wrong</p>

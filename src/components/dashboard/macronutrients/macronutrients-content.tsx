@@ -14,7 +14,7 @@ export function MacronutrientsContent({ data }: MacronutrientsContentProps) {
     <div className="flex flex-col h-full gap-6">
       {/* Two-tier header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
           Composition
         </p>
         <h2 className="text-2xl font-extrabold font-headline text-foreground">

@@ -74,7 +74,7 @@ export default function Pricing() {
   const [billing, setBilling] = useState<BillingCycle>('monthly');
 
   return (
-    <section id="pricing" className="py-24 px-6 bg-surface-container-lowest">
+    <section id="pricing" className="py-24 px-6 bg-background">
       <div className="max-w-7xl mx-auto">
 
         {/* Section Header */}
@@ -90,13 +90,13 @@ export default function Pricing() {
           </h2>
 
           {/* Billing Toggle */}
-          <div className="inline-flex p-1 bg-surface-container rounded-xl">
+          <div className="inline-flex p-1 bg-secondary rounded-xl">
             <button
               onClick={() => setBilling('monthly')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                 billing === 'monthly'
-                  ? 'bg-surface-container-lowest shadow-sm text-foreground'
-                  : 'text-on-surface-variant hover:text-foreground'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Monthly
@@ -105,8 +105,8 @@ export default function Pricing() {
               onClick={() => setBilling('yearly')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                 billing === 'yearly'
-                  ? 'bg-surface-container-lowest shadow-sm text-foreground'
-                  : 'text-on-surface-variant hover:text-foreground'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Yearly <span className="text-primary">(Save 20%)</span>
@@ -125,8 +125,8 @@ export default function Pricing() {
               viewport={{ once: true }}
               className={`relative flex flex-col p-8 rounded-[2rem] border ${
                 plan.popular
-                  ? 'bg-surface-container-lowest border-4 border-primary shadow-xl scale-105 z-10'
-                  : 'bg-surface-container-lowest border border-outline-variant/10 shadow-sm'
+                  ? 'bg-background border-4 border-primary shadow-xl scale-105 z-10'
+                  : 'bg-background border border-border/10 shadow-sm'
               }`}
             >
               {/* Popular Badge */}
@@ -142,7 +142,7 @@ export default function Pricing() {
                 <span className="font-headline text-4xl font-black text-foreground">
                   {plan.price[billing]}
                 </span>
-                <span className="text-on-surface-variant text-sm">{plan.period}</span>
+                <span className="text-muted-foreground text-sm">{plan.period}</span>
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
@@ -160,7 +160,7 @@ export default function Pricing() {
                 className={`w-full rounded-xl font-bold ${
                   plan.popular
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg'
-                    : 'border-2 border-primary text-primary hover:bg-primary-fixed'
+                    : 'border-2 border-primary text-primary hover:bg-secondary'
                 }`}
                 asChild
               >
@@ -176,7 +176,7 @@ export default function Pricing() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           viewport={{ once: true }}
-          className="text-center mt-12 text-sm text-on-surface-variant"
+          className="text-center mt-12 text-sm text-muted-foreground"
         >
           All plans include a 14-day free trial. No credit card required to start.{' '}
           <a href="/contact" className="text-primary hover:underline">Questions? Contact us.</a>

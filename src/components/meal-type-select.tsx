@@ -21,7 +21,7 @@ export function MealTypeSelect({ value, onChange, error, id }: MealTypeSelectPro
     <div className="space-y-1">
       <label
         htmlFor={id}
-        className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider ml-1"
+        className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1"
       >
         Meal Type
       </label>
@@ -29,7 +29,7 @@ export function MealTypeSelect({ value, onChange, error, id }: MealTypeSelectPro
         <Select value={value} onValueChange={(v) => onChange(v as MealType)}>
           <SelectTrigger
             id={id}
-            className={`w-full rounded-lg border border-outline-variant bg-background font-bold focus:border-primary focus:ring-1 focus:ring-primary${error ? ' border-destructive' : ''}`}
+            className={`w-full rounded-lg border border-border bg-background font-bold focus:border-primary focus:ring-1 focus:ring-primary${error ? ' border-destructive' : ''}`}
             data-testid="meal-type-select"
           >
             <SelectValue />

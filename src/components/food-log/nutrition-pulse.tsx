@@ -109,9 +109,9 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
       <div
         className={[
           'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden relative',
-          'dark:bg-surface-container dark:border dark:border-primary/30',
-          '[--pulse-fill:#206223] [--pulse-track:#aee39d]',
-          'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--surface-container-high)]',
+          'dark:bg-secondary dark:border dark:border-primary/30',
+          '[--pulse-fill:var(--green-dark)] [--pulse-track:#aee39d]',
+          'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--border)]',
         ].join(' ')}
         data-testid="nutrition-pulse"
       >
@@ -151,12 +151,12 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
               >
                 {isLoading ? '—' : remaining}
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mt-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground mt-1">
                 kcal left
               </span>
             </div>
           </div>
-          <p className="mt-3 text-sm text-[#002203]/70 dark:text-on-surface-variant tabular-nums text-center">
+          <p className="mt-3 text-sm text-[#002203]/70 dark:text-muted-foreground tabular-nums text-center">
             {data?.caloriesConsumed ?? 0} / {data?.calorieGoal ?? 0} kcal consumed
           </p>
         </div>
@@ -168,7 +168,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
             return (
               <div key={key} data-testid={`pulse-macro-${key}`}>
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-on-surface-variant">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-muted-foreground">
                     {label}
                   </span>
                   <span className="text-xs font-bold tabular-nums text-[#002203] dark:text-foreground">
@@ -176,7 +176,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
                     <span className="font-normal opacity-60"> / {goal}g</span>
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-black/10 dark:bg-surface-container-high overflow-hidden">
+                <div className="h-2 rounded-full bg-black/10 dark:bg-border overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
                     style={{ width: `${macroPct}%` }}
@@ -190,7 +190,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
         {/* Expand / collapse all nutrients */}
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
+          className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground transition-colors"
           aria-expanded={expanded}
         >
           {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -201,14 +201,14 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
         {expanded && (
           <div className="mb-6 space-y-4">
             {allNutrientGroups.map((group) => (
-              <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-surface-container-low p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-on-surface-variant mb-3">
+              <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-muted p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-muted-foreground mb-3">
                   {group.heading}
                 </p>
                 <div className="space-y-2">
                   {group.rows.map(({ label, value, unit, goal }) => (
                     <div key={label} className="flex items-baseline justify-between">
-                      <span className="text-xs text-[#002203]/70 dark:text-on-surface-variant">{label}</span>
+                      <span className="text-xs text-[#002203]/70 dark:text-muted-foreground">{label}</span>
                       <span className="text-sm font-bold tabular-nums text-[#002203] dark:text-foreground">
                         {value}
                         <span className="text-xs font-normal opacity-60 ml-0.5">{unit}</span>
@@ -229,13 +229,13 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground">
                 Favorites
               </p>
             </div>
             <button
               onClick={() => setFavModalOpen(true)}
-              className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-on-surface-variant hover:text-[#002203] dark:hover:text-foreground transition-colors"
+              className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground transition-colors"
               data-testid="see-all-favorites"
             >
               See all
@@ -243,7 +243,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
             </button>
           </div>
           {topFavorites.length === 0 ? (
-            <p className="text-xs text-[#002203]/50 dark:text-on-surface-variant/50">
+            <p className="text-xs text-[#002203]/50 dark:text-muted-foreground/50">
               Star foods or dishes to add them here
             </p>
           ) : (
@@ -253,7 +253,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
                   key={item.id}
                   onClick={() => onAddFood(item)}
                   data-testid={`favorite-pill-${item.id}`}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-surface-container-low dark:hover:bg-surface-container text-[#002203] dark:text-foreground font-medium transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
                 >
                   {item.name}
                 </button>
@@ -265,7 +265,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
         {/* Quick Add Recent */}
         {recentFoods.length > 0 && (
           <div data-testid="quick-add-recent" className="mt-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-on-surface-variant mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground mb-3">
               Quick Add
             </p>
             <div className="flex flex-wrap gap-2">
@@ -274,7 +274,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
                   key={food.id}
                   onClick={() => onQuickAddFood?.(food.name)}
                   data-testid={`quick-add-${food.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-surface-container-low dark:hover:bg-surface-container text-[#002203] dark:text-foreground font-medium transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
                 >
                   {food.name}
                 </button>

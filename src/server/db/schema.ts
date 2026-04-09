@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -48,6 +49,11 @@ export const verificationStatusEnum = pgEnum('verification_status', [
   'pending',
   'verified',
   'rejected',
+]);
+export const dietPlanStatusEnum = pgEnum('diet_plan_status', [
+  'active',
+  'draft',
+  'archived',
 ]);
 
 export const users = pgTable(
@@ -419,12 +425,13 @@ export const dietPlans = pgTable(
     targetFat: decimal('target_fat', { precision: 10, scale: 2 }),
     startDate: timestamp('start_date').notNull(),
     endDate: timestamp('end_date'),
-    isActive: boolean('is_active').default(true),
+    status: dietPlanStatusEnum('status').default('draft').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
     index('diet_plans_client_id_idx').on(table.clientId),
+    uniqueIndex('diet_plans_one_active_per_client').on(table.clientId).where(sql`${table.status} = 'active'`),
   ],
 );
 
@@ -437,7 +444,7 @@ export const dietPlanMeals = pgTable(
       .notNull()
       .references(() => dietPlans.id, { onDelete: 'cascade' }),
     mealType: mealTypeEnum('meal_type').notNull(),
-    dayOfWeek: integer('day_of_week'),
+    dayOfWeek: integer('day_of_week').notNull(),
     scheduledAt: timestamp('scheduled_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -464,12 +471,16 @@ export const dietPlanMealItems = pgTable(
       .references(() => foods.id, { onDelete: 'cascade' }),
     altMeasureId: uuid('alt_measure_id').references(() => foodAltMeasures.id, { onDelete: 'set null' }),
     quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
+    dishGroupId: uuid('dish_group_id'), // nullable, no FK — correlator for dish plan events
+    dishNameSnapshot: varchar('dish_name_snapshot', { length: 500 }), // dish name at plan time
+    dishSourceId: uuid('dish_source_id').references(() => customDishes.id, { onDelete: 'set null' }), // original dish FK for multiplier editing
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [
     index('diet_plan_meal_items_group_id_idx').on(table.groupId),
     index('diet_plan_meal_items_food_id_idx').on(table.foodId),
+    index('diet_plan_meal_items_dish_group_id_idx').on(table.dishGroupId),
   ],
 );
 

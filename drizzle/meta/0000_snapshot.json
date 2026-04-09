@@ -1,5 +1,5 @@
 {
-  "id": "5644f6dc-7fff-47d9-955b-6dc43c5559ad",
+  "id": "52751052-7898-4946-9817-8ff637528e21",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -565,6 +565,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "dish_group_id": {
+          "name": "dish_group_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_name_snapshot": {
+          "name": "dish_name_snapshot",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dish_source_id": {
+          "name": "dish_source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -601,6 +619,21 @@
           "columns": [
             {
               "expression": "food_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "diet_plan_meal_items_dish_group_id_idx": {
+          "name": "diet_plan_meal_items_dish_group_id_idx",
+          "columns": [
+            {
+              "expression": "dish_group_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -651,6 +684,19 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "diet_plan_meal_items_dish_source_id_custom_dishes_id_fk": {
+          "name": "diet_plan_meal_items_dish_source_id_custom_dishes_id_fk",
+          "tableFrom": "diet_plan_meal_items",
+          "tableTo": "custom_dishes",
+          "columnsFrom": [
+            "dish_source_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -686,7 +732,7 @@
           "name": "day_of_week",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "scheduled_at": {
           "name": "scheduled_at",
@@ -838,12 +884,13 @@
           "primaryKey": false,
           "notNull": false
         },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
+        "status": {
+          "name": "status",
+          "type": "diet_plan_status",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": true
+          "notNull": true,
+          "default": "'draft'"
         },
         "created_at": {
           "name": "created_at",
@@ -872,6 +919,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "diet_plans_one_active_per_client": {
+          "name": "diet_plans_one_active_per_client",
+          "columns": [
+            {
+              "expression": "client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"diet_plans\".\"status\" = 'active'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2707,6 +2770,15 @@
     }
   },
   "enums": {
+    "public.diet_plan_status": {
+      "name": "diet_plan_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "draft",
+        "archived"
+      ]
+    },
     "public.goal_type": {
       "name": "goal_type",
       "schema": "public",

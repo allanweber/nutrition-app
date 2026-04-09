@@ -23,9 +23,9 @@ function MomentumTooltip({ active, payload }: MomentumTooltipProps) {
   if (!d.hasData) return null;
 
   return (
-    <div className="rounded-xl border border-outline-variant bg-surface-container-highest px-3 py-2.5 shadow-lg text-xs">
+    <div className="rounded-xl border border-border bg-card px-3 py-2.5 shadow-lg text-xs">
       <p className="font-semibold text-foreground mb-1.5">
-        {d.caloriesConsumed.toLocaleString()} <span className="font-normal text-on-surface-variant">kcal</span>
+        {d.caloriesConsumed.toLocaleString()} <span className="font-normal text-muted-foreground">kcal</span>
       </p>
       <div className="flex flex-col gap-1">
         <MacroRow label="Protein" value={d.protein} color={MACRO_HEX_COLORS.protein} />
@@ -40,7 +40,7 @@ function MacroRow({ label, value, color }: { label: string; value: number; color
   return (
     <div className="flex items-center gap-1.5">
       <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-on-surface-variant">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span className="ml-auto font-medium text-foreground">{value}g</span>
     </div>
   );
@@ -59,7 +59,7 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
           Insights
         </p>
         <h2 className="text-2xl font-extrabold font-headline text-foreground">
@@ -76,7 +76,7 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
           >
             <Tooltip
               content={<MomentumTooltip />}
-              cursor={{ fill: 'var(--color-surface-container)', radius: 4 }}
+              cursor={{ fill: 'var(--color-secondary)', radius: 4 }}
             />
             <YAxis domain={[0, 100]} hide />
             <XAxis
@@ -112,7 +112,7 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
                       ? 'var(--color-primary)'
                       : entry.hasData
                         ? 'color-mix(in oklch, var(--color-primary) 35%, transparent)'
-                        : 'var(--color-surface-container)'
+                        : 'var(--color-secondary)'
                   }
                 />
               ))}

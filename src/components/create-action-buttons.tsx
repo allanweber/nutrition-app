@@ -4,7 +4,7 @@ import { CalendarPlus, UtensilsCrossed, Dumbbell } from 'lucide-react';
 const base =
   'inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors';
 const primary = `${base} bg-primary text-primary-foreground hover:bg-primary/90`;
-const ghost = `${base} border border-outline-variant/50 text-on-surface-variant hover:text-foreground hover:border-outline-variant`;
+const ghost = `${base} border border-border/50 text-muted-foreground hover:text-foreground hover:border-border`;
 
 export function CreatePlanButton({ variant = 'ghost' }: { variant?: 'primary' | 'ghost' }) {
   return (

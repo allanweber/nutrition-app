@@ -61,7 +61,7 @@ function AnimatedStat({ icon: _icon, value, suffix, label, delay }: StatProps) {
       <div className="text-4xl md:text-5xl font-headline font-black text-primary mb-2" aria-label={`${value}${suffix} ${label}`}>
         {formatCount(count, value)}{suffix}
       </div>
-      <div className="text-sm font-bold text-on-surface-variant uppercase tracking-widest" aria-hidden="true">{label}</div>
+      <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest" aria-hidden="true">{label}</div>
     </motion.div>
   );
 }
@@ -75,7 +75,7 @@ export default function SocialProof() {
   ];
 
   return (
-    <section className="bg-surface-container-low py-16 md:py-20">
+    <section className="bg-muted py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, index) => (

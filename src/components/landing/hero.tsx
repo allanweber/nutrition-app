@@ -7,7 +7,7 @@ import { Play, Check, Droplets, Beef, Wheat } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-surface-container-lowest">
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
 
       <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -23,7 +23,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-fixed text-on-primary-fixed text-sm font-semibold mb-8"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold mb-8"
             >
               <span>✦ New</span>
               <span>— AI-powered meal suggestions</span>
@@ -38,7 +38,7 @@ export default function Hero() {
             </h1>
 
             {/* Subtext */}
-            <p className="text-lg text-on-surface-variant mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               Precision nutrition for individuals and professional tools for clinicians. Track, analyze, and optimize every aspect of human vitality.
             </p>
 
@@ -56,7 +56,7 @@ export default function Hero() {
               <Button
                 size="lg"
                 variant="ghost"
-                className="bg-surface-container-high hover:bg-surface-container-highest text-foreground font-bold text-lg px-8 py-4 h-auto rounded-xl"
+                className="bg-secondary hover:bg-secondaryest text-foreground font-bold text-lg px-8 py-4 h-auto rounded-xl"
                 asChild
               >
                 <a href="#demo">
@@ -67,7 +67,7 @@ export default function Hero() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start text-sm text-on-surface-variant">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start text-sm text-muted-foreground">
               <div className="flex items-center">
                 <Check className="h-4 w-4 text-primary mr-2" />
                 No credit card required
@@ -95,14 +95,14 @@ export default function Hero() {
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -z-10" aria-hidden="true" />
 
             {/* Dashboard Card */}
-            <div className="bg-surface-container-lowest rounded-3xl shadow-2xl p-8 border border-outline-variant/10">
+            <div className="bg-background rounded-3xl shadow-2xl p-8 border border-border/10">
               {/* Mini Dashboard Header */}
               <div className="flex items-center justify-between mb-10">
                 <div>
                   <h3 className="font-headline font-bold text-xl text-foreground">Daily Snapshot</h3>
-                  <p className="text-sm text-on-surface-variant">Wednesday, May 24</p>
+                  <p className="text-sm text-muted-foreground">Wednesday, May 24</p>
                 </div>
-                <div className="w-10 h-10 bg-primary-fixed rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
                   <span className="text-primary font-bold text-sm">JD</span>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function Hero() {
                       cx="96"
                       cy="96"
                       r="80"
-                      stroke="var(--surface-container)"
+                      stroke="var(--secondary)"
                       strokeWidth="12"
                       fill="none"
                     />
@@ -141,7 +141,7 @@ export default function Hero() {
                     >
                       1,560
                     </motion.span>
-                    <span className="text-xs uppercase tracking-widest font-bold text-on-surface-variant">/ 2000 kcal</span>
+                    <span className="text-xs uppercase tracking-widest font-bold text-muted-foreground">/ 2000 kcal</span>
                   </div>
                 </div>
 
@@ -179,12 +179,12 @@ function MacroBar({
     <div className="space-y-2">
       <div className="flex justify-between text-sm font-bold">
         <span className="flex items-center gap-1.5 text-foreground">
-          <Icon className="h-3.5 w-3.5 text-on-surface-variant" aria-hidden="true" />
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
           {label}
         </span>
-        <span className="tabular-nums text-on-surface-variant">{current}g / {goal}g</span>
+        <span className="tabular-nums text-muted-foreground">{current}g / {goal}g</span>
       </div>
-      <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}

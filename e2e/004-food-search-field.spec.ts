@@ -204,6 +204,8 @@ test.describe('004 US3: Search History & Autocomplete', () => {
     const searches = ['apple', 'banana', 'carrot'];
     for (const term of searches) {
       await typeSearch(page, term);
+      // Wait for the dropdown to appear before checking count (API response may take > 600ms)
+      await page.getByTestId('food-search-dropdown').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
       const results = page.getByTestId('food-result-item');
       const count = await results.count();
       if (count > 0) {

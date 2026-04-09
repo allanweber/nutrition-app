@@ -22,7 +22,7 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
     <div className="flex flex-col h-full gap-6">
       {/* Two-tier header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
           Energy Metabolism
         </p>
         <h2 className="text-2xl font-extrabold font-headline text-foreground">
@@ -37,11 +37,11 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
             <span className="text-5xl font-headline font-black tabular-nums leading-none text-primary">
               {caloriesConsumed.toLocaleString()}
             </span>
-            <span className="text-base font-semibold text-on-surface-variant">
+            <span className="text-base font-semibold text-muted-foreground">
               / {calorieGoal.toLocaleString()} kcal
             </span>
           </div>
-          <p className="text-sm text-on-surface-variant max-w-xs">
+          <p className="text-sm text-muted-foreground max-w-xs">
             You&apos;ve consumed {percentConsumed}% of your daily target.
           </p>
 

@@ -99,6 +99,18 @@ export const routes = {
   goals: '/goals',
   profile: '/profile',
   settings: '/settings',
+  mealPlanner: '/meal-planner',
+};
+
+// Meal planner seed data constants (for testUser = weightLoss)
+export const mealPlannerSeedData = {
+  weightLossActivePlanName: 'Balanced Weight Loss — Full Week',
+  weightLossDraftPlanName: 'Low Carb Experiment',
+  weightLossArchivedPlanName: 'Initial Starter Plan',
+  activePlanTargetCalories: 1800,
+  activePlanTargetProtein: 140,
+  activePlanTargetCarbs: 180,
+  activePlanTargetFat: 60,
 };
 
 // Sample foods from seed data
