@@ -142,6 +142,7 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
   return (
     <>
       <div
+        data-testid={`meal-card-${meal.id}`}
         onClick={isDeleting ? undefined : onEdit}
         className={`rounded-2xl border bg-background transition-all flex flex-col relative ${isDeleting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:shadow-sm'}`}
       >
@@ -158,6 +159,7 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
           <span className="text-xs font-bold uppercase tracking-widest text-foreground flex-1">{label}</span>
           <button
             type="button"
+            data-testid={`meal-delete-btn-${meal.id}`}
             onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
             disabled={isDeleting}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:pointer-events-none"
@@ -188,7 +190,7 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
         <div className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto">
           <div className="flex flex-col px-5 py-3 flex-1">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
-            <span className="text-base font-bold text-foreground">
+            <span data-testid={`meal-total-calories-${meal.id}`} className="text-base font-bold text-foreground">
               {Math.round(meal.totalCalories)}{' '}
               <span className="text-xs font-normal text-muted-foreground">kcal</span>
             </span>
@@ -220,6 +222,7 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              data-testid="meal-delete-confirm"
               onClick={onDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

@@ -42,16 +42,17 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
   return (
     <Popover open={open} onOpenChange={(v) => { if (!isPending) setOpen(v); }}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-1.5" disabled={isPending}>
+        <Button data-testid="copy-day-button" variant="outline" className="gap-1.5" disabled={isPending}>
           {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
           Copy Day
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-44 p-1">
+      <PopoverContent data-testid="copy-day-popover" align="end" className="w-44 p-1">
         <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Copy meals from</p>
         {daysWithMeals.map((day) => (
           <button
             key={day}
+            data-testid={`copy-from-day-${day}`}
             onClick={() => handleCopy(day)}
             disabled={isPending}
             className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted transition-colors disabled:opacity-50 flex items-center justify-between"

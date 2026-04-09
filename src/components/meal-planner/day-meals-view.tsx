@@ -24,7 +24,7 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
   const dayName = DAY_NAMES[selectedDay - 1];
 
   return (
-    <div className="mt-6 rounded-2xl border bg-background p-6">
+    <div data-testid="day-meals-view" className="mt-6 rounded-2xl border bg-background p-6">
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-end justify-between">
@@ -32,11 +32,11 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-0.5">
             Detailed Editor •
           </p>
-          <h2 className="text-2xl font-bold text-foreground">{dayName}&apos;s Meals</h2>
+          <h2 data-testid="day-meals-heading" className="text-2xl font-bold text-foreground">{dayName}&apos;s Meals</h2>
         </div>
         <div className="flex items-center gap-2">
           <CopyDayPopover planId={plan.id} currentDay={selectedDay} meals={meals} />
-          <Button className="gap-1.5" onClick={() => onAddMeal(selectedDay)}>
+          <Button data-testid="add-meal-button" className="gap-1.5" onClick={() => onAddMeal(selectedDay)}>
             <Plus className="h-3.5 w-3.5" />
             Add Meal
           </Button>
@@ -67,6 +67,7 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
 
           {/* Add another meal card */}
           <button
+            data-testid="add-meal-card"
             onClick={() => onAddMeal(selectedDay)}
             className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors min-h-48 cursor-pointer"
           >

@@ -13,7 +13,7 @@ export function MealItemRow({ item }: MealItemRowProps) {
     : `${Math.round(item.quantity)}G`;
 
   return (
-    <div className="flex items-center gap-3 py-3">
+    <div data-testid={`meal-item-row-${item.id}`} className="flex items-center gap-3 py-3">
       {/* Icon */}
       <div className="w-5 h-5 flex items-center justify-center shrink-0">
         {item.thumbnail ? (

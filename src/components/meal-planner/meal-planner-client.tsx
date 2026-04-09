@@ -100,6 +100,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
         overline="Planning"
         title="Meal Planner"
         subtitle="Plan your meals for the week ahead"
+        data-testid="meal-planner-heading"
       />
 
       {/* Plan Carousel */}
@@ -114,7 +115,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
 
       {/* Empty state if no plans */}
       {!plansQuery.isLoading && plans.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <div data-testid="meal-planner-empty-state" className="flex flex-col items-center justify-center py-24 gap-4 text-center">
           <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center">
             <CalendarDays className="h-8 w-8 text-muted-foreground/40" />
           </div>

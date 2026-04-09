@@ -20,7 +20,7 @@ interface DaySelectorProps {
 
 export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelectorProps) {
   return (
-    <div className="mb-6 flex flex-wrap justify-between gap-2">
+    <div data-testid="day-selector" className="mb-6 flex flex-wrap justify-between gap-2">
       {DAY_LABELS.map((label, idx) => {
         const day = idx + 1;
         const dayMeals = meals.filter((m) => m.dayOfWeek === day);
@@ -46,6 +46,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
         return (
           <button
             key={day}
+            data-testid={`day-button-${day}`}
             onClick={() => onSelectDay(day)}
             className={cn(
               'flex flex-col gap-2 p-3 rounded-xl border transition-all min-w-20 flex-1 text-left cursor-pointer',
@@ -61,7 +62,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
 
             {/* Calories + status */}
             <div className="flex items-baseline justify-between gap-1">
-              <p className={cn('text-sm font-bold leading-tight', isSelected ? 'text-white' : 'text-foreground')}>
+              <p data-testid={`day-calories-${day}`} className={cn('text-sm font-bold leading-tight', isSelected ? 'text-white' : 'text-foreground')}>
                 {isEmpty ? '0' : Math.round(calories).toLocaleString()}
                 <span className={cn('text-[10px] font-normal ml-0.5', isSelected ? 'text-emerald-300' : 'text-muted-foreground')}>kcal</span>
               </p>

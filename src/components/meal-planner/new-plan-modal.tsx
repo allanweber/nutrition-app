@@ -83,10 +83,10 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
         const res = await createMutation.mutateAsync({
           name: value.name,
           description: value.description || undefined,
-          targetCalories: value.targetCalories,
-          targetProtein: value.targetProtein,
-          targetCarbs: value.targetCarbs,
-          targetFat: value.targetFat,
+          targetCalories: Number(value.targetCalories),
+          targetProtein: Number(value.targetProtein),
+          targetCarbs: Number(value.targetCarbs),
+          targetFat: Number(value.targetFat),
           startDate: value.startDate.toISOString(),
           endDate: value.endDate?.toISOString(),
           status,
@@ -105,7 +105,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-        <DialogContent className="md:min-w-2xl">
+        <DialogContent data-testid="new-plan-modal" className="md:min-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Create New Diet Plan</DialogTitle>
           </DialogHeader>
@@ -128,13 +128,16 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                   <FieldLabel required>Plan Name</FieldLabel>
                   <Input
                     id={field.name}
+                    data-testid="plan-name-input"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     placeholder="e.g., Summer Shred 2024"
                     className={`${field.state.meta.errors.length ? 'border-destructive' : ''}`}
                   />
-                  <FieldError errors={field.state.meta.errors} />
+                  {field.state.meta.errors.length > 0 && (
+                    <p data-testid="plan-name-error" className="text-xs text-destructive mt-1">{String(field.state.meta.errors[0])}</p>
+                  )}
                 </div>
               )}
             </form.Field>
@@ -146,6 +149,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                   <FieldLabel>Description</FieldLabel>
                   <textarea
                     id={field.name}
+                    data-testid="plan-description-input"
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Briefly describe the objectives of this plan..."
@@ -170,6 +174,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       name={field.name}
                       fieldApi={field}
                       unit="kcal"
+                      inputTestId="plan-target-calories-input"
                     />
                   )}
                 </form.Field>
@@ -187,6 +192,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       bgClass={`${MACRO_CELL_BG.protein} border-border/20`}
                       textClass={MACRO_CELL_TEXT.protein}
                       borderClass={MACRO_CELL_BORDER.protein}
+                      inputTestId="plan-target-protein-input"
                     />
                   )}
                 </form.Field>
@@ -204,6 +210,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       bgClass={`${MACRO_CELL_BG.carbs} border-border/20`}
                       textClass={MACRO_CELL_TEXT.carbs}
                       borderClass={MACRO_CELL_BORDER.carbs}
+                      inputTestId="plan-target-carbs-input"
                     />
                   )}
                 </form.Field>
@@ -221,6 +228,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       bgClass={`${MACRO_CELL_BG.fat} border-border/20`}
                       textClass={MACRO_CELL_TEXT.fat}
                       borderClass={MACRO_CELL_BORDER.fat}
+                      inputTestId="plan-target-fat-input"
                     />
                   )}
                 </form.Field>
@@ -238,6 +246,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                     <FieldLabel required>Start Date</FieldLabel>
                     <Input
                       id={field.name}
+                      data-testid="plan-start-date-input"
                       type="date"
                       value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
                       onChange={(e) => field.handleChange(new Date(e.target.value))}
@@ -255,6 +264,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                     <FieldLabel>End Date (Optional)</FieldLabel>
                     <Input
                       id={field.name}
+                      data-testid="plan-end-date-input"
                       type="date"
                       value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
                       onChange={(e) => field.handleChange(e.target.value ? new Date(e.target.value) : undefined)}
@@ -275,6 +285,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       return (
                         <button
                           key={s}
+                          data-testid={`plan-status-${s}`}
                           type="button"
                           onClick={() => field.handleChange(s)}
                           className={`flex-1 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest transition-colors ${
@@ -293,12 +304,12 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
             </form.Field>
 
             <div className="flex gap-3 pt-2 pb-6">
-              <Button type="button" variant="outline" onClick={onClose} className="w-[30%] font-medium bg-background">
+              <Button data-testid="new-plan-cancel" type="button" variant="outline" onClick={onClose} className="w-[30%] font-medium bg-background">
                 Cancel
               </Button>
               <form.Subscribe selector={(s) => s.isSubmitting}>
                 {(isSubmitting) => (
-                  <Button type="submit" disabled={isSubmitting} className="flex-1">
+                  <Button data-testid="new-plan-submit" type="submit" disabled={isSubmitting} className="flex-1">
                     {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                     Create Plan
                   </Button>
@@ -311,16 +322,16 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
 
       {conflict && (
         <AlertDialog open>
-          <AlertDialogContent>
+          <AlertDialogContent data-testid="activate-conflict-dialog">
             <AlertDialogHeader>
               <AlertDialogTitle>Archive current active plan?</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription data-testid="activate-conflict-description">
                 Activating this plan will archive &quot;{conflict.conflictPlan.name}&quot;. Continue?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={conflict.onCancel}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={conflict.onConfirm}>Archive and Activate</AlertDialogAction>
+              <AlertDialogCancel data-testid="activate-conflict-cancel" onClick={conflict.onCancel}>Cancel</AlertDialogCancel>
+              <AlertDialogAction data-testid="activate-conflict-confirm" onClick={conflict.onConfirm}>Archive and Activate</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

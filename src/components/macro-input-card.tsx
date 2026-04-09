@@ -12,6 +12,7 @@ interface MacroInputCardProps {
   bgClass?: string;
   textClass?: string;
   borderClass?: string;
+  inputTestId?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export function MacroInputCard({
   bgClass,
   textClass,
   borderClass,
+  inputTestId,
 }: MacroInputCardProps) {
   return (
     <div
@@ -53,7 +55,7 @@ export function MacroInputCard({
             'text-base sm:text-xl font-bold h-10 sm:h-11 bg-white min-w-0',
             fieldApi.state.meta.errors.length > 0 ? 'border-destructive' : 'border-border/30',
           )}
-          data-testid={`field-${name}`}
+          data-testid={inputTestId ?? `field-${name}`}
         />
         <span className="text-xs sm:text-sm font-semibold text-muted-foreground shrink-0">{unit}</span>
       </div>

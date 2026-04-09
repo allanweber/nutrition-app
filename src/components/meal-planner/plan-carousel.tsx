@@ -59,7 +59,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
   const showDots =  canScrollLeft || canScrollRight;
 
   return (
-    <div className="mb-6 space-y-3">
+    <div data-testid="plan-carousel" className="mb-6 space-y-3">
       <div className="relative">
         {/* Left arrow */}
         {showArrows && (
@@ -85,6 +85,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
         >
           {/* Add New Plan card */}
           <button
+            data-testid="add-new-plan-card"
             onClick={onAddNew}
             className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors shrink-0"
           >

@@ -71,6 +71,7 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
   return (
     <>
       <div
+        data-testid={`plan-card-${plan.id}`}
         onClick={onSelect}
         className={cn(
           'plan-card relative flex flex-col gap-4 p-5 rounded-2xl border cursor-pointer transition-all select-none w-[320px] shrink-0',
@@ -80,6 +81,7 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
         {/* Status badge + menu */}
         <div className="flex items-center justify-between">
           <span
+            data-testid={`plan-status-badge-${plan.id}`}
             className={cn(
               'text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
               isActive
@@ -94,22 +96,23 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 -mr-1.5 text-muted-foreground">
+              <Button data-testid={`plan-menu-trigger-${plan.id}`} variant="ghost" size="icon" className="h-7 w-7 shrink-0 -mr-1.5 text-muted-foreground">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem disabled={plan.status === 'active'} onSelect={() => handleStatusChange('active')}>
+              <DropdownMenuItem data-testid={`plan-menu-set-active-${plan.id}`} disabled={plan.status === 'active'} onSelect={() => handleStatusChange('active')}>
                 Set Active
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={plan.status === 'draft'} onSelect={() => handleStatusChange('draft')}>
+              <DropdownMenuItem data-testid={`plan-menu-set-draft-${plan.id}`} disabled={plan.status === 'draft'} onSelect={() => handleStatusChange('draft')}>
                 Set Draft
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={plan.status === 'archived'} onSelect={() => handleStatusChange('archived')}>
+              <DropdownMenuItem data-testid={`plan-menu-archive-${plan.id}`} disabled={plan.status === 'archived'} onSelect={() => handleStatusChange('archived')}>
                 Archive
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                data-testid={`plan-menu-delete-${plan.id}`}
                 className="text-destructive focus:text-destructive"
                 onSelect={() => setDeleteDialogOpen(true)}
               >
@@ -121,19 +124,19 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
         </div>
 
         {/* Plan name */}
-        <p className="text-2xl font-bold text-foreground truncate">{plan.name}</p>
+        <p data-testid={`plan-name-${plan.id}`} className="text-2xl font-bold text-foreground truncate">{plan.name}</p>
 
         {/* Calories row */}
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground mb-0.5">Calories</p>
-            <p className="text-2xl font-bold text-foreground tabular-nums">
+            <p data-testid={`plan-target-calories-${plan.id}`} className="text-2xl font-bold text-foreground tabular-nums">
               {plan.targetCalories ? `${Math.round(plan.targetCalories).toLocaleString()} kcal` : '—'}
             </p>
           </div>
           <div className="text-right">
               <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground mb-0.5">Daily Average</p>
-              <p className="text-sm font-semibold text-foreground tabular-nums">
+              <p data-testid={`plan-avg-calories-${plan.id}`} className="text-sm font-semibold text-foreground tabular-nums">
                 {plan.avgDailyCalories ? `${Math.round(plan.avgDailyCalories).toLocaleString()} kcal` : '0 kcal'}
               </p>
             </div>
@@ -159,7 +162,7 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{progressLabel(plan)}</span>
-            <span className="font-semibold text-foreground">{completeness}%</span>
+            <span data-testid={`plan-completeness-${plan.id}`} className="font-semibold text-foreground">{completeness}%</span>
           </div>
           <Progress
             value={completeness}
@@ -171,16 +174,16 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
       {/* Conflict AlertDialog */}
       {conflict && (
         <AlertDialog open>
-          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogContent data-testid="activate-conflict-dialog" onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Archive current active plan?</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription data-testid="activate-conflict-description">
                 Activating &quot;{plan.name}&quot; will archive &quot;{conflict.conflictPlan.name}&quot;. Continue?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={conflict.onCancel}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={conflict.onConfirm}>Archive and Activate</AlertDialogAction>
+              <AlertDialogCancel data-testid="activate-conflict-cancel" onClick={conflict.onCancel}>Cancel</AlertDialogCancel>
+              <AlertDialogAction data-testid="activate-conflict-confirm" onClick={conflict.onConfirm}>Archive and Activate</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -196,8 +199,9 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel data-testid="plan-delete-cancel">Cancel</AlertDialogCancel>
             <AlertDialogAction
+              data-testid="plan-delete-confirm"
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

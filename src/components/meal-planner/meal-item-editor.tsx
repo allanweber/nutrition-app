@@ -27,11 +27,12 @@ export interface LocalMealItem {
 
 interface MealItemEditorProps {
   item: LocalMealItem;
+  index?: number;
   onChange: (updated: LocalMealItem) => void;
   onRemove: () => void;
 }
 
-export function MealItemEditor({ item, onChange, onRemove }: MealItemEditorProps) {
+export function MealItemEditor({ item, index, onChange, onRemove }: MealItemEditorProps) {
   const kcal = Math.round((item.caloriesPer100g / 100) * item.quantityGrams);
   const protein = Math.round((item.proteinPer100g / 100) * item.quantityGrams);
   const carbs = Math.round((item.carbsPer100g / 100) * item.quantityGrams);
@@ -104,12 +105,15 @@ export function MealItemEditor({ item, onChange, onRemove }: MealItemEditorProps
           onQuantityChange={handleQtyChange}
           showSlider={false}
           showLabel={false}
+          qtyInputTestId={index !== undefined ? `meal-item-qty-input-${index}` : 'quantity-input'}
+          measureSelectTestId={index !== undefined ? `meal-item-measure-select-${index}` : 'measure-select'}
         />
       </div>
 
       {/* Remove button */}
       <button
         type="button"
+        data-testid={index !== undefined ? `meal-item-remove-${index}` : undefined}
         onClick={onRemove}
         className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded shrink-0"
         aria-label="Remove item"

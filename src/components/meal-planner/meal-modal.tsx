@@ -404,33 +404,35 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="md:min-w-2xl min-h-[80vh] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+      <DialogContent data-testid="meal-modal" className="md:min-w-2xl min-h-[80vh] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
 
         {/* ── Header ── */}
-        <DialogHeader className="px-6 pt-6 pb-6 shrink-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0">
               <Utensils className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div className="min-w-0">
-              <DialogTitle className="text-xl font-bold leading-tight">
+            <div className="min-w-0 flex-1">
+              <DialogTitle data-testid="meal-modal-title" className="text-xl font-bold leading-tight">
                 {isEdit ? 'Edit Meal' : 'Create Meal'}
               </DialogTitle>
-              <Select value={mealType} onValueChange={(v) => setMealType(v as MealType)}>
-                <SelectTrigger className="h-auto w-auto border-none p-0 shadow-none bg-transparent focus:ring-0 gap-1 [&>svg]:hidden">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary">
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  Meal type
+                </span>
+                <Select value={mealType} onValueChange={(v) => setMealType(v as MealType)}>
+                  <SelectTrigger data-testid="meal-type-select" className="h-6 w-auto border border-primary/40 px-2.5 shadow-none bg-primary/8 rounded-full gap-1 text-[11px] font-bold uppercase tracking-widest text-primary focus:ring-0 [&>svg]:ml-0.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70">
                     <SelectValue />
-                  </span>
-                  <span className="text-primary text-[11px] font-bold">››</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {MEAL_TYPE_ORDER.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {MEAL_TYPE_LABELS[type]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MEAL_TYPE_ORDER.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {MEAL_TYPE_LABELS[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -444,6 +446,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
             onSelect={handleFoodSelect}
             placeholder="Search for a food item..."
             size="small"
+            inputTestId="meal-food-search"
           />
           {detailQuery.isLoading && pendingFood && (
             <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
@@ -457,7 +460,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
         {/* ── Scrollable items list ── */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
           {hasContent && (
-            <div className="space-y-3">
+            <div data-testid="meal-items-list" className="space-y-3">
               {/* Dish groups */}
               {dishGroups.length > 0 && (
                 <div className="space-y-2">
@@ -537,6 +540,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
                       <MealItemEditor
                         key={item.id ?? `new-${index}`}
                         item={item}
+                        index={index}
                         onChange={(updated) => updateItem(index, updated)}
                         onRemove={() => removeItem(index)}
                       />
@@ -562,7 +566,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
                 <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                   Total Meal Summary
                 </p>
-                <p className="text-2xl font-bold text-foreground mt-0.5 leading-none">
+                <p data-testid="meal-summary-kcal" className="text-2xl font-bold text-foreground mt-0.5 leading-none">
                   {Math.round(totalKcal)}{' '}
                   <span className="text-sm font-semibold text-muted-foreground">Total Kcal</span>
                 </p>
@@ -570,19 +574,19 @@ export function MealModal({ state, onClose }: MealModalProps) {
               <div className="flex gap-4">
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Protein</p>
-                  <p className="text-base font-bold text-rose-500 leading-tight">
+                  <p data-testid="meal-summary-protein" className="text-base font-bold text-rose-500 leading-tight">
                     {Math.round(totalProtein)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Carbs</p>
-                  <p className="text-base font-bold text-amber-500 leading-tight">
+                  <p data-testid="meal-summary-carbs" className="text-base font-bold text-amber-500 leading-tight">
                     {Math.round(totalCarbs)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fats</p>
-                  <p className="text-base font-bold text-sky-500 leading-tight">
+                  <p data-testid="meal-summary-fat" className="text-base font-bold text-sky-500 leading-tight">
                     {Math.round(totalFat)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
@@ -592,6 +596,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
           <DialogFooter className="gap-3 sm:gap-3 flex-row">
             <Button
+              data-testid="meal-modal-cancel"
               type="button"
               variant="outline"
               onClick={onClose}
@@ -600,6 +605,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
               Cancel
             </Button>
             <Button
+              data-testid="meal-modal-save"
               onClick={handleSave}
               disabled={isSaving || !hasContent}
               className="flex-7 bg-primary text-primary-foreground hover:bg-primary/90"

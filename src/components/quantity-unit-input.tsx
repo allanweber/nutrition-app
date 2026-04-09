@@ -29,6 +29,8 @@ interface QuantityUnitInputProps {
   showSlider?: boolean;
   /** Whether to show the "Quantity & Serving Size" label. Defaults to true. */
   showLabel?: boolean;
+  qtyInputTestId?: string;
+  measureSelectTestId?: string;
 }
 
 export function QuantityUnitInput({
@@ -39,6 +41,8 @@ export function QuantityUnitInput({
   onQuantityChange,
   showSlider = true,
   showLabel = true,
+  qtyInputTestId = 'quantity-input',
+  measureSelectTestId = 'measure-select',
 }: QuantityUnitInputProps) {
   const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
 
@@ -75,14 +79,14 @@ export function QuantityUnitInput({
           value={quantity}
           onChange={(e) => handleNumberChange(e.target.value)}
           className="flex-1 min-w-0 bg-transparent border-none px-3 py-1 text-sm font-medium text-foreground focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          data-testid="quantity-input"
+          data-testid={qtyInputTestId}
           aria-label="Quantity"
         />
         <div className="h-4 w-px bg-border shrink-0" />
         <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
           <SelectTrigger
             className="h-full border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-7 rounded-none w-auto min-w-20 max-w-36"
-            data-testid="measure-select"
+            data-testid={measureSelectTestId}
           >
             <SelectValue />
           </SelectTrigger>

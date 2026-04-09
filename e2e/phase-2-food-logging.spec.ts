@@ -213,7 +213,9 @@ test.describe('Phase 2: Food Logging', () => {
   });
 
   // These tests use mock Nutritionix data (USE_MOCK_NUTRITIONIX=true in playwright config)
+  // Serial mode: both tests mutate the same user's food log; parallel execution causes race conditions.
   test.describe('Food Logging with Mock API', () => {
+    test.describe.configure({ mode: 'serial' });
     test('user can add food to log', async ({ page }) => {
       await loginAsTestUser(page);
 
