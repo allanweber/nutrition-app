@@ -19,7 +19,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nutrition_app_test
         ports:
-          - 5433:5432
+          - 5434:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -44,30 +44,30 @@ jobs:
 
       - name: Run database migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5434/nutrition_app_test
         run: npx drizzle-kit push --force
 
       - name: Start dev server and seed database
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5434/nutrition_app_test
           BETTER_AUTH_SECRET: test-secret-for-ci
-          BETTER_AUTH_URL: http://localhost:3001
+          BETTER_AUTH_URL: http://localhost:3002
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
           NUTRITIONIX_APP_ID: test_app_id
           NUTRITIONIX_API_KEY: test_api_key
           USE_MOCK_NUTRITIONIX: 'true'
           NODE_ENV: test
-          PORT: '3001'
+          PORT: '3002'
         run: |
-          # Start dev server in background on port 3001
-          npm run dev -- --port 3001 &
+          # Start dev server in background on port 3002
+          npm run dev -- --port 3002 &
           DEV_PID=$!
           
           # Wait for server to be ready
-          echo "Waiting for dev server to start on port 3001..."
+          echo "Waiting for dev server to start on port 3002..."
           for i in {1..60}; do
-            if curl -s http://localhost:3001/api/auth/session > /dev/null 2>&1; then
+            if curl -s http://localhost:3002/api/auth/session > /dev/null 2>&1; then
               echo "Server is ready!"
               break
             fi
@@ -83,17 +83,17 @@ jobs:
 
       - name: Run E2E tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/nutrition_app_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5434/nutrition_app_test
           BETTER_AUTH_SECRET: test-secret-for-ci
-          BETTER_AUTH_URL: http://localhost:3001
+          BETTER_AUTH_URL: http://localhost:3002
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
           NUTRITIONIX_APP_ID: test_app_id
           NUTRITIONIX_API_KEY: test_api_key
           USE_MOCK_NUTRITIONIX: 'true'
           NODE_ENV: test
-          PORT: '3001'
-          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3001
+          PORT: '3002'
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3002
           CI: true
         run: npx playwright test --project=chromium
 

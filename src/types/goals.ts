@@ -23,6 +23,7 @@ export interface NutritionGoals {
   fat: number;
   fiber: number;
   sodium: number;
+  hydration?: number;
   goalType?: GoalType;
   activityLevel?: ActivityLevel;
 }

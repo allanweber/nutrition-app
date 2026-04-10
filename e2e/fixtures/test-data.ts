@@ -113,6 +113,14 @@ export const mealPlannerSeedData = {
   activePlanTargetFat: 60,
 };
 
+// Auth state file paths (written by auth.setup.ts, consumed by test files)
+export const AUTH_FILES = {
+  testUser:      'e2e/.auth/testUser.json',
+  generalHealth: 'e2e/.auth/generalHealth.json',
+  professional1: 'e2e/.auth/professional1.json',
+  muscleGain:    'e2e/.auth/muscleGain.json',
+};
+
 // Sample foods from seed data
 export const sampleFoods = [
   'Apple, raw',

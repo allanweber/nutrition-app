@@ -126,7 +126,7 @@ npm run test:e2e:headed   # In headed browser mode
 **Requirements:**
 
 - Docker must be running
-- Port 5433 must be available (test database)
+- Port 5434 must be available (test database)
 
 The test runner automatically:
 

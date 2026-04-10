@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { seedUsers, testUser, mealPlannerSeedData } from './fixtures/test-data';
+import { testUser, mealPlannerSeedData, AUTH_FILES } from './fixtures/test-data';
 import { LoginPage } from './pages/login.page';
 import { MealPlannerPage } from './pages/meal-planner.page';
 
@@ -17,8 +17,6 @@ async function loginAs(page: Page, email: string, password = 'Password123!') {
 }
 
 const loginAsTestUser = (page: Page) => loginAs(page, testUser.email, testUser.password);
-const loginAsFreshUser = (page: Page) =>
-  loginAs(page, seedUsers.generalHealth.email, seedUsers.generalHealth.password);
 
 // ── API seeding helpers ───────────────────────────────────────────────────────
 
@@ -81,11 +79,11 @@ const DEFAULT_PLAN: Omit<CreatePlanInput, 'name' | 'status'> = {
 // ── Block 1: Page structure and empty state ───────────────────────────────────
 
 test.describe('013: Page structure and empty state', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     await mp.goto();
   });
 
@@ -115,11 +113,11 @@ test.describe('013: Page structure and empty state', () => {
 // ── Block 2: Plan carousel — seeded plans display ─────────────────────────────
 
 test.describe('013: Plan carousel — seeded plans display', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page);
     await mp.goto();
   });
 
@@ -233,12 +231,12 @@ test.describe('013: Plan carousel — seeded plans display', () => {
 // ── Block 3: Create plan — draft ──────────────────────────────────────────────
 
 test.describe('013: Create plan — draft', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let createdPlanId: string | null = null;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     await mp.goto();
     createdPlanId = null;
   });
@@ -343,12 +341,12 @@ test.describe('013: Create plan — draft', () => {
 // ── Block 4: Create plan — active, no conflict ────────────────────────────────
 
 test.describe('013: Create plan — active, no conflict', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let createdPlanId: string | null = null;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     await mp.goto();
     createdPlanId = null;
   });
@@ -394,13 +392,13 @@ test.describe('013: Create plan — active, no conflict', () => {
 // ── Block 5: Create plan — active, conflict ───────────────────────────────────
 
 test.describe('013: Create plan — active, conflict with existing active plan', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
   let newPlanId: string | null = null;
   let originalActivePlanId: string | null = null;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page); // already has an active plan
     await mp.goto();
     // Record the current active plan ID for cleanup
     await expect
@@ -537,12 +535,12 @@ test.describe('013: Create plan — active, conflict with existing active plan',
 // ── Block 6: Plan status updates via dropdown ─────────────────────────────────
 
 test.describe('013: Plan status updates via dropdown', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Status Test Plan',
       status: 'draft',
@@ -622,12 +620,12 @@ test.describe('013: Plan status updates via dropdown', () => {
 // ── Block 7: Delete plan ──────────────────────────────────────────────────────
 
 test.describe('013: Delete plan', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Delete Me Plan',
       status: 'draft',
@@ -706,11 +704,11 @@ test.describe('013: Delete plan', () => {
 // ── Block 8: Plan selection and day selector ──────────────────────────────────
 
 test.describe('013: Plan selection and day selector', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page);
     await mp.goto();
     await expect
       .poll(async () => (await mp.getPlanCardIds()).length, { timeout: 10000 })
@@ -758,12 +756,12 @@ test.describe('013: Plan selection and day selector', () => {
 // ── Block 9: Add meal — create mode ──────────────────────────────────────────
 
 test.describe('013: Add meal — create mode', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Add Meal Test Plan',
       status: 'draft',
@@ -883,9 +881,9 @@ test.describe('013: Add meal — create mode', () => {
     await mp.addMealButton.click();
     await expect(mp.mealModal).toBeVisible({ timeout: 5000 });
     await mp.mealFoodSearch.fill('chicken');
-    await page.waitForTimeout(600);
+    await page.getByTestId('food-result-item').first().waitFor({ state: 'visible', timeout: 7000 });
     await page.getByTestId('food-result-item').first().click();
-    await page.waitForTimeout(500);
+    await expect(mp.mealModalSave).toBeEnabled({ timeout: 5000 });
     await mp.mealModalSave.click();
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
     await expect
@@ -928,13 +926,13 @@ test.describe('013: Add meal — create mode', () => {
 // ── Block 10: Edit meal ───────────────────────────────────────────────────────
 
 test.describe('013: Edit meal', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Edit Meal Test Plan',
       status: 'draft',
@@ -1000,13 +998,13 @@ test.describe('013: Edit meal', () => {
 // ── Block 11: Delete meal ─────────────────────────────────────────────────────
 
 test.describe('013: Delete meal', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Delete Meal Test Plan',
       status: 'draft',
@@ -1061,13 +1059,13 @@ test.describe('013: Delete meal', () => {
 // ── Block 12: Item quantity update ────────────────────────────────────────────
 
 test.describe('013: Item quantity update', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Qty Update Test Plan',
       status: 'draft',
@@ -1127,12 +1125,12 @@ test.describe('013: Item quantity update', () => {
 // ── Block 13: Copy day ────────────────────────────────────────────────────────
 
 test.describe('013: Copy day', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
   let mp: MealPlannerPage;
   let planId: string;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsFreshUser(page);
     planId = await createPlanViaApi(page, {
       name: 'Copy Day Test Plan',
       status: 'draft',
@@ -1204,11 +1202,11 @@ test.describe('013: Copy day', () => {
 // ── Block 14: Plan completeness ───────────────────────────────────────────────
 
 test.describe('013: Plan completeness', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page);
     await mp.goto();
     await expect
       .poll(async () => (await mp.getPlanCardIds()).length, { timeout: 10000 })
@@ -1250,11 +1248,11 @@ test.describe('013: Plan completeness', () => {
 // ── Block 15: URL parameter persistence ──────────────────────────────────────
 
 test.describe('013: URL parameter persistence', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page);
     await mp.goto();
     await expect
       .poll(async () => (await mp.getPlanCardIds()).length, { timeout: 10000 })
@@ -1287,11 +1285,11 @@ test.describe('013: URL parameter persistence', () => {
 // ── Block 16: Seeded meal card detail ─────────────────────────────────────────
 
 test.describe('013: Seeded meal card detail', () => {
+  test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
-    await loginAsTestUser(page);
     await mp.goto();
     // Wait for active plan to auto-select
     await expect(mp.daySelector).toBeVisible({ timeout: 10000 });
