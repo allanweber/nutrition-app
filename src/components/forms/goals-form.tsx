@@ -21,6 +21,7 @@ import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { goalsFormSchema, zodValidator } from '@/lib/form-validation';
 import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 import type { ActivityLevel, GoalType } from '@/types/goals';
+import { Button } from '../ui/button';
 
 type GoalsFormValues = {
   goalType: GoalType;
@@ -516,12 +517,12 @@ export function GoalsForm({
 
           <form.Subscribe selector={(state) => [state.isSubmitting]}>
             {([isSubmitting]) => (
-              <button
+              <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative w-full max-w-sm overflow-hidden rounded-2xl bg-primary px-8 py-5 text-lg font-black text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                size="xl"
+                className='w-xl'
               >
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="flex items-center justify-center gap-2">
                   {isSubmitting ? (
                     <>
@@ -532,7 +533,7 @@ export function GoalsForm({
                     'Save Goals'
                   )}
                 </span>
-              </button>
+              </Button>
             )}
           </form.Subscribe>
         </div>

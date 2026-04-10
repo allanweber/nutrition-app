@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 import type { ActivityLevel, GoalType } from '@/types/goals';
+import { Button } from './ui/button';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,11 +74,14 @@ const CALORIE_ADJUSTMENTS: Partial<Record<GoalType, number>> = {
 // Protein g/kg factor and fat % of calories per preset × goal combination
 // protein_gPerKg: grams of protein per kg bodyweight
 // fat_ratio: fraction of total calories from fat
-const MACRO_PRESETS: Record<MacroPreset, { proteinGPerKg: number; fatRatio: number }> = {
-  balanced:     { proteinGPerKg: 1.4, fatRatio: 0.30 },
+const MACRO_PRESETS: Record<
+  MacroPreset,
+  { proteinGPerKg: number; fatRatio: number }
+> = {
+  balanced: { proteinGPerKg: 1.4, fatRatio: 0.3 },
   high_protein: { proteinGPerKg: 2.0, fatRatio: 0.25 },
-  low_carb:     { proteinGPerKg: 1.6, fatRatio: 0.40 },
-  keto:         { proteinGPerKg: 1.6, fatRatio: 0.70 },
+  low_carb: { proteinGPerKg: 1.6, fatRatio: 0.4 },
+  keto: { proteinGPerKg: 1.6, fatRatio: 0.7 },
 };
 
 const STRATEGY_LABELS: Partial<Record<GoalType, string>> = {
@@ -90,16 +94,29 @@ const STRATEGY_LABELS: Partial<Record<GoalType, string>> = {
 
 // ─── Unit conversion helpers ──────────────────────────────────────────────────
 
-function kgToLbs(kg: number) { return Math.round(kg * 2.20462); }
-function lbsToKg(lbs: number) { return lbs / 2.20462; }
-function cmToFtIn(cm: number) { const totalIn = cm / 2.54; const ft = Math.floor(totalIn / 12); const ins = Math.round(totalIn % 12); return { ft, in: ins }; }
-function ftInToCm(ft: number, inches: number) { return (ft * 12 + inches) * 2.54; }
+function kgToLbs(kg: number) {
+  return Math.round(kg * 2.20462);
+}
+function lbsToKg(lbs: number) {
+  return lbs / 2.20462;
+}
+function cmToFtIn(cm: number) {
+  const totalIn = cm / 2.54;
+  const ft = Math.floor(totalIn / 12);
+  const ins = Math.round(totalIn % 12);
+  return { ft, in: ins };
+}
+function ftInToCm(ft: number, inches: number) {
+  return (ft * 12 + inches) * 2.54;
+}
 
 // ─── BMR/TDEE calculation ─────────────────────────────────────────────────────
 
 function calculate(state: WizardState): CalcResults {
-  const { weightKg, heightCm, age, sex, activityLevel, goalType, macroPreset } = state;
-  const bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + (sex === 'male' ? 5 : -161);
+  const { weightKg, heightCm, age, sex, activityLevel, goalType, macroPreset } =
+    state;
+  const bmr =
+    10 * weightKg + 6.25 * heightCm - 5 * age + (sex === 'male' ? 5 : -161);
   const tdee = bmr * ACTIVITY_MULTIPLIERS[activityLevel];
   const adjustment = CALORIE_ADJUSTMENTS[goalType] ?? 0;
   const targetCalories = Math.round(tdee + adjustment);
@@ -110,7 +127,7 @@ function calculate(state: WizardState): CalcResults {
   const carbsCalories = targetCalories - protein * 4 - fat * 9;
   const carbs = Math.max(0, Math.round(carbsCalories / 4));
   const hydrationMl = Math.round(weightKg * 35); // ~35ml/kg
-  const fiber = Math.round(targetCalories / 1000 * 14); // 14g per 1000 kcal
+  const fiber = Math.round((targetCalories / 1000) * 14); // 14g per 1000 kcal
   const sodium = 2300; // standard ≤2300 mg/day
   return {
     bmr: Math.round(bmr),
@@ -151,7 +168,11 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
   const [results, setResults] = useState<CalcResults | null>(null);
   const [saving, setSaving] = useState(false);
-  const [macroAdj, setMacroAdj] = useState<{ proteinPct: number; carbsPct: number; fatPct: number } | null>(null);
+  const [macroAdj, setMacroAdj] = useState<{
+    proteinPct: number;
+    carbsPct: number;
+    fatPct: number;
+  } | null>(null);
 
   // Imperial display values
   const displayWeightLbs = kgToLbs(state.weightKg);
@@ -181,8 +202,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
     }
   }
 
-  function goTo(s: number) { setStep(s); }
-  function goBack() { if (step > 0) goTo(step - 1); }
+  function goTo(s: number) {
+    setStep(s);
+  }
+  function goBack() {
+    if (step > 0) goTo(step - 1);
+  }
 
   function handleCalculate() {
     const calc = calculate(state);
@@ -195,8 +220,8 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
     if (!results) return;
     if (!macroAdj) {
       const totalCals = results.targetCalories;
-      const pPct = Math.round((results.protein * 4 / totalCals) * 100);
-      const fPct = Math.round((results.fat * 9 / totalCals) * 100);
+      const pPct = Math.round(((results.protein * 4) / totalCals) * 100);
+      const fPct = Math.round(((results.fat * 9) / totalCals) * 100);
       const cPct = 100 - pPct - fPct;
       setMacroAdj({ proteinPct: pPct, carbsPct: cPct, fatPct: fPct });
     }
@@ -204,11 +229,16 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
   }
 
   // Adjust one macro %, redistribute remainder proportionally between the other two
-  function adjustMacro(key: 'proteinPct' | 'carbsPct' | 'fatPct', newVal: number) {
+  function adjustMacro(
+    key: 'proteinPct' | 'carbsPct' | 'fatPct',
+    newVal: number,
+  ) {
     setMacroAdj((prev) => {
       if (!prev) return prev;
       const clamped = Math.min(95, Math.max(5, newVal));
-      const other = (['proteinPct', 'carbsPct', 'fatPct'] as const).filter((k) => k !== key);
+      const other = (['proteinPct', 'carbsPct', 'fatPct'] as const).filter(
+        (k) => k !== key,
+      );
       const oldOtherTotal = prev[other[0]] + prev[other[1]];
       const remaining = 100 - clamped;
       let a: number, b: number;
@@ -216,7 +246,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
         a = Math.round(remaining / 2);
         b = remaining - a;
       } else {
-        a = Math.round(remaining * prev[other[0]] / oldOtherTotal);
+        a = Math.round((remaining * prev[other[0]]) / oldOtherTotal);
         b = remaining - a;
       }
       return { ...prev, [key]: clamped, [other[0]]: a, [other[1]]: b };
@@ -227,9 +257,11 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
   function getAdjustedMacros() {
     if (!results || !macroAdj) return null;
     const { targetCalories } = results;
-    const protein = Math.round((targetCalories * macroAdj.proteinPct / 100) / 4);
-    const fat = Math.round((targetCalories * macroAdj.fatPct / 100) / 9);
-    const carbs = Math.round((targetCalories * macroAdj.carbsPct / 100) / 4);
+    const protein = Math.round(
+      (targetCalories * macroAdj.proteinPct) / 100 / 4,
+    );
+    const fat = Math.round((targetCalories * macroAdj.fatPct) / 100 / 9);
+    const carbs = Math.round((targetCalories * macroAdj.carbsPct) / 100 / 4);
     return { protein, carbs, fat };
   }
 
@@ -269,7 +301,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
 
   function handleClose() {
     onClose();
-    setTimeout(() => { setStep(0); setState(DEFAULT_STATE); setResults(null); setMacroAdj(null); }, 300);
+    setTimeout(() => {
+      setStep(0);
+      setState(DEFAULT_STATE);
+      setResults(null);
+      setMacroAdj(null);
+    }, 300);
   }
 
   const totalSteps = 5;
@@ -277,7 +314,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
   const progressPct = (step / totalSteps) * 100;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) handleClose();
+      }}
+    >
       <DialogContent className="max-w-lg p-0 gap-0 border-0 rounded-[2.5rem] shadow-2xl shadow-primary/10 overflow-hidden sm:rounded-[2.5rem]">
         <DialogTitle className="sr-only">Goal Calculator</DialogTitle>
         {/* Progress bar */}
@@ -316,16 +358,18 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   Let&apos;s personalize your nutrition plan
                 </h1>
                 <p className="text-sm text-muted-foreground font-medium max-w-md mx-auto">
-                  Take a quick moment to discover the perfect fuel for your unique body and lifestyle.
+                  Take a quick moment to discover the perfect fuel for your
+                  unique body and lifestyle.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
                 onClick={() => goTo(1)}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 Start My Journey
-              </button>
+              </Button>
             </div>
           )}
 
@@ -334,8 +378,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <h2 className="text-xl font-headline font-extrabold">Tell us a bit about yourself</h2>
-                  <p className="text-muted-foreground text-sm">We use these details to find your perfect daily balance.</p>
+                  <h2 className="text-xl font-headline font-extrabold">
+                    Tell us a bit about yourself
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    We use these details to find your perfect daily balance.
+                  </p>
                 </div>
                 {/* Unit toggle */}
                 <div className="flex gap-1 shrink-0 ml-4 border border-border rounded-lg p-0.5">
@@ -359,11 +407,15 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Age */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Age</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Age
+                  </label>
                   <input
                     type="number"
                     value={state.age}
-                    onChange={(e) => update('age', parseInt(e.target.value, 10) || 25)}
+                    onChange={(e) =>
+                      update('age', parseInt(e.target.value, 10) || 25)
+                    }
                     placeholder="25"
                     min={1}
                     max={120}
@@ -373,7 +425,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
 
                 {/* Sex */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Gender</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Gender
+                  </label>
                   <div className="flex gap-2">
                     {(['male', 'female'] as const).map((s) => (
                       <button
@@ -408,8 +462,14 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     type="range"
                     min={state.unitSystem === 'metric' ? 40 : 88}
                     max={state.unitSystem === 'metric' ? 200 : 440}
-                    value={state.unitSystem === 'metric' ? Math.round(state.weightKg) : displayWeightLbs}
-                    onChange={(e) => handleWeightChange(parseFloat(e.target.value))}
+                    value={
+                      state.unitSystem === 'metric'
+                        ? Math.round(state.weightKg)
+                        : displayWeightLbs
+                    }
+                    onChange={(e) =>
+                      handleWeightChange(parseFloat(e.target.value))
+                    }
                     className="w-full h-2 rounded-full accent-primary cursor-pointer"
                   />
                 </div>
@@ -432,7 +492,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                       min={140}
                       max={220}
                       value={Math.round(state.heightCm)}
-                      onChange={(e) => handleHeightChange(parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        handleHeightChange(parseFloat(e.target.value))
+                      }
                       className="w-full h-2 rounded-full accent-primary cursor-pointer"
                     />
                   ) : (
@@ -443,10 +505,17 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                           min={4}
                           max={7}
                           value={displayHeightFtIn.ft}
-                          onChange={(e) => handleHeightChange(parseInt(e.target.value, 10), 'ft')}
+                          onChange={(e) =>
+                            handleHeightChange(
+                              parseInt(e.target.value, 10),
+                              'ft',
+                            )
+                          }
                           className="w-full h-2 rounded-full accent-primary cursor-pointer"
                         />
-                        <p className="text-xs text-center text-muted-foreground mt-1">feet</p>
+                        <p className="text-xs text-center text-muted-foreground mt-1">
+                          feet
+                        </p>
                       </div>
                       <div className="flex-1">
                         <input
@@ -454,23 +523,31 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                           min={0}
                           max={11}
                           value={displayHeightFtIn.in}
-                          onChange={(e) => handleHeightChange(parseInt(e.target.value, 10), 'in')}
+                          onChange={(e) =>
+                            handleHeightChange(
+                              parseInt(e.target.value, 10),
+                              'in',
+                            )
+                          }
                           className="w-full h-2 rounded-full accent-primary cursor-pointer"
                         />
-                        <p className="text-xs text-center text-muted-foreground mt-1">inches</p>
+                        <p className="text-xs text-center text-muted-foreground mt-1">
+                          inches
+                        </p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={() => goTo(2)}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 Continue
-              </button>
+              </Button>
             </div>
           )}
 
@@ -478,16 +555,36 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {step === 2 && (
             <div className="space-y-4">
               <div className="space-y-1 text-center">
-                <h2 className="text-xl font-headline font-extrabold">What&apos;s your main goal?</h2>
-                <p className="text-muted-foreground text-sm">Focusing on one goal helps us create a clearer map for your progress.</p>
+                <h2 className="text-xl font-headline font-extrabold">
+                  What&apos;s your main goal?
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Focusing on one goal helps us create a clearer map for your
+                  progress.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-2">
                 {(
                   [
-                    { value: 'weight_loss', label: 'Lose weight', desc: 'Sustainable fat loss with vibrant energy.', Icon: Target },
-                    { value: 'maintenance', label: 'Maintain weight', desc: 'Fuel your lifestyle and feel your best.', Icon: Scale },
-                    { value: 'muscle_gain', label: 'Gain muscle', desc: 'Build strength and lean muscle mass.', Icon: Dumbbell },
+                    {
+                      value: 'weight_loss',
+                      label: 'Lose weight',
+                      desc: 'Sustainable fat loss with vibrant energy.',
+                      Icon: Target,
+                    },
+                    {
+                      value: 'maintenance',
+                      label: 'Maintain weight',
+                      desc: 'Fuel your lifestyle and feel your best.',
+                      Icon: Scale,
+                    },
+                    {
+                      value: 'muscle_gain',
+                      label: 'Gain muscle',
+                      desc: 'Build strength and lean muscle mass.',
+                      Icon: Dumbbell,
+                    },
                   ] as const
                 ).map(({ value, label, desc, Icon }) => {
                   const selected = state.goalType === value;
@@ -504,27 +601,32 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     >
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 shrink-0 transition-colors ${
-                          selected ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+                          selected
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-primary/10 text-primary'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-base">{label}</h3>
-                        <p className="text-xs text-muted-foreground font-medium">{desc}</p>
+                        <p className="text-xs text-muted-foreground font-medium">
+                          {desc}
+                        </p>
                       </div>
                     </button>
                   );
                 })}
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={() => goTo(3)}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 Next
-              </button>
+              </Button>
             </div>
           )}
 
@@ -532,18 +634,48 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {step === 3 && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <h2 className="text-xl font-headline font-extrabold">How active is your lifestyle?</h2>
-                <p className="text-muted-foreground text-sm">Understanding your daily movement helps us find your calorie sweet spot.</p>
+                <h2 className="text-xl font-headline font-extrabold">
+                  How active is your lifestyle?
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Understanding your daily movement helps us find your calorie
+                  sweet spot.
+                </p>
               </div>
 
               <div className="space-y-2">
                 {(
                   [
-                    { value: 'sedentary', label: 'Sedentary', desc: 'Desk job, little intentional exercise', Icon: Armchair },
-                    { value: 'light', label: 'Lightly Active', desc: 'Active hobby, 1–3 workouts/week', Icon: Footprints },
-                    { value: 'moderate', label: 'Moderately Active', desc: 'Moving often, 3–5 workouts/week', Icon: Zap },
-                    { value: 'active', label: 'Very Active', desc: 'Daily training, physically demanding job', Icon: Flame },
-                    { value: 'extra_active', label: 'Extra Active', desc: 'Athlete-level training twice a day', Icon: Trophy },
+                    {
+                      value: 'sedentary',
+                      label: 'Sedentary',
+                      desc: 'Desk job, little intentional exercise',
+                      Icon: Armchair,
+                    },
+                    {
+                      value: 'light',
+                      label: 'Lightly Active',
+                      desc: 'Active hobby, 1–3 workouts/week',
+                      Icon: Footprints,
+                    },
+                    {
+                      value: 'moderate',
+                      label: 'Moderately Active',
+                      desc: 'Moving often, 3–5 workouts/week',
+                      Icon: Zap,
+                    },
+                    {
+                      value: 'active',
+                      label: 'Very Active',
+                      desc: 'Daily training, physically demanding job',
+                      Icon: Flame,
+                    },
+                    {
+                      value: 'extra_active',
+                      label: 'Extra Active',
+                      desc: 'Athlete-level training twice a day',
+                      Icon: Trophy,
+                    },
                   ] as const
                 ).map(({ value, label, desc, Icon }) => {
                   const selected = state.activityLevel === value;
@@ -560,13 +692,19 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     >
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                          selected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                          selected
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className={`font-semibold text-sm ${selected ? 'text-primary' : ''}`}>{label}</p>
+                        <p
+                          className={`font-semibold text-sm ${selected ? 'text-primary' : ''}`}
+                        >
+                          {label}
+                        </p>
                         <p className="text-xs text-muted-foreground">{desc}</p>
                       </div>
                     </button>
@@ -574,13 +712,14 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 })}
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={() => goTo(4)}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 Almost there!
-              </button>
+              </Button>
             </div>
           )}
 
@@ -588,8 +727,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {step === 4 && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <h2 className="text-xl font-headline font-extrabold">Any personal preferences?</h2>
-                <p className="text-muted-foreground text-sm">Choose a style that feels natural and sustainable for you.</p>
+                <h2 className="text-xl font-headline font-extrabold">
+                  Any personal preferences?
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Choose a style that feels natural and sustainable for you.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -622,7 +765,10 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               {/* Visual toggles (UI only) */}
               <div className="pt-3 space-y-3 border-t border-border/20">
                 {['Vegetarian / Vegan', 'Low Sodium focus'].map((label) => (
-                  <div key={label} className="flex items-center justify-between">
+                  <div
+                    key={label}
+                    className="flex items-center justify-between"
+                  >
                     <span className="font-medium text-sm">{label}</span>
                     <div className="w-12 h-6 bg-muted rounded-full relative">
                       <div className="absolute right-1 top-1 w-4 h-4 bg-background rounded-full shadow-sm" />
@@ -632,20 +778,17 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               </div>
 
               <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => goTo(5)}
-                  className="flex-1 py-3 border-2 border-border/30 rounded-xl font-semibold text-sm text-muted-foreground hover:text-foreground transition-all"
-                >
+                <Button onClick={() => goTo(5)} variant="outline" size="lg" className="flex-1">
                   Skip
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   onClick={() => goTo(5)}
-                  className="flex-[2] bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+                  variant="default"
+                  size="lg"
+                  className="flex-1"
                 >
                   Review Plan
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -654,8 +797,13 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {step === 5 && (
             <div className="space-y-4 text-center">
               <div className="space-y-1">
-                <h2 className="text-xl font-headline font-extrabold">Ready for your results?</h2>
-                <p className="text-muted-foreground text-sm">We&apos;ve gathered everything we need to build your custom path.</p>
+                <h2 className="text-xl font-headline font-extrabold">
+                  Ready for your results?
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  We&apos;ve gathered everything we need to build your custom
+                  path.
+                </p>
               </div>
 
               <div className="bg-muted rounded-2xl p-4 text-left space-y-3">
@@ -693,20 +841,27 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="w-5 h-5 text-primary/60" />
-                      <span className="text-muted-foreground font-medium">{label}</span>
+                      <span className="text-muted-foreground font-medium">
+                        {label}
+                      </span>
                     </div>
-                    <span className={`font-semibold uppercase tracking-wider ${valueClass}`}>{value}</span>
+                    <span
+                      className={`font-semibold uppercase tracking-wider ${valueClass}`}
+                    >
+                      {value}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={handleCalculate}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                variant="default"
+                  size="lg"
+                  className='w-full'
               >
                 Calculate my plan
-              </button>
+              </Button>
             </div>
           )}
 
@@ -717,7 +872,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest">
                   <Star className="w-3 h-3" /> Personalized for you
                 </div>
-                <h2 className="text-2xl font-headline font-black">Your Custom Daily Plan</h2>
+                <h2 className="text-2xl font-headline font-black">
+                  Your Custom Daily Plan
+                </h2>
               </div>
 
               {/* Calorie hero */}
@@ -729,7 +886,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   <span className="text-5xl font-headline font-black tracking-tighter">
                     {results.targetCalories.toLocaleString('en-US')}
                   </span>
-                  <span className="text-lg font-bold text-muted-foreground">kcal</span>
+                  <span className="text-lg font-bold text-muted-foreground">
+                    kcal
+                  </span>
                 </div>
                 <div className="mt-2 inline-flex items-center gap-2 text-primary font-semibold bg-white px-4 py-1 rounded-full shadow-sm border border-primary/5 text-xs">
                   {results.strategy}
@@ -740,24 +899,56 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               <div className="grid grid-cols-3 gap-2">
                 {(
                   [
-                    { key: 'protein', label: 'Protein', g: (getAdjustedMacros()?.protein ?? results.protein), color: MACRO_HEX_COLORS.protein, desc: 'Muscle repair.' },
-                    { key: 'carbs', label: 'Carbs', g: (getAdjustedMacros()?.carbs ?? results.carbs), color: MACRO_HEX_COLORS.carbs, desc: 'Fuel for energy.' },
-                    { key: 'fat', label: 'Fats', g: (getAdjustedMacros()?.fat ?? results.fat), color: MACRO_HEX_COLORS.fat, desc: 'Hormone balance.' },
+                    {
+                      key: 'protein',
+                      label: 'Protein',
+                      g: getAdjustedMacros()?.protein ?? results.protein,
+                      color: MACRO_HEX_COLORS.protein,
+                      desc: 'Muscle repair.',
+                    },
+                    {
+                      key: 'carbs',
+                      label: 'Carbs',
+                      g: getAdjustedMacros()?.carbs ?? results.carbs,
+                      color: MACRO_HEX_COLORS.carbs,
+                      desc: 'Fuel for energy.',
+                    },
+                    {
+                      key: 'fat',
+                      label: 'Fats',
+                      g: getAdjustedMacros()?.fat ?? results.fat,
+                      color: MACRO_HEX_COLORS.fat,
+                      desc: 'Hormone balance.',
+                    },
                   ] as const
                 ).map(({ key, label, g, color, desc }) => {
                   const calsPer = key === 'fat' ? 9 : 4;
-                  const pct = Math.round((g * calsPer / results.targetCalories) * 100);
+                  const pct = Math.round(
+                    ((g * calsPer) / results.targetCalories) * 100,
+                  );
                   return (
-                    <div key={key} className="p-3 rounded-xl bg-white border border-border/30 shadow-sm flex flex-col items-center text-center">
+                    <div
+                      key={key}
+                      className="p-3 rounded-xl bg-white border border-border/30 shadow-sm flex flex-col items-center text-center"
+                    >
                       <div
                         className="w-9 h-9 rounded-full border-4 flex items-center justify-center mb-2"
                         style={{ borderColor: `${color}33` }}
                       >
-                        <span className="text-[9px] font-black" style={{ color }}>{pct}%</span>
+                        <span
+                          className="text-[9px] font-black"
+                          style={{ color }}
+                        >
+                          {pct}%
+                        </span>
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        {label}
+                      </span>
                       <div className="text-xl font-black">{g}g</div>
-                      <p className="text-[9px] mt-1 text-muted-foreground leading-tight">{desc}</p>
+                      <p className="text-[9px] mt-1 text-muted-foreground leading-tight">
+                        {desc}
+                      </p>
                     </div>
                   );
                 })}
@@ -770,8 +961,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     <span className="text-blue-600 text-sm">💧</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">Hydration</span>
-                    <span className="text-base font-black">{(results.hydrationMl / 1000).toFixed(1)} L</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      Hydration
+                    </span>
+                    <span className="text-base font-black">
+                      {(results.hydrationMl / 1000).toFixed(1)} L
+                    </span>
                   </div>
                 </div>
                 <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
@@ -779,8 +974,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     <span className="text-emerald-600 text-sm">🌿</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">Fiber</span>
-                    <span className="text-base font-black">{results.fiber} g</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      Fiber
+                    </span>
+                    <span className="text-base font-black">
+                      {results.fiber} g
+                    </span>
                   </div>
                 </div>
                 <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
@@ -788,44 +987,55 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     <span className="text-orange-600 text-sm">🧂</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">Sodium</span>
-                    <span className="text-base font-black">{results.sodium} mg</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      Sodium
+                    </span>
+                    <span className="text-base font-black">
+                      {results.sodium} mg
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* CTAs */}
               <div className="space-y-2">
-                <button
+                <Button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-base font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                  variant="default"
+                  size="lg"
+                  className='w-full'
                 >
                   {saving ? 'Saving...' : 'Start Tracking My Plan'}
-                </button>
+                </Button>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    className="flex-1"
                     onClick={openAdjustMacros}
-                    className="flex-1 py-2.5 rounded-xl border-2 border-primary/30 text-sm font-semibold text-primary hover:bg-primary/5 transition-all"
                   >
                     Adjust Macros
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
                     onClick={() => goTo(4)}
-                    className="flex-1 py-2.5 rounded-xl border-2 border-border/30 text-sm font-semibold hover:bg-muted transition-all"
                   >
                     Refine My Plan
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { goTo(0); setState(DEFAULT_STATE); setResults(null); setMacroAdj(null); }}
-                    className="flex-1 py-2.5 rounded-xl border-2 border-border/30 text-sm font-semibold hover:bg-muted transition-all"
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      goTo(0);
+                      setState(DEFAULT_STATE);
+                      setResults(null);
+                      setMacroAdj(null);
+                    }}
                   >
                     Start Over
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -835,29 +1045,64 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {step === 7 && results && macroAdj && (
             <div className="space-y-5">
               <div className="space-y-0.5">
-                <h2 className="text-xl font-headline font-black">Fine-tune Your Macros</h2>
-                <p className="text-sm text-muted-foreground">Drag to adjust. Total calories stay at {results.targetCalories.toLocaleString('en-US')} kcal.</p>
+                <h2 className="text-xl font-headline font-black">
+                  Fine-tune Your Macros
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Drag to adjust. Total calories stay at{' '}
+                  {results.targetCalories.toLocaleString('en-US')} kcal.
+                </p>
               </div>
 
               <div className="space-y-4">
                 {(
                   [
-                    { key: 'proteinPct', label: 'Protein', pct: macroAdj.proteinPct, color: MACRO_HEX_COLORS.protein, calsPerG: 4 },
-                    { key: 'carbsPct',   label: 'Carbs',   pct: macroAdj.carbsPct,   color: MACRO_HEX_COLORS.carbs,   calsPerG: 4 },
-                    { key: 'fatPct',     label: 'Fat',     pct: macroAdj.fatPct,     color: MACRO_HEX_COLORS.fat,     calsPerG: 9 },
+                    {
+                      key: 'proteinPct',
+                      label: 'Protein',
+                      pct: macroAdj.proteinPct,
+                      color: MACRO_HEX_COLORS.protein,
+                      calsPerG: 4,
+                    },
+                    {
+                      key: 'carbsPct',
+                      label: 'Carbs',
+                      pct: macroAdj.carbsPct,
+                      color: MACRO_HEX_COLORS.carbs,
+                      calsPerG: 4,
+                    },
+                    {
+                      key: 'fatPct',
+                      label: 'Fat',
+                      pct: macroAdj.fatPct,
+                      color: MACRO_HEX_COLORS.fat,
+                      calsPerG: 9,
+                    },
                   ] as const
                 ).map(({ key, label, pct, color, calsPerG }) => {
-                  const grams = Math.round((results.targetCalories * pct / 100) / calsPerG);
+                  const grams = Math.round(
+                    (results.targetCalories * pct) / 100 / calsPerG,
+                  );
                   return (
                     <div key={key} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: color }}
+                          />
                           <span className="text-sm font-semibold">{label}</span>
                         </div>
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-xl font-black" style={{ color }}>{pct}%</span>
-                          <span className="text-sm text-muted-foreground font-medium">{grams} g</span>
+                          <span
+                            className="text-xl font-black"
+                            style={{ color }}
+                          >
+                            {pct}%
+                          </span>
+                          <span className="text-sm text-muted-foreground font-medium">
+                            {grams} g
+                          </span>
                         </div>
                       </div>
                       <input
@@ -866,7 +1111,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                         max={95}
                         step={1}
                         value={pct}
-                        onChange={(e) => adjustMacro(key, Number(e.target.value))}
+                        onChange={(e) =>
+                          adjustMacro(key, Number(e.target.value))
+                        }
                         className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted"
                         style={{ accentColor: color }}
                       />
@@ -878,7 +1125,10 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               {/* Total check */}
               <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/30 pt-3">
                 <span>Total</span>
-                <span className="font-black">{macroAdj.proteinPct + macroAdj.carbsPct + macroAdj.fatPct}% · {results.targetCalories.toLocaleString('en-US')} kcal</span>
+                <span className="font-black">
+                  {macroAdj.proteinPct + macroAdj.carbsPct + macroAdj.fatPct}% ·{' '}
+                  {results.targetCalories.toLocaleString('en-US')} kcal
+                </span>
               </div>
 
               <div className="flex gap-2">
