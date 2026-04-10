@@ -128,6 +128,17 @@ export const nutritionGoalsSchema = z.object({
     ])
     .optional(), // From goalTypeEnum in schema.ts
   activityLevel: z.string().optional(), // DB uses varchar, not enum
+  hydration: z.number().min(0).max(10000).optional(),
+  ageYears: z.number().int().min(1).max(120).optional().nullable(),
+  sex: z.enum(['male', 'female']).optional().nullable(),
+  heightCm: z.number().min(50).max(300).optional().nullable(),
+  weightKg: z.number().min(10).max(500).optional().nullable(),
+  activityMultiplier: z.number().optional().nullable(),
+  bmrCalories: z.number().optional().nullable(),
+  tdeeCalories: z.number().optional().nullable(),
+  wizardInputs: z.record(z.string(), z.unknown()).optional().nullable(),
+  inputUnitSystem: z.enum(['metric', 'imperial']).optional().nullable(),
+  macroPresetId: z.string().optional().nullable(),
 });
 
 // Food log ID validation
@@ -221,7 +232,18 @@ export function transformNutritionGoalsForDB(
     targetFat: apiGoals.fat.toString(),
     targetFiber: apiGoals.fiber.toString(),
     targetSodium: apiGoals.sodium.toString(),
+    targetHydrationMl: apiGoals.hydration ?? 2500,
     activityLevel: apiGoals.activityLevel || null,
+    ageYears: apiGoals.ageYears ?? null,
+    sex: apiGoals.sex ?? null,
+    heightCm: apiGoals.heightCm != null ? apiGoals.heightCm.toString() : null,
+    weightKg: apiGoals.weightKg != null ? apiGoals.weightKg.toString() : null,
+    activityMultiplier: apiGoals.activityMultiplier != null ? apiGoals.activityMultiplier.toString() : null,
+    bmrCalories: apiGoals.bmrCalories != null ? apiGoals.bmrCalories.toString() : null,
+    tdeeCalories: apiGoals.tdeeCalories != null ? apiGoals.tdeeCalories.toString() : null,
+    wizardInputs: apiGoals.wizardInputs ?? null,
+    inputUnitSystem: apiGoals.inputUnitSystem ?? null,
+    macroPresetId: apiGoals.macroPresetId ?? null,
     startDate: new Date(),
     isActive: true,
   };

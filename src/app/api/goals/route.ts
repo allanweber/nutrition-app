@@ -21,6 +21,7 @@ export async function GET() {
       fat: 65,
       fiber: 25,
       sodium: 2300,
+      hydration: 2500,
     };
 
     // Get the most recent active goal for the user
@@ -43,6 +44,7 @@ export async function GET() {
       fat: activeGoal.targetFat ? Number(activeGoal.targetFat) : defaultGoals.fat,
       fiber: activeGoal.targetFiber ? Number(activeGoal.targetFiber) : defaultGoals.fiber,
       sodium: activeGoal.targetSodium ? Number(activeGoal.targetSodium) : defaultGoals.sodium,
+      hydration: activeGoal.targetHydrationMl ?? defaultGoals.hydration,
       goalType: activeGoal.goalType,
       activityLevel: activeGoal.activityLevel,
     };
@@ -103,8 +105,8 @@ export async function PUT(request: NextRequest) {
     // Create new goal record
     const [newGoal] = await db.insert(nutritionGoals).values(dbValidation.data).returning();
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       goals: {
         calories: Number(newGoal.targetCalories),
         protein: Number(newGoal.targetProtein),
@@ -112,6 +114,7 @@ export async function PUT(request: NextRequest) {
         fat: Number(newGoal.targetFat),
         fiber: Number(newGoal.targetFiber),
         sodium: Number(newGoal.targetSodium),
+        hydration: newGoal.targetHydrationMl ?? 2500,
         goalType: newGoal.goalType,
         activityLevel: newGoal.activityLevel,
       }

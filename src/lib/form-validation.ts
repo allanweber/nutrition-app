@@ -124,6 +124,10 @@ export const goalsFormSchema = z.object({
     (v) => (v === '' || v == null ? undefined : v),
     z.coerce.number({ error: 'Sodium is required' }).min(0, 'Must be 0 or more').max(100000, 'Sodium must be at most 100,000mg'),
   ),
+  hydration: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number({ error: 'Hydration is required' }).min(0, 'Must be 0 or more').max(10000, 'Hydration must be at most 10,000ml'),
+  ),
 })
 
 // ============================================

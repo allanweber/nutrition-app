@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 COMPOSE_FILE="docker-compose.test.yml"
 CONTAINER_NAME="nutrition_db_test"
 ENV_FILE=".env.test"
-TEST_PORT=3001
+TEST_PORT=3002
 MAX_RETRIES=30
 RETRY_INTERVAL=2
 

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Test server runs on port 3001 to avoid conflicts with dev server on 3000
-const TEST_PORT = process.env.PORT || '3001';
+// Test server runs on port 3002 to avoid conflicts with dev server on 3000
+const TEST_PORT = process.env.PORT || '3002';
 const TEST_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://localhost:${TEST_PORT}`;
 
 export default defineConfig({
@@ -9,6 +9,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
+  maxFailures: 1,
   workers: process.env.CI ? 4 : undefined,
   reporter: 'html',
   timeout: 60000,
@@ -19,13 +20,20 @@ export default defineConfig({
     actionTimeout: 10000,
   },
   projects: [
+    // Runs auth.setup.ts once — logs in each seed user and saves storage state
+    {
+      name: 'setup',
+      testMatch: /auth\.setup/,
+    },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
     {
       name: 'mobile',
       use: { ...devices['iPhone 13'] },
+      dependencies: ['setup'],
     },
   ],
   // When running via run-e2e.sh, the script manages the server

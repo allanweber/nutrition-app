@@ -204,16 +204,19 @@ test.describe('004 US3: Search History & Autocomplete', () => {
     const searches = ['apple', 'banana', 'carrot'];
     for (const term of searches) {
       await typeSearch(page, term);
-      // Wait for the dropdown to appear before checking count (API response may take > 600ms)
-      await page.getByTestId('food-search-dropdown').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+      // Wait for result items to appear (not just the dropdown container — results load async after debounce)
       const results = page.getByTestId('food-result-item');
+      await results.first().waitFor({ state: 'visible', timeout: 7000 }).catch(() => {});
       const count = await results.count();
       if (count > 0) {
         await results.first().click();
-        // Close modal if it opened
+        // Wait for modal to appear (modal animation is async — isVisible() snapshot can miss it)
         const modal = page.getByTestId('food-add-modal');
+        await modal.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
         if (await modal.isVisible()) {
           await page.keyboard.press('Escape');
+          // Wait for modal to close before interacting with the page again
+          await modal.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
         }
       }
       // Clear search
