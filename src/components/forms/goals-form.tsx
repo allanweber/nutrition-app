@@ -135,7 +135,7 @@ export function GoalsForm({
       >
         {/* Section 1 — Lifestyle & Aim */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <Target className="w-6 h-6" />
             </div>
@@ -164,7 +164,7 @@ export function GoalsForm({
                     value={field.state.value}
                     onValueChange={(v) => field.handleChange(v as GoalType)}
                   >
-                    <SelectTrigger className="w-full text-base font-semibold">
+                    <SelectTrigger className="w-full h-14! px-5 text-base font-semibold">
                       <SelectValue placeholder="Select your goal" />
                     </SelectTrigger>
                     <SelectContent>
@@ -205,7 +205,7 @@ export function GoalsForm({
                       field.handleChange(v as ActivityLevel)
                     }
                   >
-                    <SelectTrigger className="w-full text-base font-semibold">
+                    <SelectTrigger className="w-full h-14! px-5 text-base font-semibold ">
                       <SelectValue placeholder="Select activity level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,7 +239,7 @@ export function GoalsForm({
 
         {/* Section 2 — Energy & Vitality */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
               <Droplets className="w-6 h-6" />
             </div>
@@ -271,7 +271,7 @@ export function GoalsForm({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="2500"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-20 py-3 text-3xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-20 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
                       kcal
@@ -304,7 +304,7 @@ export function GoalsForm({
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="3500"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-28 py-3 text-3xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-28 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
                       ml / day
@@ -323,7 +323,7 @@ export function GoalsForm({
 
         {/* Section 3 — Macronutrients */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
               <UtensilsCrossed className="w-6 h-6" />
             </div>
@@ -402,7 +402,7 @@ export function GoalsForm({
 
         {/* Section 4 — Micros & Refinement */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
               <FlaskConical className="w-6 h-6" />
             </div>
