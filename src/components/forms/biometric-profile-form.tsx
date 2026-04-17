@@ -2,11 +2,12 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Camera, CheckCircle2, Ruler, User, UserCircle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Calendar, Camera, CheckCircle2, Loader2, Ruler, User, UserCircle } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { biometricProfileSchema, zodValidator } from '@/lib/form-validation';
 import { cn } from '@/lib/utils';
 
@@ -77,72 +79,63 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-const textInputCls =
-  'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive py-3 text-xl font-semibold';
-
-const numberInputCls =
-  'w-full border rounded-2xl px-6 py-4 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none';
-
-// ─── main component ───────────────────────────────────────────────────────────
+// ─── loading shell ────────────────────────────────────────────────────────────
 
 export function BiometricProfileForm() {
+  const { data, isLoading } = useQuery<{ profile: ProfileData }>({
+    queryKey: ['profile'],
+    queryFn: () => fetch('/api/profile').then((r) => r.json()),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!data?.profile) return null;
+
+  return <BiometricProfileFormContent profile={data.profile} />;
+}
+
+// ─── form (mounted only when profile is available) ────────────────────────────
+
+function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const { data, isLoading } = useQuery<{ profile: ProfileData }>({
-    queryKey: ['profile'],
-    queryFn: () => fetch('/api/profile').then((r) => r.json()),
-  });
+  const unit = profile.preferredUnit ?? 'metric';
+  let heightCm: string | number = '';
+  let weightKg: string | number = '';
+  let heightFt: string | number = '';
+  let heightIn: string | number = '';
+  let weightLbs: string | number = '';
 
-  const profile = data?.profile;
+  if (profile.heightCm) {
+    if (unit === 'metric') {
+      heightCm = profile.heightCm;
+    } else {
+      const { ft, inches } = cmToFtIn(profile.heightCm);
+      heightFt = ft;
+      heightIn = inches;
+    }
+  }
+
+  if (profile.weightKg) {
+    if (unit === 'metric') {
+      weightKg = profile.weightKg;
+    } else {
+      weightLbs = kgToLbs(profile.weightKg);
+    }
+  }
 
   const form = useForm({
     defaultValues: {
-      name: '',
-      dateOfBirth: '',
-      gender: '' as string,
-      preferredUnit: 'metric' as 'metric' | 'imperial',
-      heightCm: '' as string | number,
-      weightKg: '' as string | number,
-      heightFt: '' as string | number,
-      heightIn: '' as string | number,
-      weightLbs: '' as string | number,
-    },
-  });
-
-  // Populate form when data loads
-  useEffect(() => {
-    if (!profile) return;
-
-    const unit = profile.preferredUnit ?? 'metric';
-    let heightCm: string | number = '';
-    let weightKg: string | number = '';
-    let heightFt: string | number = '';
-    let heightIn: string | number = '';
-    let weightLbs: string | number = '';
-
-    if (profile.heightCm) {
-      if (unit === 'metric') {
-        heightCm = profile.heightCm;
-      } else {
-        const { ft, inches } = cmToFtIn(profile.heightCm);
-        heightFt = ft;
-        heightIn = inches;
-      }
-    }
-
-    if (profile.weightKg) {
-      if (unit === 'metric') {
-        weightKg = profile.weightKg;
-      } else {
-        weightLbs = kgToLbs(profile.weightKg);
-      }
-    }
-
-    form.reset({
       name: profile.name,
       dateOfBirth: profile.dateOfBirth ?? '',
       gender: profile.gender ?? '',
@@ -152,25 +145,23 @@ export function BiometricProfileForm() {
       heightFt,
       heightIn,
       weightLbs,
-    });
-
-    if (profile.image) setAvatarPreview(null); // use server image
-  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+    },
+  });
 
   const mutation = useMutation({
     mutationFn: async (values: typeof form.state.values) => {
-      const unit = values.preferredUnit;
-      let heightCm: number | null = null;
-      let weightKg: number | null = null;
+      const u = values.preferredUnit;
+      let hCm: number | null = null;
+      let wKg: number | null = null;
 
-      if (unit === 'metric') {
-        heightCm = values.heightCm !== '' ? Number(values.heightCm) : null;
-        weightKg = values.weightKg !== '' ? Number(values.weightKg) : null;
+      if (u === 'metric') {
+        hCm = values.heightCm !== '' ? Number(values.heightCm) : null;
+        wKg = values.weightKg !== '' ? Number(values.weightKg) : null;
       } else {
         const ft = values.heightFt !== '' ? Number(values.heightFt) : 0;
         const inches = values.heightIn !== '' ? Number(values.heightIn) : 0;
-        if (ft || inches) heightCm = ftInToCm(ft, inches);
-        if (values.weightLbs !== '') weightKg = lbsToKg(Number(values.weightLbs));
+        if (ft || inches) hCm = ftInToCm(ft, inches);
+        if (values.weightLbs !== '') wKg = lbsToKg(Number(values.weightLbs));
       }
 
       const res = await fetch('/api/profile', {
@@ -180,9 +171,9 @@ export function BiometricProfileForm() {
           name: values.name,
           dateOfBirth: values.dateOfBirth || null,
           gender: values.gender || null,
-          preferredUnit: unit,
-          heightCm,
-          weightKg,
+          preferredUnit: u,
+          heightCm: hCm,
+          weightKg: wKg,
         }),
       });
 
@@ -221,16 +212,8 @@ export function BiometricProfileForm() {
     }
   }
 
-  const currentAvatar = avatarPreview ?? profile?.image ?? null;
-  const currentName = form.state.values.name || profile?.name || '';
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  const currentAvatar = avatarPreview ?? profile.image ?? null;
+  const currentName = form.state.values.name || profile.name || '';
 
   return (
     <form
@@ -268,7 +251,7 @@ export function BiometricProfileForm() {
               </Avatar>
               <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white rounded-full">
                 {avatarUploading ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   <>
                     <Camera className="w-6 h-6" />
@@ -292,12 +275,12 @@ export function BiometricProfileForm() {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <SectionLabel>Email</SectionLabel>
-              <div className="text-base font-semibold px-1">{profile?.email}</div>
+              <div className="text-base font-semibold px-1">{profile.email}</div>
             </div>
             <div>
               <SectionLabel>Email Verified?</SectionLabel>
               <div className="flex items-center gap-1.5 text-base font-semibold px-1">
-                {profile?.emailVerified ? (
+                {profile.emailVerified ? (
                   <>
                     <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />
                     <span>Yes</span>
@@ -317,14 +300,15 @@ export function BiometricProfileForm() {
             {(field) => (
               <div className="space-y-3">
                 <SectionLabel>Full Name</SectionLabel>
-                <input
+                <Input
                   id="name"
                   type="text"
-                  className={cn(textInputCls, field.state.meta.errors.length && 'border-destructive')}
                   placeholder="John Doe"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
+                  aria-invalid={field.state.meta.errors.length > 0}
+                  className={cn(field.state.meta.errors.length && 'border-destructive')}
                 />
                 <FieldError errors={field.state.meta.errors} />
               </div>
@@ -337,10 +321,10 @@ export function BiometricProfileForm() {
               <div className="space-y-3">
                 <SectionLabel>Date of Birth</SectionLabel>
                 <div className="relative">
-                  <input
+                  <Input
                     id="dateOfBirth"
                     type="date"
-                    className={cn(textInputCls, 'pr-14')}
+                    className="pr-14"
                     value={field.state.value as string}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
@@ -357,10 +341,10 @@ export function BiometricProfileForm() {
               <div className="space-y-3">
                 <SectionLabel>Gender Identity</SectionLabel>
                 <Select
-                  value={field.state.value as string}
+                  value={(field.state.value as string) || undefined}
                   onValueChange={(v) => field.handleChange(v)}
                 >
-                  <SelectTrigger className="w-full h-14! px-5 text-base font-semibold">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Identity" />
                   </SelectTrigger>
                   <SelectContent>
@@ -393,71 +377,65 @@ export function BiometricProfileForm() {
           {/* Metric / Imperial segmented toggle */}
           <form.Field name="preferredUnit">
             {(field) => (
-              <div className="flex p-1.5 bg-muted rounded-2xl w-full">
-                {(['metric', 'imperial'] as const).map((unit) => (
-                  <button
-                    key={unit}
-                    type="button"
-                    onClick={() => {
-                      const current = field.state.value as 'metric' | 'imperial';
-                      if (current === unit) return;
-
-                      // Convert displayed values when switching units
-                      const vals = form.state.values;
-                      if (unit === 'imperial') {
-                        // metric → imperial
-                        const cm = vals.heightCm !== '' ? Number(vals.heightCm) : null;
-                        const kg = vals.weightKg !== '' ? Number(vals.weightKg) : null;
-                        if (cm) {
-                          const { ft, inches } = cmToFtIn(cm);
-                          form.setFieldValue('heightFt', ft);
-                          form.setFieldValue('heightIn', inches);
-                        }
-                        if (kg) form.setFieldValue('weightLbs', kgToLbs(kg));
-                        form.setFieldValue('heightCm', '');
-                        form.setFieldValue('weightKg', '');
-                      } else {
-                        // imperial → metric
-                        const ft = vals.heightFt !== '' ? Number(vals.heightFt) : 0;
-                        const inches = vals.heightIn !== '' ? Number(vals.heightIn) : 0;
-                        const lbs = vals.weightLbs !== '' ? Number(vals.weightLbs) : null;
-                        if (ft || inches) form.setFieldValue('heightCm', ftInToCm(ft, inches));
-                        if (lbs) form.setFieldValue('weightKg', lbsToKg(lbs));
-                        form.setFieldValue('heightFt', '');
-                        form.setFieldValue('heightIn', '');
-                        form.setFieldValue('weightLbs', '');
-                      }
-                      field.handleChange(unit);
-                    }}
-                    className={cn(
-                      'flex-1 text-center py-3 rounded-xl text-sm font-black uppercase tracking-wider text-muted-foreground transition-all',
-                      field.state.value === unit && 'bg-background text-foreground shadow-sm',
-                    )}
-                  >
-                    {unit}
-                  </button>
-                ))}
-              </div>
+              <ToggleGroup
+                type="single"
+                value={field.state.value as string}
+                onValueChange={(newUnit) => {
+                  if (!newUnit || newUnit === field.state.value) return;
+                  const u = newUnit as 'metric' | 'imperial';
+                  const vals = form.state.values;
+                  if (u === 'imperial') {
+                    const cm = vals.heightCm !== '' ? Number(vals.heightCm) : null;
+                    const kg = vals.weightKg !== '' ? Number(vals.weightKg) : null;
+                    if (cm) {
+                      const { ft, inches } = cmToFtIn(cm);
+                      form.setFieldValue('heightFt', ft);
+                      form.setFieldValue('heightIn', inches);
+                    }
+                    if (kg) form.setFieldValue('weightLbs', kgToLbs(kg));
+                    form.setFieldValue('heightCm', '');
+                    form.setFieldValue('weightKg', '');
+                  } else {
+                    const ft = vals.heightFt !== '' ? Number(vals.heightFt) : 0;
+                    const inches = vals.heightIn !== '' ? Number(vals.heightIn) : 0;
+                    const lbs = vals.weightLbs !== '' ? Number(vals.weightLbs) : null;
+                    if (ft || inches) form.setFieldValue('heightCm', ftInToCm(ft, inches));
+                    if (lbs) form.setFieldValue('weightKg', lbsToKg(lbs));
+                    form.setFieldValue('heightFt', '');
+                    form.setFieldValue('heightIn', '');
+                    form.setFieldValue('weightLbs', '');
+                  }
+                  field.handleChange(u);
+                }}
+                className="w-full"
+              >
+                <ToggleGroupItem value="metric" className="flex-1 uppercase tracking-wider text-sm font-black">
+                  Metric
+                </ToggleGroupItem>
+                <ToggleGroupItem value="imperial" className="flex-1 uppercase tracking-wider text-sm font-black">
+                  Imperial
+                </ToggleGroupItem>
+              </ToggleGroup>
             )}
           </form.Field>
 
           {/* Height */}
           <form.Subscribe selector={(s) => s.values.preferredUnit}>
-            {(unit) => (
+            {(u) => (
               <div className="space-y-3">
                 <SectionLabel>Height</SectionLabel>
-                {unit === 'metric' ? (
+                {u === 'metric' ? (
                   <form.Field name="heightCm">
                     {(field) => (
                       <>
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min="50"
                             max="300"
                             step="0.1"
                             placeholder="180"
-                            className={cn(numberInputCls, 'pr-20')}
+                            className="pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={field.state.value as string | number}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
@@ -475,12 +453,12 @@ export function BiometricProfileForm() {
                     <form.Field name="heightFt">
                       {(field) => (
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min="0"
                             max="9"
                             placeholder="5"
-                            className={cn(numberInputCls, 'pr-16')}
+                            className="pr-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={field.state.value as string | number}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
@@ -494,13 +472,13 @@ export function BiometricProfileForm() {
                     <form.Field name="heightIn">
                       {(field) => (
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min="0"
                             max="11"
                             step="0.1"
                             placeholder="10"
-                            className={cn(numberInputCls, 'pr-16')}
+                            className="pr-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={field.state.value as string | number}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
@@ -519,21 +497,21 @@ export function BiometricProfileForm() {
 
           {/* Weight */}
           <form.Subscribe selector={(s) => s.values.preferredUnit}>
-            {(unit) => (
+            {(u) => (
               <div className="space-y-3">
                 <SectionLabel>Current Weight</SectionLabel>
-                {unit === 'metric' ? (
+                {u === 'metric' ? (
                   <form.Field name="weightKg">
                     {(field) => (
                       <>
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min="10"
                             max="500"
                             step="0.1"
                             placeholder="75.5"
-                            className={cn(numberInputCls, 'pr-20')}
+                            className="pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={field.state.value as string | number}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
@@ -551,13 +529,13 @@ export function BiometricProfileForm() {
                     {(field) => (
                       <>
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min="22"
                             max="1100"
                             step="0.1"
                             placeholder="165.3"
-                            className={cn(numberInputCls, 'pr-20')}
+                            className="pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={field.state.value as string | number}
                             onChange={(e) => field.handleChange(e.target.value)}
                             onBlur={field.handleBlur}
@@ -588,13 +566,18 @@ export function BiometricProfileForm() {
         {saveStatus === 'error' && (
           <p className="text-sm font-semibold text-destructive">Failed to save. Please try again.</p>
         )}
-        <Button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full max-w-sm rounded-2xl py-6 text-lg font-black shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 active:scale-95"
-        >
-          {mutation.isPending ? 'Saving…' : 'Update Profile'}
-        </Button>
+        <form.Subscribe selector={(state) => state.isValid}>
+          {(isValid) => (
+            <Button
+              type="submit"
+              size="lg"
+              disabled={mutation.isPending || !isValid}
+              className="w-full max-w-sm"
+            >
+              {mutation.isPending ? 'Saving…' : 'Update Profile'}
+            </Button>
+          )}
+        </form.Subscribe>
       </div>
     </form>
   );
