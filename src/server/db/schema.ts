@@ -8,6 +8,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
   unique,
@@ -55,6 +56,16 @@ export const dietPlanStatusEnum = pgEnum('diet_plan_status', [
   'draft',
   'archived',
 ]);
+export const genderEnum = pgEnum('gender', [
+  'woman',
+  'man',
+  'non-binary',
+  'prefer-not-to-say',
+]);
+export const preferredUnitEnum = pgEnum('preferred_unit', [
+  'metric',
+  'imperial',
+]);
 
 export const users = pgTable(
   'user',
@@ -70,6 +81,17 @@ export const users = pgTable(
   },
   (table) => [index('users_email_idx').on(table.email)],
 );
+
+export const userProfiles = pgTable('user_profiles', {
+  userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  dateOfBirth: date('date_of_birth'),
+  gender: genderEnum('gender'),
+  heightCm: real('height_cm'),
+  weightKg: real('weight_kg'),
+  preferredUnit: preferredUnitEnum('preferred_unit').default('metric').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 // Better Auth schema tables
 export const sessions = pgTable(
@@ -581,17 +603,22 @@ export const hydrationLogs = pgTable(
 // RELATIONS
 // ============================================
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  profile: one(userProfiles, { fields: [users.id], references: [userProfiles.userId] }),
   sessions: many(sessions),
   accounts: many(accounts),
   foodLogMeals: many(foodLogMeals),
   nutritionGoals: many(nutritionGoals),
   bodyCheckins: many(bodyCheckins),
   dietPlans: many(dietPlans),
-  customFoods: many(foods), // Custom foods owned by user
+  customFoods: many(foods),
   hydrationLogs: many(hydrationLogs),
   customDishes: many(customDishes),
   favorites: many(favorites),
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+  user: one(users, { fields: [userProfiles.userId], references: [users.id] }),
 }));
 
 export const foodsRelations = relations(foods, ({ one, many }) => ({
@@ -781,6 +808,8 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
+export const insertUserProfileSchema = createInsertSchema(userProfiles);
+export const selectUserProfileSchema = createSelectSchema(userProfiles);
 export const insertFoodSchema = createInsertSchema(foods);
 export const selectFoodSchema = createSelectSchema(foods);
 export const insertFoodPhotoSchema = createInsertSchema(foodPhotos);
@@ -818,6 +847,8 @@ export const selectDishPhotoSchema = createSelectSchema(dishPhotos);
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
 export type Food = typeof foods.$inferSelect;
 export type NewFood = typeof foods.$inferInsert;
 export type FoodPhoto = typeof foodPhotos.$inferSelect;
