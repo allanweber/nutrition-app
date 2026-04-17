@@ -2,10 +2,11 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Camera, CheckCircle2, Loader2, Ruler, User, UserCircle } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, Ruler, User, UserCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DateInput } from '@/components/ui/date-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -320,17 +321,11 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
             {(field) => (
               <div className="space-y-3">
                 <SectionLabel>Date of Birth</SectionLabel>
-                <div className="relative">
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    className="pr-14"
-                    value={field.state.value as string}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                  <Calendar className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/40 pointer-events-none" />
-                </div>
+                <DateInput
+                  value={field.state.value as string}
+                  onChange={(v) => field.handleChange(v)}
+                  onBlur={field.handleBlur}
+                />
               </div>
             )}
           </form.Field>
