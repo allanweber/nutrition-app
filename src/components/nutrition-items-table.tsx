@@ -28,6 +28,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -283,7 +285,7 @@ export function NutritionItemsTable<T>({
     <div className="flex flex-col gap-4">
       {/* Controls bar */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 bg-background/50 px-4 py-2.5 rounded-xl border border-border/40">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border">
           <span className="size-2 rounded-full bg-primary shrink-0" />
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
             {filteredCount} {filteredCount === 1 ? 'Item' : 'Items'} View
@@ -291,7 +293,7 @@ export function NutritionItemsTable<T>({
         </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => {
@@ -299,28 +301,29 @@ export function NutritionItemsTable<T>({
               setPagination((p) => ({ ...p, pageIndex: 0 }));
             }}
             placeholder={searchPlaceholder}
-            className="w-full pl-10 pr-4 py-2.5 bg-background rounded-xl border border-border/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium outline-none"
+            className="pl-10"
           />
         </div>
         <div className="ml-auto">
           {(sorting.length > 0 || search.length > 0) && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setSorting([]);
                 setSearch('');
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/40 bg-background text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Table card */}
-      <div className="bg-background rounded-2xl shadow-sm overflow-hidden border border-border/20">
+      <div className="bg-background rounded-lg overflow-hidden border border-border">
         <div className="overflow-x-auto">
           <Table className="min-w-225 border-collapse">
             <TableHeader>
@@ -409,18 +412,22 @@ export function NutritionItemsTable<T>({
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                 Rows per page
               </span>
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  table.setPageSize(Number(e.target.value));
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => {
+                  table.setPageSize(Number(v));
                   table.setPageIndex(0);
                 }}
-                className="appearance-none bg-background border border-border/40 rounded-lg pl-3 pr-7 py-1.5 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-all hover:bg-muted"
               >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-16 h-8 text-sm font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <span className="text-xs font-semibold text-muted-foreground">
               Showing{' '}
@@ -433,14 +440,15 @@ export function NutritionItemsTable<T>({
 
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
-              </button>
+              </Button>
               <div className="flex items-center gap-1">
                 {getPageButtons().map((btn, i) =>
                   btn === 'ellipsis' ? (
@@ -451,28 +459,27 @@ export function NutritionItemsTable<T>({
                       …
                     </span>
                   ) : (
-                    <button
+                    <Button
                       key={btn}
+                      variant={btn === pageIndex + 1 ? 'default' : 'outline'}
+                      size="icon"
                       onClick={() => table.setPageIndex(btn - 1)}
-                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-all ${
-                        btn === pageIndex + 1
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
-                      }`}
+                      className="h-8 w-8"
                     >
                       {btn}
-                    </button>
+                    </Button>
                   )
                 )}
               </div>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           )}
         </div>
