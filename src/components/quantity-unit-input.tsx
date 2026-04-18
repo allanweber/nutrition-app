@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 
 export interface QuantityMeasure {
   id: string;
@@ -51,9 +53,8 @@ export function QuantityUnitInput({
     if (!isNaN(val) && val > 0) onQuantityChange(val);
   };
 
-  const handleSliderChange = (raw: string) => {
-    const val = parseFloat(raw);
-    if (!isNaN(val)) onQuantityChange(val);
+  const handleSliderChange = (values: number[]) => {
+    if (values[0] !== undefined) onQuantityChange(values[0]);
   };
 
   const handleMeasureChange = (id: string) => {
@@ -71,14 +72,14 @@ export function QuantityUnitInput({
 
       {/* Number input + unit select — matches app's h-9 / text-sm input style */}
       <div className="flex items-center h-9 rounded-md border border-input bg-transparent shadow-xs overflow-hidden transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
-        <input
+        <Input
           type="number"
           min={measure.sliderMin}
           max={measure.sliderMax}
           step={measure.sliderStep}
           value={quantity}
           onChange={(e) => handleNumberChange(e.target.value)}
-          className="flex-1 min-w-0 bg-transparent border-none px-3 py-1 text-sm font-medium text-foreground focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="flex-1 min-w-0 h-full border-none shadow-none rounded-none px-3 py-1 text-sm font-medium focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           data-testid={qtyInputTestId}
           aria-label="Quantity"
         />
@@ -103,14 +104,12 @@ export function QuantityUnitInput({
       {/* Slider */}
       {showSlider && (
         <div className="px-1">
-          <input
-            type="range"
+          <Slider
             min={measure.sliderMin}
             max={measure.sliderMax}
             step={measure.sliderStep}
-            value={quantity}
-            onChange={(e) => handleSliderChange(e.target.value)}
-            className="w-full h-1 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+            value={[quantity]}
+            onValueChange={handleSliderChange}
             data-testid="quantity-slider"
             aria-label="Quantity slider"
           />
