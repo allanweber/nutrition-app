@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,7 +72,7 @@ export function LoginForm() {
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
               placeholder="you@example.com"
-              className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-destructive' : ''}`}
+              className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
               data-testid="email-input"
             />
             {field.state.meta.errors.length > 0 && (
@@ -100,7 +101,7 @@ export function LoginForm() {
               onChange={(e) => field.handleChange(e.target.value)}
               onBlur={field.handleBlur}
               placeholder="Enter your password"
-              className={`h-12 ${field.state.meta.errors.length > 0 ? 'border-destructive' : ''}`}
+              className={field.state.meta.errors.length > 0 ? 'border-destructive' : ''}
               data-testid="password-input"
             />
             {field.state.meta.errors.length > 0 && (
@@ -113,12 +114,9 @@ export function LoginForm() {
       <form.Subscribe selector={(state) => [state.errorMap]}>
         {([errorMap]) =>
           errorMap.onSubmit || authError ? (
-            <div
-              className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg"
-              data-testid="error-message"
-            >
-              {authError || String(errorMap.onSubmit)}
-            </div>
+            <Alert variant="destructive" data-testid="error-message">
+              <AlertDescription>{authError || String(errorMap.onSubmit)}</AlertDescription>
+            </Alert>
           ) : null
         }
       </form.Subscribe>
@@ -127,7 +125,7 @@ export function LoginForm() {
         {([isSubmitting]) => (
           <Button
             type="submit"
-            className="w-full h-12 text-base font-medium"
+            className="w-full"
             disabled={isSubmitting}
             data-testid="submit-button"
           >
