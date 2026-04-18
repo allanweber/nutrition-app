@@ -222,7 +222,7 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
         e.preventDefault();
         mutation.mutate(form.state.values);
       }}
-      className="space-y-20"
+      className="space-y-20 sm:space-y-10"
     >
       {/* ── Identity & Age ─────────────────────────────────────────────────── */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">

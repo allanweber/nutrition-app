@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, UtensilsCrossed, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/page-header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDishesQuery, useDeleteDishMutation } from '@/queries/dishes';
@@ -164,55 +165,40 @@ export default function MyFoodsPage() {
         )}
       </PageHeader>
 
-      {/* Tabs + Table */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-6">
-        <button
-          onClick={() => setTab('foods')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'foods' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          data-testid="tab-custom-foods"
-        >
-          <span className="flex items-center gap-1.5">
-            <UtensilsCrossed className="h-4 w-4" />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'foods' | 'dishes')} className="mb-6">
+        <TabsList className="h-11">
+          <TabsTrigger value="foods" data-testid="tab-custom-foods" className="px-5 text-sm">
+            <UtensilsCrossed className="h-4 w-4 mr-1.5" />
             Custom Foods
-          </span>
-        </button>
-        <button
-          onClick={() => setTab('dishes')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'dishes' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          data-testid="tab-dishes"
-        >
-          <span className="flex items-center gap-1.5">
-            <ChefHat className="h-4 w-4" />
+          </TabsTrigger>
+          <TabsTrigger value="dishes" data-testid="tab-dishes" className="px-5 text-sm">
+            <ChefHat className="h-4 w-4 mr-1.5" />
             Dishes
-          </span>
-        </button>
-      </div>
+          </TabsTrigger>
+        </TabsList>
 
-      {tab === 'foods' && (
-        <NutritionItemsTable
-          items={foodsQuery.data?.foods ?? []}
-          config={foodsConfig}
-          isLoading={foodsQuery.isLoading}
-          emptyTitle="No custom foods yet"
-          emptyDescription="Create your own foods with exact nutrition info and reuse them across your logs."
-          searchPlaceholder="Filter by food name..."
-        />
-      )}
+        <TabsContent value="foods">
+          <NutritionItemsTable
+            items={foodsQuery.data?.foods ?? []}
+            config={foodsConfig}
+            isLoading={foodsQuery.isLoading}
+            emptyTitle="No custom foods yet"
+            emptyDescription="Create your own foods with exact nutrition info and reuse them across your logs."
+            searchPlaceholder="Filter by food name..."
+          />
+        </TabsContent>
 
-      {tab === 'dishes' && (
-        <NutritionItemsTable
-          items={dishesQuery.data?.dishes ?? []}
-          config={dishesConfig}
-          isLoading={dishesQuery.isLoading}
-          emptyTitle="No dishes yet"
-          emptyDescription="Create multi-ingredient dishes and log them as a single entry with a serving multiplier."
-          searchPlaceholder="Filter by dish name..."
-        />
-      )}
+        <TabsContent value="dishes">
+          <NutritionItemsTable
+            items={dishesQuery.data?.dishes ?? []}
+            config={dishesConfig}
+            isLoading={dishesQuery.isLoading}
+            emptyTitle="No dishes yet"
+            emptyDescription="Create multi-ingredient dishes and log them as a single entry with a serving multiplier."
+            searchPlaceholder="Filter by dish name..."
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
