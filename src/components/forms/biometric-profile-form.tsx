@@ -565,8 +565,8 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
           {(isValid) => (
             <Button
               type="submit"
-              size="lg"
               disabled={mutation.isPending || !isValid}
+              size="lg"
               className="w-full max-w-sm"
             >
               {mutation.isPending ? 'Saving…' : 'Update Profile'}
