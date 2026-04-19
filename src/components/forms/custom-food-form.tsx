@@ -258,7 +258,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
         {/* Step 2: General Info */}
         <section>
           <StepLabel>Step 2: General Info</StepLabel>
-          <div className="rounded-xl border border-border/20 p-6 bg-background space-y-6">
+          <div className="rounded-xl border border-border p-6 bg-background space-y-6">
             {/* Name + Brand */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <form.Field
@@ -381,7 +381,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   name="protein"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.protein, 'border-border/20')}
+                  bgClass={cn(MACRO_CELL_BG.protein, 'border-border')}
                   textClass={MACRO_CELL_TEXT.protein}
                   borderClass={MACRO_CELL_BORDER.protein}
                 />
@@ -398,7 +398,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   name="carbs"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.carbs, 'border-border/20')}
+                  bgClass={cn(MACRO_CELL_BG.carbs, 'border-border')}
                   textClass={MACRO_CELL_TEXT.carbs}
                   borderClass={MACRO_CELL_BORDER.carbs}
                 />
@@ -415,7 +415,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   name="fat"
                   fieldApi={field}
                   unit="g"
-                  bgClass={cn(MACRO_CELL_BG.fat, 'border-border/20')}
+                  bgClass={cn(MACRO_CELL_BG.fat, 'border-border')}
                   textClass={MACRO_CELL_TEXT.fat}
                   borderClass={MACRO_CELL_BORDER.fat}
                 />
@@ -424,7 +424,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           </div>
 
           {/* Additional nutrients */}
-          <div className="rounded-xl border border-border/20 p-6 bg-background mt-4">
+          <div className="rounded-xl border border-border p-6 bg-background mt-4">
             <div className="flex items-baseline gap-2 mb-4">
               <p className="text-sm font-bold text-foreground">Additional Nutrients</p>
               <span className="text-xs text-muted-foreground">(optional)</span>
@@ -463,11 +463,14 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           <Button variant="outline" asChild className="flex-1">
             <Link href="/my-foods">Cancel</Link>
           </Button>
-          <form.Subscribe selector={(state) => [state.isSubmitting]}>
-            {([isSubmitting]) => (
+          <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit, state.values]}>
+            {([isSubmitting, canSubmit, values]) => {
+              const v = values as CustomFoodFormData;
+              const hasRequired = Boolean(v.name && v.calories !== ('' as never) && v.protein !== ('' as never) && v.carbs !== ('' as never) && v.fat !== ('' as never));
+              return (
               <Button
                 type="submit"
-                disabled={isSubmitting || mutation.isPending}
+                disabled={!canSubmit || !hasRequired || isSubmitting || mutation.isPending}
                 className="flex-2"
                 data-testid={isEdit ? 'submit-edit-food' : 'submit-create-food'}
               >
@@ -475,7 +478,8 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Saving…</>
                   : isEdit ? 'Save Changes' : 'Create Food'}
               </Button>
-            )}
+              );
+            }}
           </form.Subscribe>
         </div>
       </form>
