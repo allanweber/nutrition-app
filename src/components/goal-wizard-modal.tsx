@@ -18,6 +18,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 import type { ActivityLevel, GoalType } from '@/types/goals';
@@ -329,13 +333,15 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               <span className="text-xs font-black uppercase tracking-widest text-primary">
                 Step {step} of {totalSteps}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={goBack}
-                className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-sm font-bold"
+                className="gap-1 text-muted-foreground hover:text-foreground"
               >
                 <ChevronLeft className="w-4 h-4" /> Back
-              </button>
+              </Button>
             </div>
             <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
               <div
@@ -376,176 +382,139 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           {/* ── Step 1: Personal Info ── */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h2 className="text-xl font-headline font-extrabold">
-                    Tell us a bit about yourself
-                  </h2>
-                  <p className="text-muted-foreground text-sm">
-                    We use these details to find your perfect daily balance.
-                  </p>
-                </div>
-                {/* Unit toggle */}
-                <div className="flex gap-1 shrink-0 ml-4 border border-border rounded-lg p-0.5">
-                  {(['metric', 'imperial'] as const).map((u) => (
-                    <button
-                      key={u}
-                      type="button"
-                      onClick={() => update('unitSystem', u)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                        state.unitSystem === u
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {u === 'metric' ? 'kg / cm' : 'lbs / ft'}
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-1">
+                <h2 className="text-xl font-headline font-extrabold">
+                  Tell us a bit about yourself
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  We use these details to find your perfect daily balance.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Age */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Age
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="number"
                     value={state.age}
-                    onChange={(e) =>
-                      update('age', parseInt(e.target.value, 10) || 25)
-                    }
+                    onChange={(e) => update('age', parseInt(e.target.value, 10) || 25)}
                     placeholder="25"
                     min={1}
                     max={120}
-                    className="w-full bg-muted border-none rounded-lg px-4 py-2 text-base font-bold focus:ring-2 focus:ring-primary/10 transition-all outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
 
-                {/* Sex */}
+                {/* Gender */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Gender
-                  </label>
-                  <div className="flex gap-2">
-                    {(['male', 'female'] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => update('sex', s)}
-                        className={`flex-1 py-2 border-2 rounded-lg font-semibold text-sm transition-all capitalize ${
-                          state.sex === s
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-border/30 hover:border-primary/40'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+                  </Label>
+                  <ToggleGroup
+                    type="single"
+                    value={state.sex}
+                    onValueChange={(v) => { if (v) update('sex', v as Sex); }}
+                    className="w-full border border-border rounded-lg p-0.5 gap-0"
+                  >
+                    <ToggleGroupItem value="male" className="flex-1 capitalize font-semibold">
+                      Male
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="female" className="flex-1 capitalize font-semibold">
+                      Female
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
 
-                {/* Weight */}
-                <div className="md:col-span-2 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                      Current Weight
-                    </label>
-                    <span className="text-base font-bold text-primary">
-                      {state.unitSystem === 'metric'
-                        ? `${Math.round(state.weightKg)} kg`
-                        : `${displayWeightLbs} lbs`}
-                    </span>
+                {/* Measurements: unit toggle + sliders */}
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                      Measurements
+                    </Label>
+                    <ToggleGroup
+                      type="single"
+                      value={state.unitSystem}
+                      onValueChange={(v) => { if (v) update('unitSystem', v as UnitSystem); }}
+                      className="border border-border rounded-lg p-0.5 gap-0"
+                    >
+                      <ToggleGroupItem value="metric" className="px-3 py-1.5 text-sm font-semibold">
+                        kg / cm
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="imperial" className="px-3 py-1.5 text-sm font-semibold">
+                        lbs / ft
+                      </ToggleGroupItem>
+                    </ToggleGroup>
                   </div>
-                  <input
-                    type="range"
-                    min={state.unitSystem === 'metric' ? 40 : 88}
-                    max={state.unitSystem === 'metric' ? 200 : 440}
-                    value={
-                      state.unitSystem === 'metric'
-                        ? Math.round(state.weightKg)
-                        : displayWeightLbs
-                    }
-                    onChange={(e) =>
-                      handleWeightChange(parseFloat(e.target.value))
-                    }
-                    className="w-full h-2 rounded-full accent-primary cursor-pointer"
-                  />
-                </div>
 
-                {/* Height */}
-                <div className="md:col-span-2 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                      Height
-                    </label>
-                    <span className="text-base font-bold text-primary">
-                      {state.unitSystem === 'metric'
-                        ? `${Math.round(state.heightCm)} cm`
-                        : `${displayHeightFtIn.ft}ft ${displayHeightFtIn.in}in`}
-                    </span>
-                  </div>
-                  {state.unitSystem === 'metric' ? (
-                    <input
-                      type="range"
-                      min={140}
-                      max={220}
-                      value={Math.round(state.heightCm)}
-                      onChange={(e) =>
-                        handleHeightChange(parseFloat(e.target.value))
-                      }
-                      className="w-full h-2 rounded-full accent-primary cursor-pointer"
-                    />
-                  ) : (
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <input
-                          type="range"
-                          min={4}
-                          max={7}
-                          value={displayHeightFtIn.ft}
-                          onChange={(e) =>
-                            handleHeightChange(
-                              parseInt(e.target.value, 10),
-                              'ft',
-                            )
-                          }
-                          className="w-full h-2 rounded-full accent-primary cursor-pointer"
-                        />
-                        <p className="text-xs text-center text-muted-foreground mt-1">
-                          feet
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          type="range"
-                          min={0}
-                          max={11}
-                          value={displayHeightFtIn.in}
-                          onChange={(e) =>
-                            handleHeightChange(
-                              parseInt(e.target.value, 10),
-                              'in',
-                            )
-                          }
-                          className="w-full h-2 rounded-full accent-primary cursor-pointer"
-                        />
-                        <p className="text-xs text-center text-muted-foreground mt-1">
-                          inches
-                        </p>
-                      </div>
+                  {/* Weight */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                        Current Weight
+                      </Label>
+                      <span className="text-base font-bold text-primary">
+                        {state.unitSystem === 'metric'
+                          ? `${Math.round(state.weightKg)} kg`
+                          : `${displayWeightLbs} lbs`}
+                      </span>
                     </div>
-                  )}
+                    <Slider
+                      min={state.unitSystem === 'metric' ? 40 : 88}
+                      max={state.unitSystem === 'metric' ? 200 : 440}
+                      value={[state.unitSystem === 'metric' ? Math.round(state.weightKg) : displayWeightLbs]}
+                      onValueChange={([v]) => handleWeightChange(v)}
+                    />
+                  </div>
+
+                  {/* Height */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                        Height
+                      </Label>
+                      <span className="text-base font-bold text-primary">
+                        {state.unitSystem === 'metric'
+                          ? `${Math.round(state.heightCm)} cm`
+                          : `${displayHeightFtIn.ft}ft ${displayHeightFtIn.in}in`}
+                      </span>
+                    </div>
+                    {state.unitSystem === 'metric' ? (
+                      <Slider
+                        min={140}
+                        max={220}
+                        value={[Math.round(state.heightCm)]}
+                        onValueChange={([v]) => handleHeightChange(v)}
+                      />
+                    ) : (
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <Slider
+                            min={4}
+                            max={7}
+                            value={[displayHeightFtIn.ft]}
+                            onValueChange={([v]) => handleHeightChange(v, 'ft')}
+                          />
+                          <p className="text-xs text-center text-muted-foreground mt-1">feet</p>
+                        </div>
+                        <div className="flex-1">
+                          <Slider
+                            min={0}
+                            max={11}
+                            value={[displayHeightFtIn.in]}
+                            onValueChange={([v]) => handleHeightChange(v, 'in')}
+                          />
+                          <p className="text-xs text-center text-muted-foreground mt-1">inches</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <Button
-                onClick={() => goTo(2)}
-                variant="default"
-                size="lg"
-                className="w-full"
-              >
+              <Button onClick={() => goTo(2)} variant="default" size="lg" className="w-full">
                 Continue
               </Button>
             </div>
@@ -589,11 +558,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 ).map(({ value, label, desc, Icon }) => {
                   const selected = state.goalType === value;
                   return (
-                    <button
+                    <Button
                       key={value}
                       type="button"
+                      variant="ghost"
                       onClick={() => update('goalType', value)}
-                      className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all text-left ${
+                      className={`h-auto relative flex items-center p-4 border-2 rounded-xl text-left justify-start ${
                         selected
                           ? 'border-primary bg-primary/5'
                           : 'border-border/30 hover:border-primary hover:bg-primary/5'
@@ -614,7 +584,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                           {desc}
                         </p>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -680,11 +650,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 ).map(({ value, label, desc, Icon }) => {
                   const selected = state.activityLevel === value;
                   return (
-                    <button
+                    <Button
                       key={value}
                       type="button"
+                      variant="ghost"
                       onClick={() => update('activityLevel', value)}
-                      className={`w-full p-3 border-2 rounded-xl text-left flex items-center gap-3 transition-all ${
+                      className={`h-auto w-full p-3 border-2 rounded-xl text-left flex items-center gap-3 justify-start ${
                         selected
                           ? 'border-primary bg-primary/5'
                           : 'border-border/30 hover:border-primary/40'
@@ -700,14 +671,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <p
-                          className={`font-semibold text-sm ${selected ? 'text-primary' : ''}`}
-                        >
+                        <p className={`font-semibold text-sm ${selected ? 'text-primary' : ''}`}>
                           {label}
                         </p>
                         <p className="text-xs text-muted-foreground">{desc}</p>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -735,7 +704,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <ToggleGroup
+                type="single"
+                value={state.macroPreset}
+                onValueChange={(v) => { if (v) update('macroPreset', v as MacroPreset); }}
+                className="grid grid-cols-2 gap-2 w-full"
+              >
                 {(
                   [
                     { value: 'high_protein', label: 'High Protein' },
@@ -743,24 +717,16 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     { value: 'low_carb', label: 'Low Carb' },
                     { value: 'keto', label: 'Keto' },
                   ] as const
-                ).map(({ value, label }) => {
-                  const selected = state.macroPreset === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => update('macroPreset', value)}
-                      className={`p-3 border-2 rounded-xl font-semibold text-sm transition-all ${
-                        selected
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border/30 hover:border-primary/40'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
+                ).map(({ value, label }) => (
+                  <ToggleGroupItem
+                    key={value}
+                    value={value}
+                    className="border-2 rounded-xl font-semibold text-sm data-[state=on]:border-primary data-[state=on]:bg-primary/5 data-[state=on]:text-primary border-border/30"
+                  >
+                    {label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
 
               {/* Visual toggles (UI only) */}
               <div className="pt-3 space-y-3 border-t border-border/20">
@@ -957,8 +923,8 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               {/* Info tiles */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                    <span className="text-blue-600 text-sm">💧</span>
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-primary text-sm">💧</span>
                   </div>
                   <div>
                     <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
@@ -970,8 +936,8 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   </div>
                 </div>
                 <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    <span className="text-emerald-600 text-sm">🌿</span>
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-primary text-sm">🌿</span>
                   </div>
                   <div>
                     <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
@@ -1105,17 +1071,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                           </span>
                         </div>
                       </div>
-                      <input
-                        type="range"
+                      <Slider
                         min={5}
                         max={95}
                         step={1}
-                        value={pct}
-                        onChange={(e) =>
-                          adjustMacro(key, Number(e.target.value))
-                        }
-                        className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted"
-                        style={{ accentColor: color }}
+                        value={[pct]}
+                        onValueChange={([v]) => adjustMacro(key, v)}
                       />
                     </div>
                   );
@@ -1132,20 +1093,12 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               </div>
 
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => goTo(6)}
-                  className="flex-1 py-3 rounded-xl border-2 border-border/30 text-sm font-semibold hover:bg-muted transition-all"
-                >
+                <Button type="button" variant="outline" onClick={() => goTo(6)} className="flex-1">
                   Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goTo(6)}
-                  className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:scale-[1.02]"
-                >
+                </Button>
+                <Button type="button" onClick={() => goTo(6)} className="flex-1">
                   Apply Changes
-                </button>
+                </Button>
               </div>
             </div>
           )}
