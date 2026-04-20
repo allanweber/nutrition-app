@@ -50,16 +50,18 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
       <PopoverContent data-testid="copy-day-popover" align="end" className="w-44 p-1">
         <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Copy meals from</p>
         {daysWithMeals.map((day) => (
-          <button
+          <Button
             key={day}
             data-testid={`copy-from-day-${day}`}
             onClick={() => handleCopy(day)}
             disabled={isPending}
-            className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted transition-colors disabled:opacity-50 flex items-center justify-between"
+            variant="ghost"
+            size="sm"
+            className="w-full justify-between text-sm font-normal"
           >
             {DAY_NAMES[day - 1]}
             {copyingFromDay === day && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-          </button>
+          </Button>
         ))}
       </PopoverContent>
     </Popover>

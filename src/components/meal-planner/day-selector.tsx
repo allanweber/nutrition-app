@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
 
@@ -44,19 +45,20 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
         };
 
         return (
-          <button
+          <Button
             key={day}
             data-testid={`day-button-${day}`}
             onClick={() => onSelectDay(day)}
+            variant="ghost"
             className={cn(
-              'flex flex-col gap-2 p-3 rounded-xl border transition-all min-w-20 flex-1 text-left cursor-pointer',
+              'flex flex-col gap-2 p-3 rounded-xl border h-auto min-w-20 flex-1 items-start justify-start text-left',
               isSelected
-                ? 'bg-day-selected border-day-selected text-white'
+                ? 'bg-day-selected border-day-selected text-white hover:bg-day-selected'
                 : 'border-border bg-background hover:border-border/80 hover:bg-muted/30',
             )}
           >
             {/* Day name */}
-            <span className={cn('uppercase text-xs font-semibold tracking-wide', isSelected ? 'text-emerald-300' : 'text-muted-foreground')}>
+            <span className={cn('uppercase text-xs font-semibold tracking-wide', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
               {label}
             </span>
 
@@ -64,13 +66,13 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
             <div className="flex items-baseline justify-between gap-1">
               <p data-testid={`day-calories-${day}`} className={cn('text-sm font-bold leading-tight', isSelected ? 'text-white' : 'text-foreground')}>
                 {isEmpty ? '0' : Math.round(calories).toLocaleString()}
-                <span className={cn('text-[10px] font-normal ml-0.5', isSelected ? 'text-emerald-300' : 'text-muted-foreground')}>kcal</span>
+                <span className={cn('text-[10px] font-normal ml-0.5', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>kcal</span>
               </p>
               {isSelected && !isEmpty && (
-                <span className="text-[10px] font-semibold text-emerald-300 shrink-0">Active</span>
+                <span className="text-[10px] font-semibold text-primary-foreground/70 shrink-0">Active</span>
               )}
               {!isSelected && !isEmpty && (
-                <span className="text-[10px] font-medium text-emerald-600 shrink-0">{Math.round(calPct)}%</span>
+                <span className="text-[10px] font-medium text-primary shrink-0">{Math.round(calPct)}%</span>
               )}
               {!isSelected && isEmpty && (
                 <span className="text-[10px] font-medium text-muted-foreground shrink-0">Empty</span>
@@ -83,17 +85,17 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
                 <div key={key} className="flex flex-col gap-0.5 flex-1">
                   <div className={cn('h-1 w-full rounded-full overflow-hidden', isSelected ? 'bg-day-selected/40' : 'bg-muted')}>
                     <div
-                      className={cn('h-full rounded-full transition-all', isSelected ? 'bg-emerald-400' : MACRO_COLORS[key])}
+                      className={cn('h-full rounded-full transition-all', isSelected ? 'bg-primary/80' : MACRO_COLORS[key])}
                       style={{ width: `${macroPcts[key]}%` }}
                     />
                   </div>
-                  <span className={cn('text-[9px] uppercase font-medium tracking-wider', isSelected ? 'text-emerald-400' : 'text-muted-foreground/60')}>
+                  <span className={cn('text-[9px] uppercase font-medium tracking-wider', isSelected ? 'text-primary/80' : 'text-muted-foreground/60')}>
                     {macroLabel}
                   </span>
                 </div>
               ))}
             </div>
-          </button>
+          </Button>
         );
       })}
     </div>

@@ -84,16 +84,17 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {/* Add New Plan card */}
-          <button
+          <Button
             data-testid="add-new-plan-card"
             onClick={onAddNew}
-            className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors shrink-0"
+            variant="ghost"
+            className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 shrink-0"
           >
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
               <Plus className="h-5 w-5 text-primary" />
             </div>
             <span className="text-sm font-medium text-muted-foreground">Add New Plan</span>
-          </button>
+          </Button>
 
           {/* Skeleton cards while loading */}
           {isLoading &&

@@ -1,8 +1,10 @@
 'use client';
 
 import { Utensils, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { QuantityUnitInput } from '@/components/quantity-unit-input';
 import type { QuantityMeasure } from '@/components/quantity-unit-input';
+import { MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
 export interface LocalMealItem {
   /** undefined = new item not yet saved */
@@ -82,15 +84,15 @@ export function MealItemEditor({ item, index, onChange, onRemove }: MealItemEdit
           </span>
           <span>
             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">PROT</span>
-            <span className="text-xs font-bold text-rose-500">{protein}g</span>
+            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.protein}`}>{protein}g</span>
           </span>
           <span>
             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">CARB</span>
-            <span className="text-xs font-bold text-amber-500">{carbs}g</span>
+            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.carbs}`}>{carbs}g</span>
           </span>
           <span>
             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">FAT</span>
-            <span className="text-xs font-bold text-sky-500">{fat}g</span>
+            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.fat}`}>{fat}g</span>
           </span>
         </div>
       </div>
@@ -111,15 +113,17 @@ export function MealItemEditor({ item, index, onChange, onRemove }: MealItemEdit
       </div>
 
       {/* Remove button */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         data-testid={index !== undefined ? `meal-item-remove-${index}` : undefined}
         onClick={onRemove}
-        className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded shrink-0"
+        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
         aria-label="Remove item"
       >
         <X className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

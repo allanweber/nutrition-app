@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { FoodSearchField } from '@/components/food-search-field';
 import { MealItemEditor, type LocalMealItem } from './meal-item-editor';
 import { useFoodSearch } from '@/hooks/use-food-search';
@@ -24,7 +25,7 @@ import { useFoodDetailQuery, type FoodDetailResponse } from '@/queries/food-deta
 import { useDishesQuery } from '@/queries/dishes';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 import type { QuantityMeasure } from '@/components/quantity-unit-input';
-import { MEAL_TYPE_LABELS, MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants';
+import { MACRO_TEXT_COLORS, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants';
 import {
   useCreateMealMutation,
   useUpdateMealMutation,
@@ -470,10 +471,10 @@ export function MealModal({ state, onClose }: MealModalProps) {
                   {dishGroups.map((group, index) => (
                     <div
                       key={group.dbDishGroupId ?? `new-dish-${index}`}
-                      className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-violet-50/60 border border-violet-200/60"
+                      className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center shrink-0">
-                        <ChefHat className="h-4 w-4 text-violet-600" />
+                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <ChefHat className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate leading-tight">
@@ -486,22 +487,22 @@ export function MealModal({ state, onClose }: MealModalProps) {
                           </span>
                           <span>
                             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">PROT</span>
-                            <span className="text-xs font-bold text-rose-500">{Math.round(group.totalProtein * group.multiplier)}g</span>
+                            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(group.totalProtein * group.multiplier)}g</span>
                           </span>
                           <span>
                             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">CARB</span>
-                            <span className="text-xs font-bold text-amber-500">{Math.round(group.totalCarbs * group.multiplier)}g</span>
+                            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(group.totalCarbs * group.multiplier)}g</span>
                           </span>
                           <span>
                             <span className="text-[9px] font-bold uppercase text-muted-foreground mr-0.5">FAT</span>
-                            <span className="text-xs font-bold text-sky-500">{Math.round(group.totalFat * group.multiplier)}g</span>
+                            <span className={`text-xs font-bold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(group.totalFat * group.multiplier)}g</span>
                           </span>
                         </div>
                       </div>
                       {/* Multiplier input — shown when we know the source dish */}
                       {group.dishId && (
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <input
+                          <Input
                             type="number"
                             min={0.25}
                             max={20}
@@ -511,19 +512,21 @@ export function MealModal({ state, onClose }: MealModalProps) {
                               const v = parseFloat(e.target.value);
                               if (!isNaN(v) && v > 0) updateDishGroupMultiplier(index, v);
                             }}
-                            className="w-16 h-8 rounded-lg border border-violet-200 bg-background px-2 text-sm text-center font-semibold focus:outline-none focus:ring-1 focus:ring-violet-400"
+                            className="w-16 h-8 px-2 text-sm text-center font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                           />
                           <span className="text-xs text-muted-foreground">×</span>
                         </div>
                       )}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => removeDishGroup(index)}
-                        className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded shrink-0"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                         aria-label="Remove dish"
                       >
                         <X className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -574,19 +577,19 @@ export function MealModal({ state, onClose }: MealModalProps) {
               <div className="flex gap-4">
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Protein</p>
-                  <p data-testid="meal-summary-protein" className="text-base font-bold text-rose-500 leading-tight">
+                  <p data-testid="meal-summary-protein" className={`text-base font-bold ${MACRO_TEXT_COLORS.protein} leading-tight`}>
                     {Math.round(totalProtein)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Carbs</p>
-                  <p data-testid="meal-summary-carbs" className="text-base font-bold text-amber-500 leading-tight">
+                  <p data-testid="meal-summary-carbs" className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs} leading-tight`}>
                     {Math.round(totalCarbs)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Fats</p>
-                  <p data-testid="meal-summary-fat" className="text-base font-bold text-sky-500 leading-tight">
+                  <p data-testid="meal-summary-fat" className={`text-base font-bold ${MACRO_TEXT_COLORS.fat} leading-tight`}>
                     {Math.round(totalFat)}<span className="text-xs font-semibold">g</span>
                   </p>
                 </div>
