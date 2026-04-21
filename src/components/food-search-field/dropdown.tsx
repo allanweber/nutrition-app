@@ -69,7 +69,7 @@ export function Dropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute left-0 right-0 top-full mt-2 z-50 bg-background border border-border rounded-2xl shadow-lg overflow-hidden max-h-[520px] flex flex-col"
+      className="absolute left-0 right-0 top-full mt-2 z-50 bg-background border border-border rounded-lg shadow-lg overflow-hidden max-h-130 flex flex-col"
       data-testid="food-search-dropdown"
     >
       {/* Scrollable content area */}

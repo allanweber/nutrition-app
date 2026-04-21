@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { SearchHistoryEntry } from '@/hooks/use-search-history';
 
 interface HistoryListProps {
@@ -19,16 +20,17 @@ export function HistoryList({ history, onSelect }: HistoryListProps) {
         Recent searches
       </p>
       {displayed.map((entry) => (
-        <button
+        <Button
           key={entry.normalizedTerm}
           type="button"
+          variant="ghost"
           onClick={() => onSelect(entry.term)}
-          className="flex items-center gap-3 w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/60 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2 h-auto justify-start text-sm text-foreground"
           data-testid="history-item"
         >
-          <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
           {entry.term}
-        </button>
+        </Button>
       ))}
     </div>
   );

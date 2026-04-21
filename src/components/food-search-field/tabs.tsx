@@ -1,5 +1,8 @@
 'use client';
 
+import React from 'react';
+import { Tabs as TabsRoot, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { LoadingMoreState } from './states';
 import { ResultItem } from './result-item';
 import type { UnifiedFoodSearchResultItem } from './types';
@@ -41,7 +44,6 @@ export function Tabs({
     ? ['Common', 'Branded', 'Custom']
     : ['Common', 'Branded'];
 
-  // Find which non-custom tab has content to determine a good default
   const defaultTab =
     availableTabs.find((t) => {
       if (t === 'Custom') return false;
@@ -57,7 +59,6 @@ export function Tabs({
     userHasManuallySelectedTab.current = true;
     setActiveTab(tab);
   };
-
 
   // Switch to a non-custom tab that has items when results change (initial load / query change)
   React.useEffect(() => {
@@ -98,85 +99,66 @@ export function Tabs({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoadingMore]);
 
-  const activeItems =
-    activeTab === 'Common' ? commonItems : activeTab === 'Branded' ? brandedItems : customItems;
-
-  // Compute per-tab highlighted index offset
   const commonOffset = 0;
   const brandedOffset = commonItems.length;
   const customOffset = commonItems.length + brandedItems.length;
 
-  const tabOffset =
-    activeTab === 'Common' ? commonOffset : activeTab === 'Branded' ? brandedOffset : customOffset;
-
   return (
-    <div>
-      {/* Tab headers */}
-      <div className="sticky top-0 z-10 bg-muted flex gap-2 border-b border-border px-4 pt-3 pb-2" role="tablist">
+    <TabsRoot value={activeTab} onValueChange={(v) => handleTabClick(v as TabKey)}>
+      <TabsList className="sticky top-0 z-10 bg-muted border-b border-border w-full justify-start rounded-none h-auto px-4 pt-3 pb-2 gap-1 overflow-visible">
         {availableTabs.map((tab) => {
           const count =
             tab === 'Common' ? commonItems.length : tab === 'Branded' ? brandedItems.length : customItems.length;
           return (
-            <button
+            <TabsTrigger
               key={tab}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab}
-              onClick={() => handleTabClick(tab)}
-              className={`relative px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-green-600 text-white'
-                  : 'text-muted-foreground hover:bg-muted'
-              }`}
+              value={tab}
+              className="relative flex-none h-auto px-3 py-1 rounded-full text-xs font-medium"
               data-testid={`tab-${tab.toLowerCase()}`}
             >
               {TAB_LABELS[tab]}
               {count > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-green-600 text-white text-[10px] font-semibold px-1 leading-none ring-2 ring-background">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1 leading-none ring-2 ring-background">
                   {count}
                 </span>
               )}
-            </button>
+            </TabsTrigger>
           );
         })}
-      </div>
+      </TabsList>
 
-      {/* Tab content */}
-      <div role="listbox" aria-label={`${activeTab} food results`}>
-        {activeItems.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-muted-foreground">No {TAB_LABELS[activeTab].toLowerCase()} results</p>
-        ) : (
-          activeItems.map((item, i) => (
-            <ResultItem
-              key={`${item.fatSecretId ?? item.id}-${i}`}
-              item={item}
-              query={query}
-              highlighted={highlightedIndex === tabOffset + i}
-              onSelect={onSelect}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Load more */}
-      {(hasMore || isLoadingMore) && activeTab !== 'Custom' && (
-        <div className="px-4 pb-2 pt-1 flex justify-center">
-          {isLoadingMore ? (
-            <LoadingMoreState />
-          ) : (
-            <button
-              type="button"
-              onClick={onLoadMore}
-              className="text-xs font-medium text-green-700 hover:text-green-800"
-            >
-              Load more results
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+      {availableTabs.map((tab) => {
+        const items = tab === 'Common' ? commonItems : tab === 'Branded' ? brandedItems : customItems;
+        const offset = tab === 'Common' ? commonOffset : tab === 'Branded' ? brandedOffset : customOffset;
+        return (
+          <TabsContent key={tab} value={tab} role="listbox" aria-label={`${tab} food results`} className="m-0">
+            {items.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-muted-foreground">No {TAB_LABELS[tab].toLowerCase()} results</p>
+            ) : (
+              items.map((item, i) => (
+                <ResultItem
+                  key={`${item.fatSecretId ?? item.id}-${i}`}
+                  item={item}
+                  query={query}
+                  highlighted={highlightedIndex === offset + i}
+                  onSelect={onSelect}
+                />
+              ))
+            )}
+            {(hasMore || isLoadingMore) && tab !== 'Custom' && (
+              <div className="px-4 pb-2 pt-1 flex justify-center">
+                {isLoadingMore ? (
+                  <LoadingMoreState />
+                ) : (
+                  <Button variant="ghost" size="sm" onClick={onLoadMore} className="text-xs font-medium text-primary hover:text-primary">
+                    Load more results
+                  </Button>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        );
+      })}
+    </TabsRoot>
   );
 }
-
-// Need React import for useState/useEffect
-import React from 'react';

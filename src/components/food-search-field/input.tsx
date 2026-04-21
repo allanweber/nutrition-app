@@ -1,6 +1,8 @@
 'use client';
 
 import { X, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface SearchInputProps {
   value: string;
@@ -35,29 +37,31 @@ export function SearchInput({
             Search Foods
           </span>
         )}
-        <input
+        <Input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           onFocus={onFocus}
           placeholder={placeholder}
-          className={`flex w-full bg-transparent outline-none placeholder:text-muted-foreground ${isSmall ? 'h-6 text-sm' : 'h-10 text-base'}`}
+          className={`border-0 shadow-none focus-visible:ring-0 bg-transparent px-0 placeholder:text-muted-foreground ${isSmall ? 'h-6 text-sm' : 'h-10 text-base'}`}
           aria-label="Search foods"
           data-testid={inputTestId}
           autoComplete="off"
           aria-autocomplete="list"
         />
         {value && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => onChange('')}
-            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
             aria-label="Clear search"
             data-testid="food-search-clear"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
     </div>
