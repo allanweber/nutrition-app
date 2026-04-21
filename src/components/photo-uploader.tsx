@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { UploadCloud, Trash2, Loader2 } from 'lucide-react';
 import { resizeForUpload } from '@/lib/image-resize';
+import { Button } from '@/components/ui/button';
 
 export interface PhotoUploaderProps {
   /** Current thumbnail URL to display (from the server) */
@@ -210,7 +211,7 @@ export function PhotoUploader({
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
       {...dropHandlers}
       className={[
-        'relative flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer select-none rounded-2xl border-2 border-dashed',
+        'relative flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer select-none rounded-lg border border-dashed',
         compact ? 'p-6' : 'p-8 md:p-12',
         isDragging
           ? 'border-primary bg-primary/10'
@@ -249,16 +250,15 @@ export function PhotoUploader({
           )}
 
           <div className={['flex items-center gap-3 justify-center', compact ? 'mb-3' : 'mb-4'].join(' ')}>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={(e) => { e.stopPropagation(); handleClick(); }}
-              className={[
-                'bg-primary text-white font-bold font-headline rounded-xl hover:brightness-110 active:scale-95 transition-all duration-200 shadow-md shadow-primary/20 whitespace-nowrap',
-                compact ? 'px-4 py-2 text-sm' : 'px-7 py-2.5 text-base',
-              ].join(' ')}
+              className="font-bold font-headline whitespace-nowrap"
             >
               Browse Files
-            </button>
+            </Button>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-xs uppercase tracking-wider">or</span>
               <div className="flex items-center gap-1 bg-background px-2.5 py-1.5 rounded-lg border border-border/40 shadow-sm">
@@ -288,7 +288,7 @@ export function PhotoUploader({
         // With-image: side-by-side layout
         <div className="flex flex-row gap-4">
           {/* Image panel — left */}
-          <div className="flex-1 relative rounded-2xl overflow-hidden min-h-55 border border-border/20">
+          <div className="flex-1 relative rounded-lg overflow-hidden min-h-55 border border-border/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={displaySrc}
@@ -313,15 +313,17 @@ export function PhotoUploader({
 
             {/* Bottom-right delete button */}
             {!isBusy && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 aria-label="Delete image"
                 disabled={disabled || isDeleting}
                 onClick={(e) => { e.stopPropagation(); void handleDelete(); }}
-                className="absolute bottom-3 right-3 w-9 h-9 bg-background/90 hover:bg-background rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 border border-border/20 disabled:opacity-50"
+                className="absolute bottom-3 right-3 bg-background/90 hover:bg-background border border-border/20"
               >
-                <Trash2 className="h-4 w-4 text-[#717a6d]" />
-              </button>
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
             )}
           </div>
 
