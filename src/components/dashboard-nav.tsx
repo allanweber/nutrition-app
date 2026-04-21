@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/user-nav';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import {
@@ -82,20 +83,23 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               aria-label="Notifications"
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <Bell className="h-5 w-5" />
-            </button>
+            </Button>
             <ThemeSwitcher />
             <UserNav user={user} />
 
             {/* Mobile menu button */}
-            <button
+            <Button
               type="button"
-              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav-menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -106,7 +110,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
               ) : (
                 <Menu className="h-6 w-6" aria-hidden="true" />
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

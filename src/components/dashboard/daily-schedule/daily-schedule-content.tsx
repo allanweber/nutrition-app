@@ -72,8 +72,8 @@ export function DailyScheduleContent({ morning, midday, evening }: DailySchedule
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <TimeGroupCard label="Morning" entries={morning} iconBgClass="bg-primary/10" />
-        <TimeGroupCard label="Midday" entries={midday} iconBgClass="bg-amber-100 dark:bg-amber-900/30" />
-        <TimeGroupCard label="Evening" entries={evening} iconBgClass="bg-pink-500/10" />
+        <TimeGroupCard label="Midday" entries={midday} iconBgClass="bg-muted" />
+        <TimeGroupCard label="Evening" entries={evening} iconBgClass="bg-secondary" />
       </div>
     </div>
   );

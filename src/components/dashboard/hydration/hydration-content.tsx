@@ -23,7 +23,7 @@ export function HydrationContent({ data }: HydrationContentProps) {
 
       {/* Main value */}
       <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-headline font-black tabular-nums text-blue-600 leading-none">
+        <span className="text-5xl font-headline font-black tabular-nums text-primary leading-none">
           {totalMl}
         </span>
         <span className="text-base font-bold text-muted-foreground">ml</span>
@@ -44,7 +44,7 @@ export function HydrationContent({ data }: HydrationContentProps) {
           className="h-3 w-full rounded-full bg-secondary overflow-hidden"
         >
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary rounded-full transition-all duration-500"
             style={{ width: `${Math.min(percentConsumed, 100)}%` }}
           />
         </div>

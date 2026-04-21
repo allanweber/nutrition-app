@@ -132,7 +132,7 @@ export default function MyFoodsPage() {
       },
     ],
     extraCol: {
-      label: 'Ingredients',
+      label: 'Ing.',
       getValue: (d) => `${d.ingredientCount}`,
     },
     getEditHref: (d) => `/my-foods/dishes/${d.id}/edit`,

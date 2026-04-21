@@ -30,6 +30,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -112,7 +113,7 @@ export function NutritionItemsTable<T>({
         const subtitle = config.getItemSubtitle(item);
         const thumb = config.getThumbnail(item);
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="size-10 rounded-lg overflow-hidden shrink-0 border border-border/30 bg-secondary">
               {thumb ? (
                 <Image src={thumb} alt="" width={40} height={40} className="w-full h-full object-cover" />
@@ -122,10 +123,10 @@ export function NutritionItemsTable<T>({
                 </div>
               )}
             </div>
-            <div>
-              <span className="font-headline font-bold text-foreground block text-sm">{name}</span>
+            <div className="min-w-0">
+              <span className="font-headline font-bold text-foreground block text-sm truncate">{name}</span>
               {subtitle && (
-                <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{subtitle}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-tight truncate block max-w-[220px]">{subtitle}</span>
               )}
             </div>
           </div>
@@ -168,12 +169,23 @@ export function NutritionItemsTable<T>({
     })),
     {
       id: 'extra',
-      header: config.extraCol.label,
+      header: () => (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="text-center cursor-default">{config.extraCol.label}</div>
+          </TooltipTrigger>
+          <TooltipContent className="font-semibold text-background bg-foreground">
+            Ingredients
+          </TooltipContent>
+        </Tooltip>
+      ),
       accessorFn: (row) => parseFloat(config.extraCol.getValue(row)) || 0,
       cell: ({ row }) => (
-        <span className="font-mono text-sm text-muted-foreground tabular-nums">
-          {config.extraCol.getValue(row.original)}
-        </span>
+        <div className="text-center">
+          <span className="font-mono text-sm text-muted-foreground tabular-nums">
+            {config.extraCol.getValue(row.original)}
+          </span>
+        </div>
       ),
     },
     {
@@ -206,19 +218,23 @@ export function NutritionItemsTable<T>({
             </Button>
             {meta.confirmDelete === id ? (
               <div className="flex gap-1">
-                <button
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={() => { config.onDelete(id); meta.setConfirmDelete(null); }}
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-all"
+                  className="text-xs h-auto py-1.5 px-2.5 rounded-lg"
                   data-testid={confirmTestId}
                 >
                   Delete
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => meta.setConfirmDelete(null)}
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/70 transition-all"
+                  className="text-xs h-auto py-1.5 px-2.5 rounded-lg"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             ) : (
               <Button
@@ -325,7 +341,7 @@ export function NutritionItemsTable<T>({
       {/* Table card */}
       <div className="bg-background rounded-lg overflow-hidden border border-border">
         <div className="overflow-x-auto">
-          <Table className="min-w-225 border-collapse">
+          <Table className="border-collapse w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-muted hover:bg-muted border-0">
@@ -343,13 +359,15 @@ export function NutritionItemsTable<T>({
                         }`}
                       >
                         {canSort ? (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={header.column.getToggleSortingHandler()}
-                            className="flex items-center gap-1 cursor-pointer select-none hover:opacity-80 transition-opacity"
+                            className="flex items-center gap-1 h-auto p-0 select-none hover:bg-transparent hover:text-foreground transition-colors font-extrabold uppercase tracking-[0.15em] text-[11px]"
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                             <SortIcon sorted={sorted} />
-                          </button>
+                          </Button>
                         ) : (
                           flexRender(header.column.columnDef.header, header.getContext())
                         )}

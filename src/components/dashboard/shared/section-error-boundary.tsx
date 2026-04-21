@@ -3,6 +3,7 @@
 import React, { startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface RetryUIProps {
   minHeight: string;
@@ -25,12 +26,14 @@ function RetryUI({ minHeight, onReset }: RetryUIProps) {
     >
       <AlertCircle className="h-5 w-5 text-muted-foreground" />
       <p className="text-sm text-muted-foreground">Something went wrong</p>
-      <button
+      <Button
+        variant="link"
+        size="sm"
         onClick={handleRetry}
-        className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+        className="h-auto p-0 text-xs font-semibold"
       >
         Retry
-      </button>
+      </Button>
     </div>
   );
 }

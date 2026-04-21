@@ -4,6 +4,7 @@ import { Star, Loader2, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useFavoritesQuery, useDeleteFavoriteMutation } from '@/queries/favorites';
+import { ITEM_TYPE_BADGE_COLORS } from '@/lib/nutrition-constants';
 import type { FavoriteItem } from '@/types/favorites';
 
 interface FavoritesModalProps {
@@ -67,11 +68,7 @@ export function FavoritesModal({ open, onClose, onSelectFood, onSelectDish }: Fa
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                          item.type === 'dish'
-                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-                            : 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${ITEM_TYPE_BADGE_COLORS[item.type]}`}>
                           {item.type === 'dish' ? 'Dish' : 'Food'}
                         </span>
                         {item.calories != null && (

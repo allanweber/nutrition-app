@@ -11,6 +11,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -66,21 +67,27 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
         <div className="flex items-center gap-3">
           {/* Today button — only shown when not already on today */}
           {(!isOnCurrentWeek || !isTodaySelected) && (
-            <button
+            <Button
               onClick={handleGoToToday}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all"
+              variant="ghost"
+              size="sm"
+              className="rounded-full h-auto py-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
             >
               Today
-            </button>
+            </Button>
           )}
 
           {/* Full Month button */}
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <button className="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full h-auto py-1.5 gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
+              >
                 <CalendarIcon className="h-3 w-3" />
                 Full Month
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
@@ -97,13 +104,15 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
 
       {/* Day pills with flanking arrows */}
       <div className="flex items-center gap-1">
-        <button
+        <Button
           onClick={handlePrevWeek}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0"
           aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
-        </button>
+        </Button>
 
           <div className="flex flex-1 justify-between items-center overflow-x-auto hide-scrollbar">
             {days.map((day, i) => {
@@ -112,18 +121,19 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
               const isDisabled = isFuture(day) && !isToday(day);
 
               return (
-                <button
+                <Button
                   key={dayStr}
                   data-testid={`week-day-${dayStr}`}
                   onClick={() => !isDisabled && onDateChange(day)}
                   disabled={isDisabled}
+                  variant="ghost"
                   className={[
-                    'flex flex-col items-center p-3 rounded-xl transition-colors min-w-[52px] select-none',
+                    'flex flex-col items-center p-3 rounded-xl min-w-13 select-none h-auto',
                     isSelected
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                       : isDisabled
                         ? 'opacity-30 cursor-not-allowed text-foreground'
-                        : 'hover:bg-muted cursor-pointer text-foreground',
+                        : 'cursor-pointer text-foreground',
                   ].join(' ')}
                 >
                   <span
@@ -132,19 +142,21 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                     {DAY_LABELS[i]}
                   </span>
                   <span className="text-lg font-headline font-bold">{format(day, 'd')}</span>
-                </button>
+                </Button>
               );
             })}
           </div>
 
-        <button
+        <Button
           onClick={handleNextWeek}
           disabled={weekOffset >= 0}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0"
           aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

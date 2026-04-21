@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Star, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useNutritionSummaryQuery } from '@/queries/nutrition-summary';
 import { useFoodLogsQuery } from '@/queries/food-logs';
 import { useFavoritesTopQuery } from '@/queries/favorites';
@@ -145,7 +146,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span
                 className={`text-3xl font-headline font-black tabular-nums leading-none ${
-                  isOverGoal ? 'text-red-600 dark:text-red-400' : 'text-[#002203] dark:text-foreground'
+                  isOverGoal ? 'text-destructive' : 'text-[#002203] dark:text-foreground'
                 }`}
                 data-testid="pulse-calories-remaining"
               >
@@ -188,14 +189,16 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
         </div>
 
         {/* Expand / collapse all nutrients */}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground transition-colors"
+          className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground hover:bg-transparent transition-colors h-auto"
           aria-expanded={expanded}
         >
           {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           {expanded ? 'Hide' : 'All nutrients'}
-        </button>
+        </Button>
 
         {/* Extended nutrients panel */}
         {expanded && (
@@ -233,14 +236,16 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
                 Favorites
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setFavModalOpen(true)}
-              className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground transition-colors"
+              className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground hover:bg-transparent transition-colors h-auto p-0"
               data-testid="see-all-favorites"
             >
               See all
               <ChevronRight className="h-3 w-3" />
-            </button>
+            </Button>
           </div>
           {topFavorites.length === 0 ? (
             <p className="text-xs text-[#002203]/50 dark:text-muted-foreground/50">
@@ -249,14 +254,16 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
           ) : (
             <div className="flex flex-wrap gap-2">
               {topFavorites.map((item) => (
-                <button
+                <Button
                   key={item.id}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onAddFood(item)}
                   data-testid={`favorite-pill-${item.id}`}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full h-auto bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
                 >
                   {item.name}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -270,14 +277,16 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
             </p>
             <div className="flex flex-wrap gap-2">
               {recentFoods.map((food) => (
-                <button
+                <Button
                   key={food.id}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onQuickAddFood?.(food.name)}
                   data-testid={`quick-add-${food.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-full h-auto bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
                 >
                   {food.name}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

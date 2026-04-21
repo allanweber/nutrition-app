@@ -798,7 +798,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
               </div>
 
               {ingredients.length > 0 ? (
-                <div className="space-y-2 rounded-xl bg-[#ecefe6] dark:bg-muted/60 p-3">
+                <div className="space-y-2 rounded-xl bg-muted dark:bg-muted/60 p-3">
                   {ingredients.map((ing) => (
                     <IngredientRow
                       key={ing.key}

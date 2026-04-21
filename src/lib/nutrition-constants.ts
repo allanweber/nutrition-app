@@ -94,6 +94,33 @@ export const MACRO_CELL_BORDER = {
   fat:      'border-l-[#408FBE] dark:border-l-sky-400',
 } as const;
 
+/** Solid bg dot indicator for each meal type (used in food log row headers) */
+export const MEAL_DOT_COLORS: Record<string, string> = {
+  breakfast: 'bg-amber-500',
+  lunch: 'bg-sky-500',
+  dinner: 'bg-violet-500',
+  snack: 'bg-emerald-500',
+  morning_snack: 'bg-amber-500',
+  afternoon_snack: 'bg-orange-500',
+  evening_snack: 'bg-indigo-500',
+  pre_workout: 'bg-lime-500',
+  post_workout: 'bg-teal-500',
+  other: 'bg-muted-foreground',
+};
+
+/** Light-tinted badge bg+text classes for inline macro chips */
+export const MACRO_BADGE_COLORS = {
+  protein: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+  carbs: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  fat: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+} as const;
+
+/** Badge bg+text classes for food-vs-dish type indicators */
+export const ITEM_TYPE_BADGE_COLORS = {
+  dish: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+  food: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+} as const;
+
 /** Background, text, and fill color classes for fiber, sugar, and sodium */
 export const NUTRIENT_COLORS = {
   fiber:  { bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', fill: 'bg-[#7E22CE]' },
