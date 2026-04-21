@@ -1,3 +1,5 @@
+import { Skeleton } from '@/components/ui/skeleton';
+
 type SkeletonVariant = 'calories' | 'hydration' | 'macros' | 'weekly' | 'schedule';
 
 const VARIANT_LABELS: Record<SkeletonVariant, string> = {
@@ -21,20 +23,20 @@ function CaloriesSkeleton() {
     <div className="flex flex-col h-full gap-6">
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-2">
-          <div className="h-3 w-16 rounded bg-secondary" />
-          <div className="h-12 w-40 rounded-lg bg-secondary" />
-          <div className="h-3 w-28 rounded bg-secondary" />
+          <Skeleton className="bg-muted-foreground/15 h-3 w-16" />
+          <Skeleton className="bg-muted-foreground/15 h-12 w-40 rounded-lg" />
+          <Skeleton className="bg-muted-foreground/15 h-3 w-28" />
         </div>
-        <div className="h-[120px] w-[120px] rounded-full bg-secondary" />
+        <Skeleton className="bg-muted-foreground/15 h-30 w-30 rounded-full" />
       </div>
       <div className="flex gap-6">
         <div className="flex flex-col gap-1.5">
-          <div className="h-3 w-12 rounded bg-secondary" />
-          <div className="h-7 w-20 rounded bg-secondary" />
+          <Skeleton className="bg-muted-foreground/15 h-3 w-12" />
+          <Skeleton className="bg-muted-foreground/15 h-7 w-20" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <div className="h-3 w-16 rounded bg-secondary" />
-          <div className="h-7 w-24 rounded bg-secondary" />
+          <Skeleton className="bg-muted-foreground/15 h-3 w-16" />
+          <Skeleton className="bg-muted-foreground/15 h-7 w-24" />
         </div>
       </div>
     </div>
@@ -44,10 +46,10 @@ function CaloriesSkeleton() {
 function HydrationSkeleton() {
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="h-3 w-20 rounded bg-secondary" />
-      <div className="h-14 w-32 rounded-lg bg-secondary" />
-      <div className="h-2 w-full rounded-full bg-secondary" />
-      <div className="mt-auto h-10 w-28 rounded-xl bg-secondary" />
+      <Skeleton className="bg-muted-foreground/15 h-3 w-20" />
+      <Skeleton className="bg-muted-foreground/15 h-14 w-32 rounded-lg" />
+      <Skeleton className="bg-muted-foreground/15 h-2 w-full rounded-full" />
+      <Skeleton className="bg-muted-foreground/15 mt-auto h-10 w-28 rounded-xl" />
     </div>
   );
 }
@@ -55,20 +57,15 @@ function HydrationSkeleton() {
 function MacrosSkeleton() {
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="h-3 w-14 rounded bg-secondary" />
+      <Skeleton className="bg-muted-foreground/15 h-3 w-14" />
       <div className="flex flex-col gap-5 flex-1">
-        {[40, 60, 50].map((w, i) => (
+        {[40, 60, 50].map((_, i) => (
           <div key={i} className="flex flex-col gap-1.5">
             <div className="flex justify-between">
-              <div className="h-3 w-12 rounded bg-secondary" />
-              <div className="h-3 w-16 rounded bg-secondary" />
+              <Skeleton className="bg-muted-foreground/15 h-3 w-12" />
+              <Skeleton className="bg-muted-foreground/15 h-3 w-16" />
             </div>
-            <div className="h-2 w-full rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-border"
-                style={{ width: `${w}%` }}
-              />
-            </div>
+            <Skeleton className="bg-muted-foreground/15 h-2 w-full rounded-full" />
           </div>
         ))}
       </div>
@@ -79,15 +76,12 @@ function MacrosSkeleton() {
 function WeeklySkeleton() {
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="h-3 w-32 rounded bg-secondary" />
+      <Skeleton className="bg-muted-foreground/15 h-3 w-32" />
       <div className="flex items-end gap-2 flex-1">
         {[55, 80, 40, 90, 65, 30, 0].map((h, i) => (
           <div key={i} className="flex flex-col items-center gap-1 flex-1">
-            <div
-              className="w-full rounded-t bg-secondary"
-              style={{ height: `${Math.max(h, 8)}px` }}
-            />
-            <div className="h-2 w-5 rounded bg-secondary" />
+            <Skeleton className="bg-muted-foreground/15 w-full rounded-t" style={{ height: `${Math.max(h, 8)}px` }} />
+            <Skeleton className="bg-muted-foreground/15 h-2 w-5" />
           </div>
         ))}
       </div>
@@ -98,16 +92,16 @@ function WeeklySkeleton() {
 function ScheduleSkeleton() {
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="h-3 w-24 rounded bg-secondary" />
+      <Skeleton className="bg-muted-foreground/15 h-3 w-24" />
       <div className="flex flex-col gap-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-secondary">
-            <div className="h-8 w-8 rounded-full bg-border flex-shrink-0" />
+          <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-muted">
+            <Skeleton className="bg-muted-foreground/15 h-8 w-8 rounded-full shrink-0" />
             <div className="flex flex-col gap-1 flex-1">
-              <div className="h-3 w-24 rounded bg-border" />
-              <div className="h-3 w-16 rounded bg-border" />
+              <Skeleton className="bg-muted-foreground/15 h-3 w-24" />
+              <Skeleton className="bg-muted-foreground/15 h-3 w-16" />
             </div>
-            <div className="h-3 w-14 rounded bg-border" />
+            <Skeleton className="bg-muted-foreground/15 h-3 w-14" />
           </div>
         ))}
       </div>
@@ -133,7 +127,7 @@ export function SectionSkeleton({ variant }: SectionSkeletonProps) {
 
   return (
     <div
-      className={`rounded-[24px] bg-muted border border-border shadow-sm p-8 animate-pulse h-full ${minHeight}`}
+      className={`rounded-[24px] bg-muted border border-border shadow-sm p-8 h-full ${minHeight}`}
       aria-busy="true"
       aria-label={VARIANT_LABELS[variant]}
     >

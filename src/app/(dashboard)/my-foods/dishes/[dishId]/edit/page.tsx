@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { CustomDishForm } from '@/components/forms/custom-dish-form';
 import { useDishDetailQuery } from '@/queries/dishes';
+import { Loader2 } from 'lucide-react';
 
 export default function EditDishPage() {
   const params = useParams<{ dishId: string }>();
@@ -12,7 +12,11 @@ export default function EditDishPage() {
   const dishQuery = useDishDetailQuery(dishId);
 
   if (dishQuery.isLoading) {
-    return <div className="flex justify-center pt-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex justify-center pt-32">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (dishQuery.isError || !dishQuery.data?.dish) {

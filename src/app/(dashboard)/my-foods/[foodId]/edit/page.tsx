@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { CustomFoodForm } from '@/components/forms/custom-food-form';
+import { Loader2 } from 'lucide-react';
 
 function useCustomFoodDetailQuery(foodId: string) {
   return useQuery({
@@ -23,7 +23,11 @@ export default function EditFoodPage() {
   const foodQuery = useCustomFoodDetailQuery(foodId);
 
   if (foodQuery.isLoading) {
-    return <div className="flex justify-center pt-32"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex justify-center pt-32">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (foodQuery.isError || !foodQuery.data?.food) {
