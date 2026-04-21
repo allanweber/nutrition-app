@@ -8,9 +8,9 @@ import {
   Target,
   UtensilsCrossed,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,8 +49,6 @@ export function GoalsForm({
   onOpenCalculator?: () => void;
 }) {
   const { data: goals, updateGoals } = useNutritionGoals();
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
   const form = useForm({
     defaultValues: {
       goalType: (goals?.goalType as GoalType) || 'maintenance',
@@ -77,10 +75,9 @@ export function GoalsForm({
       });
 
       if (result.success) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        toast.success('Goals saved successfully!');
       } else {
-        throw new Error(result.error || 'Failed to save goals');
+        toast.error(result.error || 'Failed to save goals');
       }
     },
   });
@@ -497,22 +494,6 @@ export function GoalsForm({
               progress metrics.
             </p>
           </div>
-
-          {saveSuccess && (
-            <Alert role="status" aria-live="polite" className="w-full max-w-sm">
-              <AlertDescription>Goals saved successfully!</AlertDescription>
-            </Alert>
-          )}
-
-          <form.Subscribe selector={(state) => [state.errorMap]}>
-            {([errorMap]) =>
-              errorMap.onSubmit ? (
-                <Alert variant="destructive" className="w-full max-w-sm">
-                  <AlertDescription>{String(errorMap.onSubmit)}</AlertDescription>
-                </Alert>
-              ) : null
-            }
-          </form.Subscribe>
 
           <form.Subscribe selector={(state) => [state.isSubmitting]}>
             {([isSubmitting]) => (

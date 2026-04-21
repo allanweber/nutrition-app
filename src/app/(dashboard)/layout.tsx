@@ -1,5 +1,6 @@
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardFooter } from '@/components/dashboard-footer';
+import { Toaster } from 'sonner';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { emailVerificationChallenges } from '@/server/db/schema';
@@ -46,6 +47,7 @@ export default async function DashboardLayout({
       </main>
 
       <DashboardFooter />
+      <Toaster richColors position="bottom-right" />
     </div>
   );
 }

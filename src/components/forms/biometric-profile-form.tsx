@@ -3,6 +3,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, CheckCircle2, Loader2, Ruler, User, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useRef, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -108,7 +109,6 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const unit = profile.preferredUnit ?? 'metric';
   let heightCm: string | number = '';
@@ -183,12 +183,10 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      toast.success('Profile updated successfully.');
     },
     onError: () => {
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      toast.error('Failed to save. Please try again.');
     },
   });
 
@@ -552,15 +550,6 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
 
       {/* ── Submit ─────────────────────────────────────────────────────────── */}
       <div className="pt-12 pb-4 border-t border-border/20 flex flex-col items-center gap-4">
-        {saveStatus === 'success' && (
-          <p className="text-sm font-semibold text-primary flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4" />
-            Profile updated successfully.
-          </p>
-        )}
-        {saveStatus === 'error' && (
-          <p className="text-sm font-semibold text-destructive">Failed to save. Please try again.</p>
-        )}
         <form.Subscribe selector={(state) => state.isValid}>
           {(isValid) => (
             <Button

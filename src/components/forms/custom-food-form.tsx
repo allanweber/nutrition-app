@@ -2,6 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -111,6 +112,9 @@ function useCustomFoodMutation(foodId: string | undefined) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['foods', 'custom'] });
+    },
+    onError: (err) => {
+      toast.error((err as Error).message ?? 'Failed to save.');
     },
   });
 }
@@ -451,12 +455,6 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
             </div>
           </div>
         </section>
-
-        {mutation.error && (
-          <p className="text-sm text-destructive">
-            {(mutation.error as Error).message}
-          </p>
-        )}
 
         {/* Footer actions */}
         <div className="flex gap-3 pt-2">

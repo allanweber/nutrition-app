@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useForm } from '@tanstack/react-form';
 import { ArrowLeft, BarChart2, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 import { FoodSearchField } from '@/components/food-search-field';
@@ -550,31 +551,36 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
         seq: i + 1,
       }));
 
-      if (isEdit && dishId) {
-        await updateMutation.mutateAsync({
-          dishId,
-          name: value.name,
-          description: value.description || null,
-          ingredients: ingredientPayload,
-        });
-      } else {
-        const result = await createMutation.mutateAsync({
-          name: value.name,
-          description: value.description || null,
-          ingredients: ingredientPayload,
-        });
+      try {
+        if (isEdit && dishId) {
+          await updateMutation.mutateAsync({
+            dishId,
+            name: value.name,
+            description: value.description || null,
+            ingredients: ingredientPayload,
+          });
+        } else {
+          const result = await createMutation.mutateAsync({
+            name: value.name,
+            description: value.description || null,
+            ingredients: ingredientPayload,
+          });
 
-        if (pendingImageFile) {
-          try {
-            const resized = await resizeForUpload(pendingImageFile);
-            const fd = new FormData();
-            fd.append('thumb', resized.thumb, 'thumb.jpg');
-            fd.append('display', resized.display, 'display.jpg');
-            await fetch(`/api/dishes/${result.dish.id}/photo`, { method: 'POST', body: fd });
-          } catch {
-            // image upload is non-blocking; dish was created successfully
+          if (pendingImageFile) {
+            try {
+              const resized = await resizeForUpload(pendingImageFile);
+              const fd = new FormData();
+              fd.append('thumb', resized.thumb, 'thumb.jpg');
+              fd.append('display', resized.display, 'display.jpg');
+              await fetch(`/api/dishes/${result.dish.id}/photo`, { method: 'POST', body: fd });
+            } catch {
+              // image upload is non-blocking; dish was created successfully
+            }
           }
         }
+      } catch (err) {
+        toast.error((err as Error).message ?? 'Failed to save dish.');
+        throw err;
       }
 
       router.push('/my-foods?tab=dishes');
@@ -811,10 +817,6 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
                 <p className="text-sm text-destructive">{ingredientError}</p>
               )}
             </div>
-
-            {mutation.error && (
-              <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
-            )}
 
             <div className="flex gap-3">
               <Button variant="outline" asChild className="flex-1">

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { Loader2, UtensilsCrossed, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
@@ -125,7 +126,6 @@ export function FoodModal({
   );
   const [quantity, setQuantity] = useState<number>(mode.kind === 'log-dish' ? 1 : 100);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const createFoodLog = useCreateFoodLogMutation();
   const updateFoodLog = useUpdateFoodLogMutation();
@@ -156,7 +156,6 @@ export function FoodModal({
       setSelectedMeasureId(measures[0].id);
       setQuantity(measures[0].defaultQty);
     }
-    setSubmitError(null);
     setIsSubmitting(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, 'foodDetail' in mode ? mode.foodDetail.id : '']);
@@ -198,7 +197,6 @@ export function FoodModal({
   };
 
   const handleSubmit = async () => {
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (mode.kind === 'log-food') {
@@ -240,7 +238,7 @@ export function FoodModal({
         mode.onSelect({ foodId: mode.foodDetail.id, altMeasureId, quantityGrams: grams });
       }
     } catch (err) {
-      setSubmitError((err as Error).message ?? 'Something went wrong');
+      toast.error((err as Error).message ?? 'Something went wrong');
     } finally {
       setIsSubmitting(false);
     }
@@ -382,9 +380,6 @@ export function FoodModal({
                 </div>
               </section>
 
-              {submitError && (
-                <p className="text-sm text-destructive">{submitError}</p>
-              )}
             </>
           )}
         </div>
