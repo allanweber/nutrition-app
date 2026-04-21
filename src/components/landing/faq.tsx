@@ -1,8 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const faqs = [
   {
@@ -59,14 +63,6 @@ const faqs = [
 ];
 
 export default function FAQ() {
-  const [openItems, setOpenItems] = useState<string[]>([]);
-
-  const toggleItem = (id: string) => {
-    setOpenItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
   return (
     <section className="py-20 md:py-28 bg-muted">
       <div className="container mx-auto px-4">
@@ -100,49 +96,26 @@ export default function FAQ() {
                 <div className="w-2 h-2 bg-primary rounded-full mr-3" />
                 {category.category}
               </h3>
-              
-              <div className="space-y-3">
+
+              <Accordion type="single" collapsible className="space-y-3">
                 {category.questions.map((faq, faqIndex) => {
                   const itemId = `${categoryIndex}-${faqIndex}`;
-                  const isOpen = openItems.includes(itemId);
-
                   return (
-                    <div
+                    <AccordionItem
                       key={itemId}
-                      className="bg-card rounded-xl border border-border overflow-hidden"
+                      value={itemId}
+                      className="bg-card rounded-xl border border-border overflow-hidden px-6"
                     >
-                      <button
-                        onClick={() => toggleItem(itemId)}
-                        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-muted transition-colors"
-                      >
-                        <span className="font-medium text-foreground pr-4">
-                          {faq.question}
-                        </span>
-                        <ChevronDown
-                          className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${
-                            isOpen ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </button>
-                      
-                      <AnimatePresence>
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className="px-6 pb-4 text-muted-foreground leading-relaxed">
-                              {faq.answer}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                      <AccordionTrigger className="hover:no-underline font-medium text-foreground text-sm">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground leading-relaxed">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
                   );
                 })}
-              </div>
+              </Accordion>
             </motion.div>
           ))}
         </div>
