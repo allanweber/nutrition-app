@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { Users, Utensils, Star, Award } from 'lucide-react';
 
 interface StatProps {
-  icon: React.ElementType;
   value: number;
   suffix: string;
   label: string;
@@ -18,11 +16,10 @@ function formatCount(n: number, target: number): string {
   if (isDecimal(target)) {
     return n.toFixed(1);
   }
-  return Math.floor(n).toLocaleString();
+  return Math.floor(n).toLocaleString('en-US');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function AnimatedStat({ icon: _icon, value, suffix, label, delay }: StatProps) {
+function AnimatedStat({ value, suffix, label, delay }: StatProps) {
   const prefersReducedMotion = useReducedMotion();
   const [count, setCount] = useState(prefersReducedMotion ? value : 0);
   const ref = useRef(null);
@@ -68,10 +65,10 @@ function AnimatedStat({ icon: _icon, value, suffix, label, delay }: StatProps) {
 
 export default function SocialProof() {
   const stats = [
-    { icon: Utensils, value: 500, suffix: 'K+', label: 'Meals Logged', delay: 0 },
-    { icon: Users, value: 50, suffix: 'K+', label: 'Active Users', delay: 0.1 },
-    { icon: Award, value: 2, suffix: 'K+', label: 'Professionals', delay: 0.2 },
-    { icon: Star, value: 4.9, suffix: '', label: 'App Rating', delay: 0.3 },
+    { value: 500, suffix: 'K+', label: 'Meals Logged', delay: 0 },
+    { value: 50, suffix: 'K+', label: 'Active Users', delay: 0.1 },
+    { value: 2, suffix: 'K+', label: 'Professionals', delay: 0.2 },
+    { value: 4.9, suffix: '', label: 'App Rating', delay: 0.3 },
   ];
 
   return (

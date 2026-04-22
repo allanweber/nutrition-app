@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CalendarDays } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { useDietPlansQuery, useDietPlanMealsQuery, useDeleteMealMutation } from '@/queries/diet-plans';
 import { PlanCarousel } from './plan-carousel';
@@ -115,14 +114,21 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
 
       {/* Empty state if no plans */}
       {!plansQuery.isLoading && plans.length === 0 && (
-        <div data-testid="meal-planner-empty-state" className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center">
-            <CalendarDays className="h-8 w-8 text-muted-foreground/40" />
+        <div data-testid="meal-planner-empty-state" className="flex flex-col items-center justify-center py-16 gap-6 text-center">
+          <div className="flex gap-1.5">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground/40">{day}</span>
+                <div className="w-10 h-14 rounded-lg border border-dashed border-border bg-muted/20" />
+              </div>
+            ))}
           </div>
-          <h2 className="text-xl font-bold text-foreground">No meal plans yet</h2>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            Build weekly meal plans, track nutritional targets, and stay consistent with your diet goals.
-          </p>
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Plan your week</h2>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              Build structured meal plans with daily nutritional targets. Assign meals to each day and track against your goals.
+            </p>
+          </div>
         </div>
       )}
 

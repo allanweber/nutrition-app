@@ -83,15 +83,18 @@ export default function Pricing() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-16 space-y-6"
+          className="mb-12 space-y-6"
         >
-          <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+          <h2 className="font-headline text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[0.95]">
             Investment in Vitality
           </h2>
 
           {/* Billing Toggle */}
-          <div className="inline-flex p-1 bg-secondary rounded-xl">
+          <div role="tablist" aria-label="Billing cycle" className="inline-flex p-1 bg-secondary rounded-xl">
             <button
+              type="button"
+              role="tab"
+              aria-selected={billing === 'monthly'}
               onClick={() => setBilling('monthly')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                 billing === 'monthly'
@@ -102,6 +105,9 @@ export default function Pricing() {
               Monthly
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={billing === 'yearly'}
               onClick={() => setBilling('yearly')}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                 billing === 'yearly'
@@ -115,7 +121,7 @@ export default function Pricing() {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 items-center">
+        <div className="grid md:grid-cols-3 gap-8 items-start">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -125,7 +131,7 @@ export default function Pricing() {
               viewport={{ once: true }}
               className={`relative flex flex-col p-8 rounded-[2rem] border ${
                 plan.popular
-                  ? 'bg-background border-4 border-primary shadow-xl scale-105 z-10'
+                  ? 'bg-background border-4 border-primary shadow-xl z-10'
                   : 'bg-background border border-border/10 shadow-sm'
               }`}
             >
@@ -138,17 +144,17 @@ export default function Pricing() {
 
               <h3 className="font-headline font-bold text-xl mb-2 text-foreground">{plan.name}</h3>
 
-              <div className="flex items-baseline gap-1 mb-8">
-                <span className="font-headline text-4xl font-black text-foreground">
+              <div className="flex items-baseline gap-2 mb-10">
+                <span className={`font-headline text-7xl font-black leading-none ${plan.popular ? 'text-primary' : 'text-foreground'}`}>
                   {plan.price[billing]}
                 </span>
-                <span className="text-muted-foreground text-sm">{plan.period}</span>
+                <span className="text-muted-foreground text-base">{plan.period}</span>
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 text-sm text-foreground">
-                    <Check className="h-4 w-4 text-primary flex-shrink-0" aria-hidden="true" />
+                    <Check className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
                     {feature}
                   </li>
                 ))}

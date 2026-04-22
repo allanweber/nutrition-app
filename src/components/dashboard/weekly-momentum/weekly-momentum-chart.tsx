@@ -59,10 +59,7 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-          Insights
-        </p>
-        <h2 className="text-2xl font-extrabold font-headline text-foreground">
+        <h2 className="text-xl font-headline font-bold text-foreground">
           Weekly Momentum
         </h2>
       </div>

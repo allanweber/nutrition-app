@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
@@ -72,6 +73,7 @@ interface NutritionItemsTableProps<T> {
   isLoading?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  emptyState?: ReactNode;
   searchPlaceholder?: string;
 }
 
@@ -94,6 +96,7 @@ export function NutritionItemsTable<T>({
   isLoading,
   emptyTitle = 'No items yet',
   emptyDescription = 'Add your first entry to get started.',
+  emptyState,
   searchPlaceholder = 'Filter by name...',
 }: NutritionItemsTableProps<T>) {
   const router = useRouter();
@@ -380,14 +383,19 @@ export function NutritionItemsTable<T>({
             <TableBody className="divide-y divide-border/15">
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow className="hover:bg-transparent border-0">
-                  <TableCell colSpan={columns.length} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
-                        <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
+                  <TableCell
+                    colSpan={columns.length}
+                    className={emptyState ? 'px-6 py-10' : 'px-6 py-20 text-center'}
+                  >
+                    {emptyState ?? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                          <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-base font-bold text-foreground">{emptyTitle}</p>
+                        <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
                       </div>
-                      <p className="text-base font-bold text-foreground">{emptyTitle}</p>
-                      <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
-                    </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (

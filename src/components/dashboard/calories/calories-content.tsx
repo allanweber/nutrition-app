@@ -1,5 +1,4 @@
 import { type DailySummaryDTO } from '@/server/services/dashboard.service';
-import { StatCard } from '@/components/dashboard/shared/stat-card';
 import { SectionNudge } from '@/components/dashboard/shared/section-nudge';
 import { CircularProgress } from '@/components/dashboard/calories/circular-progress';
 
@@ -20,15 +19,9 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
 
   return (
     <div className="flex flex-col h-full gap-6">
-      {/* Two-tier header */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-          Energy Metabolism
-        </p>
-        <h2 className="text-2xl font-extrabold font-headline text-foreground">
-          Calories
-        </h2>
-      </div>
+      <h2 className="text-2xl font-extrabold font-headline text-foreground">
+        Calories
+      </h2>
 
       {/* Main content: number + circle */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 flex-1">
@@ -41,18 +34,23 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
               / {calorieGoal.toLocaleString()} kcal
             </span>
           </div>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            You&apos;ve consumed {percentConsumed}% of your daily target.
-          </p>
 
-          {/* Stat cards */}
-          <div className="flex gap-4 mt-6">
-            <StatCard label="Burned" value={caloriesBurned.toLocaleString()} unit="kcal" />
-            <StatCard
-              label="Net Balance"
-              value={netBalance >= 0 ? `+${netBalance.toLocaleString()}` : netBalance.toLocaleString()}
-              unit="kcal"
-            />
+          {/* Secondary stats */}
+          <div className="flex gap-8 mt-6 pt-5 border-t border-border/50">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Burned</span>
+              <span className="text-xl font-headline font-black tabular-nums text-foreground">
+                {caloriesBurned.toLocaleString()}
+                <span className="text-sm font-semibold text-muted-foreground ml-0.5">kcal</span>
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Balance</span>
+              <span className="text-xl font-headline font-black tabular-nums text-foreground">
+                {netBalance >= 0 ? `+${netBalance.toLocaleString()}` : netBalance.toLocaleString()}
+                <span className="text-sm font-semibold text-muted-foreground ml-0.5">kcal</span>
+              </span>
+            </div>
           </div>
         </div>
 

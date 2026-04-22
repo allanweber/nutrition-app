@@ -1,10 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 
 export default function FinalCTA() {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <section className="py-20 md:py-28 bg-primary relative overflow-hidden">
       {/* Background Pattern */}
@@ -17,22 +19,18 @@ export default function FinalCTA() {
         />
       </div>
 
-      {/* Animated Blobs */}
+      {/* Decorative blobs — motion disabled for prefers-reduced-motion */}
       <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          x: [0, 20, 0],
-        }}
+        animate={prefersReducedMotion ? undefined : { scale: [1, 1.2, 1], x: [0, 20, 0] }}
         transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"
+        aria-hidden="true"
       />
       <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          x: [0, -20, 0],
-        }}
+        animate={prefersReducedMotion ? undefined : { scale: [1, 1.1, 1], x: [0, -20, 0] }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl"
+        aria-hidden="true"
       />
 
       <div className="container mx-auto px-4 relative z-10">
@@ -43,11 +41,11 @@ export default function FinalCTA() {
           viewport={{ once: true }}
           className="text-center max-w-4xl mx-auto"
         >
-          <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-primary-foreground mb-6 leading-tight">
+          <h2 className="font-headline text-5xl md:text-7xl font-black text-primary-foreground mb-6 leading-[0.92]">
             Ready to Take Control of Your Nutrition?
           </h2>
           <p className="text-lg text-primary-foreground/80 mb-12">
-            Join 50,000+ others archiving their journey to better health.
+            Join <span className="font-black text-primary-foreground">50,000+</span> others archiving their journey to better health.
           </p>
 
           {/* Dual CTA Cards */}
@@ -58,9 +56,9 @@ export default function FinalCTA() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               viewport={{ once: true }}
-              className="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1"
+              className="bg-white/10 p-8 rounded-3xl text-left border border-white/20 flex-1"
             >
-              <h3 className="font-headline font-bold text-xl text-primary-foreground mb-3">
+              <h3 className="font-headline font-bold text-2xl text-primary-foreground mb-3">
                 Individuals
               </h3>
               <p className="text-primary-foreground/70 text-sm mb-6">
@@ -81,9 +79,9 @@ export default function FinalCTA() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true }}
-              className="bg-white/10 backdrop-blur-md p-8 rounded-3xl text-left border border-white/20 flex-1"
+              className="bg-white/10 p-8 rounded-3xl text-left border border-white/20 flex-1"
             >
-              <h3 className="font-headline font-bold text-xl text-primary-foreground mb-3">
+              <h3 className="font-headline font-bold text-2xl text-primary-foreground mb-3">
                 Professionals
               </h3>
               <p className="text-primary-foreground/70 text-sm mb-6">

@@ -55,10 +55,7 @@ export function DailyScheduleContent({ morning, midday, evening }: DailySchedule
     <div className="flex flex-col gap-6 h-full">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            Timeline
-          </p>
-          <h2 className="text-2xl font-extrabold font-headline text-foreground">
+          <h2 className="text-xl font-headline font-bold text-foreground">
             Daily Schedule
           </h2>
         </div>

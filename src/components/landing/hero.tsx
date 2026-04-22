@@ -3,195 +3,220 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Play, Check, Droplets, Beef, Wheat } from 'lucide-react';
+
+const NAV_ITEMS = [
+  { name: 'Dashboard', active: true },
+  { name: 'Food Log', active: false },
+  { name: 'Meal Planner', active: false },
+  { name: 'Goals', active: false },
+];
+
+const MACROS = [
+  { label: 'Protein', val: '85g', goal: '120g', pct: 71, color: 'bg-rose-500' },
+  { label: 'Carbs', val: '180g', goal: '250g', pct: 72, color: 'bg-amber-500' },
+  { label: 'Fat', val: '52g', goal: '65g', pct: 80, color: 'bg-sky-500' },
+];
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-background">
+    <section
+      className="relative bg-background"
+      style={{ backgroundImage: 'radial-gradient(circle, oklch(0.5 0 0 / 0.045) 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+    >
+      <div className="container mx-auto px-6 pt-28 pb-0 relative z-10">
 
-      <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center lg:text-left"
+        {/* Eyebrow */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6 border-l-2 border-primary pl-3"
+        >
+          Precision nutrition · For clinicians and individuals
+        </motion.p>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="font-headline text-7xl sm:text-8xl lg:text-[120px] font-extrabold text-foreground leading-[0.88] tracking-tight mb-10 max-w-5xl"
+        >
+          The Living Archive of{' '}
+          <span className="text-primary italic">Your Health.</span>
+        </motion.h1>
+
+        {/* CTA row */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="flex flex-wrap items-center gap-6 mb-16"
+        >
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base px-8 h-12 rounded-xl shadow-lg"
+            asChild
           >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold mb-8"
-            >
-              <span>✦ New</span>
-              <span>— AI-powered meal suggestions</span>
-            </motion.div>
+            <Link href="/signup">Start Free Trial</Link>
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Free forever · No credit card required · 14-day Pro trial
+          </p>
+        </motion.div>
 
-            {/* Headline */}
-            <h1 className="font-headline text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground mb-6 leading-[1.1] tracking-tight">
-              The Living Archive of{' '}
-              <span className="text-primary italic">
-                Your Health.
-              </span>
-            </h1>
+        {/* Full-width dashboard mockup */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="relative overflow-hidden rounded-t-2xl border border-b-0 border-border/30 shadow-2xl"
+          style={{ maxHeight: 440 }}
+        >
+          {/* Bottom fade */}
+          <div
+            className="absolute bottom-0 inset-x-0 h-28 bg-linear-to-t from-background to-transparent z-10 pointer-events-none"
+            aria-hidden
+          />
 
-            {/* Subtext */}
-            <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Precision nutrition for individuals and professional tools for clinicians. Track, analyze, and optimize every aspect of human vitality.
-            </p>
+          {/* Nav bar */}
+          <div className="flex items-center h-14 px-6 border-b border-border/20 bg-background">
+            <span className="font-headline font-semibold text-primary italic text-lg mr-8">Vitalis</span>
+            <div className="hidden md:flex items-center h-full">
+              {NAV_ITEMS.map(({ name, active }) => (
+                <span
+                  key={name}
+                  className={`relative h-full flex items-center px-4 text-sm font-medium ${
+                    active ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {name}
+                  {active && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
+                  )}
+                </span>
+              ))}
+            </div>
+            <div className="ml-auto">
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">JD</span>
+              </div>
+            </div>
+          </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start mb-8">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-4 h-auto rounded-xl shadow-xl"
-                asChild
-              >
-                <Link href="/signup">
-                  Start Free Trial
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="ghost"
-                className="bg-secondary hover:bg-secondaryest text-foreground font-bold text-lg px-8 py-4 h-auto rounded-xl"
-                asChild
-              >
-                <a href="#demo">
-                  <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
-                </a>
-              </Button>
+          {/* Page content */}
+          <div className="bg-muted/30 px-6 py-5">
+            {/* Page header */}
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-headline font-bold text-2xl text-foreground">Today</h2>
+              <div className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center">
+                Log Food
+              </div>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start text-sm text-muted-foreground">
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-primary mr-2" />
-                No credit card required
-              </div>
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-primary mr-2" />
-                14-day Pro trial
-              </div>
-              <div className="flex items-center">
-                <Check className="h-4 w-4 text-primary mr-2" />
-                Cancel anytime
-              </div>
-            </div>
-          </motion.div>
+            {/* Card grid */}
+            <div className="grid grid-cols-12 gap-4">
 
-          {/* Right Content - Dashboard Mockup */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative"
-          >
-            {/* Decorative blurs */}
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" aria-hidden="true" />
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -z-10" aria-hidden="true" />
-
-            {/* Dashboard Card */}
-            <div className="bg-background rounded-3xl shadow-2xl p-8 border border-border/10">
-              {/* Mini Dashboard Header */}
-              <div className="flex items-center justify-between mb-10">
-                <div>
-                  <h3 className="font-headline font-bold text-xl text-foreground">Daily Snapshot</h3>
-                  <p className="text-sm text-muted-foreground">Wednesday, May 24</p>
-                </div>
-                <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-                  <span className="text-primary font-bold text-sm">JD</span>
-                </div>
-              </div>
-
-              {/* Calorie Ring + Macro Bars side by side */}
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="relative w-48 h-48 flex-shrink-0">
-                  <svg className="w-full h-full transform -rotate-90" aria-hidden="true">
-                    <circle
-                      cx="96"
-                      cy="96"
-                      r="80"
-                      stroke="var(--secondary)"
-                      strokeWidth="12"
-                      fill="none"
-                    />
-                    <motion.circle
-                      cx="96"
-                      cy="96"
-                      r="80"
-                      stroke="var(--primary)"
-                      strokeWidth="12"
-                      fill="none"
-                      strokeLinecap="round"
-                      initial={{ strokeDasharray: '0 502' }}
-                      animate={{ strokeDasharray: '392 502' }}
-                      transition={{ duration: 2, delay: 1 }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1.5 }}
-                      className="text-3xl font-black font-headline text-foreground tabular-nums"
-                    >
-                      1,560
-                    </motion.span>
-                    <span className="text-xs uppercase tracking-widest font-bold text-muted-foreground">/ 2000 kcal</span>
+              {/* Calories — 8/12 */}
+              <div className="col-span-8 bg-card rounded-xl p-5 border border-border/10">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Calories</h3>
+                <div className="flex items-start gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.2 }}
+                        className="text-6xl font-headline font-black tabular-nums text-primary leading-none"
+                      >
+                        1,560
+                      </motion.span>
+                      <span className="text-base text-muted-foreground font-semibold">/ 2,000 kcal</span>
+                    </div>
+                    <div className="flex gap-8 mt-4 pt-4 border-t border-border/50">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Burned</span>
+                        <span className="text-xl font-headline font-black tabular-nums">
+                          340<span className="text-sm font-semibold text-muted-foreground ml-0.5">kcal</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Balance</span>
+                        <span className="text-xl font-headline font-black tabular-nums">
+                          +1,220<span className="text-sm font-semibold text-muted-foreground ml-0.5">kcal</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Circular progress */}
+                  <div className="relative w-25 h-25 shrink-0">
+                    <svg className="w-full h-full -rotate-90" aria-hidden>
+                      <circle cx="50" cy="50" r="42" stroke="var(--secondary)" strokeWidth="8" fill="none" />
+                      <motion.circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        stroke="var(--primary)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        initial={{ strokeDasharray: '0 264' }}
+                        animate={{ strokeDasharray: '206 264' }}
+                        transition={{ duration: 1.5, delay: 1 }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-sm font-black font-headline">440</span>
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">left</span>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-              {/* Macro Bars */}
-              <div className="flex-1 w-full space-y-6">
-                <MacroBar icon={Beef} label="Protein" current={85} goal={120} color="bg-rose-500" />
-                <MacroBar icon={Wheat} label="Carbs" current={180} goal={250} color="bg-amber-500" />
-                <MacroBar icon={Droplets} label="Fat" current={52} goal={65} color="bg-sky-500" />
+              {/* Hydration — 4/12 */}
+              <div className="col-span-4 bg-background rounded-xl p-5 border border-border/10">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Water</h3>
+                <div className="flex items-baseline gap-1.5 mb-4">
+                  <span className="text-4xl font-headline font-black tabular-nums text-primary leading-none">1,200</span>
+                  <span className="text-sm font-bold text-muted-foreground">ml</span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-valuenow={60}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Water intake"
+                  className="h-2.5 w-full rounded-full bg-secondary overflow-hidden"
+                >
+                  <div className="h-full bg-primary rounded-full" style={{ width: '60%' }} />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-2 text-right">
+                  Goal: 2,000 ml
+                </p>
               </div>
+
+              {/* Macros — 5/12 */}
+              <div className="col-span-5 bg-background rounded-xl p-5 border border-border/10">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Macronutrients</h3>
+                <div className="flex flex-col gap-4">
+                  {MACROS.map((m) => (
+                    <div key={m.label}>
+                      <div className="flex justify-between text-xs font-bold mb-1.5">
+                        <span className="text-foreground">{m.label}</span>
+                        <span className="text-muted-foreground tabular-nums">{m.val} / {m.goal}</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                        <div className={`h-full ${m.color} rounded-full`} style={{ width: `${m.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
-  );
-}
-
-function MacroBar({
-  icon: Icon,
-  label,
-  current,
-  goal,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  current: number;
-  goal: number;
-  color: string;
-}) {
-  const percentage = Math.min((current / goal) * 100, 100);
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm font-bold">
-        <span className="flex items-center gap-1.5 text-foreground">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-          {label}
-        </span>
-        <span className="tabular-nums text-muted-foreground">{current}g / {goal}g</span>
-      </div>
-      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1.5, delay: 1.2 }}
-          className={`h-full ${color} rounded-full`}
-        />
-      </div>
-    </div>
   );
 }
