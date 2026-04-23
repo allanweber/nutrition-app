@@ -1,82 +1,20 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/session';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PageHeader } from '@/components/page-header';
+import { BiometricProfileForm } from '@/components/forms/biometric-profile-form';
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  if (!user) redirect('/login');
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
       <PageHeader
         overline="Account"
-        title="Profile"
-        subtitle="Manage your account information"
+        title="Biometric Profile"
+        subtitle="Keep your physical metrics up to date for precise health calculations and personalized insights."
       />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your personal details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={user.image || undefined} alt={user.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-lg font-semibold">{user.name}</h3>
-                <p className="text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-
-            <dl className="space-y-4">
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">Name</dt>
-                <dd className="text-foreground">{user.name}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">Email</dt>
-                <dd className="text-foreground">{user.email}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">Email Verified</dt>
-                <dd className="text-foreground">{user.emailVerified ? 'Yes' : 'No'}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Settings</CardTitle>
-            <CardDescription>Manage your account preferences</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              Account settings and preferences will be available here soon.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <BiometricProfileForm />
     </div>
   );
 }

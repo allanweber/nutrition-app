@@ -14,7 +14,7 @@ export async function CaloriesSection({ date }: CaloriesSectionProps) {
   const data = await getDailySummary(user.id, date);
 
   return (
-    <BentoCell className="min-h-[280px]">
+    <BentoCell className="min-h-[280px] bg-card">
       <CaloriesContent data={data} />
     </BentoCell>
   );

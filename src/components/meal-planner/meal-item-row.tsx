@@ -2,6 +2,7 @@
 
 import { Utensils } from 'lucide-react';
 import type { MealItemDTO } from '@/server/services/diet-plan.service';
+import { MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
 interface MealItemRowProps {
   item: MealItemDTO;
@@ -40,16 +41,16 @@ export function MealItemRow({ item }: MealItemRowProps) {
           <span className="text-sm font-semibold text-foreground">{Math.round(item.calories)}</span>
         </div>
         <div className="flex flex-col items-center w-12 text-center">
-          <span className="text-[10px] text-rose-500 uppercase tracking-wider leading-tight">PROT</span>
-          <span className="text-sm font-semibold text-rose-500">{Math.round(item.protein)}g</span>
+          <span className={`text-[10px] ${MACRO_TEXT_COLORS.protein} uppercase tracking-wider leading-tight`}>PROT</span>
+          <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(item.protein)}g</span>
         </div>
         <div className="flex flex-col items-center w-12 text-center">
-          <span className="text-[10px] text-amber-500 uppercase tracking-wider leading-tight">CARB</span>
-          <span className="text-sm font-semibold text-amber-500">{Math.round(item.carbs)}g</span>
+          <span className={`text-[10px] ${MACRO_TEXT_COLORS.carbs} uppercase tracking-wider leading-tight`}>CARB</span>
+          <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(item.carbs)}g</span>
         </div>
         <div className="flex flex-col items-center w-10 text-center">
-          <span className="text-[10px] text-sky-500 uppercase tracking-wider leading-tight">FAT</span>
-          <span className="text-sm font-semibold text-sky-500">{Math.round(item.fat)}g</span>
+          <span className={`text-[10px] ${MACRO_TEXT_COLORS.fat} uppercase tracking-wider leading-tight`}>FAT</span>
+          <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(item.fat)}g</span>
         </div>
       </div>
     </div>

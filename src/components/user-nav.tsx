@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { User, Settings, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { signOut } from '@/lib/auth-client';
 
 interface UserNavProps {
@@ -57,14 +58,14 @@ export function UserNav({ user }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0">
           <Avatar className="h-8 w-8 cursor-pointer">
             <AvatarImage src={user.image || undefined} alt={user.name} />
             <AvatarFallback className="bg-primary text-primary-foreground text-sm">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
@@ -92,7 +93,7 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuItem 
           onClick={handleLogout} 
           disabled={isLoggingOut}
-          className="cursor-pointer text-red-600 focus:text-red-600"
+          className="cursor-pointer text-destructive focus:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>

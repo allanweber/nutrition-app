@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, UtensilsCrossed, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/page-header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDishesQuery, useDeleteDishMutation } from '@/queries/dishes';
@@ -131,7 +132,7 @@ export default function MyFoodsPage() {
       },
     ],
     extraCol: {
-      label: 'Ingredients',
+      label: 'Ing.',
       getValue: (d) => `${d.ingredientCount}`,
     },
     getEditHref: (d) => `/my-foods/dishes/${d.id}/edit`,
@@ -164,55 +165,88 @@ export default function MyFoodsPage() {
         )}
       </PageHeader>
 
-      {/* Tabs + Table */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit mb-6">
-        <button
-          onClick={() => setTab('foods')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'foods' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          data-testid="tab-custom-foods"
-        >
-          <span className="flex items-center gap-1.5">
-            <UtensilsCrossed className="h-4 w-4" />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'foods' | 'dishes')} className="mb-6">
+        <TabsList className="h-11">
+          <TabsTrigger value="foods" data-testid="tab-custom-foods" className="px-5 text-sm">
+            <UtensilsCrossed className="h-4 w-4 mr-1.5" />
             Custom Foods
-          </span>
-        </button>
-        <button
-          onClick={() => setTab('dishes')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'dishes' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          data-testid="tab-dishes"
-        >
-          <span className="flex items-center gap-1.5">
-            <ChefHat className="h-4 w-4" />
+          </TabsTrigger>
+          <TabsTrigger value="dishes" data-testid="tab-dishes" className="px-5 text-sm">
+            <ChefHat className="h-4 w-4 mr-1.5" />
             Dishes
-          </span>
-        </button>
-      </div>
+          </TabsTrigger>
+        </TabsList>
 
-      {tab === 'foods' && (
-        <NutritionItemsTable
-          items={foodsQuery.data?.foods ?? []}
-          config={foodsConfig}
-          isLoading={foodsQuery.isLoading}
-          emptyTitle="No custom foods yet"
-          emptyDescription="Create your own foods with exact nutrition info and reuse them across your logs."
-          searchPlaceholder="Filter by food name..."
-        />
-      )}
+        <TabsContent value="foods">
+          <NutritionItemsTable
+            items={foodsQuery.data?.foods ?? []}
+            config={foodsConfig}
+            isLoading={foodsQuery.isLoading}
+            searchPlaceholder="Filter by food name..."
+            emptyState={
+              <div className="flex justify-center py-4">
+                <div className="flex flex-col gap-4 max-w-70 text-left">
+                  <div className="space-y-1">
+                    <p className="text-base font-bold text-foreground">Your nutritional database</p>
+                    <p className="text-sm text-muted-foreground">Define foods with exact macro profiles per 100g — reusable across every log and dish.</p>
+                  </div>
+                  <div className="rounded-md border border-border/50 divide-y divide-border/30 text-xs select-none pointer-events-none">
+                    <div className="flex items-center gap-3 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
+                      <span className="flex-1">Name</span>
+                      <span className="flex gap-4"><span>Protein</span><span>Carbs</span><span>Fat</span></span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 text-muted-foreground/25">
+                      <span className="flex-1">—————————</span>
+                      <span className="flex gap-5 font-mono"><span>—g</span><span>—g</span><span>—g</span></span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-2 text-muted-foreground/15">
+                      <span className="flex-1">——————</span>
+                      <span className="flex gap-5 font-mono"><span>—g</span><span>—g</span><span>—g</span></span>
+                    </div>
+                  </div>
+                  <Button asChild size="sm" className="self-start">
+                    <Link href="/my-foods/create">Create your first food</Link>
+                  </Button>
+                </div>
+              </div>
+            }
+          />
+        </TabsContent>
 
-      {tab === 'dishes' && (
-        <NutritionItemsTable
-          items={dishesQuery.data?.dishes ?? []}
-          config={dishesConfig}
-          isLoading={dishesQuery.isLoading}
-          emptyTitle="No dishes yet"
-          emptyDescription="Create multi-ingredient dishes and log them as a single entry with a serving multiplier."
-          searchPlaceholder="Filter by dish name..."
-        />
-      )}
+        <TabsContent value="dishes">
+          <NutritionItemsTable
+            items={dishesQuery.data?.dishes ?? []}
+            config={dishesConfig}
+            isLoading={dishesQuery.isLoading}
+            searchPlaceholder="Filter by dish name..."
+            emptyState={
+              <div className="flex justify-center py-4">
+                <div className="flex flex-col gap-4 max-w-[280px] text-left">
+                  <div className="space-y-1">
+                    <p className="text-base font-bold text-foreground">Recipes, logged as one entry</p>
+                    <p className="text-sm text-muted-foreground">Combine ingredients into dishes with exact totals — log any portion with a serving multiplier.</p>
+                  </div>
+                  <div className="rounded-md border border-border/50 px-3 py-2 text-xs select-none pointer-events-none space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">Recipe</p>
+                    <div className="pl-1 space-y-1 text-muted-foreground/30">
+                      <p>· Ingredient A &nbsp; 100g</p>
+                      <p className="opacity-75">· Ingredient B &nbsp; 50g</p>
+                      <p className="opacity-50">· Ingredient C &nbsp; 30g</p>
+                    </div>
+                    <div className="pt-1.5 border-t border-border/30 flex justify-between text-muted-foreground/25">
+                      <span>Total</span>
+                      <span>——— kcal</span>
+                    </div>
+                  </div>
+                  <Button asChild size="sm" className="self-start">
+                    <Link href="/my-foods/dishes/create">Create your first dish</Link>
+                  </Button>
+                </div>
+              </div>
+            }
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

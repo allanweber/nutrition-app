@@ -8,8 +8,11 @@ import {
   Target,
   UtensilsCrossed,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -21,7 +24,6 @@ import { useNutritionGoals } from '@/hooks/use-nutrition-goals';
 import { goalsFormSchema, zodValidator } from '@/lib/form-validation';
 import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 import type { ActivityLevel, GoalType } from '@/types/goals';
-import { Button } from '../ui/button';
 
 type GoalsFormValues = {
   goalType: GoalType;
@@ -47,8 +49,6 @@ export function GoalsForm({
   onOpenCalculator?: () => void;
 }) {
   const { data: goals, updateGoals } = useNutritionGoals();
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
   const form = useForm({
     defaultValues: {
       goalType: (goals?.goalType as GoalType) || 'maintenance',
@@ -75,10 +75,9 @@ export function GoalsForm({
       });
 
       if (result.success) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        toast.success('Goals saved successfully!');
       } else {
-        throw new Error(result.error || 'Failed to save goals');
+        toast.error(result.error || 'Failed to save goals');
       }
     },
   });
@@ -114,15 +113,16 @@ export function GoalsForm({
           fitness journey.
         </p>
         {onOpenCalculator && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onOpenCalculator}
-            className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-primary/20 bg-primary/5 text-primary text-sm font-semibold hover:bg-primary/10 hover:border-primary/40 transition-all"
+            className="gap-3"
           >
             <Target className="w-4 h-4 shrink-0" />
             Not sure about your numbers?
             <span className="font-black">Open Calculator →</span>
-          </button>
+          </Button>
         )}
       </div>
 
@@ -165,7 +165,7 @@ export function GoalsForm({
                     value={field.state.value}
                     onValueChange={(v) => field.handleChange(v as GoalType)}
                   >
-                    <SelectTrigger className="w-full h-14! px-5 text-base font-semibold">
+                    <SelectTrigger className="w-full w-full">
                       <SelectValue placeholder="Select your goal" />
                     </SelectTrigger>
                     <SelectContent>
@@ -206,7 +206,7 @@ export function GoalsForm({
                       field.handleChange(v as ActivityLevel)
                     }
                   >
-                    <SelectTrigger className="w-full h-14! px-5 text-base font-semibold ">
+                    <SelectTrigger className="w-full w-full ">
                       <SelectValue placeholder="Select activity level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -241,7 +241,7 @@ export function GoalsForm({
         {/* Section 2 — Energy & Vitality */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <Droplets className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-headline font-extrabold">
@@ -266,13 +266,13 @@ export function GoalsForm({
                   <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Daily Target Calories
                   </label>
-                  <div className="relative group">
-                    <input
+                  <div className="relative">
+                    <Input
                       type="number"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="2500"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-20 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="pr-20 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
                       kcal
@@ -299,13 +299,13 @@ export function GoalsForm({
                   <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Target Hydration
                   </label>
-                  <div className="relative group">
-                    <input
+                  <div className="relative">
+                    <Input
                       type="number"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="3500"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-28 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="pr-28 py-3 text-2xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
                       ml / day
@@ -325,7 +325,7 @@ export function GoalsForm({
         {/* Section 3 — Macronutrients */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <UtensilsCrossed className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-headline font-extrabold">
@@ -371,7 +371,7 @@ export function GoalsForm({
                       {label}
                     </label>
                     <div className="relative">
-                      <input
+                      <Input
                         type="number"
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
@@ -382,7 +382,7 @@ export function GoalsForm({
                               ? '250'
                               : '70'
                         }
-                        className="w-full border rounded-2xl px-6 py-4 text-2xl font-semibold pr-20 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="px-6 py-4 text-2xl font-semibold pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         style={{ borderLeftWidth: 8, borderLeftColor: color }}
                       />
                       <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
@@ -404,7 +404,7 @@ export function GoalsForm({
         {/* Section 4 — Micros & Refinement */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <FlaskConical className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-headline font-extrabold">
@@ -430,12 +430,12 @@ export function GoalsForm({
                     Target Fiber
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="35"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-10 py-3 text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="pr-10 py-3 text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground/40 uppercase">
                       g
@@ -463,12 +463,12 @@ export function GoalsForm({
                     Target Sodium
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="2300"
-                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input w-full min-w-0 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive pr-10 py-3 text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="pr-10 py-3 text-xl font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground/40 uppercase">
                       mg
@@ -495,33 +495,13 @@ export function GoalsForm({
             </p>
           </div>
 
-          {saveSuccess && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="text-sm text-green-600 bg-green-50 dark:bg-green-950/30 dark:text-green-400 p-3 rounded-xl text-center w-full max-w-sm"
-            >
-              Goals saved successfully!
-            </div>
-          )}
-
-          <form.Subscribe selector={(state) => [state.errorMap]}>
-            {([errorMap]) =>
-              errorMap.onSubmit ? (
-                <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-xl w-full max-w-sm text-center">
-                  {String(errorMap.onSubmit)}
-                </div>
-              ) : null
-            }
-          </form.Subscribe>
-
           <form.Subscribe selector={(state) => [state.isSubmitting]}>
             {([isSubmitting]) => (
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                size="xl"
-                className='w-xl'
+              size="lg"
+              className="w-full max-w-sm"
               >
                 <span className="flex items-center justify-center gap-2">
                   {isSubmitting ? (

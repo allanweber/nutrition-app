@@ -23,13 +23,13 @@ export default function FeaturesGrid() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-16 space-y-4"
+          className="mb-12"
         >
           <h2 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-            Everything you need to succeed
+            Built for precision.
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            From smart food search to professional clinical analytics — built for precision.
+          <p className="text-muted-foreground mt-3 max-w-xl">
+            From food search to clinical analytics — every feature engineered for accuracy.
           </p>
         </motion.div>
 
@@ -46,11 +46,11 @@ export default function FeaturesGrid() {
             className="md:col-span-3 bg-background p-8 rounded-[2rem] border border-border/10 shadow-sm overflow-hidden group"
           >
             <div className="flex flex-col h-full justify-between gap-10">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-primary">
-                  <Search className="h-6 w-6" aria-hidden="true" />
-                </div>
-                <h3 className="font-headline text-2xl font-bold text-foreground">Smart Food Search</h3>
+              <div className="space-y-3">
+                <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2.5">
+                  <Search className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+                  Smart Food Search
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   500,000+ verified foods from the FatSecret database. Search in natural language and log meals in seconds.
                 </p>
@@ -78,11 +78,11 @@ export default function FeaturesGrid() {
             className="md:col-span-3 bg-background p-8 rounded-[2rem] border border-border/10 shadow-sm overflow-hidden group"
           >
             <div className="flex flex-col h-full justify-between gap-10">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-secondary-foreground">
-                  <BarChart3 className="h-6 w-6" aria-hidden="true" />
-                </div>
-                <h3 className="font-headline text-2xl font-bold text-foreground">Visual Progress</h3>
+              <div className="space-y-3">
+                <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2.5">
+                  <BarChart3 className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+                  Visual Progress
+                </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   See trends over months and years. Data is more than numbers — it&apos;s your story.
                 </p>
@@ -104,10 +104,12 @@ export default function FeaturesGrid() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
-            className="md:col-span-2 bg-muted p-6 rounded-3xl space-y-3"
+            className="md:col-span-2 bg-muted p-6 rounded-3xl"
           >
-            <Target className="h-6 w-6 text-primary" aria-hidden="true" />
-            <h4 className="font-headline font-bold text-foreground">Goal Tracking</h4>
+            <h4 className="font-headline font-bold text-foreground flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+              Goal Tracking
+            </h4>
             <p className="text-sm text-muted-foreground">Set custom macro ratios and weight milestones.</p>
           </motion.div>
 
@@ -118,10 +120,12 @@ export default function FeaturesGrid() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
-            className="md:col-span-2 bg-muted p-6 rounded-3xl space-y-3"
+            className="md:col-span-2 bg-muted p-6 rounded-3xl"
           >
-            <Smartphone className="h-6 w-6 text-secondary-foreground" aria-hidden="true" />
-            <h4 className="font-headline font-bold text-foreground">Log Anywhere</h4>
+            <h4 className="font-headline font-bold text-foreground flex items-center gap-2 mb-2">
+              <Smartphone className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+              Log Anywhere
+            </h4>
             <p className="text-sm text-muted-foreground">Quick-log on any device. Your data syncs instantly.</p>
           </motion.div>
 
@@ -132,11 +136,13 @@ export default function FeaturesGrid() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-80px' }}
-            className="md:col-span-2 bg-muted p-6 rounded-3xl space-y-3"
+            className="md:col-span-2 bg-muted p-6 rounded-3xl"
           >
-            <Lightbulb className="h-6 w-6 text-amber-500" aria-hidden="true" />
-            <h4 className="font-headline font-bold text-foreground">Smart Insights</h4>
-            <p className="text-sm text-muted-foreground">AI-generated reports on your eating habits.</p>
+            <h4 className="font-headline font-bold text-foreground flex items-center gap-2 mb-2">
+              <Lightbulb className="h-4 w-4 text-amber-500 shrink-0" aria-hidden="true" />
+              Smart Insights
+            </h4>
+            <p className="text-sm text-muted-foreground">Weekly pattern analysis on your eating habits.</p>
           </motion.div>
 
         </div>

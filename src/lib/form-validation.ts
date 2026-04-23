@@ -262,6 +262,46 @@ export const dietPlanFormSchema = z.object({
 })
 
 // ============================================
+// BIOMETRIC PROFILE SCHEMA — mirrors: user_profiles table + users.name
+// ============================================
+
+export const biometricProfileSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(255, 'Name must be at most 255 characters'),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional()
+    .or(z.literal('')),
+  gender: z.enum(['woman', 'man', 'non-binary', 'prefer-not-to-say']).optional(),
+  preferredUnit: z.enum(['metric', 'imperial']).default('metric'),
+  // Metric inputs
+  heightCm: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().min(50, 'Height must be at least 50cm').max(300, 'Height must be at most 300cm').optional(),
+  ),
+  weightKg: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().min(10, 'Weight must be at least 10kg').max(500, 'Weight must be at most 500kg').optional(),
+  ),
+  // Imperial inputs (converted to metric before API submit)
+  heightFt: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().int().min(0).max(9).optional(),
+  ),
+  heightIn: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().min(0).max(11.9).optional(),
+  ),
+  weightLbs: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().min(22, 'Weight must be at least 22lbs').max(1100, 'Weight must be at most 1100lbs').optional(),
+  ),
+})
+
+// ============================================
 // TYPE EXPORTS
 // ============================================
 
@@ -276,3 +316,4 @@ export type CustomDishFormData = z.infer<typeof customDishFormSchema>
 export type FoodLogFormData = z.infer<typeof foodLogFormSchema>
 export type DishLogFormData = z.infer<typeof dishLogFormSchema>
 export type DietPlanFormData = z.infer<typeof dietPlanFormSchema>
+export type BiometricProfileFormData = z.infer<typeof biometricProfileSchema>

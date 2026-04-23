@@ -33,7 +33,7 @@ export function SearchSection() {
 
   return (
     <section className="py-20 md:py-28 bg-background border-b border-border" data-testid="landing-search-section">
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-6">
 
         {/* Header */}
         <motion.div
@@ -41,16 +41,15 @@ export function SearchSection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="mb-10"
         >
           <p className="text-sm font-medium text-primary uppercase tracking-widest mb-3">
             Nutrition Database
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
-            Search 500,000+ foods{' '}
-            <span className="text-primary">instantly</span>
+          <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4 leading-[1.05]">
+            Search 500,000+ foods instantly
           </h2>
-          <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+          <p className="text-lg text-muted-foreground max-w-lg">
             Common foods, branded products, and your own custom entries — all in one place, no account required to explore.
           </p>
         </motion.div>
@@ -106,8 +105,8 @@ export function SearchSection() {
         >
           {stats.map((stat) => (
             <div key={stat.label}>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              <p className="text-5xl md:text-6xl font-headline font-black text-foreground tabular-nums leading-none">{stat.value}</p>
+              <p className="text-sm text-muted-foreground mt-2">{stat.label}</p>
             </div>
           ))}
         </motion.div>

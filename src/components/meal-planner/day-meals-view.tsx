@@ -2,6 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
 import { MealCard } from './meal-card';
 import { CopyDayPopover } from './copy-day-popover';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
@@ -29,7 +30,7 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-0.5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-0.5">
             Detailed Editor •
           </p>
           <h2 data-testid="day-meals-heading" className="text-2xl font-bold text-foreground">{dayName}&apos;s Meals</h2>
@@ -66,16 +67,17 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
           ))}
 
           {/* Add another meal card */}
-          <button
+          <Button
             data-testid="add-meal-card"
+            variant="ghost"
             onClick={() => onAddMeal(selectedDay)}
-            className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors min-h-48 cursor-pointer"
+            className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 h-auto min-h-48 w-full"
           >
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
               <Plus className="h-5 w-5 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">Add another meal to {dayName}</p>
-          </button>
+          </Button>
         </div>
       )}
     </div>

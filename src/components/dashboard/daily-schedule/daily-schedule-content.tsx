@@ -55,10 +55,7 @@ export function DailyScheduleContent({ morning, midday, evening }: DailySchedule
     <div className="flex flex-col gap-6 h-full">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            Timeline
-          </p>
-          <h2 className="text-2xl font-extrabold font-headline text-foreground">
+          <h2 className="text-xl font-headline font-bold text-foreground">
             Daily Schedule
           </h2>
         </div>
@@ -72,8 +69,8 @@ export function DailyScheduleContent({ morning, midday, evening }: DailySchedule
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <TimeGroupCard label="Morning" entries={morning} iconBgClass="bg-primary/10" />
-        <TimeGroupCard label="Midday" entries={midday} iconBgClass="bg-amber-100 dark:bg-amber-900/30" />
-        <TimeGroupCard label="Evening" entries={evening} iconBgClass="bg-pink-500/10" />
+        <TimeGroupCard label="Midday" entries={midday} iconBgClass="bg-muted" />
+        <TimeGroupCard label="Evening" entries={evening} iconBgClass="bg-secondary" />
       </div>
     </div>
   );

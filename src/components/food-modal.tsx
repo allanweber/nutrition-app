@@ -4,6 +4,10 @@ import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { Loader2, UtensilsCrossed, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Button } from '@/components/ui/button';
 
 import { MealTypeSelect } from '@/components/meal-type-select';
 import { DateNavigator } from '@/components/date-navigator';
@@ -122,7 +126,6 @@ export function FoodModal({
   );
   const [quantity, setQuantity] = useState<number>(mode.kind === 'log-dish' ? 1 : 100);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const createFoodLog = useCreateFoodLogMutation();
   const updateFoodLog = useUpdateFoodLogMutation();
@@ -153,28 +156,9 @@ export function FoodModal({
       setSelectedMeasureId(measures[0].id);
       setQuantity(measures[0].defaultQty);
     }
-    setSubmitError(null);
     setIsSubmitting(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, 'foodDetail' in mode ? mode.foodDetail.id : '']);
-
-  // Escape key
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
-  // Body scroll lock
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [open]);
 
   // Measures list
   const measures: QuantityMeasure[] = useMemo(() => {
@@ -213,7 +197,6 @@ export function FoodModal({
   };
 
   const handleSubmit = async () => {
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (mode.kind === 'log-food') {
@@ -255,22 +238,21 @@ export function FoodModal({
         mode.onSelect({ foodId: mode.foodDetail.id, altMeasureId, quantityGrams: grams });
       }
     } catch (err) {
-      setSubmitError((err as Error).message ?? 'Something went wrong');
+      toast.error((err as Error).message ?? 'Something went wrong');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!open) return null;
-
   const acceptLabel = submitLabel ?? (mode.kind === 'ingredient' ? 'Add Ingredient' : mode.kind === 'edit-food' ? 'Save Changes' : 'Log Meal');
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
-      data-testid="food-add-modal"
-    >
-      <div className="relative w-full max-w-[340px] bg-background rounded-2xl shadow-2xl flex flex-col border border-border overflow-hidden max-h-[90vh]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        data-testid="food-add-modal"
+        className="p-0 gap-0 max-w-85 max-h-[90vh] flex flex-col overflow-hidden"
+      >
+        <VisuallyHidden><DialogTitle>{name}</DialogTitle></VisuallyHidden>
 
         {/* ── Header (image or green gradient fallback) ── */}
         <div className="relative h-24 overflow-hidden shrink-0">
@@ -300,14 +282,16 @@ export function FoodModal({
           </div>
 
           {/* Close button */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="absolute top-2 right-2 z-[60] size-7 flex items-center justify-center rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors border border-border"
+            className="absolute top-2 right-2 z-60 size-7 rounded-full bg-white/90 hover:bg-white shadow-sm border border-border"
             aria-label="Close"
           >
             <X className="h-3.5 w-3.5 text-foreground" />
-          </button>
+          </Button>
         </div>
 
         {/* ── Body ── */}
@@ -396,28 +380,25 @@ export function FoodModal({
                 </div>
               </section>
 
-              {submitError && (
-                <p className="text-sm text-destructive">{submitError}</p>
-              )}
             </>
           )}
         </div>
 
         {/* ── Footer ── */}
-        <div className="p-3 bg-secondary border-t border-border flex gap-2 shrink-0">
-          <button
+        <DialogFooter className="p-3 bg-secondary border-t border-border flex-row gap-2 shrink-0">
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-lg border border-border bg-background font-bold text-md text-muted-foreground hover:bg-secondary transition-colors"
             data-testid="food-modal-cancel"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            className="flex-1"
             onClick={handleSubmit}
             disabled={isSubmitting || isLoading}
-            className="flex-1 py-2.5 rounded-lg bg-primary text-white font-bold text-md shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:pointer-events-none"
             data-testid="add-food-button"
           >
             {isSubmitting ? (
@@ -428,9 +409,9 @@ export function FoodModal({
             ) : (
               acceptLabel
             )}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

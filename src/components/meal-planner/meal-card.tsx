@@ -12,7 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MEAL_TYPE_LABELS } from '@/lib/nutrition-constants';
+import { Button } from '@/components/ui/button';
+import { MEAL_TYPE_COLORS, MEAL_TYPE_LABELS, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 import { MealItemRow } from './meal-item-row';
 import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.service';
 
@@ -23,18 +24,6 @@ interface MealCardProps {
   onDelete: () => void;
 }
 
-const MEAL_ICON_COLORS: Record<string, string> = {
-  breakfast: 'bg-emerald-500 text-white',
-  lunch: 'bg-sky-500 text-white',
-  dinner: 'bg-violet-500 text-white',
-  snack: 'bg-emerald-400 text-white',
-  morning_snack: 'bg-amber-500 text-white',
-  afternoon_snack: 'bg-orange-500 text-white',
-  evening_snack: 'bg-indigo-500 text-white',
-  pre_workout: 'bg-lime-500 text-white',
-  post_workout: 'bg-teal-500 text-white',
-  other: 'bg-muted text-muted-foreground',
-};
 
 interface DishGroup {
   dishGroupId: string;
@@ -82,9 +71,10 @@ function DishGroupRow({ group }: { group: DishGroup }) {
   return (
     <div>
       {/* Dish header */}
-      <button
+      <Button
         type="button"
-        className="w-full flex items-center gap-3 py-3 text-left"
+        variant="ghost"
+        className="w-full flex items-center gap-3 py-3 h-auto justify-start text-left px-0 hover:bg-transparent"
         onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
       >
         <div className="w-5 h-5 flex items-center justify-center shrink-0">
@@ -105,20 +95,20 @@ function DishGroupRow({ group }: { group: DishGroup }) {
             <span className="text-sm font-semibold text-foreground">{Math.round(group.totalCalories)}</span>
           </div>
           <div className="flex flex-col items-center w-12 text-center">
-            <span className="text-[10px] text-rose-500 uppercase tracking-wider leading-tight">PROT</span>
-            <span className="text-sm font-semibold text-rose-500">{Math.round(group.totalProtein)}g</span>
+            <span className={`text-[10px] ${MACRO_TEXT_COLORS.protein} uppercase tracking-wider leading-tight`}>PROT</span>
+            <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(group.totalProtein)}g</span>
           </div>
           <div className="flex flex-col items-center w-12 text-center">
-            <span className="text-[10px] text-amber-500 uppercase tracking-wider leading-tight">CARB</span>
-            <span className="text-sm font-semibold text-amber-500">{Math.round(group.totalCarbs)}g</span>
+            <span className={`text-[10px] ${MACRO_TEXT_COLORS.carbs} uppercase tracking-wider leading-tight`}>CARB</span>
+            <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(group.totalCarbs)}g</span>
           </div>
           <div className="flex flex-col items-center w-10 text-center">
-            <span className="text-[10px] text-sky-500 uppercase tracking-wider leading-tight">FAT</span>
-            <span className="text-sm font-semibold text-sky-500">{Math.round(group.totalFat)}g</span>
+            <span className={`text-[10px] ${MACRO_TEXT_COLORS.fat} uppercase tracking-wider leading-tight`}>FAT</span>
+            <span className={`text-sm font-semibold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(group.totalFat)}g</span>
           </div>
         </div>
         <ChevronIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
-      </button>
+      </Button>
 
       {/* Expanded ingredients */}
       {expanded && (
@@ -134,7 +124,7 @@ function DishGroupRow({ group }: { group: DishGroup }) {
 
 export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const iconColors = MEAL_ICON_COLORS[meal.mealType] ?? 'bg-muted text-muted-foreground';
+  const iconColors = MEAL_TYPE_COLORS[meal.mealType] ?? 'bg-muted text-muted-foreground';
   const label = (MEAL_TYPE_LABELS[meal.mealType] ?? meal.mealType).toUpperCase();
 
   const { dishGroups, soloItems } = groupItems(meal.items);
@@ -157,16 +147,18 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
             <Utensils className="h-5 w-5" />
           </div>
           <span className="text-xs font-bold uppercase tracking-widest text-foreground flex-1">{label}</span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             data-testid={`meal-delete-btn-${meal.id}`}
             onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
             disabled={isDeleting}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:pointer-events-none"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             aria-label={`Delete ${label} meal`}
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          </button>
+          </Button>
         </div>
 
         {/* Items */}
@@ -197,15 +189,15 @@ export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCar
           </div>
           <div className="flex flex-col px-4 py-3">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
-            <span className="text-base font-bold text-rose-500">{Math.round(meal.totalProtein)}g</span>
+            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(meal.totalProtein)}g</span>
           </div>
           <div className="flex flex-col px-4 py-3">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
-            <span className="text-base font-bold text-amber-500">{Math.round(meal.totalCarbs)}g</span>
+            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(meal.totalCarbs)}g</span>
           </div>
           <div className="flex flex-col px-4 py-3">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
-            <span className="text-base font-bold text-sky-500">{Math.round(meal.totalFat)}g</span>
+            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(meal.totalFat)}g</span>
           </div>
         </div>
       </div>

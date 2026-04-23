@@ -1,6 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { SearchHistoryEntry } from '@/hooks/use-search-history';
 import type { UnifiedFoodSearchResultItem } from './types';
 
@@ -32,16 +33,17 @@ export function Suggestions({ query, history, results, onSelect }: SuggestionsPr
   return (
     <div data-testid="search-suggestions">
       {suggestions.map((term) => (
-        <button
+        <Button
           key={term}
           type="button"
+          variant="ghost"
           onClick={() => onSelect(term)}
-          className="flex items-center gap-3 w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted/60 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2 h-auto justify-start text-sm text-foreground"
           data-testid="suggestion-item"
         >
-          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Search className="h-4 w-4 text-muted-foreground shrink-0" />
           {term}
-        </button>
+        </Button>
       ))}
     </div>
   );

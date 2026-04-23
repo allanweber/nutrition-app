@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest add tabs --yes)",
+      "Bash(npx shadcn@latest add separator --yes)",
+      "Bash(npx shadcn@latest add slider --yes)",
+      "Bash(npx shadcn@latest add textarea --yes)",
+      "Bash(npx shadcn@latest add accordion --yes)",
+      "Bash(npx shadcn@latest add collapsible --yes)",
+      "Bash(npx shadcn@latest add toggle-group --yes)",
+      "Bash(npx shadcn@latest add alert --yes)",
+      "Bash(npx shadcn@latest add skeleton --yes)",
+      "Bash(npx shadcn@latest add sonner --yes)",
+      "Bash(npm run *)",
+      "Bash(npx shadcn@latest add tooltip --yes)"
+    ]
+  }
+}

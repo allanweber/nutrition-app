@@ -15,7 +15,7 @@ export default function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -53,9 +53,9 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <button onClick={scrollToTop} className="flex items-center space-x-2 cursor-pointer">
+          <button type="button" onClick={scrollToTop} className="flex items-center space-x-2 cursor-pointer">
             <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-               <span className="text-primary-foreground font-black text-lg">N</span>
+               <span className="text-primary-foreground font-black text-lg">V</span>
              </div>
              <span className="font-headline font-extrabold text-xl text-foreground">
                Vitalis
@@ -105,14 +105,17 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-card border-t border-border"
-          >
+        {/* Mobile Menu — grid-template-rows transition avoids animating layout height property */}
+        <div
+          className="md:hidden bg-card border-t border-border overflow-hidden"
+          style={{
+            display: 'grid',
+            gridTemplateRows: isMobileMenuOpen ? '1fr' : '0fr',
+            transition: 'grid-template-rows 300ms ease',
+          }}
+          aria-hidden={!isMobileMenuOpen}
+        >
+          <div className="overflow-hidden">
             <div className="px-4 py-6 space-y-4">
               {navLinks.map((link) => (
                 <a
@@ -137,8 +140,8 @@ export default function Navbar() {
                 </Button>
               </div>
             </div>
-          </motion.div>
-        )}
+          </div>
+        </div>
       </div>
     </motion.nav>
   );

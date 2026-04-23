@@ -1,6 +1,8 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { FoodModal } from '@/components/food-modal';
 import { useDishDetailQuery } from '@/queries/dishes';
 import type { MealType } from '@/lib/nutrition-constants';
@@ -37,11 +39,12 @@ export function DishLogModal({
 
   if (isLoading || !dish) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-        <div className="w-full max-w-[340px] bg-background rounded-2xl border border-border flex items-center justify-center py-16">
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-85 flex items-center justify-center min-h-32">
+          <VisuallyHidden><DialogTitle>{dishName ?? 'Dish'}</DialogTitle></VisuallyHidden>
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 

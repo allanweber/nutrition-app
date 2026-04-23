@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { use } from 'react';
 
 import { ResetPasswordForm } from '@/components/forms/reset-password-form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ResetPasswordPage({
   searchParams,
@@ -14,25 +15,25 @@ export default function ResetPasswordPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md bg-background border rounded-xl p-6 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Reset your password</h1>
-          <p className="text-sm text-muted-foreground">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Reset your password</CardTitle>
+          <CardDescription>
             Enter the 6-digit code from your email and choose a new password.
-          </p>
-        </div>
-        <div className="mt-6">
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <ResetPasswordForm defaultEmail={defaultEmail} />
-        </div>
-        <div className="text-center mt-4">
-          <Link
-            href="/login"
-            className="text-sm text-primary hover:underline"
-          >
-            Back to login
-          </Link>
-        </div>
-      </div>
+          <div className="text-center">
+            <Link
+              href="/login"
+              className="text-sm text-primary hover:underline"
+            >
+              Back to login
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

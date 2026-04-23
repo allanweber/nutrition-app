@@ -92,6 +92,10 @@ Emotional goal: Users should feel in control. Competent. Like the data is workin
 4. **Professional grade, personal friendly.** Pro dashboard is the flagship. Individual tracking is an on-ramp. Same elevated product, not two apps.
 5. **Motion serves momentum.** Transitions feel like progress and state change — not animation for its own sake.
 
+### Accessibility
+
+**Target**: WCAG 2.1 AA for all new UI work — sufficient contrast, keyboard navigation, screen reader support. `prefers-reduced-motion` is handled globally in `globals.css`; respect it in all custom animations. Never use color as the sole means of conveying information.
+
 ### Component System
 
 **Design token source of truth**: `src/app/globals.css` — OKLch-based CSS variables for color, radius, and sidebar tokens.

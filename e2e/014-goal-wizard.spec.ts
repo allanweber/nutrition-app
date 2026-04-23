@@ -101,10 +101,10 @@ test.describe('014: Wizard step navigation', () => {
     await gp.clickNext();
     await gp.selectActivity('Moderately Active');
     await gp.clickAlmostThere();
-    await expect(gp.dialog.getByRole('button', { name: /balanced/i })).toBeVisible();
-    await expect(gp.dialog.getByRole('button', { name: /high protein/i })).toBeVisible();
-    await expect(gp.dialog.getByRole('button', { name: /low carb/i })).toBeVisible();
-    await expect(gp.dialog.getByRole('button', { name: /keto/i })).toBeVisible();
+    await expect(gp.dialog.getByRole('radio', { name: /balanced/i })).toBeVisible();
+    await expect(gp.dialog.getByRole('radio', { name: /high protein/i })).toBeVisible();
+    await expect(gp.dialog.getByRole('radio', { name: /low carb/i })).toBeVisible();
+    await expect(gp.dialog.getByRole('radio', { name: /keto/i })).toBeVisible();
   });
 
   test('step 4 → step 5: review summary shows selected data', async () => {
@@ -302,8 +302,8 @@ test.describe('014: Adjust Macros step', () => {
     await walkToResults(page);
     await gp.clickAdjustMacros();
     const sliders = gp.getSliders();
-    // Move protein slider to 50%
-    await sliders.first().fill('50');
+    // Move protein slider via keyboard (Radix sliders are spans, not inputs)
+    await sliders.first().press('ArrowRight');
     // Total row should still say 100%
     await expect(gp.getMacroTotal()).toBeVisible();
   });

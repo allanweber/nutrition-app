@@ -11,19 +11,13 @@ export function HydrationContent({ data }: HydrationContentProps) {
 
   return (
     <div className="flex flex-col h-full gap-6">
-      {/* Two-tier header */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-          Hydration
-        </p>
-        <h2 className="text-2xl font-extrabold font-headline text-foreground">
-          Water
-        </h2>
-      </div>
+      <h2 className="text-2xl font-extrabold font-headline text-foreground">
+        Water
+      </h2>
 
       {/* Main value */}
       <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-headline font-black tabular-nums text-blue-600 leading-none">
+        <span className="text-5xl font-headline font-black tabular-nums text-primary leading-none">
           {totalMl}
         </span>
         <span className="text-base font-bold text-muted-foreground">ml</span>
@@ -31,9 +25,8 @@ export function HydrationContent({ data }: HydrationContentProps) {
 
       {/* Progress */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          <span>Progress</span>
-          <span>{totalMl} / {goalMl} ml</span>
+        <div className="flex justify-end text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <span>Goal: {goalMl} ml</span>
         </div>
         <div
           role="progressbar"
@@ -44,7 +37,7 @@ export function HydrationContent({ data }: HydrationContentProps) {
           className="h-3 w-full rounded-full bg-secondary overflow-hidden"
         >
           <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary rounded-full transition-all duration-500"
             style={{ width: `${Math.min(percentConsumed, 100)}%` }}
           />
         </div>

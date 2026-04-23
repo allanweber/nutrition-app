@@ -27,6 +27,7 @@ import { useDeleteDietPlanMutation, useUpdateDietPlanMutation, useDietPlansQuery
 import { useActivatePlan } from '@/hooks/use-activate-plan';
 import { MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
+
 interface PlanCardProps {
   plan: DietPlanDTO;
   isSelected: boolean;
@@ -75,7 +76,7 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
         onClick={onSelect}
         className={cn(
           'plan-card relative flex flex-col gap-4 p-5 rounded-2xl border cursor-pointer transition-all select-none w-[320px] shrink-0',
-          isSelected && 'bg-[#C1F0B1] dark:bg-secondary text-white',
+          isSelected && 'bg-primary/10 dark:bg-secondary',
         )}
       >
         {/* Status badge + menu */}
@@ -85,10 +86,10 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
             className={cn(
               'text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full',
               isActive
-                ? 'bg-emerald-800 text-white'
+                ? 'bg-primary text-primary-foreground'
                 : plan.status === 'draft'
                   ? 'bg-muted text-muted-foreground border border-border'
-                  : 'bg-zinc-200 text-zinc-600',
+                  : 'bg-muted text-muted-foreground',
             )}
           >
             {isActive ? 'Active Plan' : plan.status === 'draft' ? 'Draft' : 'Archived'}
@@ -166,7 +167,7 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
           </div>
           <Progress
             value={completeness}
-            className={cn('h-1.5', isActive && '[&>div]:bg-emerald-800')}
+            className={cn('h-1.5', isActive && '[&>div]:bg-primary')}
           />
         </div>
       </div>

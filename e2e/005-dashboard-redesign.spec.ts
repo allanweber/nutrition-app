@@ -37,11 +37,11 @@ test.describe('005: Dashboard Redesign', () => {
     await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   });
 
-  test('"Log Activity" CTA is visible and links to /food-log', async ({ page }) => {
+  test('"Log Food" CTA is visible and links to /food-log', async ({ page }) => {
     await page.goto('/dashboard');
-    const logActivity = page.getByRole('link', { name: 'Log Activity' });
-    await expect(logActivity).toBeVisible();
-    await expect(logActivity).toHaveAttribute('href', '/food-log');
+    const logFood = page.getByRole('link', { name: 'Log Food' });
+    await expect(logFood).toBeVisible();
+    await expect(logFood).toHaveAttribute('href', '/food-log');
   });
 
   // ── Navigation (FR-013) ─────────────────────────────────────────────────
@@ -53,7 +53,7 @@ test.describe('005: Dashboard Redesign', () => {
     await expect(nav).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Vitalis' })).toBeVisible();
 
-    for (const label of ['Dashboard', 'Food Log', 'Meal Planner', 'Exercise Library', 'Goals']) {
+    for (const label of ['Dashboard', 'Food Log', 'My Foods', 'Meal Planner', 'Goals']) {
       await expect(nav.getByRole('link', { name: label })).toBeVisible();
     }
   });
@@ -144,9 +144,6 @@ test.describe('005: Dashboard Redesign', () => {
 
     // Goal denominator rendered as "/ X kcal"
     await expect(page.getByText(/\/\s*[\d,.]+\s*kcal/)).toBeVisible();
-
-    // Percentage consumed sentence
-    await expect(page.getByText(/% of your daily target/)).toBeVisible();
 
     // Stat cards
     await expect(page.getByText('Burned')).toBeVisible();

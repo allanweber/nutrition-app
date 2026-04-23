@@ -5,6 +5,7 @@ import { use, useEffect, useState } from 'react';
 
 import { ForgotPasswordForm } from '@/components/forms/forgot-password-form';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiError, ValidationError } from '@/lib/api-error';
 import { useRequestPasswordResetCodeMutation } from '@/queries/auth-codes';
 
@@ -50,69 +51,75 @@ export default function ForgotPasswordPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md bg-background border rounded-xl p-6 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Forgot your password?</h1>
-          <p className="text-sm text-muted-foreground">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Forgot your password?</CardTitle>
+          <CardDescription>
             Enter your email and we&apos;ll send you a 6-digit reset code.
-          </p>
-        </div>
-
-        {submittedEmail ? (
-          <div className="mt-6 space-y-4">
-            <p className="text-sm">
-              If an account exists for{' '}
-              <span className="font-medium">{submittedEmail}</span>, we sent a
-              reset code.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Check your inbox (and spam), then enter the code to set a new
-              password. Codes expire in ~10 minutes.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              You can request another code after 60 seconds (limit ~5/hour).
-            </p>
-            <div className="flex gap-2">
-              <Button asChild className="flex-1">
-                <Link
-                  href={`/reset-password?email=${encodeURIComponent(submittedEmail)}`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {submittedEmail ? (
+            <div className="space-y-4">
+              <p className="text-sm">
+                If an account exists for{' '}
+                <span className="font-medium">{submittedEmail}</span>, we sent a
+                reset code.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Check your inbox (and spam), then enter the code to set a new
+                password. Codes expire in ~10 minutes.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You can request another code after 60 seconds (limit ~5/hour).
+              </p>
+              <div className="flex gap-2">
+                <Button asChild className="flex-1">
+                  <Link
+                    href={`/reset-password?email=${encodeURIComponent(submittedEmail)}`}
+                  >
+                    Continue
+                  </Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleResend}
+                  disabled={isResendDisabled}
                 >
-                  Continue
+                  {requestMutation.isPending
+                    ? 'Sending\u2026'
+                    : cooldownSecondsLeft > 0
+                      ? `Resend in ${cooldownSecondsLeft}s`
+                      : 'Resend code'}
+                </Button>
+              </div>
+              <ValidationError error={error} />
+              <div className="text-center">
+                <Link
+                  href="/login"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Back to login
                 </Link>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={handleResend}
-                disabled={isResendDisabled}
-              >
-                {requestMutation.isPending
-                  ? 'Sending\u2026'
-                  : cooldownSecondsLeft > 0
-                    ? `Resend in ${cooldownSecondsLeft}s`
-                    : 'Resend code'}
-              </Button>
+              </div>
             </div>
-            <ValidationError error={error} />
-            <div className="text-center">
-              <Link
-                href="/login"
-                className="text-sm text-primary hover:underline"
-              >
-                Back to login
-              </Link>
+          ) : (
+            <div className="space-y-4">
+              <ForgotPasswordForm
+                defaultEmail={defaultEmail}
+                onSuccess={(email) => setSubmittedEmail(email)}
+              />
+              <div className="text-center">
+                <Link href="/login" className="text-sm text-primary hover:underline">
+                  Back to login
+                </Link>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="mt-6">
-            <ForgotPasswordForm
-              defaultEmail={defaultEmail}
-              onSuccess={(email) => setSubmittedEmail(email)}
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

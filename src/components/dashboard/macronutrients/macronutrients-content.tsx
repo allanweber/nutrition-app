@@ -12,15 +12,9 @@ export function MacronutrientsContent({ data }: MacronutrientsContentProps) {
 
   return (
     <div className="flex flex-col h-full gap-6">
-      {/* Two-tier header */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
-          Composition
-        </p>
-        <h2 className="text-2xl font-extrabold font-headline text-foreground">
-          Macronutrients
-        </h2>
-      </div>
+      <h2 className="text-2xl font-extrabold font-headline text-foreground">
+        Macronutrients
+      </h2>
 
       <div className="flex flex-col gap-5 flex-1">
         <ProgressBar

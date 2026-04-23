@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { format, addDays, subDays, startOfDay, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 
@@ -20,27 +21,31 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
       className="flex items-center justify-between p-1.5 rounded-lg border border-border bg-background"
       data-testid="date-navigator"
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
+        className="size-6"
         onClick={() => onChange(subDays(value, 1))}
-        className="size-6 flex items-center justify-center text-foreground hover:bg-muted rounded transition-colors"
         aria-label="Previous day"
         data-testid="date-nav-prev"
       >
         <ChevronLeft className="h-4 w-4" />
-      </button>
+      </Button>
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-muted transition-colors"
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1.5 px-2"
             aria-label="Pick a date"
             data-testid="date-nav-display"
           >
             <CalendarIcon className="h-3 w-3 text-primary" />
             <span className="font-bold text-foreground">{format(value, 'MMM d')}</span>
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="center">
           <Calendar
@@ -57,16 +62,18 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
         </PopoverContent>
       </Popover>
 
-      <button
+      <Button
         type="button"
-        onClick={() => !isAtToday && onChange(addDays(value, 1))}
+        variant="ghost"
+        size="icon"
+        className="size-6"
+        onClick={() => onChange(addDays(value, 1))}
         disabled={isAtToday}
-        className="size-6 flex items-center justify-center text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
         aria-label="Next day"
         data-testid="date-nav-next"
       >
         <ChevronRight className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ColumnDef,
@@ -28,6 +29,9 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -69,6 +73,7 @@ interface NutritionItemsTableProps<T> {
   isLoading?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  emptyState?: ReactNode;
   searchPlaceholder?: string;
 }
 
@@ -91,6 +96,7 @@ export function NutritionItemsTable<T>({
   isLoading,
   emptyTitle = 'No items yet',
   emptyDescription = 'Add your first entry to get started.',
+  emptyState,
   searchPlaceholder = 'Filter by name...',
 }: NutritionItemsTableProps<T>) {
   const router = useRouter();
@@ -110,7 +116,7 @@ export function NutritionItemsTable<T>({
         const subtitle = config.getItemSubtitle(item);
         const thumb = config.getThumbnail(item);
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="size-10 rounded-lg overflow-hidden shrink-0 border border-border/30 bg-secondary">
               {thumb ? (
                 <Image src={thumb} alt="" width={40} height={40} className="w-full h-full object-cover" />
@@ -120,10 +126,10 @@ export function NutritionItemsTable<T>({
                 </div>
               )}
             </div>
-            <div>
-              <span className="font-headline font-bold text-foreground block text-sm">{name}</span>
+            <div className="min-w-0">
+              <span className="font-headline font-bold text-foreground block text-sm truncate">{name}</span>
               {subtitle && (
-                <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{subtitle}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-tight truncate block max-w-[220px]">{subtitle}</span>
               )}
             </div>
           </div>
@@ -166,12 +172,23 @@ export function NutritionItemsTable<T>({
     })),
     {
       id: 'extra',
-      header: config.extraCol.label,
+      header: () => (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="text-center cursor-default">{config.extraCol.label}</div>
+          </TooltipTrigger>
+          <TooltipContent className="font-semibold text-background bg-foreground">
+            Ingredients
+          </TooltipContent>
+        </Tooltip>
+      ),
       accessorFn: (row) => parseFloat(config.extraCol.getValue(row)) || 0,
       cell: ({ row }) => (
-        <span className="font-mono text-sm text-muted-foreground tabular-nums">
-          {config.extraCol.getValue(row.original)}
-        </span>
+        <div className="text-center">
+          <span className="font-mono text-sm text-muted-foreground tabular-nums">
+            {config.extraCol.getValue(row.original)}
+          </span>
+        </div>
       ),
     },
     {
@@ -204,19 +221,23 @@ export function NutritionItemsTable<T>({
             </Button>
             {meta.confirmDelete === id ? (
               <div className="flex gap-1">
-                <button
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={() => { config.onDelete(id); meta.setConfirmDelete(null); }}
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-all"
+                  className="text-xs h-auto py-1.5 px-2.5 rounded-lg"
                   data-testid={confirmTestId}
                 >
                   Delete
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => meta.setConfirmDelete(null)}
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/70 transition-all"
+                  className="text-xs h-auto py-1.5 px-2.5 rounded-lg"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             ) : (
               <Button
@@ -283,7 +304,7 @@ export function NutritionItemsTable<T>({
     <div className="flex flex-col gap-4">
       {/* Controls bar */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 bg-background/50 px-4 py-2.5 rounded-xl border border-border/40">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border">
           <span className="size-2 rounded-full bg-primary shrink-0" />
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
             {filteredCount} {filteredCount === 1 ? 'Item' : 'Items'} View
@@ -291,7 +312,7 @@ export function NutritionItemsTable<T>({
         </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => {
@@ -299,30 +320,31 @@ export function NutritionItemsTable<T>({
               setPagination((p) => ({ ...p, pageIndex: 0 }));
             }}
             placeholder={searchPlaceholder}
-            className="w-full pl-10 pr-4 py-2.5 bg-background rounded-xl border border-border/40 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium outline-none"
+            className="pl-10"
           />
         </div>
         <div className="ml-auto">
           {(sorting.length > 0 || search.length > 0) && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setSorting([]);
                 setSearch('');
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/40 bg-background text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Table card */}
-      <div className="bg-background rounded-2xl shadow-sm overflow-hidden border border-border/20">
+      <div className="bg-background rounded-lg overflow-hidden border border-border">
         <div className="overflow-x-auto">
-          <Table className="min-w-225 border-collapse">
+          <Table className="border-collapse w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-muted hover:bg-muted border-0">
@@ -340,13 +362,15 @@ export function NutritionItemsTable<T>({
                         }`}
                       >
                         {canSort ? (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={header.column.getToggleSortingHandler()}
-                            className="flex items-center gap-1 cursor-pointer select-none hover:opacity-80 transition-opacity"
+                            className="flex items-center gap-1 h-auto p-0 select-none hover:bg-transparent hover:text-foreground transition-colors font-extrabold uppercase tracking-[0.15em] text-[11px]"
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                             <SortIcon sorted={sorted} />
-                          </button>
+                          </Button>
                         ) : (
                           flexRender(header.column.columnDef.header, header.getContext())
                         )}
@@ -359,14 +383,19 @@ export function NutritionItemsTable<T>({
             <TableBody className="divide-y divide-border/15">
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow className="hover:bg-transparent border-0">
-                  <TableCell colSpan={columns.length} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
-                        <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
+                  <TableCell
+                    colSpan={columns.length}
+                    className={emptyState ? 'px-6 py-10' : 'px-6 py-20 text-center'}
+                  >
+                    {emptyState ?? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                          <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
+                        </div>
+                        <p className="text-base font-bold text-foreground">{emptyTitle}</p>
+                        <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
                       </div>
-                      <p className="text-base font-bold text-foreground">{emptyTitle}</p>
-                      <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
-                    </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -409,18 +438,22 @@ export function NutritionItemsTable<T>({
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                 Rows per page
               </span>
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  table.setPageSize(Number(e.target.value));
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => {
+                  table.setPageSize(Number(v));
                   table.setPageIndex(0);
                 }}
-                className="appearance-none bg-background border border-border/40 rounded-lg pl-3 pr-7 py-1.5 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer transition-all hover:bg-muted"
               >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-16 h-8 text-sm font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <span className="text-xs font-semibold text-muted-foreground">
               Showing{' '}
@@ -433,14 +466,15 @@ export function NutritionItemsTable<T>({
 
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
-              </button>
+              </Button>
               <div className="flex items-center gap-1">
                 {getPageButtons().map((btn, i) =>
                   btn === 'ellipsis' ? (
@@ -451,28 +485,27 @@ export function NutritionItemsTable<T>({
                       …
                     </span>
                   ) : (
-                    <button
+                    <Button
                       key={btn}
+                      variant={btn === pageIndex + 1 ? 'default' : 'outline'}
+                      size="icon"
                       onClick={() => table.setPageIndex(btn - 1)}
-                      className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-all ${
-                        btn === pageIndex + 1
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
-                      }`}
+                      className="h-8 w-8"
                     >
                       {btn}
-                    </button>
+                    </Button>
                   )
                 )}
               </div>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/40 bg-background text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all disabled:opacity-30 disabled:pointer-events-none text-xs font-bold uppercase tracking-wider"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           )}
         </div>

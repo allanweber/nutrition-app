@@ -77,9 +77,12 @@ test.describe('007: Create custom food', () => {
   test('shows validation — required fields show inline errors on submit', async ({ page }) => {
     await login(page);
     await page.goto('/my-foods/create');
-    // Submit without filling required fields
-    await page.getByTestId('submit-create-food').click();
-    // TanStack Form shows inline field-level error messages
+    // Submit button is disabled when required fields are empty — the form
+    // guards submission via hasRequired. Trigger onChange validation instead
+    // by typing then clearing the name field.
+    const nameInput = page.getByTestId('field-name');
+    await nameInput.fill('a');
+    await nameInput.clear();
     await expect(page.getByText(/name is required/i)).toBeVisible();
   });
 });
@@ -243,13 +246,13 @@ test.describe('007: Empty states', () => {
     await loginAs(page, seedUsers.professional1.email, seedUsers.professional1.password);
     await page.goto('/my-foods');
     await page.getByTestId('tab-dishes').click();
-    await expect(page.getByText('No dishes yet')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Recipes, logged as one entry')).toBeVisible({ timeout: 10000 });
   });
 
   test('fresh user sees empty state on Custom Foods tab', async ({ page }) => {
     await loginAs(page, seedUsers.professional1.email, seedUsers.professional1.password);
     await page.goto('/my-foods');
     await page.getByTestId('tab-custom-foods').click();
-    await expect(page.getByText('No custom foods yet')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Your nutritional database')).toBeVisible({ timeout: 10000 });
   });
 });

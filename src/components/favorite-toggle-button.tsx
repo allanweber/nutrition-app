@@ -1,6 +1,7 @@
 'use client';
 
 import { Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useFavoriteIdsQuery, useToggleFavoriteMutation } from '@/queries/favorites';
 import { useFavoritesQuery } from '@/queries/favorites';
 
@@ -44,13 +45,15 @@ export function FavoriteToggleButton({ foodId, dishId, className = '' }: Favorit
   };
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={handleToggle}
       disabled={toggleMutation.isPending || idsQuery.isLoading}
-      className={`p-1 rounded transition-colors ${
+      className={`size-7 ${
         isFavorite
-          ? 'text-amber-500 hover:text-amber-600'
-          : 'text-muted-foreground/40 hover:text-amber-500'
+          ? 'text-amber-500 hover:text-amber-600 hover:bg-transparent'
+          : 'text-muted-foreground/40 hover:text-amber-500 hover:bg-transparent'
       } ${className}`}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       data-testid={`favorite-toggle-${foodId ?? dishId}`}
@@ -59,6 +62,6 @@ export function FavoriteToggleButton({ foodId, dishId, className = '' }: Favorit
         className="h-4 w-4"
         fill={isFavorite ? 'currentColor' : 'none'}
       />
-    </button>
+    </Button>
   );
 }

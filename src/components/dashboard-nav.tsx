@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/user-nav';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import {
@@ -10,9 +11,7 @@ import {
   LayoutDashboard,
   UtensilsCrossed,
   CalendarDays,
-  Dumbbell,
   Target,
-  Bell,
   BookMarked,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -22,7 +21,6 @@ const navigation = [
   { name: 'Food Log', href: '/food-log', icon: UtensilsCrossed },
   { name: 'My Foods', href: '/my-foods', icon: BookMarked },
   { name: 'Meal Planner', href: '/meal-planner', icon: CalendarDays },
-  { name: 'Exercise Library', href: '/exercise-library', icon: Dumbbell },
   { name: 'Goals', href: '/goals', icon: Target },
 ];
 
@@ -82,20 +80,15 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
             <ThemeSwitcher />
             <UserNav user={user} />
 
             {/* Mobile menu button */}
-            <button
+            <Button
               type="button"
-              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-nav-menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -106,7 +99,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
               ) : (
                 <Menu className="h-6 w-6" aria-hidden="true" />
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -123,7 +116,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors rounded-md ${
                     active
-                      ? 'text-primary bg-primary/5 border-l-2 border-primary'
+                      ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}

@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 const clients = [
   { name: 'Marcus Aurelius', avatar: 'MA', color: 'bg-blue-200', status: 'Over Calorie Limit', statusClass: 'bg-destructive/10 text-destructive' },
-  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-secondary text-secondary-foreground' },
+  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-emerald-500/15 text-emerald-700' },
   { name: 'Arthur Morgan', avatar: 'AM', color: 'bg-orange-200', status: 'Logged 2h ago', statusClass: 'bg-muted text-muted-foreground' },
 ];
 
@@ -29,11 +29,11 @@ export default function ForProfessionals() {
           viewport={{ once: true }}
           className="flex-1 space-y-8"
         >
-          <div className="w-fit px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground font-bold text-xs uppercase tracking-widest">
+          <div className="w-fit px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest">
             For Professionals
           </div>
 
-          <h2 className="font-headline text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
+          <h2 className="font-headline text-4xl md:text-5xl lg:text-6xl font-extrabold leading-none text-foreground">
             Powerful Tools for Nutrition Professionals
           </h2>
 
@@ -44,7 +44,7 @@ export default function ForProfessionals() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {features.map((feature) => (
               <div key={feature.title} className="flex gap-4">
-                <feature.icon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <feature.icon className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <span className="font-bold block text-foreground">{feature.title}</span>
                   <span className="text-sm text-muted-foreground">{feature.description}</span>
@@ -80,7 +80,7 @@ export default function ForProfessionals() {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
-          className="flex-1 w-full max-w-md"
+          className="flex-1 w-full"
         >
           <div className="bg-card rounded-3xl shadow-2xl p-6 border border-border/10">
             {/* Dashboard Header */}
@@ -110,7 +110,7 @@ export default function ForProfessionals() {
                   className="flex items-center justify-between p-4 bg-muted rounded-xl"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full ${client.color} flex items-center justify-center text-xs font-bold text-gray-700`}>
+                    <div className={`w-8 h-8 rounded-full ${client.color} flex items-center justify-center text-xs font-bold text-foreground`}>
                       {client.avatar}
                     </div>
                     <span className="font-medium text-sm text-foreground">{client.name}</span>
@@ -122,14 +122,14 @@ export default function ForProfessionals() {
               ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex gap-3 mt-4">
-              <button className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-primary/90 transition-colors">
+            {/* Quick Actions — decorative mockup, not interactive */}
+            <div className="flex gap-3 mt-4" role="presentation" aria-hidden="true">
+              <div className="flex-1 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-bold text-center">
                 + Add Client
-              </button>
-              <button className="flex-1 bg-muted border border-border text-foreground rounded-xl py-2.5 text-sm font-bold hover:bg-secondary transition-colors">
+              </div>
+              <div className="flex-1 bg-muted border border-border text-foreground rounded-xl py-2.5 text-sm font-bold text-center">
                 Create Plan
-              </button>
+              </div>
             </div>
           </div>
         </motion.div>

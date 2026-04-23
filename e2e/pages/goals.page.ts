@@ -96,7 +96,7 @@ export class GoalsPage {
   // ── Step 4: Macro preset ──────────────────────────────────────────────────
 
   async selectPreset(preset: 'Balanced' | 'High Protein' | 'Low Carb' | 'Keto') {
-    await this.dialog.getByRole('button', { name: new RegExp(preset, 'i') }).click();
+    await this.dialog.getByRole('radio', { name: new RegExp(preset, 'i') }).click();
   }
 
   // ── Step 6: Results ───────────────────────────────────────────────────────

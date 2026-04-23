@@ -19,8 +19,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { dietPlanFormSchema, zodValidator } from '@/lib/form-validation';
 import type { DietPlanFormData } from '@/lib/form-validation';
 import { useCreateDietPlanMutation } from '@/queries/diet-plans';
@@ -147,14 +149,13 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               {(field) => (
                 <div className="space-y-1.5">
                   <FieldLabel>Description</FieldLabel>
-                  <textarea
+                  <Textarea
                     id={field.name}
                     data-testid="plan-description-input"
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Briefly describe the objectives of this plan..."
                     rows={3}
-                    className="border-input placeholder:text-muted-foreground w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none resize-y transition-[color,box-shadow] focus:border-ring focus:ring-[3px] focus:ring-ring/50"
                   />
                 </div>
               )}
@@ -189,7 +190,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       name={field.name}
                       fieldApi={field}
                       unit="g"
-                      bgClass={`${MACRO_CELL_BG.protein} border-border/20`}
+                      bgClass={`${MACRO_CELL_BG.protein} border-border`}
                       textClass={MACRO_CELL_TEXT.protein}
                       borderClass={MACRO_CELL_BORDER.protein}
                       inputTestId="plan-target-protein-input"
@@ -207,7 +208,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       name={field.name}
                       fieldApi={field}
                       unit="g"
-                      bgClass={`${MACRO_CELL_BG.carbs} border-border/20`}
+                      bgClass={`${MACRO_CELL_BG.carbs} border-border`}
                       textClass={MACRO_CELL_TEXT.carbs}
                       borderClass={MACRO_CELL_BORDER.carbs}
                       inputTestId="plan-target-carbs-input"
@@ -225,7 +226,7 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       name={field.name}
                       fieldApi={field}
                       unit="g"
-                      bgClass={`${MACRO_CELL_BG.fat} border-border/20`}
+                      bgClass={`${MACRO_CELL_BG.fat} border-border`}
                       textClass={MACRO_CELL_TEXT.fat}
                       borderClass={MACRO_CELL_BORDER.fat}
                       inputTestId="plan-target-fat-input"
@@ -279,26 +280,16 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               {(field) => (
                 <div className="space-y-1.5">
                   <FieldLabel required>Initial Status</FieldLabel>
-                  <div className="flex gap-2">
-                    {(['active', 'draft', 'archived'] as const).map((s) => {
-                      const selected = field.state.value === s;
-                      return (
-                        <button
-                          key={s}
-                          data-testid={`plan-status-${s}`}
-                          type="button"
-                          onClick={() => field.handleChange(s)}
-                          className={`flex-1 py-2.5 rounded-md text-xs font-bold uppercase tracking-widest transition-colors ${
-                            selected
-                              ? 'border-2 border-primary text-primary bg-white'
-                              : 'border border-border text-muted-foreground hover:bg-muted'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <ToggleGroup
+                    type="single"
+                    value={field.state.value}
+                    onValueChange={(v) => { if (v) field.handleChange(v as 'active' | 'draft' | 'archived'); }}
+                    className="justify-start"
+                  >
+                    <ToggleGroupItem data-testid="plan-status-draft" value="draft" className="flex-1 text-xs font-bold uppercase tracking-widest">Draft</ToggleGroupItem>
+                    <ToggleGroupItem data-testid="plan-status-active" value="active" className="flex-1 text-xs font-bold uppercase tracking-widest">Active</ToggleGroupItem>
+                    <ToggleGroupItem data-testid="plan-status-archived" value="archived" className="flex-1 text-xs font-bold uppercase tracking-widest">Archived</ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
               )}
             </form.Field>

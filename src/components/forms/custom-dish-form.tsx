@@ -7,7 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useForm } from '@tanstack/react-form';
 import { ArrowLeft, BarChart2, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react';
-import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
+import { toast } from 'sonner';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 import { FoodSearchField } from '@/components/food-search-field';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
@@ -26,7 +27,8 @@ import { resizeForUpload } from '@/lib/image-resize';
 import {
   MACRO_COLORS,
   MACRO_CELL_BG,
-  MACRO_TEXT_COLORS,
+  MACRO_CELL_TEXT,
+  MACRO_CELL_FILL,
   NUTRIENT_COLORS,
 } from '@/lib/nutrition-constants';
 import { cn } from '@/lib/utils';
@@ -142,13 +144,13 @@ function IngredientRow({
               <Badge variant="outline" className="border-transparent bg-primary/10 text-primary text-[10px] px-1.5 py-0">
                 {kcal} kcal
               </Badge>
-              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.protein, MACRO_TEXT_COLORS.protein)}>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.protein, MACRO_CELL_TEXT.protein)}>
                 P: {protein}g
               </Badge>
-              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.carbs, MACRO_TEXT_COLORS.carbs)}>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.carbs, MACRO_CELL_TEXT.carbs)}>
                 C: {carbs}g
               </Badge>
-              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.fat, MACRO_TEXT_COLORS.fat)}>
+              <Badge variant="outline" className={cn('border-transparent text-[10px] px-1.5 py-0', MACRO_CELL_BG.fat, MACRO_CELL_TEXT.fat)}>
                 F: {fat}g
               </Badge>
             </>
@@ -261,18 +263,18 @@ function DishNutritionSummary({
 
   return (
     <div className="bg-card rounded-[2rem] p-8 border border-border/30 shadow-xl overflow-hidden">
-      <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={setOpen}>
         {/* Header — always visible */}
         <div className="flex items-start justify-between mb-8">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#008d4d] flex items-center gap-2">
+          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-primary flex items-center gap-2">
             <BarChart2 className="h-4 w-4" />
             Nutrition Deep-Dive
           </h2>
-          <CollapsiblePrimitive.Trigger asChild>
+          <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="lg:hidden -mt-1 -mr-2">
               {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
-          </CollapsiblePrimitive.Trigger>
+          </CollapsibleTrigger>
         </div>
 
         {/* Kcal — always visible */}
@@ -281,18 +283,18 @@ function DishNutritionSummary({
             <span className="font-headline text-6xl font-extrabold text-foreground tracking-tighter tabular-nums">
               {hasIngredients ? Math.round(totals.calories) : '—'}
             </span>
-            <span className="text-lg font-bold text-[#008d4d]">kcal</span>
+            <span className="text-lg font-bold text-primary">kcal</span>
           </div>
           {hasIngredients && (
             <p className="text-sm font-medium text-muted-foreground mt-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#008d4d] shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
               {kcalPct}% of your daily {kcalGoal.toLocaleString()} kcal goal
             </p>
           )}
         </div>
 
         {/* Collapsible macros — always mounted; CSS hides on mobile when closed, always visible on lg+ */}
-        <CollapsiblePrimitive.Content forceMount className="data-[state=closed]:hidden lg:data-[state=closed]:block">
+        <CollapsibleContent forceMount className="data-[state=closed]:hidden lg:data-[state=closed]:block">
           {!hasIngredients ? (
             <p className="text-sm text-muted-foreground">Add ingredients to see nutrition</p>
           ) : (
@@ -302,59 +304,59 @@ function DishNutritionSummary({
                 value={round1(totals.protein)}
                 goal={goals?.protein ?? 0}
                 unit="g"
-                labelColor="text-[#D54069]"
-                trackBg="bg-[#FFEBEC]"
-                fillBg="bg-[#D54069]"
+                labelColor={MACRO_CELL_TEXT.protein}
+                trackBg={MACRO_CELL_BG.protein}
+                fillBg={MACRO_CELL_FILL.protein}
               />
               <NutrientRow
                 label="Carbohydrates"
                 value={round1(totals.carbs)}
                 goal={goals?.carbs ?? 0}
                 unit="g"
-                labelColor="text-[#CC7A40]"
-                trackBg="bg-[#FEF6D4]"
-                fillBg="bg-[#CC7A40]"
+                labelColor={MACRO_CELL_TEXT.carbs}
+                trackBg={MACRO_CELL_BG.carbs}
+                fillBg={MACRO_CELL_FILL.carbs}
               />
               <NutrientRow
                 label="Total Fats"
                 value={round1(totals.fat)}
                 goal={goals?.fat ?? 0}
                 unit="g"
-                labelColor="text-[#408FBE]"
-                trackBg="bg-[#DFF2FE]"
-                fillBg="bg-[#408FBE]"
+                labelColor={MACRO_CELL_TEXT.fat}
+                trackBg={MACRO_CELL_BG.fat}
+                fillBg={MACRO_CELL_FILL.fat}
               />
               <NutrientRow
                 label="Fiber"
                 value={round1(totals.fiber)}
                 goal={goals?.fiber ?? 30}
                 unit="g"
-                labelColor="text-[#7E22CE]"
-                trackBg="bg-[#F3E8FF]"
-                fillBg="bg-[#7E22CE]"
+                labelColor={NUTRIENT_COLORS.fiber.text}
+                trackBg={NUTRIENT_COLORS.fiber.bg}
+                fillBg={NUTRIENT_COLORS.fiber.fill}
               />
               <NutrientRow
                 label="Sugar"
                 value={round1(totals.sugar)}
                 goal={50}
                 unit="g"
-                labelColor="text-[#E11D48]"
-                trackBg="bg-[#FFF1F2]"
-                fillBg="bg-[#E11D48]"
+                labelColor={NUTRIENT_COLORS.sugar.text}
+                trackBg={NUTRIENT_COLORS.sugar.bg}
+                fillBg={NUTRIENT_COLORS.sugar.fill}
               />
               <NutrientRow
                 label="Sodium"
                 value={Math.round(totals.sodium)}
                 goal={goals?.sodium ?? 2300}
                 unit="mg"
-                labelColor="text-[#475569]"
-                trackBg="bg-[#F1F5F9]"
-                fillBg="bg-[#475569]"
+                labelColor={NUTRIENT_COLORS.sodium.text}
+                trackBg={NUTRIENT_COLORS.sodium.bg}
+                fillBg={NUTRIENT_COLORS.sodium.fill}
               />
             </div>
           )}
-        </CollapsiblePrimitive.Content>
-      </CollapsiblePrimitive.Root>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
@@ -549,31 +551,36 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
         seq: i + 1,
       }));
 
-      if (isEdit && dishId) {
-        await updateMutation.mutateAsync({
-          dishId,
-          name: value.name,
-          description: value.description || null,
-          ingredients: ingredientPayload,
-        });
-      } else {
-        const result = await createMutation.mutateAsync({
-          name: value.name,
-          description: value.description || null,
-          ingredients: ingredientPayload,
-        });
+      try {
+        if (isEdit && dishId) {
+          await updateMutation.mutateAsync({
+            dishId,
+            name: value.name,
+            description: value.description || null,
+            ingredients: ingredientPayload,
+          });
+        } else {
+          const result = await createMutation.mutateAsync({
+            name: value.name,
+            description: value.description || null,
+            ingredients: ingredientPayload,
+          });
 
-        if (pendingImageFile) {
-          try {
-            const resized = await resizeForUpload(pendingImageFile);
-            const fd = new FormData();
-            fd.append('thumb', resized.thumb, 'thumb.jpg');
-            fd.append('display', resized.display, 'display.jpg');
-            await fetch(`/api/dishes/${result.dish.id}/photo`, { method: 'POST', body: fd });
-          } catch {
-            // image upload is non-blocking; dish was created successfully
+          if (pendingImageFile) {
+            try {
+              const resized = await resizeForUpload(pendingImageFile);
+              const fd = new FormData();
+              fd.append('thumb', resized.thumb, 'thumb.jpg');
+              fd.append('display', resized.display, 'display.jpg');
+              await fetch(`/api/dishes/${result.dish.id}/photo`, { method: 'POST', body: fd });
+            } catch {
+              // image upload is non-blocking; dish was created successfully
+            }
           }
         }
+      } catch (err) {
+        toast.error((err as Error).message ?? 'Failed to save dish.');
+        throw err;
       }
 
       router.push('/my-foods?tab=dishes');
@@ -791,7 +798,7 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
               </div>
 
               {ingredients.length > 0 ? (
-                <div className="space-y-2 rounded-xl bg-[#ecefe6] dark:bg-muted/60 p-3">
+                <div className="space-y-2 rounded-xl bg-muted dark:bg-muted/60 p-3">
                   {ingredients.map((ing) => (
                     <IngredientRow
                       key={ing.key}
@@ -810,10 +817,6 @@ export function CustomDishForm({ dishId, initialDish }: CustomDishFormProps) {
                 <p className="text-sm text-destructive">{ingredientError}</p>
               )}
             </div>
-
-            {mutation.error && (
-              <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
-            )}
 
             <div className="flex gap-3">
               <Button variant="outline" asChild className="flex-1">

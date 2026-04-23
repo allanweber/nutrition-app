@@ -15,19 +15,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 py-6">
-      <PageHeader
-        overline="Daily Overview"
-        title="Today"
-        subtitle="Your nutrition snapshot for the day"
-      >
+      <PageHeader title="Today">
         <Button asChild>
-          <Link href="/food-log">Log Activity</Link>
+          <Link href="/food-log">Log Food</Link>
         </Button>
       </PageHeader>
 
-      {/* Bento grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Calories — 8/12 */}
+      {/* Card grid */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-5">
+        {/* Calories — 8/12 — primary card (bg-card) */}
         <div className="md:col-span-8">
           <SectionErrorBoundary minHeight="min-h-[280px]">
             <Suspense fallback={<SectionSkeleton variant="calories" />}>
@@ -62,15 +58,15 @@ export default async function DashboardPage() {
             </Suspense>
           </SectionErrorBoundary>
         </div>
+      </div>
 
-        {/* Daily schedule — full width */}
-        <div className="md:col-span-12">
-          <SectionErrorBoundary minHeight="min-h-[200px]">
-            <Suspense fallback={<SectionSkeleton variant="schedule" />}>
-              <DailyScheduleSection date={today} />
-            </Suspense>
-          </SectionErrorBoundary>
-        </div>
+      {/* Daily schedule — borderless section below the card grid */}
+      <div className="mt-2 pt-6 border-t border-border/50">
+        <SectionErrorBoundary minHeight="min-h-[200px]">
+          <Suspense fallback={<SectionSkeleton variant="schedule" />}>
+            <DailyScheduleSection date={today} />
+          </Suspense>
+        </SectionErrorBoundary>
       </div>
     </div>
   );

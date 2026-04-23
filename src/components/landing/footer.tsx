@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Twitter, Github, Linkedin, Instagram } from 'lucide-react';
 
 const footerLinks = {
   product: [
@@ -31,13 +30,6 @@ const footerLinks = {
   ],
 };
 
-const socialLinks = [
-  { icon: Twitter, href: 'https://twitter.com/nutritiontracker', label: 'Twitter' },
-  { icon: Github, href: 'https://github.com/nutritiontracker', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://linkedin.com/company/nutritiontracker', label: 'LinkedIn' },
-  { icon: Instagram, href: 'https://instagram.com/nutritiontracker', label: 'Instagram' },
-];
-
 export default function Footer() {
   return (
     <footer className="bg-muted border-t border-border">
@@ -47,28 +39,13 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-black text-lg">N</span>
+                <span className="text-primary-foreground font-black text-lg">V</span>
               </div>
               <span className="font-headline font-extrabold text-xl text-foreground">Vitalis</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               The Living Archive of Human Health. Empowering precision nutrition for everyone.
             </p>
-            {/* Social Links */}
-            <div className="flex space-x-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 bg-background rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary-foreground" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Product Links */}

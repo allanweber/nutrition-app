@@ -13,7 +13,7 @@ export function PageHeader({ overline, title, subtitle, children, className, 'da
   return (
     <div
       className={cn(
-        'mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-l-4 border-primary pl-6',
+        'mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6',
         className
       )}
     >

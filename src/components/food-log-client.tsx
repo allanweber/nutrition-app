@@ -9,7 +9,8 @@ import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown } from 'lucide-r
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 
 import { FoodLogEntry } from '@/types/food';
-import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, type MealType } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, type MealType } from '@/lib/nutrition-constants';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Totals {
   calories: number;
@@ -34,19 +35,6 @@ interface FoodLogClientProps {
   lastAdded?: { mealType: MealType; seq: number } | null;
 }
 
-// Dot color for each meal type used in the header
-const MEAL_DOT_COLORS: Record<string, string> = {
-  breakfast: 'bg-amber-500',
-  lunch: 'bg-sky-500',
-  dinner: 'bg-violet-500',
-  snack: 'bg-emerald-500',
-  morning_snack: 'bg-amber-500',
-  afternoon_snack: 'bg-orange-500',
-  evening_snack: 'bg-indigo-500',
-  pre_workout: 'bg-lime-500',
-  post_workout: 'bg-teal-500',
-  other: 'bg-muted-foreground',
-};
 
 
 function groupByDish(logs: FoodLogEntry[]) {
@@ -184,15 +172,14 @@ export default function FoodLogClient({
     <div className="space-y-4">
       {/* Inline delete error */}
       {deleteError && (
-        <div
-          role="alert"
-          className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-xl text-sm"
-        >
-          {deleteError}
-          <button className="ml-2 underline hover:no-underline" onClick={() => setDeleteError(null)}>
-            Dismiss
-          </button>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>
+            {deleteError}
+            <Button variant="link" size="sm" className="h-auto p-0 ml-2 text-destructive-foreground underline" onClick={() => setDeleteError(null)}>
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Meal sections */}
@@ -238,12 +225,13 @@ export default function FoodLogClient({
             className="rounded-2xl border border-border/20 hover:border-primary/20 transition-all shadow-sm bg-background dark:bg-muted overflow-hidden"
           >
             {/* Meal header */}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={toggleMeal}
               aria-expanded={!isMealCollapsed}
               data-testid={`meal-toggle-${mealType}`}
-              className={`w-full flex items-center justify-between px-5 py-4 text-left group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-border/10' : ''}`}
+              className={`w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-border/10' : ''}`}
             >
               <div>
                 <div className="flex items-center gap-2">
@@ -279,7 +267,7 @@ export default function FoodLogClient({
                   />
                 </span>
               </div>
-            </button>
+            </Button>
 
             {!isMealCollapsed && isEmpty ? (
               <div
@@ -317,10 +305,11 @@ export default function FoodLogClient({
                       <div key={entry.dishLogGroupId} className="bg-secondary/30">
                         {/* Dish group header */}
                         <div className="flex items-center justify-between px-5 py-2 bg-violet-50/50 dark:bg-violet-900/10 border-b border-violet-100/50 dark:border-violet-800/20">
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
                             onClick={toggleCollapse}
-                            className="flex items-center gap-2 flex-1 min-w-0 text-left group"
+                            className="flex items-center gap-2 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent group"
                             aria-expanded={!isCollapsed}
                           >
                             <ChefHat className="h-3.5 w-3.5 text-violet-500 shrink-0" aria-hidden />
@@ -333,26 +322,30 @@ export default function FoodLogClient({
                                 aria-hidden
                               />
                             </span>
-                          </button>
+                          </Button>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs font-bold tabular-nums text-violet-600 dark:text-violet-400">
                               {groupCalories} kcal
                             </span>
                             {confirmingDelete === groupKey ? (
                               <div className="flex items-center gap-1">
-                                <button
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
                                   onClick={() => handleDeleteGroupConfirm(entry.dishLogGroupId)}
-                                  className="text-[10px] font-semibold px-2 py-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all"
+                                  className="text-[10px] h-auto py-1 px-2 rounded-full"
                                   data-testid={`delete-group-confirm-${entry.dishLogGroupId}`}
                                 >
                                   Remove all
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={handleDeleteCancel}
-                                  className="text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 transition-all"
+                                  className="text-[10px] h-auto py-1 px-2 rounded-full"
                                 >
                                   Cancel
-                                </button>
+                                </Button>
                               </div>
                             ) : (
                               <Button
@@ -442,11 +435,6 @@ interface FoodLogRowProps {
   indent?: boolean;
 }
 
-const MACRO_BADGE_COLORS2 = {
-  protein: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
-  carbs: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  fat: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-} as const;
 
 function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteRequest, onDeleteConfirm, onDeleteCancel, onEdit, indent = false }: FoodLogRowProps) {
   return (
@@ -454,10 +442,11 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
       className={`flex items-center gap-3 py-3 transition-colors ${indent ? 'pl-8 pr-5' : 'px-5'}`}
       data-testid={`food-log-${log.id}`}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => onEdit?.(log)}
-        className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-75 transition-opacity"
+        className="flex items-center gap-3 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent hover:opacity-75 transition-opacity"
         aria-label={`Edit ${log.food.name}`}
       >
         {log.food.photoUrl ? (
@@ -485,18 +474,18 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
               : `${log.quantity}g`}
           </p>
           <div className="flex items-center gap-1 mt-1 flex-wrap">
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.protein}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.protein}`}>
               P {nutrients.protein}g
             </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.carbs}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.carbs}`}>
               C {nutrients.carbs}g
             </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS2.fat}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.fat}`}>
               F {nutrients.fat}g
             </span>
           </div>
         </div>
-      </button>
+      </Button>
 
       <div className="text-right shrink-0">
         <p className="text-sm font-bold tabular-nums text-foreground">{nutrients.calories} kcal</p>
@@ -506,20 +495,24 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
 
       {confirmingDelete === log.id ? (
         <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label={`Confirm removal of ${log.food.name}`}>
-          <button
+          <Button
+            variant="destructive"
+            size="sm"
             onClick={() => onDeleteConfirm(log.id)}
             data-testid={`delete-confirm-${log.id}`}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 hover:border-destructive/40 transition-all"
+            className="text-xs h-auto py-1.5 px-3 rounded-full"
           >
             Remove
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onDeleteCancel}
             data-testid={`delete-cancel-${log.id}`}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all"
+            className="text-xs h-auto py-1.5 px-3 rounded-full"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       ) : (
         <Button
