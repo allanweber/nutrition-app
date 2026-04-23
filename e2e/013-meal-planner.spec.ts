@@ -95,7 +95,7 @@ test.describe('013: Page structure and empty state', () => {
 
   test('empty state message shown when no plans exist', async () => {
     await expect(mp.emptyState).toBeVisible();
-    await expect(mp.emptyState).toContainText(/no meal plans yet/i);
+    await expect(mp.emptyState).toContainText(/plan your week/i);
   });
 
   test('DaySelector and DayMealsView are not rendered without a selected plan', async () => {

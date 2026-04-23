@@ -59,13 +59,10 @@ test.describe('Phase 1: Authentication', () => {
       await signupPage.signup('Test User', uniqueEmail, 'TestPassword123!');
       await expect(page).toHaveURL(/\/verify-email/, { timeout: 15000 });
 
-      // The signup form fires the code request fire-and-forget. Explicitly
-      // re-request here so the challenge row is guaranteed to exist before we
-      // query the DB — if the fire-and-forget already succeeded this returns a
-      // cooldown 400 (which is fine; the original code is still valid).
-      await page.request.post('/api/auth/request-email-verification-code', {
-        data: { callbackURL: '/dashboard' },
-      });
+      // Wait for the fire-and-forget code request (fired by the signup form) to
+      // write the challenge row — poll the DB directly so we don't depend on
+      // the HTTP endpoint accepting an unauthenticated or cooldown-gated call.
+      await waitForEmailVerificationChallenge({ email: uniqueEmail, timeoutMs: 15_000 });
 
       const code = await fetchLatestEmailVerificationCode({
         email: uniqueEmail,
