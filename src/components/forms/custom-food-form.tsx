@@ -461,7 +461,7 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
           <Button variant="outline" asChild className="flex-1">
             <Link href="/my-foods">Cancel</Link>
           </Button>
-          <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit, state.values]}>
+          <form.Subscribe selector={(state): [boolean, boolean, CustomFoodFormData] => [state.isSubmitting, state.canSubmit, state.values]}>
             {([isSubmitting, canSubmit, values]) => {
               const v = values as CustomFoodFormData;
               const hasRequired = Boolean(v.name && v.calories !== ('' as never) && v.protein !== ('' as never) && v.carbs !== ('' as never) && v.fat !== ('' as never));
