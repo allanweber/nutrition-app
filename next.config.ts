@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
-// When running locally without Vercel Blob, uploaded images are served from
+// When running locally without R2, uploaded images are served from
 // public/uploads/ as plain static files. Next.js image optimization tries to
 // fetch them from the running server internally and fails. Since client-side
 // canvas already produces optimised JPEGs, skip optimisation in local mode.
-const isLocalDev = !process.env.BLOB_READ_WRITE_TOKEN;
+const isLocalDev = !process.env.R2_ACCESS_KEY_ID;
 
 const nextConfig: NextConfig = {
   images: {
@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.public.blob.vercel-storage.com',
+        hostname: 'images.vitalis.allanweber.dev',
       },
     ],
   },

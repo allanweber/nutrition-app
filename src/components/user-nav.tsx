@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -28,6 +29,17 @@ export function UserNav({ user }: UserNavProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Subscribes to the same cache key that the profile form writes to via setQueryData.
+  // initialData seeds the cache on first mount; setQueryData from the form updates it instantly.
+  const { data: avatarUrl } = useQuery<string | null>({
+    queryKey: ['user-nav-avatar'],
+    queryFn: () => Promise.resolve(user.image ?? null),
+    initialData: user.image ?? null,
+    staleTime: Infinity,
+  });
+
+  const avatarSrc = avatarUrl || undefined;
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -45,7 +57,6 @@ export function UserNav({ user }: UserNavProps) {
     }
   };
 
-  // Get initials from name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -59,8 +70,8 @@ export function UserNav({ user }: UserNavProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 p-0">
-          <Avatar className="h-8 w-8 cursor-pointer">
-            <AvatarImage src={user.image || undefined} alt={user.name} />
+          <Avatar className="h-8 w-8 cursor-pointer" key={avatarSrc}>
+            <AvatarImage src={avatarSrc} alt={user.name} />
             <AvatarFallback className="bg-primary text-primary-foreground text-sm">
               {getInitials(user.name)}
             </AvatarFallback>
@@ -90,8 +101,8 @@ export function UserNav({ user }: UserNavProps) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleLogout} 
+        <DropdownMenuItem
+          onClick={handleLogout}
           disabled={isLoggingOut}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
