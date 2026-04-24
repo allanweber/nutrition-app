@@ -44,7 +44,6 @@ export function VerifyEmailForm({ callbackURL }: VerifyEmailFormProps) {
       try {
         await verifyCodeMutation.mutateAsync({ code: value.code });
         router.push(callbackURL);
-        router.refresh();
       } catch (e) {
         handleError(e);
         throw e;

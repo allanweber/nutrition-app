@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { biometricProfileSchema, zodValidator } from '@/lib/form-validation';
+import { resizeAvatar } from '@/lib/image-resize';
 import { cn } from '@/lib/utils';
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -194,18 +195,25 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setAvatarPreview(URL.createObjectURL(file));
+    const blobUrl = URL.createObjectURL(file);
+    setAvatarPreview(blobUrl);
+    queryClient.setQueryData(['user-nav-avatar'], blobUrl);
     setAvatarUploading(true);
 
-    const fd = new FormData();
-    fd.append('avatar', file);
-
     try {
+      const resized = await resizeAvatar(file);
+      const fd = new FormData();
+      fd.append('avatar', new File([resized], 'avatar.webp', { type: 'image/webp' }));
       const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('Upload failed');
+      const { image } = await res.json();
+      // Append a timestamp so the browser doesn't serve a cached copy of the old image
+      queryClient.setQueryData(['user-nav-avatar'], `${image}?v=${Date.now()}`);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     } catch {
       setAvatarPreview(null);
+      queryClient.setQueryData(['user-nav-avatar'], null);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     } finally {
       setAvatarUploading(false);
     }
@@ -303,7 +311,7 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
                   id="name"
                   type="text"
                   placeholder="John Doe"
-                  value={field.state.value}
+                  value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
                   aria-invalid={field.state.meta.errors.length > 0}

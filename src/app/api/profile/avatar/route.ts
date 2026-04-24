@@ -1,10 +1,9 @@
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
+import { putBlob } from '@/lib/blob-storage';
 import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 
 const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -37,16 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     const ext = getExtension(file.type);
-    const filename = `${user.id}.${ext}`;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+    const blobPath = `avatars/${user.id}.${ext}`;
+    const { url } = await putBlob(blobPath, new Blob([buffer], { type: file.type }));
 
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path.join(uploadsDir, filename), buffer);
+    await db.update(users).set({ image: url, updatedAt: new Date() }).where(eq(users.id, user.id));
 
-    const imageUrl = `/uploads/avatars/${filename}`;
-    await db.update(users).set({ image: imageUrl, updatedAt: new Date() }).where(eq(users.id, user.id));
-
-    return NextResponse.json({ success: true, image: imageUrl });
+    return NextResponse.json({ success: true, image: url });
   } catch (error) {
     console.error('Error uploading avatar:', error);
     return NextResponse.json({ error: 'Failed to upload avatar' }, { status: 500 });
