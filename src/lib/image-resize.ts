@@ -1,8 +1,9 @@
 /**
  * Client-side image resize utility using the browser Canvas API.
- * Produces two JPEG blobs from a source File:
+ * All outputs are WebP for smaller file sizes.
+ *  - avatar:  max 256px on longest side, quality 0.80
  *  - thumb:   max 300px on longest side, quality 0.65
- *  - display: max 900px on longest side, quality 0.85
+ *  - display: max 900px on longest side, quality 0.75
  */
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -39,19 +40,33 @@ function resizeToBlob(
         if (blob) resolve(blob);
         else reject(new Error('Canvas toBlob failed'));
       },
-      'image/jpeg',
+      'image/webp',
       quality,
     );
   });
 }
 
 export interface ResizedImages {
-  thumb: Blob;   // ~300px max, JPEG 65%
-  display: Blob; // ~900px max, JPEG 85%
+  thumb: Blob;   // ~300px max, WebP 65%
+  display: Blob; // ~900px max, WebP 75%
 }
 
 /**
- * Resize a File into two optimised JPEG blobs suitable for upload.
+ * Resize a File into a single optimised WebP blob for avatar upload.
+ * Must be called in a browser environment (uses Canvas and URL.createObjectURL).
+ */
+export async function resizeAvatar(file: File): Promise<Blob> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(objectUrl);
+    return await resizeToBlob(img, 256, 0.80);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+/**
+ * Resize a File into two optimised WebP blobs suitable for upload.
  * Must be called in a browser environment (uses Canvas and URL.createObjectURL).
  */
 export async function resizeForUpload(file: File): Promise<ResizedImages> {
@@ -60,7 +75,7 @@ export async function resizeForUpload(file: File): Promise<ResizedImages> {
     const img = await loadImage(objectUrl);
     const [thumb, display] = await Promise.all([
       resizeToBlob(img, 300, 0.65),
-      resizeToBlob(img, 900, 0.85),
+      resizeToBlob(img, 900, 0.75),
     ]);
     return { thumb, display };
   } finally {

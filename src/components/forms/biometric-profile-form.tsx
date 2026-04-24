@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { biometricProfileSchema, zodValidator } from '@/lib/form-validation';
+import { resizeAvatar } from '@/lib/image-resize';
 import { cn } from '@/lib/utils';
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -199,10 +200,10 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
     queryClient.setQueryData(['user-nav-avatar'], blobUrl);
     setAvatarUploading(true);
 
-    const fd = new FormData();
-    fd.append('avatar', file);
-
     try {
+      const resized = await resizeAvatar(file);
+      const fd = new FormData();
+      fd.append('avatar', new File([resized], 'avatar.webp', { type: 'image/webp' }));
       const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('Upload failed');
       const { image } = await res.json();
