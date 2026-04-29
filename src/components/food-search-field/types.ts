@@ -32,6 +32,8 @@ export interface FoodSearchFieldProps {
   placeholder?: string;
   className?: string;
   size?: 'default' | 'small';
+  /** `stacked`: results sit in normal flow below the input (dialogs / tight layouts). Default `floating` uses absolute dropdown. */
+  dropdownLayout?: 'floating' | 'stacked';
   inputTestId?: string;
 }
 

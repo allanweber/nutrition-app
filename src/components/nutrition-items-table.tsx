@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -75,6 +75,9 @@ interface NutritionItemsTableProps<T> {
   emptyDescription?: string;
   emptyState?: ReactNode;
   searchPlaceholder?: string;
+  /** When set with `onSearchChange`, filter text is controlled by the parent (e.g. mobile search above tabs). */
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 type TableMeta = {
@@ -84,10 +87,150 @@ type TableMeta = {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
+/** Single-letter macro labels for compact / mobile rows */
+function macroShortLabel(label: string): string {
+  const map: Record<string, string> = {
+    Protein: 'P',
+    Carbs: 'C',
+    Fats: 'F',
+    Fat: 'F',
+  };
+  return map[label] ?? label.slice(0, 1).toUpperCase();
+}
+
 function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
   if (sorted === 'asc') return <ChevronUp className="h-3 w-3 shrink-0" />;
   if (sorted === 'desc') return <ChevronDown className="h-3 w-3 shrink-0" />;
   return <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-40" />;
+}
+
+function NutritionMobileCard<T>({
+  item,
+  config,
+  meta,
+  rowTestId,
+}: {
+  item: T;
+  config: NutritionTableConfig<T>;
+  meta: TableMeta;
+  rowTestId?: string;
+}) {
+  const id = config.getId(item);
+  const name = config.getItemName(item);
+  const subtitle = config.getItemSubtitle(item);
+  const thumb = config.getThumbnail(item);
+  const deleteTestId = config.actionTestIdPrefix
+    ? `delete-${config.actionTestIdPrefix}-${id}`
+    : `delete-${id}`;
+  const confirmTestId = config.actionTestIdPrefix
+    ? `confirm-delete-${config.actionTestIdPrefix}-${id}`
+    : `confirm-delete-${id}`;
+
+  const editHref = config.getEditHref(item);
+
+  return (
+    <article
+      data-testid={rowTestId}
+      className="flex gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm"
+    >
+      <Link
+        href={editHref}
+        className="flex min-w-0 flex-1 gap-3 outline-none ring-offset-background rounded-xl focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <div className="size-[3.25rem] shrink-0 rounded-full overflow-hidden border border-border/40 bg-secondary shadow-md">
+          {thumb ? (
+            <Image
+              src={thumb}
+              alt=""
+              width={52}
+              height={52}
+              className="h-full w-full object-cover"
+              sizes="52px"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <UtensilsCrossed className="h-5 w-5 text-muted-foreground/40" />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="font-headline text-sm font-bold leading-snug text-foreground truncate">
+            {name}
+          </h3>
+          {subtitle ? (
+            <p className="text-[10px] uppercase tracking-tight text-muted-foreground truncate">{subtitle}</p>
+          ) : null}
+          <p className="mt-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+            {Math.round(config.getEnergy(item))} kcal
+          </p>
+
+          <div className="mt-2 flex flex-col gap-1.5">
+            {config.macros.map((macro) => {
+              const val = macro.getValue(item);
+              const barPct = macro.getBarWidth(item);
+              return (
+                <div key={macro.label} className="flex items-center gap-2">
+                  <span className="w-3 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">
+                    {macroShortLabel(macro.label)}
+                  </span>
+                  <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className={`h-full rounded-full ${macro.fill}`} style={{ width: `${barPct}%` }} />
+                  </div>
+                  <span className={`shrink-0 font-mono text-xs font-semibold tabular-nums ${macro.text}`}>
+                    {val.toFixed(1)}g
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-2 flex items-center justify-between border-t border-border/25 pt-2 text-[11px] text-muted-foreground">
+            <span>{config.extraCol.label}</span>
+            <span className="font-mono tabular-nums text-foreground">{config.extraCol.getValue(item)}</span>
+          </div>
+        </div>
+      </Link>
+
+      <div className="flex shrink-0 flex-col items-center justify-center gap-1 self-center">
+        {meta.confirmDelete === id ? (
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                config.onDelete(id);
+                meta.setConfirmDelete(null);
+              }}
+              className="h-auto rounded-lg px-2 py-1 text-[10px]"
+              data-testid={confirmTestId}
+            >
+              Delete
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => meta.setConfirmDelete(null)}
+              className="h-auto rounded-lg px-2 py-1 text-[10px]"
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => meta.setConfirmDelete(id)}
+            aria-label={`Delete ${name}`}
+            data-testid={deleteTestId}
+          >
+            <Trash2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
+          </Button>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export function NutritionItemsTable<T>({
@@ -98,12 +241,25 @@ export function NutritionItemsTable<T>({
   emptyDescription = 'Add your first entry to get started.',
   emptyState,
   searchPlaceholder = 'Filter by name...',
+  searchValue,
+  onSearchChange,
 }: NutritionItemsTableProps<T>) {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [internalSearch, setInternalSearch] = useState('');
+  const isSearchControlled = onSearchChange !== undefined;
+  const search = isSearchControlled ? (searchValue ?? '') : internalSearch;
+  const setSearch = (value: string) => {
+    if (isSearchControlled) onSearchChange(value);
+    else setInternalSearch(value);
+  };
+
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>([]);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [search]);
 
   const columns: ColumnDef<T>[] = [
     {
@@ -300,50 +456,73 @@ export function NutritionItemsTable<T>({
     );
   }
 
+  const itemsViewBadge = (
+    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border shrink-0">
+      <span className="size-2 rounded-full bg-primary shrink-0" />
+      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+        {filteredCount} {filteredCount === 1 ? 'Item' : 'Items'} View
+      </span>
+    </div>
+  );
+
+  const resetFilterButton =
+    sorting.length > 0 || search.length > 0 ? (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setSorting([]);
+          setSearch('');
+        }}
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        Reset
+      </Button>
+    ) : null;
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Controls bar */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border">
-          <span className="size-2 rounded-full bg-primary shrink-0" />
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-            {filteredCount} {filteredCount === 1 ? 'Item' : 'Items'} View
-          </span>
-        </div>
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
+      {/* Controls: mobile = search when not controlled + optional reset (item count badge is md+ only); md+ = single row */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {!isSearchControlled && (
+          <div className="relative w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none z-10" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+              }}
+              placeholder={searchPlaceholder}
+              className="pl-10 w-full"
+            />
+          </div>
+        )}
+        {resetFilterButton ? (
+          <div className="flex justify-end">{resetFilterButton}</div>
+        ) : null}
+      </div>
+
+      <div className="hidden md:flex flex-wrap items-center gap-4">
+        {itemsViewBadge}
+        <div className="relative flex-1 max-w-md min-w-[200px]">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none z-10" />
           <Input
             type="text"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPagination((p) => ({ ...p, pageIndex: 0 }));
             }}
             placeholder={searchPlaceholder}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
-        <div className="ml-auto">
-          {(sorting.length > 0 || search.length > 0) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSorting([]);
-                setSearch('');
-                setPagination((p) => ({ ...p, pageIndex: 0 }));
-              }}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset
-            </Button>
-          )}
-        </div>
+        <div className="ml-auto">{resetFilterButton}</div>
       </div>
 
-      {/* Table card */}
+      {/* Table card — table on md+, stacked cards below */}
       <div className="bg-background rounded-lg overflow-hidden border border-border">
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <Table className="border-collapse w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -431,10 +610,41 @@ export function NutritionItemsTable<T>({
           </Table>
         </div>
 
+        <div className="md:hidden p-3 space-y-3">
+          {table.getRowModel().rows.length === 0 ? (
+            <div className={emptyState ? 'py-6 px-1' : 'py-14 px-4 text-center'}>
+              {emptyState ?? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                    <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-base font-bold text-foreground">{emptyTitle}</p>
+                  <p className="text-sm text-muted-foreground max-w-xs">{emptyDescription}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            table.getRowModel().rows.map((row) => {
+              const rowTestId = config.rowTestIdPrefix
+                ? `${config.rowTestIdPrefix}-${config.getId(row.original)}`
+                : undefined;
+              return (
+                <NutritionMobileCard
+                  key={row.id}
+                  item={row.original}
+                  config={config}
+                  meta={{ confirmDelete, setConfirmDelete }}
+                  rowTestId={rowTestId}
+                />
+              );
+            })
+          )}
+        </div>
+
         {/* Footer / Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-muted gap-4 border-t border-border/15">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-4 px-6 py-4 bg-muted border-t border-border/15 md:flex-row md:items-center md:justify-between md:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
+            <div className="hidden items-center gap-2 md:flex">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                 Rows per page
               </span>
@@ -455,7 +665,7 @@ export function NutritionItemsTable<T>({
                 </SelectContent>
               </Select>
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">
+            <span className="text-xs font-semibold text-muted-foreground text-center md:text-left">
               Showing{' '}
               <span className="text-foreground font-bold">{start}–{end}</span>
               {' '}of{' '}
@@ -465,7 +675,7 @@ export function NutritionItemsTable<T>({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end md:gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -475,7 +685,7 @@ export function NutritionItemsTable<T>({
                 <ChevronLeft className="h-4 w-4" />
                 Prev
               </Button>
-              <div className="flex items-center gap-1">
+              <div className="hidden items-center gap-1 md:flex">
                 {getPageButtons().map((btn, i) =>
                   btn === 'ellipsis' ? (
                     <span

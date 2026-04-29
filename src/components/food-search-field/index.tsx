@@ -17,6 +17,7 @@ export function FoodSearchField({
   placeholder,
   className,
   size = 'default',
+  dropdownLayout = 'floating',
   inputTestId,
 }: FoodSearchFieldProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -117,8 +118,13 @@ export function FoodSearchField({
       />
     ) : undefined;
 
+  const rootClass =
+    dropdownLayout === 'stacked'
+      ? `flex min-w-0 flex-col ${className ?? ''}`
+      : `relative ${className ?? ''}`;
+
   return (
-    <div className={`relative ${className ?? ''}`} ref={containerRef}>
+    <div className={rootClass.trim()} ref={containerRef}>
       <SearchInput
         value={state.query}
         onChange={handleQueryChange}
@@ -129,6 +135,7 @@ export function FoodSearchField({
         inputTestId={inputTestId}
       />
       <Dropdown
+        stacked={dropdownLayout === 'stacked'}
         open={dropdownOpen}
         query={state.query}
         results={state.results}

@@ -87,22 +87,26 @@ All test accounts use the password: `Password123!`
 
 #### Individual Users (one per goal type)
 
-| Email                           | Name                 | Goal           |
-| ------------------------------- | -------------------- | -------------- |
-| <user.weight-loss@example.com>    | Alex Weight Loss     | weight_loss    |
-| <user.maintenance@example.com>    | Jordan Maintenance   | maintenance    |
-| <user.weight-gain@example.com>    | Sam Weight Gain      | weight_gain    |
-| <user.muscle-gain@example.com>    | Chris Muscle Gain    | muscle_gain    |
-| <user.fat-loss@example.com>       | Taylor Fat Loss      | fat_loss       |
-| <user.performance@example.com>    | Morgan Performance   | performance    |
-| <user.general-health@example.com> | Casey General Health | general_health |
+
+| Email                                                                     | Name                 | Goal           |
+| ------------------------------------------------------------------------- | -------------------- | -------------- |
+| [user.weight-loss@example.com](mailto:user.weight-loss@example.com)       | Alex Weight Loss     | weight_loss    |
+| [user.maintenance@example.com](mailto:user.maintenance@example.com)       | Jordan Maintenance   | maintenance    |
+| [user.weight-gain@example.com](mailto:user.weight-gain@example.com)       | Sam Weight Gain      | weight_gain    |
+| [user.muscle-gain@example.com](mailto:user.muscle-gain@example.com)       | Chris Muscle Gain    | muscle_gain    |
+| [user.fat-loss@example.com](mailto:user.fat-loss@example.com)             | Taylor Fat Loss      | fat_loss       |
+| [user.performance@example.com](mailto:user.performance@example.com)       | Morgan Performance   | performance    |
+| [user.general-health@example.com](mailto:user.general-health@example.com) | Casey General Health | general_health |
+
 
 #### Professional Users
 
-| Email                         | Name              |
-| ----------------------------- | ----------------- |
-| <dr.sarah.wilson@example.com>   | Dr. Sarah Wilson  |
-| <mark.nutritionist@example.com> | Mark Thompson, RD |
+
+| Email                                                                 | Name              |
+| --------------------------------------------------------------------- | ----------------- |
+| [dr.sarah.wilson@example.com](mailto:dr.sarah.wilson@example.com)     | Dr. Sarah Wilson  |
+| [mark.nutritionist@example.com](mailto:mark.nutritionist@example.com) | Mark Thompson, RD |
+
 
 The seed creates:
 
@@ -165,10 +169,11 @@ git branch -r --merged main | grep -v "main" | sed 's/origin\///' | xargs -I {} 
 
 Follow **[Cloudflare Tunnels](https://docs.dokploy.com/docs/core/guides/cloudflare-tunnels)** (official). Short version:
 
-1. **Cloudflare** → Zero Trust → **Networks** → **Connectors** → **Create tunnel** → **Cloudflared** → copy **`TUNNEL_TOKEN`**.
+1. **Cloudflare** → Zero Trust → **Networks** → **Connectors** → **Create tunnel** → **Cloudflared** → copy `**TUNNEL_TOKEN`**.
 2. **SSL/TLS** in Cloudflare: use **Full** or **Full (strict)** — the doc says **avoid Flexible** (redirect loops with Traefik).
-3. In **Dokploy**, create an **Application** with Docker image **`cloudflare/cloudflared`**; env **`TUNNEL_TOKEN`**; **Advanced → Arguments**: `tunnel` then `run` (see guide).
+3. In **Dokploy**, create an **Application** with Docker image `**cloudflare/cloudflared`**; env `**TUNNEL_TOKEN`**; **Advanced → Arguments**: `tunnel` then `run` (see guide).
 4. **Published routes / public hostname** in Cloudflare:
-   - **Wildcard subdomains:** DNS **CNAME** `*` → `YOUR_TUNNEL_ID.cfargotunnel.com` (proxied), and one tunnel hostname to **`dokploy-traefik:80`** so `invest.allanweber.dev` and future subdomains work without new tunnel entries.
-5. For **your app** in Dokploy → **Domains**: add **`invest.allanweber.dev`** with the **correct container port**; with tunnel + Traefik, the doc recommends **HTTPS off** and **no Let’s Encrypt** on that domain in Dokploy so Cloudflare terminates TLS at the edge (see guide — conflicts otherwise).
+  - **Wildcard subdomains:** DNS **CNAME** `*` → `YOUR_TUNNEL_ID.cfargotunnel.com` (proxied), and one tunnel hostname to `**dokploy-traefik:80`** so `invest.allanweber.dev` and future subdomains work without new tunnel entries.
+5. For **your app** in Dokploy → **Domains**: add `**invest.allanweber.dev`** with the **correct container port**; with tunnel + Traefik, the doc recommends **HTTPS off** and **no Let’s Encrypt** on that domain in Dokploy so Cloudflare terminates TLS at the edge (see guide — conflicts otherwise).
 6. **Better Auth / OAuth:** if cookies or redirects break, you may need **Full (strict)** plus a **trusted origin certificate** on Traefik — same class of issue as Coolify’s [Full TLS](https://coolify.io/docs/integrations/cloudflare/tunnels/full-tls); plan extra time to tune SSL mode and app `BETTER_AUTH_URL`.
+

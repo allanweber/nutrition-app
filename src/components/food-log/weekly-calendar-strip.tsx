@@ -56,22 +56,22 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
 
   return (
     <div
-      className="bg-background dark:bg-secondary rounded-2xl p-6 border border-border/30 shadow-sm relative"
+      className="w-full min-w-0 max-w-full bg-background dark:bg-secondary rounded-2xl p-3 sm:p-6 border border-border/30 shadow-sm relative"
       data-testid="weekly-calendar-strip"
     >
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+      <div className="mb-3 flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-2 sm:mb-4">
+        <span className="min-w-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground sm:text-[11px]">
           Weekly Overview
         </span>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
           {/* Today button — only shown when not already on today */}
           {(!isOnCurrentWeek || !isTodaySelected) && (
             <Button
               onClick={handleGoToToday}
               variant="ghost"
               size="sm"
-              className="rounded-full h-auto py-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
+              className="rounded-full h-auto py-1 px-2.5 sm:py-1.5 sm:px-3 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
             >
               Today
             </Button>
@@ -83,10 +83,10 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-full h-auto py-1.5 gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
+                className="rounded-full h-auto py-1 px-2.5 sm:py-1.5 sm:px-3 gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 hover:border-primary/40"
               >
                 <CalendarIcon className="h-3 w-3" />
-                Full Month
+                <span className="hidden sm:inline">Full Month</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
@@ -102,19 +102,19 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
         </div>
       </div>
 
-      {/* Day pills with flanking arrows */}
-      <div className="flex items-center gap-1">
+      {/* Day pills with flanking arrows — equal-width flex tiles, no horizontal scroll */}
+      <div className="flex items-stretch gap-1 min-w-0">
         <Button
           onClick={handlePrevWeek}
           variant="ghost"
           size="icon"
-          className="size-8 shrink-0"
+          className="size-7 sm:size-8 shrink-0 self-center"
           aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-          <div className="flex flex-1 justify-between items-center overflow-x-auto hide-scrollbar">
+        <div className="flex flex-1 min-w-0 gap-0.5 sm:gap-1 items-stretch">
             {days.map((day, i) => {
               const dayStr = format(day, 'yyyy-MM-dd');
               const isSelected = dayStr === selectedStr;
@@ -128,7 +128,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                   disabled={isDisabled}
                   variant="ghost"
                   className={[
-                    'flex flex-col items-center p-3 rounded-xl min-w-13 select-none h-auto',
+                    'flex flex-1 basis-0 min-w-0 flex-col items-center justify-center px-0.5 py-1.5 sm:px-1 sm:py-2.5 rounded-lg sm:rounded-xl select-none h-auto',
                     isSelected
                       ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                       : isDisabled
@@ -137,11 +137,13 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                   ].join(' ')}
                 >
                   <span
-                    className={`text-xs font-bold mb-1 ${isSelected ? 'opacity-80' : 'text-muted-foreground'}`}
+                    className={`text-[9px] sm:text-[10px] font-bold mb-0.5 leading-none sm:mb-1 ${isSelected ? 'opacity-80' : 'text-muted-foreground'}`}
                   >
                     {DAY_LABELS[i]}
                   </span>
-                  <span className="text-lg font-headline font-bold">{format(day, 'd')}</span>
+                  <span className="text-xs sm:text-base md:text-lg font-headline font-bold tabular-nums leading-none">
+                    {format(day, 'd')}
+                  </span>
                 </Button>
               );
             })}
@@ -152,7 +154,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
           disabled={weekOffset >= 0}
           variant="ghost"
           size="icon"
-          className="size-8 shrink-0"
+          className="size-7 sm:size-8 shrink-0 self-center"
           aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />

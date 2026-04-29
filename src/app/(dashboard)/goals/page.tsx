@@ -8,7 +8,7 @@ export default function GoalsPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (
-    <div className="max-w-4xl mx-auto w-full px-4">
+    <div className="mx-auto w-full min-w-0 max-w-4xl px-4">
       <GoalsForm onOpenCalculator={() => setWizardOpen(true)} />
 
       <GoalWizardModal open={wizardOpen} onClose={() => setWizardOpen(false)} />
