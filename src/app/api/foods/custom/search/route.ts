@@ -13,7 +13,7 @@ import {
 } from '@/server/db/schema';
 
 const searchSchema = z.object({
-  q: z.string().min(3).max(200).transform((s) => s.trim()),
+  q: z.string().trim().min(3).max(200),
 });
 
 function toNum(v: string | number | null | undefined) {
