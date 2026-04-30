@@ -17,7 +17,7 @@ interface DayMealsViewProps {
   selectedDay: number;
   isLoading: boolean;
   deletingMealId: string | null;
-  onAddMeal: (day: number, mealType?: string) => void;
+  onAddMeal: (day: number, mealType?: MealType) => void;
   onEditMeal: (meal: DietPlanMealDTO) => void;
   onDeleteMeal: (meal: DietPlanMealDTO) => void;
 }
