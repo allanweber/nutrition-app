@@ -8,8 +8,20 @@ interface CustomFoodSearchResult {
   calories: number | null;
 }
 
+interface CustomDishSearchResult {
+  id: null;
+  dishId: string;
+  name: string;
+  brandName: null;
+  thumbnail: string | null;
+  calories: number | null;
+  itemKind: 'dish';
+}
+
+type CustomSearchResult = CustomFoodSearchResult | CustomDishSearchResult;
+
 interface CustomFoodSearchResponse {
-  results: CustomFoodSearchResult[];
+  results: CustomSearchResult[];
 }
 
 export function useCustomFoodSearchQuery(query: string, enabled = true) {

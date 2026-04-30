@@ -79,14 +79,14 @@ export function QuantityUnitInput({
           step={measure.sliderStep}
           value={quantity}
           onChange={(e) => handleNumberChange(e.target.value)}
-          className="flex-1 min-w-0 h-full border-none shadow-none rounded-none px-3 py-1 text-sm font-medium focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="min-w-0 h-full border-none shadow-none rounded-none px-3 py-1 text-sm font-medium focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none w-[30%] sm:flex-1 sm:w-auto"
           data-testid={qtyInputTestId}
           aria-label="Quantity"
         />
         <div className="h-4 w-px bg-border shrink-0" />
         <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
           <SelectTrigger
-            className="h-full border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-7 rounded-none w-auto min-w-20 max-w-36"
+            className="h-full border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-7 rounded-none min-w-0 w-[70%] sm:w-auto sm:min-w-20 sm:max-w-36"
             data-testid={measureSelectTestId}
           >
             <SelectValue />

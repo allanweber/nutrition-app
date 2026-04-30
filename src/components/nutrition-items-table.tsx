@@ -246,12 +246,24 @@ export function NutritionItemsTable<T>({
 }: NutritionItemsTableProps<T>) {
   const router = useRouter();
   const [internalSearch, setInternalSearch] = useState('');
+  // IMPORTANT for Playwright: avoid rendering both mobile + desktop variants at once.
+  // Hidden duplicates (md:hidden / hidden md:block) still exist in the DOM and cause
+  // strict-mode locator failures (duplicate text/testids). Default to desktop.
+  const [isDesktop, setIsDesktop] = useState(true);
   const isSearchControlled = onSearchChange !== undefined;
   const search = isSearchControlled ? (searchValue ?? '') : internalSearch;
   const setSearch = (value: string) => {
     if (isSearchControlled) onSearchChange(value);
     else setInternalSearch(value);
   };
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -483,9 +495,10 @@ export function NutritionItemsTable<T>({
   return (
     <div className="flex flex-col gap-4">
       {/* Controls: mobile = search when not controlled + optional reset (item count badge is md+ only); md+ = single row */}
-      <div className="flex flex-col gap-3 md:hidden">
-        {!isSearchControlled && (
-          <div className="relative w-full">
+      {isDesktop ? (
+        <div className="flex flex-wrap items-center gap-4">
+          {itemsViewBadge}
+          <div className="relative flex-1 max-w-md min-w-[200px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none z-10" />
             <Input
               type="text"
@@ -497,32 +510,34 @@ export function NutritionItemsTable<T>({
               className="pl-10 w-full"
             />
           </div>
-        )}
-        {resetFilterButton ? (
-          <div className="flex justify-end">{resetFilterButton}</div>
-        ) : null}
-      </div>
-
-      <div className="hidden md:flex flex-wrap items-center gap-4">
-        {itemsViewBadge}
-        <div className="relative flex-1 max-w-md min-w-[200px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none z-10" />
-          <Input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-            }}
-            placeholder={searchPlaceholder}
-            className="pl-10 w-full"
-          />
+          <div className="ml-auto">{resetFilterButton}</div>
         </div>
-        <div className="ml-auto">{resetFilterButton}</div>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {!isSearchControlled && (
+            <div className="relative w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none z-10" />
+              <Input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
+                placeholder={searchPlaceholder}
+                className="pl-10 w-full"
+              />
+            </div>
+          )}
+          {resetFilterButton ? (
+            <div className="flex justify-end">{resetFilterButton}</div>
+          ) : null}
+        </div>
+      )}
 
       {/* Table card — table on md+, stacked cards below */}
       <div className="bg-background rounded-lg overflow-hidden border border-border">
-        <div className="hidden md:block overflow-x-auto">
+        {isDesktop ? (
+        <div className="overflow-x-auto">
           <Table className="border-collapse w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -608,9 +623,8 @@ export function NutritionItemsTable<T>({
               )}
             </TableBody>
           </Table>
-        </div>
-
-        <div className="md:hidden p-3 space-y-3">
+        </div>) : (
+        <div className="p-3 space-y-3">
           {table.getRowModel().rows.length === 0 ? (
             <div className={emptyState ? 'py-6 px-1' : 'py-14 px-4 text-center'}>
               {emptyState ?? (
@@ -639,7 +653,7 @@ export function NutritionItemsTable<T>({
               );
             })
           )}
-        </div>
+        </div>)}
 
         {/* Footer / Pagination */}
         <div className="flex flex-col gap-4 px-6 py-4 bg-muted border-t border-border/15 md:flex-row md:items-center md:justify-between md:gap-4">

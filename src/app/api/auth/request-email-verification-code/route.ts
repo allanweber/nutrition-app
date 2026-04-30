@@ -114,21 +114,50 @@ export async function POST(request: NextRequest) {
     const expiresAt = minutesFromNow(CODE_EXPIRES_MINUTES);
 
     if (!existing) {
-      await db.insert(emailVerificationChallenges).values({
-        id: crypto.randomUUID(),
-        userId,
-        email,
-        codeHash,
-        expiresAt,
-        sentCountHour: 1,
-        sentCountWindowStart: now,
-        lastSentAt: now,
-        failedCountWindow: 0,
-        failedCountWindowStart: now,
-        lockedUntil: null,
-        createdAt: now,
-        updatedAt: now,
-      });
+      try {
+        await db.insert(emailVerificationChallenges).values({
+          id: crypto.randomUUID(),
+          userId,
+          email,
+          codeHash,
+          expiresAt,
+          sentCountHour: 1,
+          sentCountWindowStart: now,
+          lastSentAt: now,
+          failedCountWindow: 0,
+          failedCountWindowStart: now,
+          lockedUntil: null,
+          createdAt: now,
+          updatedAt: now,
+        });
+      } catch (err) {
+        // Race guard: in dev, client effects can fire twice (React StrictMode).
+        // Between our read and insert, another request may have inserted the row
+        // (user_id is UNIQUE). Fall back to updating the existing challenge.
+        const latest = await db.query.emailVerificationChallenges.findFirst({
+          where: eq(emailVerificationChallenges.userId, userId),
+        });
+        if (!latest) throw err;
+
+        await db
+          .update(emailVerificationChallenges)
+          .set({
+            email,
+            codeHash,
+            expiresAt,
+            sentCountHour: 1,
+            sentCountWindowStart: now,
+            lastSentAt: now,
+            updatedAt: now,
+            lockedUntil: null,
+          })
+          .where(
+            and(
+              eq(emailVerificationChallenges.userId, userId),
+              eq(emailVerificationChallenges.id, latest.id),
+            ),
+          );
+      }
     } else {
       await db
         .update(emailVerificationChallenges)

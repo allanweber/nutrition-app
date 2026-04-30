@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { useDietPlansQuery, useDietPlanMealsQuery, useDeleteMealMutation } from '@/queries/diet-plans';
 import { PlanCarousel } from './plan-carousel';
+import { MobilePlanCarousel } from './mobile-plan-carousel';
 import { DaySelector } from './day-selector';
 import { DayMealsView } from './day-meals-view';
 import { NewPlanModal } from './new-plan-modal';
 import { MealModal, type MealModalState } from './meal-modal';
+import { MealPlannerFab } from './meal-planner-fab';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
 
 interface MealPlannerClientProps {
@@ -94,7 +96,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
   const selectedPlan = plans.find((p) => p.id === selectedPlanId) ?? null;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8">
+    <div className="max-w-screen-2xl mx-auto px-0 md:px-4 lg:px-8 pt-8 pb-24 md:pb-8">
       <PageHeader
         overline="Planning"
         title="Meal Planner"
@@ -102,8 +104,8 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
         data-testid="meal-planner-heading"
       />
 
-      {/* Plan Carousel */}
-      <PlanCarousel
+      {/* Mobile plan carousel */}
+      <MobilePlanCarousel
         plans={plans}
         isLoading={plansQuery.isLoading}
         selectedPlanId={selectedPlanId}
@@ -111,6 +113,18 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
         onAddNew={() => setNewPlanModalOpen(true)}
         onPlanDeleted={handlePlanDeleted}
       />
+
+      {/* Desktop plan carousel */}
+      <div className="hidden md:block">
+        <PlanCarousel
+          plans={plans}
+          isLoading={plansQuery.isLoading}
+          selectedPlanId={selectedPlanId}
+          onSelectPlan={handleSelectPlan}
+          onAddNew={() => setNewPlanModalOpen(true)}
+          onPlanDeleted={handlePlanDeleted}
+        />
+      </div>
 
       {/* Empty state if no plans */}
       {!plansQuery.isLoading && plans.length === 0 && (
@@ -135,7 +149,6 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
       {/* Day + Meals section only when a plan is selected */}
       {selectedPlan && (
         <>
-          <p className="text-xl font-bold mb-3">{selectedPlan.name}</p>
           <DaySelector
             plan={selectedPlan}
             meals={meals}
@@ -149,11 +162,12 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
             selectedDay={selectedDay}
             isLoading={mealsQuery.isLoading}
             deletingMealId={deletingMealId}
-            onAddMeal={(day) =>
+            onAddMeal={(day, mealType) =>
               setMealModalState({
                 mode: 'create',
                 planId: selectedPlan.id,
                 day,
+                mealType,
                 existingMeals: meals.filter((m) => m.dayOfWeek === day),
               })
             }
@@ -183,6 +197,21 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
           onClose={() => setMealModalState(null)}
         />
       )}
+
+      {/* Mobile FAB */}
+      <MealPlannerFab
+        hasActivePlan={!!selectedPlan}
+        onAddPlan={() => setNewPlanModalOpen(true)}
+        onAddMeal={() => {
+          if (!selectedPlan) return;
+          setMealModalState({
+            mode: 'create',
+            planId: selectedPlan.id,
+            day: selectedDay,
+            existingMeals: meals.filter((m) => m.dayOfWeek === selectedDay),
+          });
+        }}
+      />
     </div>
   );
 }

@@ -67,7 +67,10 @@ export function Dropdown({
 
   if (!open) return null;
 
-  const showResults = query.length >= 3 && !isLoading && !error && results.length > 0;
+  // Keep the tab UI mounted as soon as we have *any* results so selected tab state
+  // doesn't reset if one of the parallel queries briefly flips isLoading=true.
+  // (Playwright interacts with tabs; unmount/remount causes missed clicks + state reset.)
+  const showTabs = query.length >= 3 && !error && results.length > 0;
 
   const positionClass = stacked
     ? 'relative mt-2 w-full max-h-[min(56dvh,28rem)]'
@@ -100,10 +103,10 @@ export function Dropdown({
         {/* Search results */}
         {query.length >= 3 && (
           <>
-            {isLoading && <LoadingSkeleton />}
+            {isLoading && results.length === 0 && <LoadingSkeleton />}
             {!isLoading && error && <ErrorState message={error} onRetry={onRetry} />}
             {!isLoading && !error && results.length === 0 && <EmptyState query={query} />}
-            {showResults && (
+            {showTabs && (
               <Tabs
                 results={results}
                 query={query}
@@ -121,7 +124,7 @@ export function Dropdown({
       </div>
 
       {/* Keyboard shortcuts footer — hidden on mobile */}
-      {showResults && (
+      {showTabs && (
         <div className="hidden sm:block border-t border-border px-4 py-3 bg-muted flex-shrink-0">
           <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">

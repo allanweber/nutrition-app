@@ -97,33 +97,34 @@ export function MealItemEditor({ item, index, onChange, onRemove }: MealItemEdit
         </div>
       </div>
 
-      {/* Quantity + unit selector — fixed width, wraps to new line on small screens */}
-      <div className="w-56 shrink-0">
-        <QuantityUnitInput
-          measures={item.measures}
-          selectedMeasureId={item.selectedMeasureId}
-          quantity={item.displayQty}
-          onMeasureChange={handleMeasureChange}
-          onQuantityChange={handleQtyChange}
-          showSlider={false}
-          showLabel={false}
-          qtyInputTestId={index !== undefined ? `meal-item-qty-input-${index}` : 'quantity-input'}
-          measureSelectTestId={index !== undefined ? `meal-item-measure-select-${index}` : 'measure-select'}
-        />
-      </div>
+      {/* Quantity + unit selector + remove button — always same row */}
+      <div className="w-full sm:w-auto flex items-center gap-2">
+        <div className="flex-1 sm:flex-none sm:w-56 min-w-0">
+          <QuantityUnitInput
+            measures={item.measures}
+            selectedMeasureId={item.selectedMeasureId}
+            quantity={item.displayQty}
+            onMeasureChange={handleMeasureChange}
+            onQuantityChange={handleQtyChange}
+            showSlider={false}
+            showLabel={false}
+            qtyInputTestId={index !== undefined ? `meal-item-qty-input-${index}` : 'quantity-input'}
+            measureSelectTestId={index !== undefined ? `meal-item-measure-select-${index}` : 'measure-select'}
+          />
+        </div>
 
-      {/* Remove button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        data-testid={index !== undefined ? `meal-item-remove-${index}` : undefined}
-        onClick={onRemove}
-        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-        aria-label="Remove item"
-      >
-        <X className="h-4 w-4" />
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          data-testid={index !== undefined ? `meal-item-remove-${index}` : undefined}
+          onClick={onRemove}
+          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+          aria-label="Remove item"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

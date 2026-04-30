@@ -44,13 +44,14 @@ export function Tabs({
     ? ['Common', 'Branded', 'Custom']
     : ['Common', 'Branded'];
 
+  // Prefer a tab that has results. If only Custom has results, default to Custom.
   const defaultTab =
     availableTabs.find((t) => {
-      if (t === 'Custom') return false;
       if (t === 'Common') return commonItems.length > 0;
       if (t === 'Branded') return brandedItems.length > 0;
+      if (t === 'Custom') return customItems.length > 0;
       return false;
-    }) ?? 'Common';
+    }) ?? (showCustomTab ? 'Custom' : 'Common');
 
   const userHasManuallySelectedTab = React.useRef(false);
   const [activeTab, setActiveTab] = React.useState<TabKey>(defaultTab);
@@ -67,9 +68,9 @@ export function Tabs({
       current === 'Common' ? commonItems : current === 'Branded' ? brandedItems : customItems;
     if (currentItems.length === 0) {
       const nextTab = availableTabs.find((t) => {
-        if (t === 'Custom') return false;
         if (t === 'Common') return commonItems.length > 0;
         if (t === 'Branded') return brandedItems.length > 0;
+        if (t === 'Custom') return customItems.length > 0;
         return false;
       });
       if (nextTab) setActiveTab(nextTab);
@@ -89,8 +90,12 @@ export function Tabs({
       const currentCount = activeTab === 'Common' ? commonItems.length : activeTab === 'Branded' ? brandedItems.length : customItems.length;
       if (currentCount === prevCountsRef.current[activeTab]) {
         const nextTab = availableTabs.find((t) => {
-          if (t === 'Custom') return false;
-          const curr = t === 'Common' ? commonItems.length : brandedItems.length;
+          const curr =
+            t === 'Common'
+              ? commonItems.length
+              : t === 'Branded'
+                ? brandedItems.length
+                : customItems.length;
           return curr > prevCountsRef.current[t];
         });
         if (nextTab) setActiveTab(nextTab);
