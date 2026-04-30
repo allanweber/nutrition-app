@@ -310,14 +310,14 @@ function BiometricProfileFormContent({ profile }: { profile: ProfileData }) {
           </div>
 
           {/* Email + verified (read-only) */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            <div className="min-w-0">
               <SectionLabel>Email</SectionLabel>
-              <div className="text-base font-semibold px-1">{profile.email}</div>
+              <div className="px-1 text-base font-semibold break-all">{profile.email}</div>
             </div>
-            <div>
+            <div className="min-w-0">
               <SectionLabel>Email Verified?</SectionLabel>
-              <div className="flex items-center gap-1.5 text-base font-semibold px-1">
+              <div className="flex items-center gap-1.5 px-1 text-base font-semibold">
                 {profile.emailVerified ? (
                   <>
                     <CheckCircle2 className="w-5 h-5 text-primary fill-primary/20" />

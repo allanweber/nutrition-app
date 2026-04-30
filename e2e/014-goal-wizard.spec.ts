@@ -266,10 +266,10 @@ test.describe('014: Adjust Macros step', () => {
     await expect(gp.dialog.getByText(/fine-tune your macros/i)).toBeVisible();
   });
 
-  test('step 7 shows three sliders (protein, carbs, fat)', async ({ page }) => {
+  test('step 7 shows four sliders (calories, protein, carbs, fat)', async ({ page }) => {
     await walkToResults(page);
     await gp.clickAdjustMacros();
-    await expect(gp.getSliders()).toHaveCount(3);
+    await expect(gp.getSliders()).toHaveCount(4);
   });
 
   test('total percentage row shows 100%', async ({ page }) => {
@@ -302,8 +302,8 @@ test.describe('014: Adjust Macros step', () => {
     await walkToResults(page);
     await gp.clickAdjustMacros();
     const sliders = gp.getSliders();
-    // Move protein slider via keyboard (Radix sliders are spans, not inputs)
-    await sliders.first().press('ArrowRight');
+    // First slider is calories; move protein slider (index 1).
+    await sliders.nth(1).press('ArrowRight');
     // Total row should still say 100%
     await expect(gp.getMacroTotal()).toBeVisible();
   });

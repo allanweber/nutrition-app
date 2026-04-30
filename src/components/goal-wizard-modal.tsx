@@ -15,9 +15,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -35,7 +36,7 @@ type UnitSystem = 'metric' | 'imperial';
 
 interface WizardState {
   unitSystem: UnitSystem;
-  age: number;
+  age: number | '';
   sex: Sex;
   weightKg: number;
   heightCm: number;
@@ -55,6 +56,21 @@ interface CalcResults {
   fiber: number;
   sodium: number;
   strategy: string;
+}
+
+interface MacroAdjustment {
+  proteinPct: number;
+  carbsPct: number;
+  fatPct: number;
+  targetCalories: number;
+}
+
+interface GoalWizardProfile {
+  dateOfBirth: string | null;
+  gender: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  preferredUnit: 'metric' | 'imperial' | null;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -119,8 +135,9 @@ function ftInToCm(ft: number, inches: number) {
 function calculate(state: WizardState): CalcResults {
   const { weightKg, heightCm, age, sex, activityLevel, goalType, macroPreset } =
     state;
+  const ageYears = age === '' ? 25 : age;
   const bmr =
-    10 * weightKg + 6.25 * heightCm - 5 * age + (sex === 'male' ? 5 : -161);
+    10 * weightKg + 6.25 * heightCm - 5 * ageYears + (sex === 'male' ? 5 : -161);
   const tdee = bmr * ACTIVITY_MULTIPLIERS[activityLevel];
   const adjustment = CALORIE_ADJUSTMENTS[goalType] ?? 0;
   const targetCalories = Math.round(tdee + adjustment);
@@ -160,27 +177,70 @@ const DEFAULT_STATE: WizardState = {
   macroPreset: 'balanced',
 };
 
+function getAgeFromDateOfBirth(dateOfBirth: string | null): number | null {
+  if (!dateOfBirth) return null;
+  const birthDate = new Date(dateOfBirth);
+  if (Number.isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+  if (!hasHadBirthdayThisYear) age -= 1;
+
+  return age > 0 ? age : null;
+}
+
+function getWizardStateFromProfile(profile?: GoalWizardProfile | null): WizardState {
+  if (!profile) return DEFAULT_STATE;
+
+  const ageFromProfile = getAgeFromDateOfBirth(profile.dateOfBirth);
+  const sex: Sex =
+    profile.gender === 'man' || profile.gender === 'male'
+      ? 'male'
+      : profile.gender === 'woman' || profile.gender === 'female'
+        ? 'female'
+        : DEFAULT_STATE.sex;
+
+  return {
+    ...DEFAULT_STATE,
+    unitSystem: profile.preferredUnit ?? DEFAULT_STATE.unitSystem,
+    age: ageFromProfile ?? DEFAULT_STATE.age,
+    sex,
+    weightKg: profile.weightKg ?? DEFAULT_STATE.weightKg,
+    heightCm: profile.heightCm ?? DEFAULT_STATE.heightCm,
+  };
+}
+
 interface GoalWizardModalProps {
   open: boolean;
   onClose: () => void;
+  initialProfile?: GoalWizardProfile | null;
 }
 
-export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
+export function GoalWizardModal({ open, onClose, initialProfile }: GoalWizardModalProps) {
   const router = useRouter();
   const { updateGoals } = useNutritionGoals();
+  const initialWizardState = useMemo(
+    () => getWizardStateFromProfile(initialProfile),
+    [initialProfile],
+  );
   const [step, setStep] = useState(0);
-  const [state, setState] = useState<WizardState>(DEFAULT_STATE);
+  const [state, setState] = useState<WizardState>(initialWizardState);
   const [results, setResults] = useState<CalcResults | null>(null);
   const [saving, setSaving] = useState(false);
-  const [macroAdj, setMacroAdj] = useState<{
-    proteinPct: number;
-    carbsPct: number;
-    fatPct: number;
-  } | null>(null);
+  const [macroAdj, setMacroAdj] = useState<MacroAdjustment | null>(null);
 
   // Imperial display values
   const displayWeightLbs = kgToLbs(state.weightKg);
   const displayHeightFtIn = cmToFtIn(state.heightCm);
+
+  useEffect(() => {
+    if (!open) {
+      setState(initialWizardState);
+    }
+  }, [initialWizardState, open]);
 
   function update<K extends keyof WizardState>(key: K, value: WizardState[K]) {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -227,9 +287,22 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
       const pPct = Math.round(((results.protein * 4) / totalCals) * 100);
       const fPct = Math.round(((results.fat * 9) / totalCals) * 100);
       const cPct = 100 - pPct - fPct;
-      setMacroAdj({ proteinPct: pPct, carbsPct: cPct, fatPct: fPct });
+      setMacroAdj({
+        proteinPct: pPct,
+        carbsPct: cPct,
+        fatPct: fPct,
+        targetCalories: totalCals,
+      });
     }
     goTo(7);
+  }
+
+  function adjustCalories(newCalories: number) {
+    setMacroAdj((prev) => {
+      if (!prev) return prev;
+      const clamped = Math.max(1200, Math.min(5000, Math.round(newCalories)));
+      return { ...prev, targetCalories: clamped };
+    });
   }
 
   // Adjust one macro %, redistribute remainder proportionally between the other two
@@ -260,7 +333,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
   // Compute macros from adjustment percentages (calories-locked)
   function getAdjustedMacros() {
     if (!results || !macroAdj) return null;
-    const { targetCalories } = results;
+    const { targetCalories } = macroAdj;
     const protein = Math.round(
       (targetCalories * macroAdj.proteinPct) / 100 / 4,
     );
@@ -273,19 +346,21 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
     if (!results) return;
     setSaving(true);
     const adjusted = getAdjustedMacros();
+    const adjustedCalories = macroAdj?.targetCalories ?? results.targetCalories;
+    const adjustedFiber = Math.round((adjustedCalories / 1000) * 14);
     try {
       await updateGoals({
-        calories: results.targetCalories,
+        calories: adjustedCalories,
         protein: adjusted?.protein ?? results.protein,
         carbs: adjusted?.carbs ?? results.carbs,
         fat: adjusted?.fat ?? results.fat,
-        fiber: results.fiber,
+        fiber: adjustedFiber,
         hydration: results.hydrationMl,
         sodium: results.sodium,
         goalType: state.goalType,
         activityLevel: state.activityLevel,
         // Wizard snapshot fields
-        ageYears: state.age,
+        ageYears: state.age === '' ? 25 : state.age,
         sex: state.sex,
         heightCm: state.heightCm,
         weightKg: state.weightKg,
@@ -307,7 +382,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
     onClose();
     setTimeout(() => {
       setStep(0);
-      setState(DEFAULT_STATE);
+      setState(initialWizardState);
       setResults(null);
       setMacroAdj(null);
     }, 300);
@@ -324,7 +399,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
         if (!o) handleClose();
       }}
     >
-      <DialogContent className="max-w-lg p-0 gap-0 border-0 rounded-[2.5rem] shadow-2xl shadow-primary/10 overflow-hidden sm:rounded-[2.5rem]">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] p-0 gap-0 border-0 rounded-[2.5rem] shadow-2xl shadow-primary/10 overflow-hidden flex flex-col sm:rounded-[2.5rem]">
         <DialogTitle className="sr-only">Goal Calculator</DialogTitle>
         {/* Progress bar */}
         {showProgress && (
@@ -352,7 +427,13 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
           </div>
         )}
 
-        <div className="p-5">
+        <div
+          className={
+            step === 6
+              ? 'flex-1 overflow-hidden p-4 sm:p-5'
+              : 'flex-1 overflow-y-auto overscroll-contain p-5'
+          }
+        >
           {/* ── Step 0: Splash ── */}
           {step === 0 && (
             <div className="text-center space-y-5">
@@ -400,7 +481,15 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   <Input
                     type="number"
                     value={state.age}
-                    onChange={(e) => update('age', parseInt(e.target.value, 10) || 25)}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        update('age', '');
+                        return;
+                      }
+                      const parsed = Number.parseInt(raw, 10);
+                      if (!Number.isNaN(parsed)) update('age', parsed);
+                    }}
                     placeholder="25"
                     min={1}
                     max={120}
@@ -707,7 +796,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               <ToggleGroup
                 type="single"
                 value={state.macroPreset}
-                onValueChange={(v) => { if (v) update('macroPreset', v as MacroPreset); }}
+                onValueChange={(v) => {
+                  if (v === 'balanced') update('macroPreset', v as MacroPreset);
+                }}
                 className="grid grid-cols-2 gap-2 w-full"
               >
                 {(
@@ -717,15 +808,24 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     { value: 'low_carb', label: 'Low Carb' },
                     { value: 'keto', label: 'Keto' },
                   ] as const
-                ).map(({ value, label }) => (
+                ).map(({ value, label }) => {
+                  const isDisabled = value !== 'balanced';
+                  return (
                   <ToggleGroupItem
                     key={value}
                     value={value}
-                    className="border-2 rounded-xl font-semibold text-sm data-[state=on]:border-primary data-[state=on]:bg-primary/5 data-[state=on]:text-primary border-border/30"
+                    disabled={isDisabled}
+                    className="border-2 rounded-xl font-semibold text-sm data-[state=on]:border-primary data-[state=on]:bg-primary/5 data-[state=on]:text-primary border-border/30 disabled:opacity-50 disabled:cursor-not-allowed h-auto py-2 flex-col items-center justify-center"
                   >
-                    {label}
+                    <span>{label}</span>
+                    {isDisabled && (
+                      <span className="block text-[10px] font-medium normal-case leading-tight text-muted-foreground mt-0.5">
+                        (disabled)
+                      </span>
+                    )}
                   </ToggleGroupItem>
-                ))}
+                );
+                })}
               </ToggleGroup>
 
               {/* Visual toggles (UI only) */}
@@ -735,12 +835,23 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     key={label}
                     className="flex items-center justify-between"
                   >
-                    <span className="font-medium text-sm">{label}</span>
+                    <div>
+                      <span className="font-medium text-sm">{label}</span>
+                      <span className="block text-[10px] font-medium text-muted-foreground leading-tight">
+                        (disabled)
+                      </span>
+                    </div>
                     <div className="w-12 h-6 bg-muted rounded-full relative">
                       <div className="absolute right-1 top-1 w-4 h-4 bg-background rounded-full shadow-sm" />
                     </div>
                   </div>
                 ))}
+
+                <Alert className="border-primary/20 bg-primary/5">
+                  <AlertDescription className="text-xs font-medium text-muted-foreground">
+                    Disabled features will be available soon.
+                  </AlertDescription>
+                </Alert>
               </div>
 
               <div className="flex gap-3">
@@ -790,7 +901,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                     {
                       Icon: Scale,
                       label: 'Details',
-                      value: `${state.age}y, ${Math.round(state.weightKg)}kg`,
+                      value: `${state.age === '' ? '—' : state.age}y, ${Math.round(state.weightKg)}kg`,
                       valueClass: '',
                     },
                     {
@@ -833,30 +944,35 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
 
           {/* ── Step 6: Results ── */}
           {step === 6 && results && (
-            <div className="space-y-4">
+            <div className="h-full flex flex-col gap-3">
+              {(() => {
+                const displayCalories =
+                  macroAdj?.targetCalories ?? results.targetCalories;
+                return (
+                  <>
               <div className="text-center space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest">
                   <Star className="w-3 h-3" /> Personalized for you
                 </div>
-                <h2 className="text-2xl font-headline font-black">
+                <h2 className="text-xl sm:text-2xl font-headline font-black">
                   Your Custom Daily Plan
                 </h2>
               </div>
 
               {/* Calorie hero */}
-              <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 text-center">
+              <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3 sm:p-5 text-center">
                 <span className="text-xs font-black uppercase tracking-[0.2em] text-primary/70">
                   Estimated Daily Energy
                 </span>
                 <div className="flex items-baseline justify-center gap-2 mt-1">
-                  <span className="text-5xl font-headline font-black tracking-tighter">
-                    {results.targetCalories.toLocaleString('en-US')}
+                  <span className="text-4xl sm:text-5xl font-headline font-black tracking-tighter leading-none">
+                    {displayCalories.toLocaleString('en-US')}
                   </span>
-                  <span className="text-lg font-bold text-muted-foreground">
+                  <span className="text-base sm:text-lg font-bold text-muted-foreground">
                     kcal
                   </span>
                 </div>
-                <div className="mt-2 inline-flex items-center gap-2 text-primary font-semibold bg-white px-4 py-1 rounded-full shadow-sm border border-primary/5 text-xs">
+                <div className="mt-2 inline-flex items-center gap-2 text-primary font-semibold bg-white px-3 py-1 rounded-full shadow-sm border border-primary/5 text-[11px] sm:text-xs">
                   {results.strategy}
                 </div>
               </div>
@@ -890,29 +1006,29 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 ).map(({ key, label, g, color, desc }) => {
                   const calsPer = key === 'fat' ? 9 : 4;
                   const pct = Math.round(
-                    ((g * calsPer) / results.targetCalories) * 100,
+                    ((g * calsPer) / displayCalories) * 100,
                   );
                   return (
                     <div
                       key={key}
-                      className="p-3 rounded-xl bg-white border border-border/30 shadow-sm flex flex-col items-center text-center"
+                      className="p-2 sm:p-3 rounded-xl bg-white border border-border/30 shadow-sm flex flex-col items-center text-center"
                     >
                       <div
-                        className="w-9 h-9 rounded-full border-4 flex items-center justify-center mb-2"
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-4 flex items-center justify-center mb-1.5 sm:mb-2"
                         style={{ borderColor: `${color}33` }}
                       >
                         <span
-                          className="text-[9px] font-black"
+                          className="text-[8px] sm:text-[9px] font-black"
                           style={{ color }}
                         >
                           {pct}%
                         </span>
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         {label}
                       </span>
-                      <div className="text-xl font-black">{g}g</div>
-                      <p className="text-[9px] mt-1 text-muted-foreground leading-tight">
+                      <div className="text-lg sm:text-xl font-black leading-tight">{g}g</div>
+                      <p className="hidden sm:block text-[9px] mt-1 text-muted-foreground leading-tight">
                         {desc}
                       </p>
                     </div>
@@ -922,41 +1038,41 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
 
               {/* Info tiles */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="bg-muted rounded-xl p-2.5 sm:p-3 flex items-center gap-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-primary text-sm">💧</span>
                   </div>
-                  <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                  <div className="min-w-0">
+                    <span className="block text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                       Hydration
                     </span>
-                    <span className="text-base font-black">
+                    <span className="text-sm sm:text-base font-black leading-tight">
                       {(results.hydrationMl / 1000).toFixed(1)} L
                     </span>
                   </div>
                 </div>
-                <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="bg-muted rounded-xl p-2.5 sm:p-3 flex items-center gap-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-primary text-sm">🌿</span>
                   </div>
-                  <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                  <div className="min-w-0">
+                    <span className="block text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                       Fiber
                     </span>
-                    <span className="text-base font-black">
-                      {results.fiber} g
+                    <span className="text-sm sm:text-base font-black leading-tight">
+                      {Math.round((displayCalories / 1000) * 14)} g
                     </span>
                   </div>
                 </div>
-                <div className="bg-muted rounded-xl p-3 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                <div className="bg-muted rounded-xl p-2.5 sm:p-3 flex items-center gap-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
                     <span className="text-orange-600 text-sm">🧂</span>
                   </div>
-                  <div>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                  <div className="min-w-0">
+                    <span className="block text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                       Sodium
                     </span>
-                    <span className="text-base font-black">
+                    <span className="text-sm sm:text-base font-black leading-tight">
                       {results.sodium} mg
                     </span>
                   </div>
@@ -964,38 +1080,38 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
               </div>
 
               {/* CTAs */}
-              <div className="space-y-2">
+              <div className="mt-auto space-y-2">
                 <Button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
                   variant="default"
                   size="lg"
-                  className='w-full'
+                  className="w-full"
                 >
                   {saving ? 'Saving...' : 'Start Tracking My Plan'}
                 </Button>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="px-2 text-xs"
                     onClick={openAdjustMacros}
                   >
                     Adjust Macros
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="px-2 text-xs"
                     onClick={() => goTo(4)}
                   >
                     Refine My Plan
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="px-2 text-xs"
                     onClick={() => {
                       goTo(0);
-                      setState(DEFAULT_STATE);
+                      setState(initialWizardState);
                       setResults(null);
                       setMacroAdj(null);
                     }}
@@ -1004,6 +1120,9 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   </Button>
                 </div>
               </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
@@ -1015,9 +1134,37 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   Fine-tune Your Macros
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Drag to adjust. Total calories stay at{' '}
-                  {results.targetCalories.toLocaleString('en-US')} kcal.
+                  Adjust calories and macro split to match your plan.
                 </p>
+              </div>
+
+              <div className="space-y-2 rounded-xl border border-border/30 p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    Daily Calories
+                  </Label>
+                  <span className="text-xl font-black text-primary">
+                    {macroAdj.targetCalories.toLocaleString('en-US')} kcal
+                  </span>
+                </div>
+                <Slider
+                  min={1200}
+                  max={5000}
+                  step={25}
+                  value={[macroAdj.targetCalories]}
+                  onValueChange={([v]) => adjustCalories(v)}
+                />
+                <Input
+                  type="number"
+                  value={macroAdj.targetCalories}
+                  onChange={(e) => {
+                    const parsed = Number.parseInt(e.target.value, 10);
+                    if (!Number.isNaN(parsed)) adjustCalories(parsed);
+                  }}
+                  min={1200}
+                  max={5000}
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
               </div>
 
               <div className="space-y-4">
@@ -1047,7 +1194,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                   ] as const
                 ).map(({ key, label, pct, color, calsPerG }) => {
                   const grams = Math.round(
-                    (results.targetCalories * pct) / 100 / calsPerG,
+                    (macroAdj.targetCalories * pct) / 100 / calsPerG,
                   );
                   return (
                     <div key={key} className="space-y-2">
@@ -1088,7 +1235,7 @@ export function GoalWizardModal({ open, onClose }: GoalWizardModalProps) {
                 <span>Total</span>
                 <span className="font-black">
                   {macroAdj.proteinPct + macroAdj.carbsPct + macroAdj.fatPct}% ·{' '}
-                  {results.targetCalories.toLocaleString('en-US')} kcal
+                  {macroAdj.targetCalories.toLocaleString('en-US')} kcal
                 </span>
               </div>
 

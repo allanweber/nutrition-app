@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +45,27 @@ interface NewPlanModalProps {
   nutritionGoalDefaults: NutritionGoalDefaults | null;
   onClose: () => void;
   onCreated: (planId: string) => void;
+}
+
+function toIsoDate(date: Date | undefined): string {
+  if (!date || Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function fromIsoDate(value: string): Date | undefined {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return undefined;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return undefined;
+  }
+  return date;
 }
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -245,14 +267,18 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                 {(field) => (
                   <div className="space-y-1.5">
                     <FieldLabel required>Start Date</FieldLabel>
-                    <Input
+                    <DateInput
                       id={field.name}
-                      data-testid="plan-start-date-input"
-                      type="date"
-                      value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
-                      onChange={(e) => field.handleChange(new Date(e.target.value))}
+                      inputTestId="plan-start-date-input"
+                      inputClassName={field.state.meta.errors.length ? 'border-destructive' : ''}
+                      value={toIsoDate(field.state.value instanceof Date ? field.state.value : undefined)}
+                      onChange={(v) => {
+                        const parsed = fromIsoDate(v);
+                        if (parsed) {
+                          field.handleChange(parsed);
+                        }
+                      }}
                       onBlur={field.handleBlur}
-                      className={field.state.meta.errors.length ? 'border-destructive' : ''}
                     />
                     <FieldError errors={field.state.meta.errors} />
                   </div>
@@ -263,12 +289,11 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                 {(field) => (
                   <div className="space-y-1.5">
                     <FieldLabel>End Date (Optional)</FieldLabel>
-                    <Input
+                    <DateInput
                       id={field.name}
-                      data-testid="plan-end-date-input"
-                      type="date"
-                      value={field.state.value instanceof Date ? field.state.value.toISOString().split('T')[0] : ''}
-                      onChange={(e) => field.handleChange(e.target.value ? new Date(e.target.value) : undefined)}
+                      inputTestId="plan-end-date-input"
+                      value={toIsoDate(field.state.value instanceof Date ? field.state.value : undefined)}
+                      onChange={(v) => field.handleChange(v ? fromIsoDate(v) : undefined)}
                     />
                   </div>
                 )}
