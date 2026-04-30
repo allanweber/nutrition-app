@@ -40,7 +40,7 @@ import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.s
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MealModalState =
-  | { mode: 'create'; planId: string; day: number; mealType?: string; existingMeals: DietPlanMealDTO[] }
+  | { mode: 'create'; planId: string; day: number; mealType?: MealType; existingMeals: DietPlanMealDTO[] }
   | { mode: 'edit'; planId: string; meal: DietPlanMealDTO };
 
 interface MealModalProps {
