@@ -169,11 +169,11 @@ git branch -r --merged main | grep -v "main" | sed 's/origin\///' | xargs -I {} 
 
 Follow **[Cloudflare Tunnels](https://docs.dokploy.com/docs/core/guides/cloudflare-tunnels)** (official). Short version:
 
-1. **Cloudflare** → Zero Trust → **Networks** → **Connectors** → **Create tunnel** → **Cloudflared** → copy `**TUNNEL_TOKEN`**.
+1. **Cloudflare** → Zero Trust → **Networks** → **Connectors** → **Create tunnel** → **Cloudflared** → copy `TUNNEL_TOKEN`.
 2. **SSL/TLS** in Cloudflare: use **Full** or **Full (strict)** — the doc says **avoid Flexible** (redirect loops with Traefik).
-3. In **Dokploy**, create an **Application** with Docker image `**cloudflare/cloudflared`**; env `**TUNNEL_TOKEN`**; **Advanced → Arguments**: `tunnel` then `run` (see guide).
+3. In **Dokploy**, create an **Application** with Docker image `cloudflare/cloudflared`; env `TUNNEL_TOKEN`; **Advanced → Arguments**: `tunnel` then `run` (see guide).
 4. **Published routes / public hostname** in Cloudflare:
-  - **Wildcard subdomains:** DNS **CNAME** `*` → `YOUR_TUNNEL_ID.cfargotunnel.com` (proxied), and one tunnel hostname to `**dokploy-traefik:80`** so `invest.allanweber.dev` and future subdomains work without new tunnel entries.
-5. For **your app** in Dokploy → **Domains**: add `**invest.allanweber.dev`** with the **correct container port**; with tunnel + Traefik, the doc recommends **HTTPS off** and **no Let’s Encrypt** on that domain in Dokploy so Cloudflare terminates TLS at the edge (see guide — conflicts otherwise).
+  - **Wildcard subdomains:** DNS **CNAME** `*` → `YOUR_TUNNEL_ID.cfargotunnel.com` (proxied), and one tunnel hostname to `dokploy-traefik:80` so `invest.allanweber.dev` and future subdomains work without new tunnel entries.
+5. For **your app** in Dokploy → **Domains**: add `invest.allanweber.dev` with the **correct container port**; with tunnel + Traefik, the doc recommends **HTTPS off** and **no Let’s Encrypt** on that domain in Dokploy so Cloudflare terminates TLS at the edge (see guide — conflicts otherwise).
 6. **Better Auth / OAuth:** if cookies or redirects break, you may need **Full (strict)** plus a **trusted origin certificate** on Traefik — same class of issue as Coolify’s [Full TLS](https://coolify.io/docs/integrations/cloudflare/tunnels/full-tls); plan extra time to tune SSL mode and app `BETTER_AUTH_URL`.
 
