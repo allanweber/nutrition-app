@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
-import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown } from 'lucide-react';
+import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown, MoreVertical, Sunrise, Sandwich, Moon } from 'lucide-react';
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 
 import { FoodLogEntry } from '@/types/food';
 import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, type MealType } from '@/lib/nutrition-constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Totals {
   calories: number;
@@ -235,6 +236,17 @@ export default function FoodLogClient({
             >
               <div>
                 <div className="flex items-center gap-2">
+                  <span className="sm:hidden text-muted-foreground">
+                    {mealType === 'breakfast' ? (
+                      <Sunrise className="h-4 w-4" aria-hidden />
+                    ) : mealType === 'lunch' ? (
+                      <Sandwich className="h-4 w-4" aria-hidden />
+                    ) : mealType === 'dinner' ? (
+                      <Moon className="h-4 w-4" aria-hidden />
+                    ) : (
+                      <UtensilsCrossed className="h-4 w-4" aria-hidden />
+                    )}
+                  </span>
                   <span
                     className={`w-2.5 h-2.5 rounded-full shrink-0 ${MEAL_DOT_COLORS[mealType]}`}
                     aria-hidden
@@ -274,11 +286,21 @@ export default function FoodLogClient({
                 className="flex items-center justify-center py-8 px-5"
                 data-testid={`meal-empty-placeholder-${mealType}`}
               >
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
-                  <p className="text-sm text-muted-foreground">
-                    No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
-                  </p>
+                <div className="w-full sm:w-auto">
+                  <div className="sm:hidden rounded-2xl border border-dashed border-border/60 bg-muted/30 px-4 py-6 text-center">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Plan {MEAL_TYPE_LABELS[mealType]}
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Nothing logged yet.
+                    </p>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-center gap-2 text-center">
+                    <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
+                    <p className="text-sm text-muted-foreground">
+                      No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : !isMealCollapsed ? (
@@ -465,72 +487,134 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
 
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
-          {log.food.brandName && (
-            <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {log.altMeasure
-              ? `${+(log.quantity / log.altMeasure.weightGrams).toFixed(2)} ${log.altMeasure.description}`
-              : `${log.quantity}g`}
-          </p>
-          <div className="flex items-center gap-1 mt-1 flex-wrap">
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.protein}`}>
-              P {nutrients.protein}g
-            </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.carbs}`}>
-              C {nutrients.carbs}g
-            </span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.fat}`}>
-              F {nutrients.fat}g
-            </span>
+          <div className="hidden sm:block">
+            {log.food.brandName && (
+              <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {log.altMeasure
+                ? `${+(log.quantity / log.altMeasure.weightGrams).toFixed(2)} ${log.altMeasure.description}`
+                : `${log.quantity}g`}
+            </p>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.protein}`}>
+                P {nutrients.protein}g
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.carbs}`}>
+                C {nutrients.carbs}g
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.fat}`}>
+                F {nutrients.fat}g
+              </span>
+            </div>
+          </div>
+
+          <div className="sm:hidden mt-0.5 text-xs text-muted-foreground tabular-nums flex items-center gap-2">
+            <span className="truncate">P: {nutrients.protein}g</span>
+            <span className="truncate">C: {nutrients.carbs}g</span>
+            <span className="truncate">F: {nutrients.fat}g</span>
           </div>
         </div>
       </Button>
 
       <div className="text-right shrink-0">
-        <p className="text-sm font-bold tabular-nums text-foreground">{nutrients.calories} kcal</p>
+        <p className="text-sm font-bold tabular-nums text-foreground">{nutrients.calories}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground -mt-0.5">kcal</p>
       </div>
 
-      <FavoriteToggleButton foodId={log.food.id} />
+      {/* Desktop actions */}
+      <div className="hidden sm:flex items-center gap-2 shrink-0">
+        <FavoriteToggleButton foodId={log.food.id} />
 
-      {confirmingDelete === log.id ? (
-        <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label={`Confirm removal of ${log.food.name}`}>
+        {confirmingDelete === log.id ? (
+          <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label={`Confirm removal of ${log.food.name}`}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDeleteConfirm(log.id)}
+              data-testid={`delete-confirm-${log.id}`}
+              className="text-xs h-auto py-1.5 px-3 rounded-full"
+            >
+              Remove
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onDeleteCancel}
+              data-testid={`delete-cancel-${log.id}`}
+              className="text-xs h-auto py-1.5 px-3 rounded-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
           <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDeleteConfirm(log.id)}
-            data-testid={`delete-confirm-${log.id}`}
-            className="text-xs h-auto py-1.5 px-3 rounded-full"
+            variant="ghost"
+            size="icon"
+            onClick={() => onDeleteRequest(log.id)}
+            disabled={deleting === log.id}
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+            aria-label={`Remove ${log.food.name} from log`}
+            data-testid={`delete-log-${log.id}`}
           >
-            Remove
+            {deleting === log.id ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Trash2 className="h-4 w-4" aria-hidden />
+            )}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onDeleteCancel}
-            data-testid={`delete-cancel-${log.id}`}
-            className="text-xs h-auto py-1.5 px-3 rounded-full"
-          >
-            Cancel
-          </Button>
-        </div>
-      ) : (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDeleteRequest(log.id)}
-          disabled={deleting === log.id}
-          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-          aria-label={`Remove ${log.food.name} from log`}
-          data-testid={`delete-log-${log.id}`}
-        >
-          {deleting === log.id ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          ) : (
-            <Trash2 className="h-4 w-4" aria-hidden />
-          )}
-        </Button>
-      )}
+        )}
+      </div>
+
+      {/* Mobile overflow actions */}
+      <div className="sm:hidden shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="More actions">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <div className="w-full flex items-center justify-between">
+                <span>Favorite</span>
+                <FavoriteToggleButton foodId={log.food.id} className="size-8" />
+              </div>
+            </DropdownMenuItem>
+            {confirmingDelete === log.id ? (
+              <>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    void onDeleteConfirm(log.id);
+                  }}
+                >
+                  Remove
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onDeleteCancel();
+                  }}
+                >
+                  Cancel
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onDeleteRequest(log.id);
+                }}
+              >
+                Remove
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

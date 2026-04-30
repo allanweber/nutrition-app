@@ -42,7 +42,12 @@ export function CopyDayPopover({ planId, currentDay, meals }: CopyDayPopoverProp
   return (
     <Popover open={open} onOpenChange={(v) => { if (!isPending) setOpen(v); }}>
       <PopoverTrigger asChild>
-        <Button data-testid="copy-day-button" variant="outline" className="gap-1.5" disabled={isPending}>
+        <Button
+          data-testid="copy-day-button"
+          variant="outline"
+          disabled={isPending}
+          className="gap-1.5 max-md:border-0 max-md:bg-transparent max-md:shadow-none max-md:px-0 max-md:hover:bg-transparent max-md:text-primary max-md:hover:text-primary max-md:underline-offset-4 max-md:hover:underline"
+        >
           {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
           Copy Day
         </Button>

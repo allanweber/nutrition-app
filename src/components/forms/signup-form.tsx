@@ -24,6 +24,24 @@ export function SignupForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
 
+  async function requestVerificationCodeWithRetry() {
+    // In some environments the auth cookie isn't readable immediately after sign-up.
+    // Retry briefly so the verification challenge row exists before navigating.
+    for (let i = 0; i < 8; i += 1) {
+      try {
+        const res = await fetch('/api/auth/request-email-verification-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ callbackURL: '/dashboard' }),
+        });
+        if (res.ok) return;
+      } catch {
+        // ignore and retry
+      }
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  }
+
   const form = useForm({
     defaultValues: {
       name: '',
@@ -37,16 +55,6 @@ export function SignupForm() {
       const result = await signUp.email(
         { email: value.email, password: value.password, name: value.name },
         {
-          onSuccess: () => {
-            void fetch('/api/auth/request-email-verification-code', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ callbackURL: '/dashboard' }),
-              keepalive: true,
-            }).catch(() => {});
-            router.push('/verify-email?callbackURL=/dashboard');
-            router.refresh();
-          },
           onError: (ctx) => {
             const msg = ctx.error.message || 'Signup failed';
             setAuthError(msg);
@@ -60,6 +68,11 @@ export function SignupForm() {
         setAuthError(msg);
         throw new Error(msg);
       }
+
+      // Ensure the server-side dashboard gate can find a challenge row.
+      await requestVerificationCodeWithRetry();
+      router.push('/verify-email?callbackURL=/dashboard');
+      router.refresh();
     },
   });
 

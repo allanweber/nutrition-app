@@ -32,7 +32,20 @@ async function typeSearch(page: import('@playwright/test').Page, query: string) 
   const searchInput = page.getByTestId('food-search-input');
   await searchInput.click();
   await searchInput.fill(query);
-  await page.waitForTimeout(600); // allow debounce + request
+  // Allow debounce + request, but also wait for the UI to settle so downstream
+  // steps don't race "results not loaded yet".
+  await expect(page.getByTestId('food-search-dropdown')).toBeVisible({ timeout: 5000 });
+
+  if (query.length >= 3) {
+    // Wait for either results or empty state (or an error) to render.
+    await Promise.race([
+      page.getByTestId('food-result-item').first().waitFor({ state: 'visible', timeout: 7000 }),
+      page.getByTestId('search-empty').waitFor({ state: 'visible', timeout: 7000 }),
+      page.getByTestId('search-error').waitFor({ state: 'visible', timeout: 7000 }),
+    ]);
+  } else {
+    await page.waitForTimeout(250);
+  }
 }
 
 // ──────────────────────────────────────────────

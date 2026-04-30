@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChefHat, ChevronDown, ChevronRight, Loader2, Trash2, Utensils, UtensilsCrossed } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { MEAL_TYPE_COLORS, MEAL_TYPE_LABELS, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 import { MealItemRow } from './meal-item-row';
 import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.service';
@@ -20,10 +22,10 @@ import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.s
 interface MealCardProps {
   meal: DietPlanMealDTO;
   isDeleting?: boolean;
+  defaultCollapsed?: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }
-
 
 interface DishGroup {
   dishGroupId: string;
@@ -70,7 +72,6 @@ function DishGroupRow({ group }: { group: DishGroup }) {
 
   return (
     <div>
-      {/* Dish header */}
       <Button
         type="button"
         variant="ghost"
@@ -110,7 +111,6 @@ function DishGroupRow({ group }: { group: DishGroup }) {
         <ChevronIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
       </Button>
 
-      {/* Expanded ingredients */}
       {expanded && (
         <div className="pl-8 divide-y divide-border/20 border-l-2 border-violet-200/60 ml-2.5 mb-1">
           {group.items.map((item) => (
@@ -122,87 +122,132 @@ function DishGroupRow({ group }: { group: DishGroup }) {
   );
 }
 
-export function MealCard({ meal, isDeleting = false, onEdit, onDelete }: MealCardProps) {
+export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultCollapsed = false, onEdit, onDelete }: MealCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Mobile: always start collapsed (desktop is forced open via isDesktop below).
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const iconColors = MEAL_TYPE_COLORS[meal.mealType] ?? 'bg-muted text-muted-foreground';
   const label = (MEAL_TYPE_LABELS[meal.mealType] ?? meal.mealType).toUpperCase();
 
   const { dishGroups, soloItems } = groupItems(meal.items);
 
+  // Desktop/tablet: keep content always visible (collapsible is mobile-only).
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   return (
     <>
-      <div
-        data-testid={`meal-card-${meal.id}`}
-        onClick={isDeleting ? undefined : onEdit}
-        className={`rounded-2xl border bg-background transition-all flex flex-col relative ${isDeleting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:shadow-sm'}`}
-      >
-        {isDeleting && (
-          <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColors}`}>
-            <Utensils className="h-5 w-5" />
-          </div>
-          <span className="text-xs font-bold uppercase tracking-widest text-foreground flex-1">{label}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            data-testid={`meal-delete-btn-${meal.id}`}
-            onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
-            disabled={isDeleting}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            aria-label={`Delete ${label} meal`}
-          >
-            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        {/* Items */}
-        <div className="px-5 divide-y divide-border/30 flex-1">
-          {dishGroups.map((group) => (
-            <DishGroupRow key={group.dishGroupId} group={group} />
-          ))}
-          {soloItems.map((item) => (
-            <MealItemRow key={item.id} item={item} />
-          ))}
-          {meal.items.length === 0 && (
-            <div className="py-8 flex flex-col items-center gap-2 text-center">
-              <UtensilsCrossed className="h-8 w-8 text-muted-foreground/30" />
-              <p className="text-sm font-medium text-muted-foreground">No foods added</p>
-              <p className="text-xs text-muted-foreground/70">Click to add foods to this meal</p>
+      <Collapsible open={isDesktop ? true : isOpen} onOpenChange={isDesktop ? undefined : setIsOpen}>
+        <div
+          data-testid={`meal-card-${meal.id}`}
+          onClick={isDeleting ? undefined : onEdit}
+          className={`rounded-2xl border bg-background transition-all flex flex-col relative ${isDeleting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:shadow-sm'}`}
+        >
+          {isDeleting && (
+            <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto">
-          <div className="flex flex-col px-5 py-3 flex-1">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
-            <span data-testid={`meal-total-calories-${meal.id}`} className="text-base font-bold text-foreground">
-              {Math.round(meal.totalCalories)}{' '}
-              <span className="text-xs font-normal text-muted-foreground">kcal</span>
-            </span>
-          </div>
-          <div className="flex flex-col px-4 py-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
-            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(meal.totalProtein)}g</span>
-          </div>
-          <div className="flex flex-col px-4 py-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
-            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(meal.totalCarbs)}g</span>
-          </div>
-          <div className="flex flex-col px-4 py-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
-            <span className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(meal.totalFat)}g</span>
-          </div>
-        </div>
-      </div>
+          {/* Header: render ONE variant to avoid duplicate testids in DOM */}
+          {isDesktop ? (
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColors}`}>
+                <Utensils className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-widest text-foreground flex-1">{label}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                data-testid={`meal-delete-btn-${meal.id}`}
+                onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
+                disabled={isDeleting}
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                aria-label={`Delete ${label} meal`}
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : (
+            <CollapsibleTrigger asChild disabled={isDeleting}>
+              <div
+                className="flex items-center gap-3 px-5 py-4 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconColors}`}>
+                  <Utensils className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-widest flex-1 text-left text-foreground">{label}</span>
+                <span className="text-sm font-semibold tabular-nums text-foreground mr-1">
+                  {Math.round(meal.totalCalories)} kcal
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  data-testid={`meal-delete-btn-${meal.id}`}
+                  onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
+                  disabled={isDeleting}
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                  aria-label={`Delete ${label} meal`}
+                >
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                </Button>
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform duration-200 shrink-0', isOpen && 'rotate-180')} />
+              </div>
+            </CollapsibleTrigger>
+          )}
 
-      {/* Delete confirmation */}
+          {/* Collapsible content — always visible on desktop, toggleable on mobile */}
+          <CollapsibleContent>
+            <div className="px-5 divide-y divide-border/30 flex-1">
+              {dishGroups.map((group) => (
+                <DishGroupRow key={group.dishGroupId} group={group} />
+              ))}
+              {soloItems.map((item) => (
+                <MealItemRow key={item.id} item={item} />
+              ))}
+              {meal.items.length === 0 && (
+                <div className="py-8 flex flex-col items-center gap-2 text-center">
+                  <UtensilsCrossed className="h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-sm font-medium text-muted-foreground">No foods added</p>
+                  <p className="text-xs text-muted-foreground/70">Click to add foods to this meal</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto">
+              <div className="flex flex-col px-5 py-3 flex-1">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
+                <span data-testid={`meal-total-calories-${meal.id}`} className="text-base font-bold text-foreground">
+                  {Math.round(meal.totalCalories)}{' '}
+                  <span className="text-xs font-normal text-muted-foreground">kcal</span>
+                </span>
+              </div>
+              <div className="flex flex-col px-4 py-3">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
+                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(meal.totalProtein)}g</span>
+              </div>
+              <div className="flex flex-col px-4 py-3">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
+                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(meal.totalCarbs)}g</span>
+              </div>
+              <div className="flex flex-col px-4 py-3">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
+                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(meal.totalFat)}g</span>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

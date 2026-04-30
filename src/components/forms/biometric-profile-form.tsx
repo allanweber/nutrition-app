@@ -85,9 +85,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ─── loading shell ────────────────────────────────────────────────────────────
 
 export function BiometricProfileForm() {
-  const { data, isLoading } = useQuery<{ profile: ProfileData }>({
+  const { data, isLoading, isError, error } = useQuery<{ profile: ProfileData }>({
     queryKey: ['profile'],
-    queryFn: () => fetch('/api/profile').then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/profile', { credentials: 'include' });
+      const json = (await res.json().catch(() => null)) as unknown;
+      if (!res.ok) {
+        const message =
+          typeof (json as any)?.error === 'string' ? (json as any).error : 'Failed to fetch profile';
+        throw new Error(message);
+      }
+      return json as { profile: ProfileData };
+    },
   });
 
   if (isLoading) {
@@ -98,7 +107,29 @@ export function BiometricProfileForm() {
     );
   }
 
-  if (!data?.profile) return null;
+  if (isError) {
+    return (
+      <div className="py-10">
+        <div className="rounded-xl border border-border/60 bg-background p-5">
+          <p className="text-sm font-semibold">Unable to load your profile.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {(error as Error | undefined)?.message ?? 'Please refresh and try again.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data?.profile) {
+    return (
+      <div className="py-10">
+        <div className="rounded-xl border border-border/60 bg-background p-5">
+          <p className="text-sm font-semibold">No profile data returned.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Please refresh and try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return <BiometricProfileFormContent profile={data.profile} />;
 }

@@ -17,6 +17,7 @@ export function FoodSearchField({
   placeholder,
   className,
   size = 'default',
+  dropdownLayout = 'floating',
   inputTestId,
 }: FoodSearchFieldProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -74,15 +75,23 @@ export function FoodSearchField({
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setHighlightedIndex((i) => (i < total - 1 ? i + 1 : i));
+        // If results haven't arrived yet, still move to index 0 so "Enter" can
+        // select the first result as soon as the list renders.
+        if (total === 0) {
+          setHighlightedIndex(0);
+        } else {
+          setHighlightedIndex((i) => (i < total - 1 ? i + 1 : i));
+        }
         setDropdownOpen(true);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setHighlightedIndex((i) => (i > 0 ? i - 1 : -1));
       } else if (e.key === 'Enter') {
-        if (highlightedIndex >= 0 && highlightedIndex < total) {
+        if (total > 0) {
           e.preventDefault();
-          handleSelect(state.results[highlightedIndex]);
+          const idx =
+            highlightedIndex >= 0 && highlightedIndex < total ? highlightedIndex : 0;
+          handleSelect(state.results[idx]);
         }
       } else if (e.key === 'Escape') {
         onQueryChange('');
@@ -117,8 +126,13 @@ export function FoodSearchField({
       />
     ) : undefined;
 
+  const rootClass =
+    dropdownLayout === 'stacked'
+      ? `flex min-w-0 flex-col ${className ?? ''}`
+      : `relative ${className ?? ''}`;
+
   return (
-    <div className={`relative ${className ?? ''}`} ref={containerRef}>
+    <div className={rootClass.trim()} ref={containerRef}>
       <SearchInput
         value={state.query}
         onChange={handleQueryChange}
@@ -129,6 +143,7 @@ export function FoodSearchField({
         inputTestId={inputTestId}
       />
       <Dropdown
+        stacked={dropdownLayout === 'stacked'}
         open={dropdownOpen}
         query={state.query}
         results={state.results}

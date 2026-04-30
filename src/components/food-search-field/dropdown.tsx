@@ -6,6 +6,8 @@ import { LoadingSkeleton, EmptyState, ErrorState, PromptState } from './states';
 import type { UnifiedFoodSearchResultItem } from './types';
 
 interface DropdownProps {
+  /** Inline below input (fills layout height); default is overlay under input */
+  stacked?: boolean;
   open: boolean;
   query: string;
   results: UnifiedFoodSearchResultItem[];
@@ -26,6 +28,7 @@ interface DropdownProps {
 }
 
 export function Dropdown({
+  stacked = false,
   open,
   query,
   results,
@@ -64,12 +67,19 @@ export function Dropdown({
 
   if (!open) return null;
 
-  const showResults = query.length >= 3 && !isLoading && !error && results.length > 0;
+  // Keep the tab UI mounted as soon as we have *any* results so selected tab state
+  // doesn't reset if one of the parallel queries briefly flips isLoading=true.
+  // (Playwright interacts with tabs; unmount/remount causes missed clicks + state reset.)
+  const showTabs = query.length >= 3 && !error && results.length > 0;
+
+  const positionClass = stacked
+    ? 'relative mt-2 w-full max-h-[min(56dvh,28rem)]'
+    : 'absolute left-0 right-0 top-full z-50 mt-2 max-h-[min(60dvh,32rem)]';
 
   return (
     <div
       ref={dropdownRef}
-      className="absolute left-0 right-0 top-full mt-2 z-50 bg-background border border-border rounded-lg shadow-lg overflow-hidden max-h-130 flex flex-col"
+      className={`${positionClass} flex flex-col overflow-hidden rounded-lg border border-border bg-background shadow-lg`}
       data-testid="food-search-dropdown"
     >
       {/* Scrollable content area */}
@@ -93,10 +103,10 @@ export function Dropdown({
         {/* Search results */}
         {query.length >= 3 && (
           <>
-            {isLoading && <LoadingSkeleton />}
+            {isLoading && results.length === 0 && <LoadingSkeleton />}
             {!isLoading && error && <ErrorState message={error} onRetry={onRetry} />}
             {!isLoading && !error && results.length === 0 && <EmptyState query={query} />}
-            {showResults && (
+            {showTabs && (
               <Tabs
                 results={results}
                 query={query}
@@ -114,7 +124,7 @@ export function Dropdown({
       </div>
 
       {/* Keyboard shortcuts footer — hidden on mobile */}
-      {showResults && (
+      {showTabs && (
         <div className="hidden sm:block border-t border-border px-4 py-3 bg-muted flex-shrink-0">
           <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">

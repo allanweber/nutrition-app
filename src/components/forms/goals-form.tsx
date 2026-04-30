@@ -99,16 +99,16 @@ export function GoalsForm({
   }, [goals]);
 
   return (
-    <div className="w-full space-y-12 py-12">
+    <div className="min-w-0 w-full overflow-x-hidden space-y-12 py-12">
       {/* Page Header */}
-      <div className="text-center space-y-4 max-w-2xl mx-auto">
+      <div className="mx-auto space-y-4 text-center max-w-2xl min-w-0 px-0">
         <span className="inline-block px-4 py-1.5 bg-primary/5 text-primary text-xs font-black uppercase tracking-widest rounded-full">
           Personalization
         </span>
-        <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-foreground tracking-tight leading-tight">
+        <h1 className="text-3xl font-headline font-extrabold tracking-tight leading-tight text-foreground sm:text-4xl md:text-5xl">
           Let&apos;s define your path.
         </h1>
-        <p className="text-muted-foreground text-lg font-medium">
+        <p className="text-base font-medium text-muted-foreground sm:text-lg">
           Configure your daily targets to match your unique metabolism and
           fitness journey.
         </p>
@@ -117,11 +117,13 @@ export function GoalsForm({
             type="button"
             variant="outline"
             onClick={onOpenCalculator}
-            className="gap-3"
+            className="mx-auto flex h-auto min-h-11 min-w-0 max-w-full flex-wrap shrink gap-x-3 gap-y-2 whitespace-normal px-4 py-3 text-center [&_svg]:shrink-0"
           >
-            <Target className="w-4 h-4 shrink-0" />
-            Not sure about your numbers?
-            <span className="font-black">Open Calculator →</span>
+            <Target className="h-4 w-4 shrink-0" />
+            <span>
+              Not sure about your numbers?{' '}
+              <span className="font-black">Open Calculator →</span>
+            </span>
           </Button>
         )}
       </div>
@@ -132,11 +134,11 @@ export function GoalsForm({
           e.stopPropagation();
           form.handleSubmit();
         }}
-        className="space-y-20"
+        className="min-w-0 space-y-20"
       >
         {/* Section 1 — Lifestyle & Aim */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4">
+        <section className="grid min-w-0 grid-cols-1 items-start gap-12 md:grid-cols-2">
+          <div className="min-w-0 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <Target className="w-6 h-6" />
             </div>
@@ -149,7 +151,7 @@ export function GoalsForm({
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="min-w-0 space-y-8">
             <form.Field
               name="goalType"
               validators={{
@@ -165,7 +167,7 @@ export function GoalsForm({
                     value={field.state.value}
                     onValueChange={(v) => field.handleChange(v as GoalType)}
                   >
-                    <SelectTrigger className="w-full w-full">
+                    <SelectTrigger className="h-auto min-h-10 min-w-0 w-full max-w-full">
                       <SelectValue placeholder="Select your goal" />
                     </SelectTrigger>
                     <SelectContent>
@@ -206,7 +208,7 @@ export function GoalsForm({
                       field.handleChange(v as ActivityLevel)
                     }
                   >
-                    <SelectTrigger className="w-full w-full ">
+                    <SelectTrigger className="h-auto min-h-10 min-w-0 w-full max-w-full">
                       <SelectValue placeholder="Select activity level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,8 +241,8 @@ export function GoalsForm({
         </section>
 
         {/* Section 2 — Energy & Vitality */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4">
+        <section className="grid min-w-0 grid-cols-1 items-start gap-12 md:grid-cols-2">
+          <div className="min-w-0 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <Droplets className="w-6 h-6" />
             </div>
@@ -253,7 +255,7 @@ export function GoalsForm({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8">
+          <div className="grid min-w-0 grid-cols-1 gap-8">
             <form.Field
               name="calories"
               validators={{
@@ -323,8 +325,8 @@ export function GoalsForm({
         </section>
 
         {/* Section 3 — Macronutrients */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4">
+        <section className="grid min-w-0 grid-cols-1 items-start gap-12 md:grid-cols-2">
+          <div className="min-w-0 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <UtensilsCrossed className="w-6 h-6" />
             </div>
@@ -337,7 +339,7 @@ export function GoalsForm({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid min-w-0 grid-cols-1 gap-6">
             {(
               [
                 {
@@ -370,19 +372,19 @@ export function GoalsForm({
                       />
                       {label}
                     </label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder={
-                          name === 'protein'
-                            ? '180'
-                            : name === 'carbs'
-                              ? '250'
-                              : '70'
-                        }
-                        className="px-6 py-4 text-2xl font-semibold pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    <div className="relative min-w-0">
+                    <Input
+                      type="number"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder={
+                        name === 'protein'
+                          ? '180'
+                          : name === 'carbs'
+                            ? '250'
+                            : '70'
+                      }
+                      className="min-w-0 px-4 py-4 text-2xl font-semibold pr-20 sm:px-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         style={{ borderLeftWidth: 8, borderLeftColor: color }}
                       />
                       <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-muted-foreground/40 uppercase">
@@ -402,8 +404,8 @@ export function GoalsForm({
         </section>
 
         {/* Section 4 — Micros & Refinement */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-4">
+        <section className="grid min-w-0 grid-cols-1 items-start gap-12 md:grid-cols-2">
+          <div className="min-w-0 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
               <FlaskConical className="w-6 h-6" />
             </div>
@@ -416,7 +418,7 @@ export function GoalsForm({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2">
             <form.Field
               name="fiber"
               validators={{

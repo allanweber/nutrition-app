@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, UtensilsCrossed, ChefHat } from 'lucide-react';
+import { Plus, Search, UtensilsCrossed, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/page-header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -57,6 +58,8 @@ export default function MyFoodsPage() {
   const [tab, setTab] = useState<'foods' | 'dishes'>(
     searchParams.get('tab') === 'dishes' ? 'dishes' : 'foods'
   );
+  const [foodsSearch, setFoodsSearch] = useState('');
+  const [dishesSearch, setDishesSearch] = useState('');
 
   const foodsQuery = useCustomFoodsQuery();
   const dishesQuery = useDishesQuery();
@@ -141,38 +144,59 @@ export default function MyFoodsPage() {
     actionTestIdPrefix: 'dish',
   };
 
+  const createHref = tab === 'foods' ? '/my-foods/create' : '/my-foods/dishes/create';
+  const createLabel = tab === 'foods' ? 'New food' : 'New dish';
+
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
-      <PageHeader
-        overline="My Library"
-        title="Custom Foods and Dishes"
-        subtitle="Manage your own foods and custom dishes with several ingredients"
-      >
-        {tab === 'foods' ? (
-          <Button asChild>
-            <Link href="/my-foods/create">
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Food
-            </Link>
-          </Button>
-        ) : (
-          <Button asChild>
-            <Link href="/my-foods/dishes/create">
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Dish
-            </Link>
-          </Button>
-        )}
-      </PageHeader>
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24 md:pt-8 md:pb-2 relative">
+      <div className="hidden md:block">
+        <PageHeader
+          overline="My Library"
+          title="Custom Foods and Dishes"
+          subtitle="Manage your own foods and custom dishes with several ingredients"
+        >
+          {tab === 'foods' ? (
+            <Button asChild>
+              <Link href="/my-foods/create">
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Food
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link href="/my-foods/dishes/create">
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Dish
+              </Link>
+            </Button>
+          )}
+        </PageHeader>
+      </div>
+
+      <div className="relative mb-4 w-full md:hidden">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+        <Input
+          type="text"
+          value={tab === 'foods' ? foodsSearch : dishesSearch}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (tab === 'foods') setFoodsSearch(v);
+            else setDishesSearch(v);
+          }}
+          placeholder={tab === 'foods' ? 'Filter by food name...' : 'Filter by dish name...'}
+          className="pl-10"
+          aria-label={tab === 'foods' ? 'Filter foods by name' : 'Filter dishes by name'}
+        />
+      </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'foods' | 'dishes')} className="mb-6">
-        <TabsList className="h-11">
-          <TabsTrigger value="foods" data-testid="tab-custom-foods" className="px-5 text-sm">
-            <UtensilsCrossed className="h-4 w-4 mr-1.5" />
+        <TabsList className="h-11 w-full grid grid-cols-2 md:inline-flex md:w-fit md:grid-cols-none">
+          <TabsTrigger value="foods" data-testid="tab-custom-foods" className="px-3 sm:px-5 text-sm">
+            <UtensilsCrossed className="h-4 w-4 mr-1.5 shrink-0" />
             Custom Foods
           </TabsTrigger>
-          <TabsTrigger value="dishes" data-testid="tab-dishes" className="px-5 text-sm">
-            <ChefHat className="h-4 w-4 mr-1.5" />
+          <TabsTrigger value="dishes" data-testid="tab-dishes" className="px-3 sm:px-5 text-sm">
+            <ChefHat className="h-4 w-4 mr-1.5 shrink-0" />
             Dishes
           </TabsTrigger>
         </TabsList>
@@ -182,6 +206,8 @@ export default function MyFoodsPage() {
             items={foodsQuery.data?.foods ?? []}
             config={foodsConfig}
             isLoading={foodsQuery.isLoading}
+            searchValue={foodsSearch}
+            onSearchChange={setFoodsSearch}
             searchPlaceholder="Filter by food name..."
             emptyState={
               <div className="flex justify-center py-4">
@@ -218,6 +244,8 @@ export default function MyFoodsPage() {
             items={dishesQuery.data?.dishes ?? []}
             config={dishesConfig}
             isLoading={dishesQuery.isLoading}
+            searchValue={dishesSearch}
+            onSearchChange={setDishesSearch}
             searchPlaceholder="Filter by dish name..."
             emptyState={
               <div className="flex justify-center py-4">
@@ -247,6 +275,17 @@ export default function MyFoodsPage() {
           />
         </TabsContent>
       </Tabs>
+
+      <Button
+        asChild
+        size="icon"
+        className="fixed bottom-6 right-4 z-40 md:hidden h-14 w-14 rounded-full shadow-lg"
+        aria-label={createLabel}
+      >
+        <Link href={createHref}>
+          <Plus className="h-7 w-7" aria-hidden />
+        </Link>
+      </Button>
     </div>
   );
 }

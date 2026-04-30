@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FoodSearchField } from '@/components/food-search-field';
@@ -17,6 +17,9 @@ import { FoodModal } from '@/components/food-modal';
 import { PageHeader } from '@/components/page-header';
 import type { MealType } from '@/lib/nutrition-constants';
 import type { FoodLogEntry } from '@/types/food';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, Search } from 'lucide-react';
 
 const EMPTY_FOOD_DETAIL: import('@/queries/food-detail').FoodDetailResponse = {
   id: '', name: '', brandName: null, foodType: 'Generic', foodUrl: null,
@@ -41,6 +44,7 @@ export function FoodLogContent() {
   });
   const [selectedFood, setSelectedFood] = useState<UnifiedFoodSearchResultItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Edit modal state
   const [lastAdded, setLastAdded] = useState<{ mealType: MealType; seq: number } | null>(null);
@@ -54,6 +58,8 @@ export function FoodLogContent() {
   const [dishModalOpen, setDishModalOpen] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const mobileTitle = useMemo(() => format(selectedDate, 'EEEE, MMM d'), [selectedDate]);
+  const mobileSubtitle = useMemo(() => format(selectedDate, 'MMMM d'), [selectedDate]);
 
   const logsQuery = useFoodLogsQuery(dateStr);
   const deleteMutation = useDeleteFoodLogMutation();
@@ -91,6 +97,7 @@ export function FoodLogContent() {
     setModalOpen(false);
     setSelectedFood(null);
     foodSearch.setQuery('');
+    setMobileSearchOpen(false);
   };
 
   const handleDishModalClose = () => {
@@ -105,6 +112,7 @@ export function FoodLogContent() {
     setSelectedDishId(null);
     setSelectedDishName(undefined);
     foodSearch.setQuery('');
+    setMobileSearchOpen(false);
   };
 
   const handleEditLog = (log: FoodLogEntry) => setEditingLog(log);
@@ -148,9 +156,9 @@ export function FoodLogContent() {
   };
 
   return (
-    <div className="grid lg:grid-cols-12 gap-8 items-start pt-6">
-      {/* Left column */}
-      <div className="lg:col-span-8 space-y-6">
+    <div className="grid min-w-0 lg:grid-cols-12 gap-6 lg:gap-8 items-start pt-6">
+      {/* Header */}
+      <div className="order-1 lg:order-none lg:col-span-8">
         <PageHeader
           overline="Food Log"
           title="Meal Planner & Daily Intake"
@@ -161,21 +169,48 @@ export function FoodLogContent() {
           <CreateFoodButton />
         </PageHeader>
 
-        {/* Weekly calendar strip */}
-        <WeeklyCalendarStrip selectedDate={selectedDate} onDateChange={handleDateChange} />
+        {/* Mobile hero (reference-style) */}
+        <div className="sm:hidden -mt-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Today’s entry
+          </p>
+          <h1 className="mt-1 text-2xl font-headline font-extrabold tracking-tight text-foreground">
+            {mobileTitle}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {mobileSubtitle}
+          </p>
+        </div>
+      </div>
 
-        {/* Search row */}
+      {/* Weekly calendar strip */}
+      <div className="order-2 min-w-0 lg:order-none lg:col-span-8">
+        <WeeklyCalendarStrip selectedDate={selectedDate} onDateChange={handleDateChange} />
+      </div>
+
+      {/* Nutrition Pulse — placed before meals on mobile */}
+      <div className="order-3 min-w-0 lg:order-none lg:col-start-9 lg:col-span-4 lg:row-start-1 lg:row-span-4">
+        <NutritionPulse
+          date={dateStr}
+          onAddFood={handleFavoriteSelect}
+          onQuickAddFood={(name) => foodSearch.setQuery(name)}
+        />
+      </div>
+
+      {/* Search row (desktop + tablet) */}
+      <div className="order-4 lg:order-none lg:col-span-8 hidden sm:block">
         <FoodSearchField
           state={foodSearch}
           onQueryChange={foodSearch.setQuery}
           onLoadMore={foodSearch.loadMore}
           onSelect={handleSelect}
           showCustomTab={true}
-
           placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
         />
+      </div>
 
-        {/* Food log */}
+      {/* Food log */}
+      <div className="order-5 lg:order-none lg:col-span-8">
         <FoodLogClient
           key={dateStr}
           logs={logsQuery.data?.logs || []}
@@ -196,14 +231,49 @@ export function FoodLogContent() {
         />
       </div>
 
-      {/* Right column — Nutrition Pulse sidebar */}
-      <div className="lg:col-span-4">
-        <NutritionPulse
-          date={dateStr}
-          onAddFood={handleFavoriteSelect}
-          onQuickAddFood={(name) => foodSearch.setQuery(name)}
-        />
+      {/* Mobile FAB */}
+      <div className="sm:hidden">
+        <Button
+          type="button"
+          onClick={() => setMobileSearchOpen(true)}
+          className="fixed right-5 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 h-14 w-14 rounded-2xl shadow-lg"
+          size="icon"
+          aria-label="Search and add food"
+          data-testid="mobile-add-food-fab"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
       </div>
+
+      {/* Mobile search dialog: stacked dropdown lays out in-flow so modal height fits content (no min-h shell). */}
+      <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+        <DialogContent
+          className={[
+            'sm:hidden flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]',
+            'flex-col gap-0 overflow-hidden rounded-2xl p-0',
+          ].join(' ')}
+        >
+          <DialogHeader className="shrink-0 border-0 px-4 pb-2 pt-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search foods
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[calc(100dvh-7rem)] overflow-x-hidden overflow-y-auto px-4 pb-4 pt-2">
+            <FoodSearchField
+              dropdownLayout="stacked"
+              className="min-w-0"
+              size="small"
+              state={foodSearch}
+              onQueryChange={foodSearch.setQuery}
+              onLoadMore={foodSearch.loadMore}
+              onSelect={handleSelect}
+              showCustomTab={true}
+              placeholder="Search for foods (e.g., 'apple', 'chicken breast')"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <FoodLogAddModal
         open={modalOpen}

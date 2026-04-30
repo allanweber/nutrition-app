@@ -40,7 +40,7 @@ import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.s
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MealModalState =
-  | { mode: 'create'; planId: string; day: number; existingMeals: DietPlanMealDTO[] }
+  | { mode: 'create'; planId: string; day: number; mealType?: MealType; existingMeals: DietPlanMealDTO[] }
   | { mode: 'edit'; planId: string; meal: DietPlanMealDTO };
 
 interface MealModalProps {
@@ -157,7 +157,9 @@ function buildLocalItemFromDTO(item: MealItemDTO): LocalMealItem {
 
 export function MealModal({ state, onClose }: MealModalProps) {
   const isEdit = state.mode === 'edit';
-  const initialMealType: MealType = isEdit ? (state.meal.mealType as MealType) : 'breakfast';
+  const initialMealType: MealType = isEdit
+    ? (state.meal.mealType as MealType)
+    : (state.mode === 'create' && state.mealType ? (state.mealType as MealType) : 'breakfast');
 
   const [mealType, setMealType] = useState<MealType>(initialMealType);
   const [items, setItems] = useState<LocalMealItem[]>([]);
@@ -405,7 +407,10 @@ export function MealModal({ state, onClose }: MealModalProps) {
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent data-testid="meal-modal" className="md:min-w-2xl min-h-[80vh] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+      <DialogContent
+        data-testid="meal-modal"
+        className="md:min-w-2xl min-h-[40vh] md:min-h-[80vh] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden"
+      >
 
         {/* ── Header ── */}
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">

@@ -21,6 +21,16 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile: hide the "Add plan" card and center the first plan
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   function updateScrollState() {
     const el = scrollRef.current;
@@ -28,7 +38,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
     setCanScrollLeft(el.scrollLeft > 8);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
     // Track active plan card index (skip the Add New Plan card at the start)
-    const addCardWidth = 180 + 16; // Add New Plan card width + gap
+    const addCardWidth = isMobile ? 0 : 180 + 16; // Add New Plan card width + gap
     const planCardWidth = 320 + 16; // plan card width + gap
     const planScrollLeft = Math.max(0, el.scrollLeft - addCardWidth);
     setActiveIndex(Math.round(planScrollLeft / planCardWidth));
@@ -46,7 +56,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
       ro.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plans.length]);
+  }, [plans.length, isMobile]);
 
   function scroll(dir: 'left' | 'right') {
     const el = scrollRef.current;
@@ -80,21 +90,29 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
         {/* Scrollable row */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-none px-1 py-1"
+          className={cn(
+            'flex gap-4 overflow-x-auto scrollbar-none py-1',
+            // Mobile: start centered on the first plan (padding = half the remaining width)
+            'max-sm:px-[calc((100vw-320px)/2)] max-sm:snap-x max-sm:snap-mandatory',
+            // Desktop/tablet: classic carousel padding
+            'sm:px-1',
+          )}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {/* Add New Plan card */}
-          <Button
-            data-testid="add-new-plan-card"
-            onClick={onAddNew}
-            variant="ghost"
-            className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 shrink-0"
-          >
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <Plus className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground">Add New Plan</span>
-          </Button>
+          {!isMobile && (
+            <Button
+              data-testid="add-new-plan-card"
+              onClick={onAddNew}
+              variant="ghost"
+              className="flex flex-col items-center justify-center gap-2 min-w-45 h-39.5 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/30 shrink-0"
+            >
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                <Plus className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">Add New Plan</span>
+            </Button>
+          )}
 
           {/* Skeleton cards while loading */}
           {isLoading &&
@@ -105,7 +123,7 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
           {/* Plan cards */}
           {!isLoading &&
             plans.map((plan) => (
-              <div key={plan.id} className="shrink-0">
+              <div key={plan.id} className={cn('shrink-0', isMobile && 'max-sm:snap-center')}>
                 <PlanCard
                   plan={plan}
                   isSelected={plan.id === selectedPlanId}
