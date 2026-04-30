@@ -13,6 +13,7 @@
     "test:e2e:headed": "bash ./scripts/run-e2e.sh --headed",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
     "db:seed": "npx tsx src/server/db/seed.ts"
   },
   "dependencies": {
