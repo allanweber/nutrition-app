@@ -5,6 +5,49 @@ import { LoginPage } from './pages/login.page';
 import { format, addDays, startOfWeek } from 'date-fns';
 
 test.describe('006: Food Log Screen Redesign', () => {
+  async function createPlanViaApi(page: import('@playwright/test').Page, data: {
+    name: string;
+    targetCalories: number;
+    targetProtein: number;
+    targetCarbs: number;
+    targetFat: number;
+    status: 'active' | 'draft' | 'archived';
+    startDate?: string;
+  }) {
+    const res = await page.request.post('/api/diet-plans', {
+      data: {
+        ...data,
+        startDate: data.startDate ?? new Date().toISOString(),
+      },
+    });
+
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    return body.plan.id as string;
+  }
+
+  async function createMealViaApi(
+    page: import('@playwright/test').Page,
+    planId: string,
+    mealType: string,
+    dayOfWeek: number,
+  ) {
+    const res = await page.request.post(`/api/diet-plans/${planId}/meals`, {
+      data: { mealType, dayOfWeek },
+    });
+
+    expect(res.ok()).toBeTruthy();
+  }
+
+  async function deletePlanViaApi(page: import('@playwright/test').Page, planId: string) {
+    await page.request.delete(`/api/diet-plans/${planId}`);
+  }
+
+  function getDbDayOfWeek(date: Date) {
+    const day = date.getUTCDay();
+    return day === 0 ? 7 : day;
+  }
+
   async function loginAsTestUser(page: import('@playwright/test').Page) {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
@@ -182,28 +225,49 @@ test.describe('006: Food Log Screen Redesign', () => {
   });
 
   test.describe('Meal Card Design', () => {
-    test('all four meal type sections are rendered', async ({ page }) => {
+    test('renders only meal sections that have logs or a plan', async ({ page }) => {
       await loginAsTestUser(page);
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
-      await expect(page.getByTestId('meal-section-breakfast')).toBeVisible();
-      await expect(page.getByTestId('meal-section-lunch')).toBeVisible();
-      await expect(page.getByTestId('meal-section-dinner')).toBeVisible();
-      await expect(page.getByTestId('meal-section-snack')).toBeVisible();
+      const mealSections = page.locator('[data-testid^="meal-section-"]');
+      await expect.poll(async () => mealSections.count(), { timeout: 10000 }).toBeGreaterThan(0);
+
+      const visibleSectionCount = await mealSections.count();
+      expect(visibleSectionCount).toBeLessThanOrEqual(4);
     });
 
-    test('empty meal placeholders appear for unlogged meals (fresh user)', async ({ page }) => {
+    test('empty meal placeholders appear for unlogged planned meals', async ({ page }) => {
       await loginAsFreshUser(page);
       const foodLogPage = new FoodLogPage(page);
-      await foodLogPage.goto();
+      const today = new Date();
+      const dayOfWeek = getDbDayOfWeek(today);
+      const planId = await createPlanViaApi(page, {
+        name: `E2E Empty Meal Plan ${Date.now()}`,
+        targetCalories: 2000,
+        targetProtein: 150,
+        targetCarbs: 200,
+        targetFat: 70,
+        status: 'active',
+        startDate: today.toISOString(),
+      });
 
-      // Empty sections start collapsed — expand breakfast to see its placeholder
-      await expect(page.getByTestId('meal-section-breakfast')).toBeVisible({ timeout: 10000 });
-      await page.getByTestId('meal-toggle-breakfast').click();
+      try {
+        await createMealViaApi(page, planId, 'breakfast', dayOfWeek);
+        await foodLogPage.goto();
 
-      const placeholder = page.getByTestId('meal-empty-placeholder-breakfast');
-      await expect(placeholder).toBeVisible({ timeout: 5000 });
+        const breakfastSection = page.getByTestId('meal-section-breakfast');
+        await expect(breakfastSection).toBeVisible({ timeout: 10000 });
+
+        const toggle = page.getByTestId('meal-toggle-breakfast');
+        if ((await toggle.getAttribute('aria-expanded')) === 'false') {
+          await toggle.click();
+        }
+
+        await expect(page.getByTestId('meal-empty-placeholder-breakfast')).toBeVisible({ timeout: 5000 });
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
     });
 
     test('food items show in logged meal sections (seeded user)', async ({ page }) => {

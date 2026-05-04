@@ -215,6 +215,25 @@ export const copyDaySchema = z.object({
   toDay: dayOfWeekSchema,
 });
 
+export const logFromPlanSchema = z.discriminatedUnion('mode', [
+  z.object({
+    mode: z.literal('replace-all'),
+    date: dateSchema,
+    planId: z.string().uuid('planId must be a valid UUID'),
+  }),
+  z.object({
+    mode: z.literal('add-all'),
+    date: dateSchema,
+    planId: z.string().uuid('planId must be a valid UUID'),
+  }),
+  z.object({
+    mode: z.literal('add-meal'),
+    date: dateSchema,
+    planId: z.string().uuid('planId must be a valid UUID'),
+    mealType: mealTypeSchema,
+  }),
+]);
+
 // ============================================
 // TRANSFORMATION HELPERS
 // ============================================
