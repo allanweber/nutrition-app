@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -47,10 +49,25 @@ export function QuantityUnitInput({
   measureSelectTestId = 'measure-select',
 }: QuantityUnitInputProps) {
   const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
+  const [displayQuantity, setDisplayQuantity] = useState(() => String(quantity));
+
+  useEffect(() => {
+    setDisplayQuantity(String(quantity));
+  }, [quantity]);
 
   const handleNumberChange = (raw: string) => {
+    setDisplayQuantity(raw);
+
+    if (raw === '') return;
+
     const val = parseFloat(raw);
     if (!isNaN(val) && val > 0) onQuantityChange(val);
+  };
+
+  const handleNumberBlur = () => {
+    if (displayQuantity === '') {
+      setDisplayQuantity(String(quantity));
+    }
   };
 
   const handleSliderChange = (values: number[]) => {
@@ -77,8 +94,10 @@ export function QuantityUnitInput({
           min={measure.sliderMin}
           max={measure.sliderMax}
           step={measure.sliderStep}
-          value={quantity}
+          value={displayQuantity}
           onChange={(e) => handleNumberChange(e.target.value)}
+          onBlur={handleNumberBlur}
+          onFocus={(e) => e.currentTarget.select()}
           className="min-w-0 h-full border-none shadow-none rounded-none px-3 py-1 text-sm font-medium focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none w-[30%] sm:flex-1 sm:w-auto"
           data-testid={qtyInputTestId}
           aria-label="Quantity"

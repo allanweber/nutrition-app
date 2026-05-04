@@ -447,6 +447,22 @@ test.describe('006: Food Log Screen Redesign', () => {
       await expect(foodLogPage.macroFat).toBeVisible();
     });
 
+    test('quantity input can be cleared and selects all text on focus', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await openFoodModal(page, foodLogPage);
+
+      await foodLogPage.quantityInput.click();
+      await expect(foodLogPage.quantityInput).toHaveJSProperty('selectionStart', 0);
+      await expect(foodLogPage.quantityInput).toHaveJSProperty('selectionEnd', 1);
+
+      await page.keyboard.press('Backspace');
+      await expect(foodLogPage.quantityInput).toHaveValue('');
+
+      await foodLogPage.quantityInput.fill('2.5');
+      await expect(foodLogPage.quantityInput).toHaveValue('2.5');
+    });
+
     test('submitting food log closes modal', async ({ page }) => {
       await loginAsTestUser(page);
       const foodLogPage = new FoodLogPage(page);
