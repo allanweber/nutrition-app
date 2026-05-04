@@ -4,6 +4,12 @@ import { format, startOfWeek, addDays } from 'date-fns';
 export class FoodLogPage {
   readonly page: Page;
   readonly heading: Locator;
+  readonly mealPlanBanner: Locator;
+  readonly mealPlanBannerDismiss: Locator;
+  readonly logAllMealsButton: Locator;
+  readonly logMealsModal: Locator;
+  readonly logMealsAddButton: Locator;
+  readonly logMealsReplaceButton: Locator;
   readonly searchInput: Locator;
   readonly searchResults: Locator;
   readonly quantityInput: Locator;
@@ -34,6 +40,12 @@ export class FoodLogPage {
   constructor(page: Page) {
     this.page = page;
     this.heading = page.getByRole('heading', { name: 'Meal Planner & Daily Intake' });
+    this.mealPlanBanner = page.getByTestId('meal-plan-banner');
+    this.mealPlanBannerDismiss = page.getByTestId('meal-plan-banner-dismiss');
+    this.logAllMealsButton = page.getByTestId('log-all-meals-btn');
+    this.logMealsModal = page.getByTestId('log-meals-modal');
+    this.logMealsAddButton = page.getByTestId('log-meals-add-btn');
+    this.logMealsReplaceButton = page.getByTestId('log-meals-replace-btn');
     this.searchInput = page.getByTestId('food-search-input');
     this.searchResults = page.getByTestId('food-search-dropdown');
     this.quantityInput = page.getByTestId('quantity-input');
@@ -62,9 +74,25 @@ export class FoodLogPage {
     this.cancelButton = page.getByTestId('food-modal-cancel');
   }
 
-  async goto() {
-    await this.page.goto('/food-log');
+  async goto(date?: string) {
+    await this.page.goto(date ? `/food-log?date=${date}` : '/food-log');
     await this.page.waitForLoadState('networkidle');
+  }
+
+  mealPlanAddon(mealType: string) {
+    return this.page.getByTestId(`meal-plan-addon-${mealType}`);
+  }
+
+  logPlanButton(mealType: string) {
+    return this.page.getByTestId(`log-plan-btn-${mealType}`);
+  }
+
+  mealSection(mealType: string) {
+    return this.page.getByTestId(`meal-section-${mealType}`);
+  }
+
+  mealRows(mealType: string) {
+    return this.mealSection(mealType).locator('[data-testid^="food-log-"]');
   }
 
   async searchFood(query: string) {

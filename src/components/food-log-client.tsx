@@ -7,9 +7,11 @@ import { format } from 'date-fns';
 
 import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown, MoreVertical, Sunrise, Sandwich, Moon } from 'lucide-react';
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
+import { MealPlanAddon } from '@/components/food-log/meal-plan-addon';
 
 import { FoodLogEntry } from '@/types/food';
 import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, type MealType } from '@/lib/nutrition-constants';
+import type { DietPlanMealDTO } from '@/server/services/diet-plan.service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -28,12 +30,17 @@ interface FoodLogClientProps {
   logsByMeal: Record<string, FoodLogEntry[]>;
   totals: Totals;
   isLoading?: boolean;
+  isPlanLoading?: boolean;
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   onDeleteLog: (logId: string) => Promise<void>;
   onDeleteDishGroup?: (dishLogGroupId: string) => Promise<void>;
   onEdit?: (log: FoodLogEntry) => void;
   lastAdded?: { mealType: MealType; seq: number } | null;
+  planMealsByMealType?: Partial<Record<MealType, DietPlanMealDTO>>;
+  planId?: string;
+  loggingMealType?: MealType | null;
+  onLogPlanForMeal?: (mealType: MealType) => void | Promise<void>;
 }
 
 
@@ -70,14 +77,47 @@ function isDishGroup(entry: GroupEntry): entry is { dishLogGroupId: string; dish
   return 'dishLogGroupId' in entry && 'items' in entry;
 }
 
+function buildFoodCountMap(foodIds: string[]) {
+  const counts = new Map<string, number>();
+
+  for (const foodId of foodIds) {
+    counts.set(foodId, (counts.get(foodId) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+function mealLogsCoverPlan(mealLogs: FoodLogEntry[], planMeal?: DietPlanMealDTO) {
+  if (!planMeal || planMeal.items.length === 0 || mealLogs.length === 0) {
+    return false;
+  }
+
+  const plannedCounts = buildFoodCountMap(planMeal.items.map((item) => item.foodId));
+  const loggedCounts = buildFoodCountMap(mealLogs.map((log) => log.food.id));
+
+  for (const [foodId, plannedCount] of plannedCounts) {
+    if ((loggedCounts.get(foodId) ?? 0) < plannedCount) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export default function FoodLogClient({
   logs,
   logsByMeal,
+  selectedDate,
   onEdit,
   isLoading = false,
+  isPlanLoading = false,
   onDeleteLog,
   onDeleteDishGroup,
   lastAdded,
+  planMealsByMealType,
+  planId,
+  loggingMealType,
+  onLogPlanForMeal,
 }: FoodLogClientProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -87,12 +127,16 @@ export default function FoodLogClient({
   const initialCollapseApplied = useRef(false);
 
   useEffect(() => {
-    if (isLoading || initialCollapseApplied.current) return;
+    if (isLoading || isPlanLoading || initialCollapseApplied.current) return;
     initialCollapseApplied.current = true;
     setCollapsedMeals(new Set(
-      MEAL_TYPE_ORDER.filter((mt) => !logsByMeal[mt] || logsByMeal[mt].length === 0)
+      MEAL_TYPE_ORDER.filter((mt) => {
+        const hasLogs = !!logsByMeal[mt] && logsByMeal[mt].length > 0;
+        const hasPlan = !!planMealsByMealType?.[mt];
+        return !hasLogs && !hasPlan;
+      })
     ));
-  }, [isLoading, logsByMeal]);
+  }, [isLoading, isPlanLoading, logsByMeal, planMealsByMealType]);
 
   useEffect(() => {
     if (!lastAdded) return;
@@ -160,6 +204,12 @@ export default function FoodLogClient({
     };
   }, []);
 
+  const visibleMealTypes = MEAL_TYPE_ORDER.filter((mealType) => {
+    const hasLogs = (logsByMeal[mealType] || []).length > 0;
+    const hasPlan = !!planMealsByMealType?.[mealType];
+    return hasLogs || hasPlan;
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
@@ -184,9 +234,11 @@ export default function FoodLogClient({
       )}
 
       {/* Meal sections */}
-      {MEAL_TYPE_ORDER.map((mealType) => {
+      {visibleMealTypes.map((mealType) => {
         const mealLogs = logsByMeal[mealType] || [];
+        const planMeal = planMealsByMealType?.[mealType];
         const isEmpty = mealLogs.length === 0;
+        const shouldShowPlanAddon = !!planMeal && !!planId && !!onLogPlanForMeal && !mealLogsCoverPlan(mealLogs, planMeal);
 
         const mealTotals = mealLogs.reduce(
           (acc, log) => {
@@ -232,7 +284,7 @@ export default function FoodLogClient({
               onClick={toggleMeal}
               aria-expanded={!isMealCollapsed}
               data-testid={`meal-toggle-${mealType}`}
-              className={`w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && !isEmpty ? 'border-b border-border/10' : ''}`}
+              className={`w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && (!isEmpty || !!planMeal) ? 'border-b border-border/10' : ''}`}
             >
               <div>
                 <div className="flex items-center gap-2">
@@ -261,7 +313,7 @@ export default function FoodLogClient({
                   </span>
                 </div>
                 {latestLoggedTime && (
-                  <p className="text-xs text-muted-foreground mt-0.5 ml-[18px]">
+                  <p className="text-xs text-muted-foreground mt-0.5 ml-4.5">
                     Logged at {latestLoggedTime}
                   </p>
                 )}
@@ -282,26 +334,38 @@ export default function FoodLogClient({
             </Button>
 
             {!isMealCollapsed && isEmpty ? (
-              <div
-                className="flex items-center justify-center py-8 px-5"
-                data-testid={`meal-empty-placeholder-${mealType}`}
-              >
-                <div className="w-full sm:w-auto">
-                  <div className="sm:hidden rounded-2xl border border-dashed border-border/60 bg-muted/30 px-4 py-6 text-center">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                      Plan {MEAL_TYPE_LABELS[mealType]}
-                    </p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Nothing logged yet.
-                    </p>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-center gap-2 text-center">
-                    <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
-                    <p className="text-sm text-muted-foreground">
-                      No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
-                    </p>
+              <div>
+                <div
+                  className="flex items-center justify-center py-8 px-5"
+                  data-testid={`meal-empty-placeholder-${mealType}`}
+                >
+                  <div className="w-full sm:w-auto">
+                    <div className="sm:hidden rounded-2xl border border-dashed border-border/60 bg-muted/30 px-4 py-6 text-center">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Plan {MEAL_TYPE_LABELS[mealType]}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Nothing logged yet.
+                      </p>
+                    </div>
+                    <div className="hidden sm:flex flex-col items-center gap-2 text-center">
+                      <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
+                      <p className="text-sm text-muted-foreground">
+                        No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
+                      </p>
+                    </div>
                   </div>
                 </div>
+                {shouldShowPlanAddon ? (
+                  <MealPlanAddon
+                    mealType={mealType}
+                    planMeal={planMeal}
+                    planId={planId}
+                    date={selectedDate.toISOString()}
+                    isLogging={loggingMealType === mealType}
+                    onLogPlan={() => void onLogPlanForMeal(mealType)}
+                  />
+                ) : null}
               </div>
             ) : !isMealCollapsed ? (
               <div className="divide-y divide-border/10">
@@ -428,6 +492,16 @@ export default function FoodLogClient({
                     />
                   );
                 })}
+                {shouldShowPlanAddon ? (
+                  <MealPlanAddon
+                    mealType={mealType}
+                    planMeal={planMeal}
+                    planId={planId}
+                    date={selectedDate.toISOString()}
+                    isLogging={loggingMealType === mealType}
+                    onLogPlan={() => void onLogPlanForMeal(mealType)}
+                  />
+                ) : null}
               </div>
             ) : null}
           </div>

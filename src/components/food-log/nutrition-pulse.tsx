@@ -14,9 +14,15 @@ interface NutritionPulseProps {
   date: string;
   onAddFood: (item: FavoriteItem) => void;
   onQuickAddFood?: (name: string) => void;
+  variant?: 'mobile' | 'desktop';
 }
 
-export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPulseProps) {
+export function NutritionPulse({
+  date,
+  onAddFood,
+  onQuickAddFood,
+  variant = 'desktop',
+}: NutritionPulseProps) {
   const { data, isLoading } = useNutritionSummaryQuery(date);
   const { data: logsData } = useFoodLogsQuery(date);
   const { data: topFavsData } = useFavoritesTopQuery();
@@ -105,18 +111,17 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
     ? [...new Map(logsData.logs.map((l) => [l.food.id, l.food])).values()].slice(0, 5)
     : [];
 
-  return (
-    <>
-      <div data-testid="nutrition-pulse">
-        {/* Mobile summary card */}
-        <div className="sm:hidden w-full min-w-0 max-w-full overflow-x-clip rounded-3xl border border-border/30 bg-muted/70 p-4 shadow-sm dark:bg-secondary">
+  if (variant === 'mobile') {
+    return (
+      <div data-testid="nutrition-pulse-mobile">
+        <div className="w-full min-w-0 max-w-full overflow-x-clip rounded-3xl border border-border/30 bg-muted/70 p-4 shadow-sm dark:bg-secondary">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0 flex-1 pr-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Energy deficit
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="max-w-full min-w-0 break-words text-2xl font-headline font-extrabold tabular-nums text-foreground">
+                <span className="max-w-full min-w-0 wrap-break-word text-2xl font-headline font-extrabold tabular-nums text-foreground">
                   {logTotals?.calories ?? 0}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
@@ -125,7 +130,6 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
               </div>
             </div>
 
-            {/* Donut percent */}
             {(() => {
               const mobileSize = 52;
               const mobileStroke = 7;
@@ -135,7 +139,6 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
               return (
                 <div className="relative shrink-0" style={{ width: mobileSize, height: mobileSize }}>
                   <svg width={mobileSize} height={mobileSize} viewBox={`0 0 ${mobileSize} ${mobileSize}`} className="-rotate-90" aria-hidden>
-                    {/* Use var(--*) — theme colors are OKLCH; hsl(var(--*)) is invalid and hides strokes */}
                     <circle
                       cx={mobileSize / 2}
                       cy={mobileSize / 2}
@@ -180,7 +183,7 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
                       {consumed}g
                     </span>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-black/10 dark:bg-border overflow-hidden">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-border">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
                       style={{ width: `${macroPct}%` }}
@@ -191,11 +194,16 @@ export function NutritionPulse({ date, onAddFood, onQuickAddFood }: NutritionPul
             })}
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Desktop sidebar card */}
+  return (
+    <>
+      <div data-testid="nutrition-pulse">
         <div
           className={[
-            'hidden sm:block bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden relative',
+            'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden',
             'dark:bg-secondary dark:border dark:border-primary/30',
             '[--pulse-fill:var(--green-dark)] [--pulse-track:#aee39d]',
             'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--border)]',

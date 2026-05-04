@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FoodLogEntry } from '@/types/food'
+import type { MealType } from '@/lib/nutrition-constants'
 
 interface FoodLogsResponse {
   logs: FoodLogEntry[]
@@ -150,6 +151,45 @@ export function useDeleteFoodLogMutation() {
       // Also invalidate analytics
       queryClient.invalidateQueries({ queryKey: ['analytics'] })
       // Invalidate nutrition summary so sidebar updates
+      queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
+    },
+  })
+}
+
+type LogFromPlanRequest =
+  | { mode: 'replace-all'; date: string; planId: string }
+  | { mode: 'add-all'; date: string; planId: string }
+  | { mode: 'add-meal'; date: string; planId: string; mealType: MealType }
+
+interface LogFromPlanResponse {
+  success: boolean
+  insertedCount: number
+  mergedCount: number
+  deletedCount: number
+}
+
+export function useLogFromPlanMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: LogFromPlanRequest): Promise<LogFromPlanResponse> => {
+      const response = await fetch('/api/food-logs/from-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to log meals from plan')
+      }
+
+      return payload
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['food-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
       queryClient.invalidateQueries({ queryKey: ['nutrition-summary'] })
     },
   })

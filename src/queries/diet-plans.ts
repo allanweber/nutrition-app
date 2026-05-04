@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants'
 import type { DietPlanDTO, DietPlanMealDTO, MealItemDTO, NutritionGoalDefaults } from '@/server/services/diet-plan.service'
 
 // ============================================
@@ -21,6 +23,15 @@ export interface DietPlansResponse {
 
 export interface DietPlanMealsResponse {
   meals: DietPlanMealDTO[]
+}
+
+function getDbDayOfWeek(dateStr: string) {
+  const jsDay = new Date(`${dateStr}T12:00:00.000Z`).getUTCDay()
+  return jsDay === 0 ? 7 : jsDay
+}
+
+function isMealType(value: string): value is MealType {
+  return (MEAL_TYPE_ORDER as readonly string[]).includes(value)
 }
 
 // ============================================
@@ -54,6 +65,35 @@ export function useDietPlanMealsQuery(planId: string | null) {
       return res.json()
     },
   })
+}
+
+export function usePlanMealsForDate(dateStr: string) {
+  const plansQuery = useDietPlansQuery()
+
+  const activePlan = useMemo(
+    () => plansQuery.data?.plans.find((plan) => plan.status === 'active') ?? null,
+    [plansQuery.data?.plans],
+  )
+
+  const mealsQuery = useDietPlanMealsQuery(activePlan?.id ?? null)
+
+  const planMealsByMealType = useMemo<Partial<Record<MealType, DietPlanMealDTO>>>(() => {
+    if (!mealsQuery.data?.meals?.length) return {}
+
+    const dayOfWeek = getDbDayOfWeek(dateStr)
+    const entries = mealsQuery.data.meals
+      .filter((meal) => meal.dayOfWeek === dayOfWeek && isMealType(meal.mealType))
+      .map((meal) => [meal.mealType, meal] as const)
+
+    return Object.fromEntries(entries) as Partial<Record<MealType, DietPlanMealDTO>>
+  }, [dateStr, mealsQuery.data?.meals])
+
+  return {
+    activePlan,
+    planMealsByMealType,
+    hasPlanForDay: Object.keys(planMealsByMealType).length > 0,
+    isLoading: plansQuery.isLoading || (!!activePlan && mealsQuery.isLoading),
+  }
 }
 
 // ============================================
