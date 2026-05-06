@@ -108,6 +108,24 @@ export function calculateItemMacros(
   };
 }
 
+export function formatAltMeasureLabel(
+  quantity: number,
+  measure: string | null | undefined,
+  servingWeight: string | number | null | undefined,
+) {
+  if (!measure) return null;
+
+  const normalizedQuantity = Number.isInteger(quantity)
+    ? String(quantity)
+    : String(+quantity.toFixed(2));
+  const cleanMeasure = measure.trim();
+  const measureWithoutLeadingQty = cleanMeasure.replace(/^\d+(?:[.,/]\d+)?\s+/u, '');
+  const displayMeasure = measureWithoutLeadingQty || cleanMeasure;
+  const totalWeight = Math.round(quantity * toNumber(servingWeight));
+
+  return `${normalizedQuantity} ${displayMeasure} (${totalWeight}g)`;
+}
+
 // ============================================
 // QUERIES
 // ============================================
@@ -276,7 +294,11 @@ export async function getMealsForPlan(dietPlanId: string, userId: string): Promi
       );
 
       const altMeasureLabel = row.altMeasureId
-        ? `${toNumber(row.altMeasureQty)} ${row.altMeasureMeasure} (${Math.round(toNumber(row.altMeasureServingWeight))}g)`
+        ? formatAltMeasureLabel(
+            toNumber(row.quantity),
+            row.altMeasureMeasure,
+            row.altMeasureServingWeight,
+          )
         : null;
 
       const meal = mealsMap.get(row.mealId)!;
@@ -418,6 +440,75 @@ export async function copyDay(
           };
         }),
       );
+  }
+
+  return getMealsForPlan(dietPlanId, userId);
+}
+
+export async function copyMeal(
+  dietPlanId: string,
+  fromMealId: string,
+  toMealType: string,
+  userId: string,
+  dbInstance = db,
+): Promise<DietPlanMealDTO[]> {
+  const plan = await dbInstance.query.dietPlans.findFirst({
+    where: and(eq(dietPlans.id, dietPlanId), eq(dietPlans.clientId, userId)),
+  });
+  if (!plan) throw new Error('Plan not found');
+
+  const sourceMeal = await dbInstance.query.dietPlanMeals.findFirst({
+    where: and(eq(dietPlanMeals.id, fromMealId), eq(dietPlanMeals.dietPlanId, dietPlanId)),
+  });
+  if (!sourceMeal) throw new Error('Meal not found');
+
+  const sourceItems = await dbInstance
+    .select()
+    .from(dietPlanMealItems)
+    .where(eq(dietPlanMealItems.groupId, fromMealId));
+
+  // Find or create the destination meal
+  let destMeal = await dbInstance.query.dietPlanMeals.findFirst({
+    where: and(
+      eq(dietPlanMeals.dietPlanId, dietPlanId),
+      eq(dietPlanMeals.dayOfWeek, sourceMeal.dayOfWeek),
+      eq(dietPlanMeals.mealType, toMealType),
+    ),
+  });
+
+  if (!destMeal) {
+    const [created] = await dbInstance
+      .insert(dietPlanMeals)
+      .values({ dietPlanId, mealType: toMealType, dayOfWeek: sourceMeal.dayOfWeek })
+      .returning();
+    destMeal = created;
+  } else {
+    // Clear existing items in destination meal
+    await dbInstance.delete(dietPlanMealItems).where(eq(dietPlanMealItems.groupId, destMeal.id));
+  }
+
+  if (sourceItems.length > 0) {
+    const dishGroupIdMap = new Map<string, string>();
+    await dbInstance.insert(dietPlanMealItems).values(
+      sourceItems.map((item) => {
+        let newDishGroupId: string | null = null;
+        if (item.dishGroupId) {
+          if (!dishGroupIdMap.has(item.dishGroupId)) {
+            dishGroupIdMap.set(item.dishGroupId, uuidv7());
+          }
+          newDishGroupId = dishGroupIdMap.get(item.dishGroupId)!;
+        }
+        return {
+          groupId: destMeal.id,
+          foodId: item.foodId,
+          altMeasureId: item.altMeasureId,
+          quantity: item.quantity,
+          dishGroupId: newDishGroupId,
+          dishNameSnapshot: item.dishNameSnapshot,
+          dishSourceId: item.dishSourceId,
+        };
+      }),
+    );
   }
 
   return getMealsForPlan(dietPlanId, userId);

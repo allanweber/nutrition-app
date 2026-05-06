@@ -215,6 +215,10 @@ export const copyDaySchema = z.object({
   toDay: dayOfWeekSchema,
 });
 
+export const copyMealSchema = z.object({
+  toMealType: mealTypeSchema,
+});
+
 export const logFromPlanSchema = z.discriminatedUnion('mode', [
   z.object({
     mode: z.literal('replace-all'),

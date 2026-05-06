@@ -339,7 +339,8 @@ export function FoodLogContent() {
       <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
         <DialogContent
           className={[
-            'lg:hidden flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]',
+            'lg:hidden flex w-[calc(100vw-2rem)]',
+            'max-md:top-[max(1rem,env(safe-area-inset-top))] max-md:left-4 max-md:right-4 max-md:max-h-[50dvh] max-md:w-auto max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0',
             'flex-col gap-0 overflow-hidden rounded-2xl p-0',
           ].join(' ')}
         >
@@ -349,7 +350,7 @@ export function FoodLogContent() {
               Search foods
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[calc(100dvh-7rem)] overflow-x-hidden overflow-y-auto px-4 pb-4 pt-2">
+          <div className="max-h-[calc(50dvh-4.5rem)] overflow-x-hidden overflow-y-auto px-4 pb-4 pt-2">
             <FoodSearchField
               dropdownLayout="stacked"
               className="min-w-0"

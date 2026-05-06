@@ -1314,7 +1314,165 @@ test.describe('013: Seeded meal card detail', () => {
   });
 });
 
-// ── Block 17: Auth redirect ───────────────────────────────────────────────────
+// ── Block 17: Copy meal ───────────────────────────────────────────────────────
+
+test.describe('013: Copy meal', () => {
+  test.use({ storageState: AUTH_FILES.generalHealth });
+  let mp: MealPlannerPage;
+  let planId: string;
+  let mealId: string;
+
+  test.beforeEach(async ({ page }) => {
+    mp = new MealPlannerPage(page);
+    planId = await createPlanViaApi(page, {
+      name: 'Copy Meal Test Plan',
+      status: 'draft',
+      ...DEFAULT_PLAN,
+    });
+    mealId = await createMealViaApi(page, planId, 'breakfast', 1);
+    await mp.goto();
+    await mp.planCard(planId).click();
+    await expect(mp.daySelector).toBeVisible({ timeout: 5000 });
+    await mp.dayButton(1).click();
+    await expect
+      .poll(async () => (await mp.getMealCardIds()).length, { timeout: 10000 })
+      .toBeGreaterThanOrEqual(1);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await deletePlanViaApi(page, planId);
+  });
+
+  test('copy meal button is visible in the meal card header', async () => {
+    await expect(mp.copyMealBtn(mealId)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('clicking copy meal button opens the popover', async () => {
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('popover does not include the source meal type', async () => {
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+    // breakfast is the source — it must not appear as a copy target
+    await expect(mp.copyToMealType('breakfast')).not.toBeVisible();
+  });
+
+  test('popover shows other meal types as options', async () => {
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+    await expect(mp.copyToMealType('lunch')).toBeVisible();
+    await expect(mp.copyToMealType('dinner')).toBeVisible();
+  });
+
+  test('copying to a new meal type creates that meal card on the same day', async ({ page }) => {
+    // Add a food to the source breakfast meal so there is something to copy
+    await mp.mealCard(mealId).click();
+    await expect(mp.mealModal).toBeVisible({ timeout: 5000 });
+    await mp.mealFoodSearch.fill('chicken');
+    await page.waitForTimeout(600);
+    await page.getByTestId('food-result-item').first().click();
+    await page.waitForTimeout(500);
+    await mp.mealModalSave.click();
+    await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
+
+    // Now copy breakfast → lunch
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+    await mp.copyToMealType('lunch').click();
+
+    // A new lunch meal card should appear
+    await expect
+      .poll(async () => (await mp.getMealCardIds()).length, { timeout: 10000 })
+      .toBe(2);
+
+    // Verify a card with "lunch" label is present
+    const ids = await mp.getMealCardIds();
+    const lunchCard = ids.find((id) => id !== mealId);
+    expect(lunchCard).toBeDefined();
+    await expect(mp.mealCard(lunchCard!)).toContainText(/lunch/i);
+  });
+
+  test('copied meal card shows non-zero calories matching the source', async ({ page }) => {
+    // Add food to source meal
+    await mp.mealCard(mealId).click();
+    await expect(mp.mealModal).toBeVisible({ timeout: 5000 });
+    await mp.mealFoodSearch.fill('chicken');
+    await page.waitForTimeout(600);
+    await page.getByTestId('food-result-item').first().click();
+    await page.waitForTimeout(500);
+    await mp.mealModalSave.click();
+    await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
+
+    // Record source calories
+    const sourceKcal = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+
+    // Copy breakfast → dinner
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+    await mp.copyToMealType('dinner').click();
+
+    await expect
+      .poll(async () => (await mp.getMealCardIds()).length, { timeout: 10000 })
+      .toBe(2);
+
+    const ids = await mp.getMealCardIds();
+    const dinnerMealId = ids.find((id) => id !== mealId)!;
+    const copiedKcal = await mp.mealTotalCalories(dinnerMealId).textContent({ timeout: 5000 });
+    expect(copiedKcal).toBe(sourceKcal);
+  });
+
+  test('copying to an existing meal replaces its contents', async ({ page }) => {
+    // Create a separate lunch meal with its own food
+    const lunchMealId = await createMealViaApi(page, planId, 'lunch', 1);
+    await mp.goto();
+    await mp.planCard(planId).click();
+    await mp.dayButton(1).click();
+    await expect
+      .poll(async () => (await mp.getMealCardIds()).length, { timeout: 10000 })
+      .toBe(2);
+
+    // Add food to breakfast (source)
+    await mp.mealCard(mealId).click();
+    await expect(mp.mealModal).toBeVisible({ timeout: 5000 });
+    await mp.mealFoodSearch.fill('chicken');
+    await page.waitForTimeout(600);
+    await page.getByTestId('food-result-item').first().click();
+    await page.waitForTimeout(500);
+    await mp.mealModalSave.click();
+    await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
+
+    const sourceKcal = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+
+    // Add different food to lunch (target) — it should be replaced after copy
+    await mp.mealCard(lunchMealId).click();
+    await expect(mp.mealModal).toBeVisible({ timeout: 5000 });
+    await mp.mealFoodSearch.fill('apple');
+    await page.waitForTimeout(600);
+    await page.getByTestId('food-result-item').first().click();
+    await page.waitForTimeout(500);
+    await mp.mealModalSave.click();
+    await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
+
+    // Copy breakfast → lunch (replace)
+    await mp.copyMealBtn(mealId).click();
+    await expect(mp.copyMealPopover()).toBeVisible({ timeout: 5000 });
+    await mp.copyToMealType('lunch').click();
+
+    // Meal count stays at 2 (lunch was replaced, not added)
+    await expect
+      .poll(async () => (await mp.getMealCardIds()).length, { timeout: 10000 })
+      .toBe(2);
+
+    // Lunch calories now match breakfast (same food was copied)
+    await expect
+      .poll(async () => mp.mealTotalCalories(lunchMealId).textContent(), { timeout: 10000 })
+      .toBe(sourceKcal);
+  });
+});
+
+// ── Block 18: Auth redirect ───────────────────────────────────────────────────
 
 test.describe('013: Auth redirect', () => {
   test('unauthenticated access to /meal-planner redirects to /login', async ({ page }) => {

@@ -6,6 +6,7 @@ import {
   dietPlanMealItems,
   dietPlanMeals,
   dietPlans,
+  foodAltMeasures,
   foodLogItems,
   foodLogMeals,
 } from '@/server/db/schema';
@@ -91,9 +92,11 @@ export async function POST(request: NextRequest) {
         foodId: dietPlanMealItems.foodId,
         altMeasureId: dietPlanMealItems.altMeasureId,
         quantity: dietPlanMealItems.quantity,
+        altMeasureServingWeight: foodAltMeasures.servingWeight,
       })
       .from(dietPlanMeals)
       .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
+      .leftJoin(foodAltMeasures, eq(dietPlanMealItems.altMeasureId, foodAltMeasures.id))
       .where(
         and(
           eq(dietPlanMeals.dietPlanId, planId),
@@ -233,12 +236,15 @@ export async function POST(request: NextRequest) {
       for (const row of planItems) {
         const mergeKey = createMergeKey(row.foodId!, row.altMeasureId, row.mealType);
         const existing = existingByKey.get(mergeKey);
+        const quantityInGrams = row.altMeasureId
+          ? Number(row.quantity!) * Number(row.altMeasureServingWeight ?? 0)
+          : Number(row.quantity!);
 
         if (existing) {
           await tx
             .update(foodLogItems)
             .set({
-              quantity: (Number(existing.quantity) + Number(row.quantity!)).toFixed(2),
+              quantity: (Number(existing.quantity) + quantityInGrams).toFixed(2),
               updatedAt: new Date(),
             })
             .where(eq(foodLogItems.id, existing.id));
@@ -250,7 +256,7 @@ export async function POST(request: NextRequest) {
           mealId: mealGroupByType.get(row.mealType)!,
           foodId: row.foodId!,
           altMeasureId: row.altMeasureId,
-          quantity: Number(row.quantity!).toFixed(2),
+          quantity: quantityInGrams.toFixed(2),
         });
         insertedCount += 1;
       }

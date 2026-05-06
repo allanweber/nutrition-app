@@ -409,7 +409,7 @@ export function MealModal({ state, onClose }: MealModalProps) {
     <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent
         data-testid="meal-modal"
-        className="md:min-w-2xl min-h-[40vh] md:min-h-[80vh] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden"
+        className="min-h-[72dvh] max-h-[92dvh] md:min-w-2xl md:min-h-[84dvh] md:max-h-[94dvh] lg:min-h-[80vh] lg:max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden"
       >
 
         {/* ── Header ── */}

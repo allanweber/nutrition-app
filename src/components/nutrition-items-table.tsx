@@ -33,6 +33,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -83,19 +93,19 @@ interface NutritionItemsTableProps<T> {
 type TableMeta = {
   confirmDelete: string | null;
   setConfirmDelete: (id: string | null) => void;
+  useInlineDeleteConfirm: boolean;
 };
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
-/** Single-letter macro labels for compact / mobile rows */
-function macroShortLabel(label: string): string {
+function macroMetricLabel(label: string): string {
   const map: Record<string, string> = {
-    Protein: 'P',
-    Carbs: 'C',
-    Fats: 'F',
-    Fat: 'F',
+    Protein: 'PROT',
+    Carbs: 'CARB',
+    Fats: 'FATS',
+    Fat: 'FATS',
   };
-  return map[label] ?? label.slice(0, 1).toUpperCase();
+  return map[label] ?? label.toUpperCase();
 }
 
 function SortIcon({ sorted }: { sorted: false | 'asc' | 'desc' }) {
@@ -127,17 +137,18 @@ function NutritionMobileCard<T>({
     : `confirm-delete-${id}`;
 
   const editHref = config.getEditHref(item);
+  const useInlineDeleteConfirm = meta.useInlineDeleteConfirm;
 
   return (
     <article
       data-testid={rowTestId}
-      className="flex gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-sm"
+      className="flex items-stretch gap-3 rounded-[1.75rem] border border-border/70 bg-card px-3.5 py-3 shadow-sm"
     >
       <Link
         href={editHref}
-        className="flex min-w-0 flex-1 gap-3 outline-none ring-offset-background rounded-xl focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-4xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="size-[3.25rem] shrink-0 rounded-full overflow-hidden border border-border/40 bg-secondary shadow-md">
+        <div className="size-16 shrink-0 overflow-hidden rounded-2xl border border-border/40 bg-secondary shadow-md">
           {thumb ? (
             <Image
               src={thumb}
@@ -154,46 +165,49 @@ function NutritionMobileCard<T>({
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <h3 className="font-headline text-sm font-bold leading-snug text-foreground truncate">
-            {name}
-          </h3>
-          {subtitle ? (
-            <p className="text-[10px] uppercase tracking-tight text-muted-foreground truncate">{subtitle}</p>
-          ) : null}
-          <p className="mt-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
-            {Math.round(config.getEnergy(item))} kcal
-          </p>
+        <div className="min-w-0 flex-1 self-stretch">
+          <div className="flex h-full flex-col justify-center gap-2">
+            <div className="min-w-0 space-y-1">
+              <h3 className="truncate font-headline text-[0.95rem] font-bold leading-tight text-foreground">
+                {name}
+              </h3>
+              {subtitle ? (
+                <p className="truncate text-[11px] leading-tight text-muted-foreground">{subtitle}</p>
+              ) : null}
+            </div>
 
-          <div className="mt-2 flex flex-col gap-1.5">
-            {config.macros.map((macro) => {
-              const val = macro.getValue(item);
-              const barPct = macro.getBarWidth(item);
-              return (
-                <div key={macro.label} className="flex items-center gap-2">
-                  <span className="w-3 shrink-0 text-center text-[10px] font-semibold text-muted-foreground">
-                    {macroShortLabel(macro.label)}
-                  </span>
-                  <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className={`h-full rounded-full ${macro.fill}`} style={{ width: `${barPct}%` }} />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm leading-none text-muted-foreground">
+              <span className="font-semibold tabular-nums text-foreground">
+                {Math.round(config.getEnergy(item))} kcal
+              </span>
+              <span className="text-border">|</span>
+              <span>
+                {config.extraCol.label}:{' '}
+                <span className="font-mono tabular-nums text-foreground">{config.extraCol.getValue(item)}</span>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {config.macros.map((macro) => {
+                const val = macro.getValue(item);
+                return (
+                  <div key={macro.label} className="px-1 py-1.5">
+                    <span className={`block text-[11px] font-bold uppercase tracking-[0.16em] ${macro.text}`}>
+                      {macroMetricLabel(macro.label)}
+                    </span>
+                    <span className={`mt-1 block font-mono text-lg font-bold tabular-nums ${macro.text}`}>
+                      {val.toFixed(1)}g
+                    </span>
                   </div>
-                  <span className={`shrink-0 font-mono text-xs font-semibold tabular-nums ${macro.text}`}>
-                    {val.toFixed(1)}g
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-2 flex items-center justify-between border-t border-border/25 pt-2 text-[11px] text-muted-foreground">
-            <span>{config.extraCol.label}</span>
-            <span className="font-mono tabular-nums text-foreground">{config.extraCol.getValue(item)}</span>
+                );
+              })}
+            </div>
           </div>
         </div>
       </Link>
 
-      <div className="flex shrink-0 flex-col items-center justify-center gap-1 self-center">
-        {meta.confirmDelete === id ? (
+      <div className="flex shrink-0 items-center self-stretch">
+        {useInlineDeleteConfirm && meta.confirmDelete === id ? (
           <div className="flex flex-col gap-1">
             <Button
               variant="destructive"
@@ -217,16 +231,44 @@ function NutritionMobileCard<T>({
             </Button>
           </div>
         ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => meta.setConfirmDelete(id)}
-            aria-label={`Delete ${name}`}
-            data-testid={deleteTestId}
-          >
-            <Trash2 className="h-[1.125rem] w-[1.125rem]" strokeWidth={1.75} />
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0 self-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => meta.setConfirmDelete(id)}
+              aria-label={`Delete ${name}`}
+              data-testid={deleteTestId}
+            >
+              <Trash2 className="h-4.5 w-4.5" strokeWidth={1.75} />
+            </Button>
+
+            {!useInlineDeleteConfirm && (
+              <AlertDialog open={meta.confirmDelete === id} onOpenChange={(open) => { if (!open) meta.setConfirmDelete(null); }}>
+                <AlertDialogContent size="sm">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete item?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete {name}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      data-testid={confirmTestId}
+                      onClick={() => {
+                        config.onDelete(id);
+                        meta.setConfirmDelete(null);
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </>
         )}
       </div>
     </article>
@@ -246,10 +288,11 @@ export function NutritionItemsTable<T>({
 }: NutritionItemsTableProps<T>) {
   const router = useRouter();
   const [internalSearch, setInternalSearch] = useState('');
-  // IMPORTANT for Playwright: avoid rendering both mobile + desktop variants at once.
-  // Hidden duplicates (md:hidden / hidden md:block) still exist in the DOM and cause
-  // strict-mode locator failures (duplicate text/testids). Default to desktop.
+  // IMPORTANT for Playwright: avoid rendering both card + table variants at once.
+  // Hidden duplicates still exist in the DOM and cause strict-mode locator failures.
+  // Desktop-only table starts at lg; tablet and smaller use cards.
   const [isDesktop, setIsDesktop] = useState(true);
+  const [useInlineDeleteConfirm, setUseInlineDeleteConfirm] = useState(false);
   const isSearchControlled = onSearchChange !== undefined;
   const search = isSearchControlled ? (searchValue ?? '') : internalSearch;
   const setSearch = (value: string) => {
@@ -258,8 +301,16 @@ export function NutritionItemsTable<T>({
   };
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
+    const mq = window.matchMedia('(min-width: 1024px)');
     const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setUseInlineDeleteConfirm(mq.matches);
     update();
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
@@ -272,6 +323,10 @@ export function NutritionItemsTable<T>({
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [search]);
+
+  useEffect(() => {
+    setConfirmDelete(null);
+  }, [useInlineDeleteConfirm]);
 
   const columns: ColumnDef<T>[] = [
     {
@@ -387,7 +442,7 @@ export function NutritionItemsTable<T>({
                 <Pencil className="h-4 w-4" />
               </Link>
             </Button>
-            {meta.confirmDelete === id ? (
+            {meta.useInlineDeleteConfirm && meta.confirmDelete === id ? (
               <div className="flex gap-1">
                 <Button
                   variant="destructive"
@@ -408,16 +463,44 @@ export function NutritionItemsTable<T>({
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => meta.setConfirmDelete(id)}
-                aria-label={`Delete ${name}`}
-                data-testid={deleteTestId}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => meta.setConfirmDelete(id)}
+                  aria-label={`Delete ${name}`}
+                  data-testid={deleteTestId}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+
+                {!meta.useInlineDeleteConfirm && (
+                  <AlertDialog open={meta.confirmDelete === id} onOpenChange={(open) => { if (!open) meta.setConfirmDelete(null); }}>
+                    <AlertDialogContent size="sm">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete item?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete {name}.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          data-testid={confirmTestId}
+                          onClick={() => {
+                            config.onDelete(id);
+                            meta.setConfirmDelete(null);
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </>
             )}
           </div>
         );
@@ -443,7 +526,7 @@ export function NutritionItemsTable<T>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    meta: { confirmDelete, setConfirmDelete },
+    meta: { confirmDelete, setConfirmDelete, useInlineDeleteConfirm },
   });
 
   const { pageIndex, pageSize } = table.getState().pagination;
@@ -647,7 +730,7 @@ export function NutritionItemsTable<T>({
                   key={row.id}
                   item={row.original}
                   config={config}
-                  meta={{ confirmDelete, setConfirmDelete }}
+                  meta={{ confirmDelete, setConfirmDelete, useInlineDeleteConfirm }}
                   rowTestId={rowTestId}
                 />
               );

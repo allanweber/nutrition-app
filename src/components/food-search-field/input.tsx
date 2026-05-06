@@ -13,6 +13,7 @@ interface SearchInputProps {
   className?: string;
   size?: 'default' | 'small';
   inputTestId?: string;
+  autoFocus?: boolean;
 }
 
 export function SearchInput({
@@ -24,6 +25,7 @@ export function SearchInput({
   className,
   size = 'default',
   inputTestId = 'food-search-input',
+  autoFocus = false,
 }: SearchInputProps) {
   const isSmall = size === 'small';
 
@@ -43,6 +45,7 @@ export function SearchInput({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           onFocus={onFocus}
+          autoFocus={autoFocus}
           placeholder={placeholder}
           className={`border-0 shadow-none focus-visible:ring-0 bg-transparent px-0 placeholder:text-muted-foreground ${isSmall ? 'h-6 text-sm' : 'h-10 text-base'}`}
           aria-label="Search foods"

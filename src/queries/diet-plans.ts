@@ -376,6 +376,33 @@ export function useDeleteDishGroupFromMealMutation() {
   })
 }
 
+export function useCopyMealMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ planId, mealId, toMealType }: {
+      planId: string
+      mealId: string
+      toMealType: string
+    }): Promise<{ meals: DietPlanMealDTO[] }> => {
+      const res = await fetch(`/api/diet-plans/${planId}/meals/${mealId}/copy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toMealType }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to copy meal')
+      }
+      return res.json()
+    },
+    onSuccess: (data, vars) => {
+      qc.setQueryData(dietPlanKeys.meals(vars.planId), data)
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
+    },
+  })
+}
+
 export function useCopyDayMutation() {
   const qc = useQueryClient()
   return useMutation({
