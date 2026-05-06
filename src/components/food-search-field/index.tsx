@@ -182,7 +182,7 @@ export function FoodSearchField({
       onKeyDown={handleKeyDown}
       onFocus={handleFocus}
       placeholder={placeholder}
-      size={size}
+      size={isMobileViewport ? 'small' : size}
       inputTestId={inputTestId}
     />
   );
