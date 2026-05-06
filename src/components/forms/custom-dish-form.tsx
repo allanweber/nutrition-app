@@ -158,37 +158,38 @@ function IngredientRow({
         </div>
       </div>
 
-      {/* Quantity + measure — fixed width, wraps to new line on small screens */}
-      {!ingredient.isLoadingNutrition && (
-        <div className="w-56 shrink-0">
-          <QuantityUnitInput
-            measures={ingredient.measures}
-            selectedMeasureId={ingredient.selectedMeasureId}
-            quantity={ingredient.displayQty}
-            onMeasureChange={(id, newQty) => {
-              const measure = ingredient.measures.find((m) => m.id === id) ?? ingredient.measures[0];
-              onMeasureChange(id, newQty, newQty * measure.weightGrams);
-            }}
-            onQuantityChange={(qty) => {
-              const measure = ingredient.measures.find((m) => m.id === ingredient.selectedMeasureId) ?? ingredient.measures[0];
-              onQuantityChange(qty, qty * measure.weightGrams);
-            }}
-            showSlider={false}
-            showLabel={false}
-          />
-        </div>
-      )}
+      {/* Quantity + measure + remove — always same row */}
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        {!ingredient.isLoadingNutrition && (
+          <div className="flex-1 min-w-0">
+            <QuantityUnitInput
+              measures={ingredient.measures}
+              selectedMeasureId={ingredient.selectedMeasureId}
+              quantity={ingredient.displayQty}
+              onMeasureChange={(id, newQty) => {
+                const measure = ingredient.measures.find((m) => m.id === id) ?? ingredient.measures[0];
+                onMeasureChange(id, newQty, newQty * measure.weightGrams);
+              }}
+              onQuantityChange={(qty) => {
+                const measure = ingredient.measures.find((m) => m.id === ingredient.selectedMeasureId) ?? ingredient.measures[0];
+                onQuantityChange(qty, qty * measure.weightGrams);
+              }}
+              showSlider={false}
+              showLabel={false}
+            />
+          </div>
+        )}
 
-      {/* Remove button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        onClick={onRemove}
-      >
-        <X className="h-4 w-4" />
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={onRemove}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
