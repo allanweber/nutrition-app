@@ -19,7 +19,7 @@ test.describe('Phase 3: Dashboard & Charts', () => {
 
     // Check that key dashboard sections are visible
     await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('heading', { name: 'Macronutrients' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Daily Macros' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Weekly Momentum' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
   });

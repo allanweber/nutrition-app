@@ -1405,8 +1405,17 @@ test.describe('013: Copy meal', () => {
     await mp.mealModalSave.click();
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
 
-    // Record source calories
-    const sourceKcal = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+    // Record source calories after the meal card footer refreshes.
+    const sourceKcal = await expect
+      .poll(
+        async () => {
+          const text = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+          const value = Number(text?.replace(/[^0-9.]/g, ''));
+          return value > 0 ? text?.trim() ?? null : null;
+        },
+        { timeout: 10000 },
+      )
+      .not.toBeNull();
 
     // Copy breakfast → dinner
     await mp.copyMealBtn(mealId).click();
@@ -1419,8 +1428,16 @@ test.describe('013: Copy meal', () => {
 
     const ids = await mp.getMealCardIds();
     const dinnerMealId = ids.find((id) => id !== mealId)!;
-    const copiedKcal = await mp.mealTotalCalories(dinnerMealId).textContent({ timeout: 5000 });
-    expect(copiedKcal).toBe(sourceKcal);
+
+    await expect
+      .poll(
+        async () => {
+          const text = await mp.mealTotalCalories(dinnerMealId).textContent({ timeout: 5000 });
+          return text?.trim() ?? null;
+        },
+        { timeout: 10000 },
+      )
+      .toBe(sourceKcal);
   });
 
   test('copying to an existing meal replaces its contents', async ({ page }) => {
