@@ -1,6 +1,7 @@
 import { type DailySummaryDTO } from '@/server/services/dashboard.service';
 import { SectionNudge } from '@/components/dashboard/shared/section-nudge';
 import { CircularProgress } from '@/components/dashboard/calories/circular-progress';
+import { LogFoodButton } from '@/components/dashboard/calories/log-food-button';
 
 interface CaloriesContentProps {
   data: DailySummaryDTO;
@@ -23,10 +24,10 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
         Calories
       </h2>
 
-      {/* Main content: number + circle */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 flex-1">
-        <div className="min-w-0 sm:flex-grow">
-          <div className="flex items-baseline gap-2 mb-2">
+      {/* Main content: number + circle always side by side */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
             <span className="text-5xl font-headline font-black tabular-nums leading-none text-primary">
               {caloriesConsumed.toLocaleString()}
             </span>
@@ -36,7 +37,7 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
           </div>
 
           {/* Secondary stats */}
-          <div className="flex gap-8 mt-6 pt-5 border-t border-border/50">
+          <div className="flex gap-8 mt-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Burned</span>
               <span className="text-xl font-headline font-black tabular-nums text-foreground">
@@ -54,7 +55,7 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
           </div>
         </div>
 
-        <div className="flex-shrink-0 flex justify-center sm:block">
+        <div className="flex-shrink-0">
           <CircularProgress
             percentage={percentConsumed}
             label="Remaining"
@@ -70,6 +71,11 @@ export function CaloriesContent({ data }: CaloriesContentProps) {
           <SectionNudge message="Set your calorie goal" />
         </div>
       )}
+
+      {/* Log Food */}
+      <div className="flex justify-center mt-auto">
+        <LogFoodButton />
+      </div>
     </div>
   );
 }
