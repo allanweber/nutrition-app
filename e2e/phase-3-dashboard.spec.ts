@@ -17,8 +17,8 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     // Check page heading
     await expect(page.locator('h1')).toBeVisible();
 
-    // Check that key dashboard sections are visible
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
+    // Calories is rendered as a region (with status bar) — others remain h2 headings
+    await expect(page.getByRole('region', { name: /^Calories\b/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Daily Macros' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Weekly Momentum' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
@@ -58,8 +58,8 @@ test.describe('Phase 3: Dashboard & Charts', () => {
     // Check mobile layout — dashboard should still display
     await expect(page.locator('h1')).toBeVisible();
 
-    // Check key sections are present on mobile
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
+    // Check key sections are present on mobile (Calories now ships as a region)
+    await expect(page.getByRole('region', { name: /^Calories\b/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
   });
 
