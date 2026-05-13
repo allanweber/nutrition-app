@@ -178,6 +178,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
           const isSelected = day === selectedDay;
 
           const macroPcts = { protein: proteinPct, carbs: carbsPct, fat: fatPct };
+          const macroVals = { protein, carbs, fat };
 
           return (
             <Button
@@ -186,7 +187,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
               onClick={() => onSelectDay(day)}
               variant="ghost"
               className={cn(
-                'flex flex-col gap-2 p-3 rounded-xl border h-auto min-w-20 flex-1 items-start justify-start text-left',
+                'flex flex-col gap-2 p-3 rounded-xl border h-auto min-w-20 flex-1 items-start justify-start text-left overflow-hidden whitespace-normal',
                 isSelected
                   ? 'bg-day-selected border-day-selected text-white hover:bg-day-selected'
                   : 'border-border bg-background hover:border-border/80 hover:bg-muted/30',
@@ -204,26 +205,54 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
                 {isSelected && !isEmpty && (
                   <span className="text-[10px] font-semibold text-primary-foreground/70 shrink-0">Active</span>
                 )}
-                {!isSelected && !isEmpty && (
-                  <span className="text-[10px] font-medium text-primary shrink-0">{Math.round(calPct)}%</span>
-                )}
                 {!isSelected && isEmpty && (
                   <span className="text-[10px] font-medium text-muted-foreground shrink-0">Empty</span>
                 )}
               </div>
 
-              <div className="flex gap-1">
+              <div className="space-y-1.5 w-full">
                 {MACRO_BARS.map(({ key, label: macroLabel }) => (
-                  <div key={key} className="flex flex-col gap-0.5 flex-1">
-                    <div className={cn('h-1 w-full rounded-full overflow-hidden', isSelected ? 'bg-day-selected/40' : 'bg-muted')}>
+                  <div key={key} className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span
+                        className={cn(
+                          'text-[9px] uppercase font-medium tracking-wider',
+                          isSelected ? 'text-primary/80' : 'text-muted-foreground/60',
+                        )}
+                      >
+                        {macroLabel}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold tabular-nums',
+                          isSelected ? 'text-white' : 'text-foreground',
+                        )}
+                      >
+                        {Math.round(macroVals[key])}
+                        <span
+                          className={cn(
+                            'font-normal',
+                            isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground',
+                          )}
+                        >
+                          g
+                        </span>
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        'h-1 w-full rounded-full overflow-hidden',
+                        isSelected ? 'bg-day-selected/40' : 'bg-muted',
+                      )}
+                    >
                       <div
-                        className={cn('h-full rounded-full transition-all', isSelected ? 'bg-primary/80' : MACRO_COLORS[key])}
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          isSelected ? 'bg-primary/80' : MACRO_COLORS[key],
+                        )}
                         style={{ width: `${macroPcts[key]}%` }}
                       />
                     </div>
-                    <span className={cn('text-[9px] uppercase font-medium tracking-wider', isSelected ? 'text-primary/80' : 'text-muted-foreground/60')}>
-                      {macroLabel}
-                    </span>
                   </div>
                 ))}
               </div>
