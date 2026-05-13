@@ -3,14 +3,14 @@ export const HYDRATION_LOG_INCREMENT_ML = 250;
 
 export const MEAL_TYPE_ORDER = [
   'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
   'morning_snack',
+  'lunch',
   'afternoon_snack',
+  'dinner',
   'evening_snack',
   'pre_workout',
   'post_workout',
+  'snack',
   'other',
 ] as const;
 export type MealType = (typeof MEAL_TYPE_ORDER)[number];
