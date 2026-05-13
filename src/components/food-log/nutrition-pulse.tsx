@@ -32,7 +32,9 @@ export function NutritionPulse({
   const remaining = data?.remaining ?? 0;
   const isOverGoal = remaining < 0 && (data?.calorieGoal ?? 0) > 0;
 
-  const pct = Math.min(Math.max(data?.percentConsumed ?? 0, 0), 100);
+  const percentConsumedRaw = Math.max(data?.percentConsumed ?? 0, 0);
+  // Clamp only for visual ring fill; the label should show true overflow (e.g. 118%).
+  const pct = Math.min(percentConsumedRaw, 100);
   const size = 160;
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
@@ -162,7 +164,7 @@ export function NutritionPulse({
                   </svg>
                   <div className="absolute inset-0 grid place-items-center">
                     <span className="text-xs font-extrabold tabular-nums text-foreground">
-                      {isLoading ? '—' : `${Math.round(pct)}%`}
+                      {isLoading ? '—' : `${Math.round(percentConsumedRaw)}%`}
                     </span>
                   </div>
                 </div>
