@@ -114,7 +114,7 @@ function DishGroupRow({ group }: { group: DishGroup }) {
       </Button>
 
       {expanded && (
-        <div className="pl-8 divide-y divide-border/20 border-l-2 border-violet-200/60 ml-2.5 mb-1">
+        <div className="ml-2 mb-1 rounded-lg border border-violet-200/50 bg-violet-50/40 py-0.5 pl-4 pr-2 divide-y divide-border/20 dark:border-violet-800/30 dark:bg-violet-950/25">
           {group.items.map((item) => (
             <MealItemRow key={item.id} item={item} />
           ))}

@@ -70,12 +70,12 @@ export function CalorieStatusBar({
         <p className="text-sm font-medium tabular-nums text-destructive">{overTarget}</p>
       )}
 
-      {/* Bar: target zone → fill (primary) → goal tick */}
+      {/* Bar track: same surface tone as selected week-day (food log strip) */}
       <div className="relative py-1">
-        <div className="relative h-7 w-full overflow-hidden rounded-full bg-muted ring-1 ring-inset ring-border/50 sm:h-8">
-          {/* Target zone ±10% — accent/cyan band, clearly separate from primary (green) fill */}
+        <div className="relative h-7 w-full overflow-hidden rounded-full border border-border bg-primary/10 shadow-sm dark:bg-secondary sm:h-8">
+          {/* Target zone ±10% — same tokens as week-day / bar track (primary/10 · secondary); edge from border */}
           <div
-            className="pointer-events-none absolute inset-y-0 z-[1] rounded-full bg-gradient-to-r from-accent/50 via-accent/65 to-accent/50 ring-1 ring-inset ring-accent-foreground/15 dark:from-accent/55 dark:via-accent/75 dark:to-accent/55"
+            className="pointer-events-none absolute inset-y-0 z-[1] rounded-full border border-primary/30 bg-primary/10 dark:border-border/60 dark:bg-secondary"
             style={{
               left: `${rangeLeftPct}%`,
               width: `${rangeWidthPct}%`,

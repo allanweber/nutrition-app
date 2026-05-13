@@ -13,6 +13,7 @@ import {
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface WeeklyCalendarStripProps {
@@ -127,21 +128,22 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                   onClick={() => !isDisabled && onDateChange(day)}
                   disabled={isDisabled}
                   variant="ghost"
-                  className={[
-                    'flex flex-1 basis-0 min-w-0 flex-col items-center justify-center px-0.5 py-1.5 sm:px-1 sm:py-2.5 rounded-lg sm:rounded-xl select-none h-auto',
-                    isSelected
-                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
-                      : isDisabled
-                        ? 'opacity-30 cursor-not-allowed text-foreground'
-                        : 'cursor-pointer text-foreground',
-                  ].join(' ')}
+                  className={cn(
+                    'flex flex-1 basis-0 min-w-0 flex-col items-center justify-center border px-0.5 py-1.5 sm:px-1 sm:py-2.5 rounded-lg sm:rounded-xl select-none h-auto',
+                    isDisabled &&
+                      'cursor-not-allowed border-transparent text-foreground opacity-30',
+                    !isDisabled &&
+                      isSelected &&
+                      'border-border bg-primary/10 text-foreground shadow-sm hover:bg-primary/[0.12] dark:bg-secondary dark:hover:bg-secondary/90',
+                    !isDisabled &&
+                      !isSelected &&
+                      'cursor-pointer border-transparent text-foreground hover:border-border/80 hover:bg-muted/30',
+                  )}
                 >
-                  <span
-                    className={`text-[9px] sm:text-[10px] font-bold mb-0.5 leading-none sm:mb-1 ${isSelected ? 'opacity-80' : 'text-muted-foreground'}`}
-                  >
+                  <span className="mb-0.5 text-[9px] font-bold leading-none text-muted-foreground sm:mb-1 sm:text-[10px]">
                     {DAY_LABELS[i]}
                   </span>
-                  <span className="text-xs sm:text-base md:text-lg font-headline font-bold tabular-nums leading-none">
+                  <span className="text-xs font-headline font-bold tabular-nums leading-none text-foreground sm:text-base md:text-lg">
                     {format(day, 'd')}
                   </span>
                 </Button>

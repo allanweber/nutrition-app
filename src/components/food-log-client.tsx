@@ -475,10 +475,10 @@ export default function FoodLogClient({
                                 </>
                               ) : (
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-violet-500/50 hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-10 text-violet-500/50 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
                                   disabled={deleting === groupKey}
                                   aria-label={`Remove entire ${entry.dishNameSnapshot} dish`}
                                   data-testid={`delete-dish-group-${entry.dishLogGroupId}`}
@@ -492,11 +492,11 @@ export default function FoodLogClient({
                               )}
                             </div>
                             <div className="lg:hidden">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-violet-500/50 hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-10 text-violet-500/50 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
                                 disabled={deleting === groupKey}
                                 aria-label={`Remove entire ${entry.dishNameSnapshot} dish`}
                                 data-testid={`delete-dish-group-${entry.dishLogGroupId}`}
@@ -595,8 +595,11 @@ export default function FoodLogClient({
       })}
 
       {logs.length === 0 && (
-        <div className="text-center py-4" data-testid="empty-state">
-          <p className="text-sm text-muted-foreground">
+        <div className="py-4 text-center" data-testid="empty-state">
+          <p className="text-sm text-muted-foreground lg:hidden">
+            Tap the + button to search and add foods to your log.
+          </p>
+          <p className="hidden text-sm text-muted-foreground lg:block">
             Search for foods above to start logging your meals.
           </p>
         </div>
@@ -731,7 +734,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
 
       {/* Mobile always-visible actions */}
       <div className="lg:hidden flex items-center gap-1.5 shrink-0">
-        <FavoriteToggleButton foodId={log.food.id} className="size-9" />
+        <FavoriteToggleButton foodId={log.food.id} />
         <Button
           variant="ghost"
           size="icon"

@@ -19,7 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ProgressBar } from '@/components/dashboard/shared/progress-bar';
 import { useFoodSearch } from '@/hooks/use-food-search';
 import { customDishFormSchema, zodValidator } from '@/lib/form-validation';
 import type { CustomDishFormData } from '@/lib/form-validation';

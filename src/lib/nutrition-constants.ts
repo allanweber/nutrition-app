@@ -89,14 +89,6 @@ export const MACRO_CELL_FILL = {
   fat:      'bg-[#408FBE] dark:bg-sky-400',
 } as const;
 
-/** Left border color classes for macro cards */
-export const MACRO_CELL_BORDER = {
-  calories: 'border-l-[#008d4d] dark:border-l-emerald-400',
-  protein:  'border-l-[#D54069] dark:border-l-rose-400',
-  carbs:    'border-l-[#CC7A40] dark:border-l-amber-400',
-  fat:      'border-l-[#408FBE] dark:border-l-sky-400',
-} as const;
-
 /** Solid bg dot indicator for each meal type (used in food log row headers) */
 export const MEAL_DOT_COLORS: Record<string, string> = {
   breakfast: 'bg-amber-500',

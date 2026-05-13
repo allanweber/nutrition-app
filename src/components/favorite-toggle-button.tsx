@@ -50,10 +50,10 @@ export function FavoriteToggleButton({ foodId, dishId, className = '' }: Favorit
       size="icon"
       onClick={handleToggle}
       disabled={toggleMutation.isPending || idsQuery.isLoading}
-      className={`size-7 ${
+      className={`min-h-11 min-w-11 ${
         isFavorite
-          ? 'text-amber-500 hover:text-amber-600 hover:bg-transparent'
-          : 'text-muted-foreground/40 hover:text-amber-500 hover:bg-transparent'
+          ? 'text-amber-500 hover:bg-transparent hover:text-amber-600'
+          : 'text-muted-foreground/40 hover:bg-transparent hover:text-amber-500'
       } ${className}`}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       data-testid={`favorite-toggle-${foodId ?? dishId}`}

@@ -30,7 +30,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6 border-l-2 border-primary pl-3"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
         >
           Precision nutrition · For clinicians and individuals
         </motion.p>

@@ -29,6 +29,7 @@ export function CircularProgress({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="-rotate-90"
+        aria-hidden
       >
         {/* Track */}
         <circle
@@ -53,8 +54,7 @@ export function CircularProgress({
           style={{ transition: 'stroke-dashoffset 0.6s ease' }}
         />
       </svg>
-      {/* Center label */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center" aria-hidden>
         <span className="text-2xl font-headline font-black tabular-nums leading-none text-foreground">
           {value}
         </span>
