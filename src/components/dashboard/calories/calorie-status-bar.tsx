@@ -1,5 +1,12 @@
 'use client';
 
+/** Fixed locale so SSR markup matches the browser (default locale differs Node vs client). */
+const CAL_NUMBER_LOCALE = 'en-US';
+
+function formatCalories(n: number): string {
+  return Math.round(n).toLocaleString(CAL_NUMBER_LOCALE);
+}
+
 interface CalorieStatusBarProps {
   caloriesConsumed: number;
   calorieGoal: number;
@@ -34,24 +41,24 @@ export function CalorieStatusBar({
   const rangeWidthPct = Math.max(0, pctOnScale(rangeMax, scaleMax) - rangeLeftPct);
   const goalPct = pctOnScale(calorieGoal, scaleMax);
 
-  const rangeLabel = `${Math.round(rangeMin).toLocaleString()}–${Math.round(rangeMax).toLocaleString()}`;
+  const rangeLabel = `${formatCalories(rangeMin)}–${formatCalories(rangeMax)}`;
 
   const overTarget =
     remaining !== undefined && remaining < 0
-      ? `${Math.abs(remaining).toLocaleString()} kcal over target`
+      ? `${formatCalories(Math.abs(remaining))} kcal over target`
       : null;
 
   return (
     <section
       className="w-full min-w-0 space-y-3"
-      aria-label={`Calories ${caloriesConsumed.toLocaleString()} of ${calorieGoal.toLocaleString()} kcal target; acceptable band ${rangeLabel} kcal (±10%); scale 0 to ${scaleMax.toLocaleString()}`}
+      aria-label={`Calories ${formatCalories(caloriesConsumed)} of ${formatCalories(calorieGoal)} kcal target; acceptable band ${rangeLabel} kcal (±10%); scale 0 to ${formatCalories(scaleMax)}`}
     >
       {/* Header: consumed / target as primary title (left); section label (right) */}
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="min-w-0 flex-1 text-left text-xl font-headline font-extrabold tabular-nums tracking-tight text-foreground sm:text-2xl">
-          <span className="text-foreground">{caloriesConsumed.toLocaleString()}</span>
+          <span className="text-foreground">{formatCalories(caloriesConsumed)}</span>
           <span className="mx-1 font-semibold text-muted-foreground">/</span>
-          <span className="text-foreground/90">{calorieGoal.toLocaleString()}</span>
+          <span className="text-foreground/90">{formatCalories(calorieGoal)}</span>
           <span className="ml-1.5 text-base font-semibold text-muted-foreground sm:text-lg">kcal</span>
         </h2>
         <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground sm:text-xs">
@@ -96,7 +103,7 @@ export function CalorieStatusBar({
         <span className="max-w-[55%] shrink text-center leading-snug">
           Target zone ±10%
         </span>
-        <span>{scaleMax.toLocaleString()}</span>
+        <span>{formatCalories(scaleMax)}</span>
       </div>
     </section>
   );

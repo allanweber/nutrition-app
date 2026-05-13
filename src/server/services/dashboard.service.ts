@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
+import { HYDRATION_LOG_INCREMENT_ML } from '@/lib/nutrition-constants';
 import {
   foodLogItems,
   foodLogMeals,
@@ -84,7 +85,6 @@ const DEFAULT_PROTEIN_GOAL = 150;
 const DEFAULT_CARBS_GOAL = 250;
 const DEFAULT_FAT_GOAL = 65;
 const DEFAULT_HYDRATION_GOAL_ML = 2500;
-const ADD_WATER_ML = 250;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -301,12 +301,12 @@ export async function addWater(
     .values({
       userId,
       date,
-      totalMl: ADD_WATER_ML,
+      totalMl: HYDRATION_LOG_INCREMENT_ML,
     })
     .onConflictDoUpdate({
       target: [hydrationLogs.userId, hydrationLogs.date],
       set: {
-        totalMl: sql`${hydrationLogs.totalMl} + ${ADD_WATER_ML}`,
+        totalMl: sql`${hydrationLogs.totalMl} + ${HYDRATION_LOG_INCREMENT_ML}`,
         updatedAt: sql`now()`,
       },
     })

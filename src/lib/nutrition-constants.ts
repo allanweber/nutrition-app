@@ -1,3 +1,6 @@
+/** Milliliters added per "Log Hydration" tap (must match `addWater` in dashboard.service). */
+export const HYDRATION_LOG_INCREMENT_ML = 250;
+
 export const MEAL_TYPE_ORDER = [
   'breakfast',
   'lunch',

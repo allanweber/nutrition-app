@@ -1,13 +1,20 @@
+'use client';
+
 import { type HydrationLogDTO } from '@/server/services/dashboard.service';
 import { AddWaterButton } from '@/components/dashboard/hydration/add-water-button';
 import { SectionNudge } from '@/components/dashboard/shared/section-nudge';
+import { useAddWaterMutation, useHydrationLogQuery } from '@/queries/hydration';
 
 interface HydrationContentProps {
-  data: HydrationLogDTO;
+  date: string;
+  initialData: HydrationLogDTO;
 }
 
-export function HydrationContent({ data }: HydrationContentProps) {
-  const { totalMl, goalMl, percentConsumed, hasGoal } = data;
+export function HydrationContent({ date, initialData }: HydrationContentProps) {
+  const { data } = useHydrationLogQuery(date, initialData);
+  const addWater = useAddWaterMutation(date);
+
+  const { totalMl, goalMl, percentConsumed, hasGoal } = data ?? initialData;
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -48,7 +55,10 @@ export function HydrationContent({ data }: HydrationContentProps) {
       )}
 
       <div className="mt-auto flex justify-center">
-        <AddWaterButton />
+        <AddWaterButton
+          onClick={() => addWater.mutate()}
+          isBusy={addWater.isPending}
+        />
       </div>
     </div>
   );

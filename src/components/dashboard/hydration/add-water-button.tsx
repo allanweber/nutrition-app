@@ -1,35 +1,30 @@
 'use client';
 
-import { useTransition } from 'react';
-import { Loader2, Droplets } from 'lucide-react';
+import { Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { addWaterAction } from '@/server/actions/hydration';
+import { HYDRATION_LOG_INCREMENT_ML } from '@/lib/nutrition-constants';
 
-export function AddWaterButton() {
-  const [isPending, startTransition] = useTransition();
+interface AddWaterButtonProps {
+  onClick: () => void;
+  isBusy?: boolean;
+}
 
-  const handleClick = () => {
-    startTransition(async () => {
-      await addWaterAction();
-    });
-  };
-
+export function AddWaterButton({ onClick, isBusy }: AddWaterButtonProps) {
   return (
     <Button
-      onClick={handleClick}
-      disabled={isPending}
-      aria-label="Add 250ml water"
+      type="button"
+      onClick={onClick}
+      aria-label={`Add ${HYDRATION_LOG_INCREMENT_ML}ml water`}
+      aria-busy={isBusy || undefined}
       variant="outline"
       className="rounded-full h-auto gap-2 px-4 py-2.5 group"
     >
-      {isPending ? (
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      ) : (
-        <Droplets className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-      )}
+      <Droplets className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
       <span className="flex flex-col items-start leading-tight">
         <span className="text-sm font-semibold text-primary">Log Hydration</span>
-        <span className="text-[10px] font-bold text-primary/60 tabular-nums">+250 ml</span>
+        <span className="text-[10px] font-bold text-primary/60 tabular-nums">
+          +{HYDRATION_LOG_INCREMENT_ML} ml
+        </span>
       </span>
     </Button>
   );

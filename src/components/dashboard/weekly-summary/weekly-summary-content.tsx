@@ -4,6 +4,16 @@ import { type WeeklySummaryDTO } from '@/server/services/dashboard.service';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
 import { cn } from '@/lib/utils';
 
+/** Fixed locale so SSR matches the client (default locale differs Node vs browser). */
+const STAT_NUMBER_LOCALE = 'en-US';
+
+function formatStatNumber(n: number): string {
+  return n.toLocaleString(STAT_NUMBER_LOCALE, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Number.isInteger(n) ? 0 : 1,
+  });
+}
+
 interface WeeklySummaryContentProps {
   data: WeeklySummaryDTO;
 }
@@ -26,10 +36,10 @@ function StatCell({ label, consumed, goal, unit, colorClass }: StatCellProps) {
       </span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-2xl font-extrabold font-headline tabular-nums text-foreground leading-none">
-          {consumed.toLocaleString()}
+          {formatStatNumber(consumed)}
         </span>
         <span className="text-xs text-muted-foreground font-medium">
-          / {goal.toLocaleString()} {unit}
+          / {formatStatNumber(goal)} {unit}
         </span>
       </div>
       {/* mini progress bar */}
