@@ -24,6 +24,13 @@ TEST_PORT=3002
 MAX_RETRIES=30
 RETRY_INTERVAL=2
 
+# Flags (default: safest, cleanest run)
+REUSE_DB=false
+SKIP_MIGRATIONS=false
+SKIP_SEED=false
+SERVER_MODE="dev" # dev | prod
+PLAYWRIGHT_ARGS=()
+
 # Store the script's directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -49,6 +56,55 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Parse script args (non-Playwright flags) while passing the rest through.
+#
+# Usage:
+#   ./scripts/run-e2e.sh --prod --reuse-db --skip-seed -- -g "Meal planner"
+#
+# Notes:
+# - `--` ends script flag parsing; everything after is passed to Playwright.
+parse_args() {
+    local parsing_flags=true
+    while [ $# -gt 0 ]; do
+        if [ "$parsing_flags" = true ] && [ "$1" = "--" ]; then
+            parsing_flags=false
+            shift
+            continue
+        fi
+
+        if [ "$parsing_flags" = true ]; then
+            case "$1" in
+                --reuse-db)
+                    REUSE_DB=true
+                    shift
+                    continue
+                    ;;
+                --skip-migrations)
+                    SKIP_MIGRATIONS=true
+                    shift
+                    continue
+                    ;;
+                --skip-seed)
+                    SKIP_SEED=true
+                    shift
+                    continue
+                    ;;
+                --prod)
+                    SERVER_MODE="prod"
+                    shift
+                    continue
+                    ;;
+                *)
+                    # fallthrough to playwright args
+                    ;;
+            esac
+        fi
+
+        PLAYWRIGHT_ARGS+=("$1")
+        shift
+    done
+}
+
 # Cleanup function
 cleanup() {
     log_info "Cleaning up..."
@@ -62,13 +118,18 @@ cleanup() {
     
     # Kill any remaining next dev processes on test port
     pkill -f "next dev.*--port $TEST_PORT" 2>/dev/null || true
+    pkill -f "next start.*--port $TEST_PORT" 2>/dev/null || true
     
     # Remove Next.js lock file if exists
     rm -rf .next/dev/lock 2>/dev/null || true
     
     # Stop test database
-    log_info "Stopping test database..."
-    docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    if [ "$REUSE_DB" = false ]; then
+        log_info "Stopping test database..."
+        docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    else
+        log_info "Leaving test database running (--reuse-db)"
+    fi
     
     log_success "Cleanup complete"
 }
@@ -102,8 +163,10 @@ kill_existing() {
 start_database() {
     log_info "Starting test database container..."
     
-    # Stop any existing test container
-    docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    if [ "$REUSE_DB" = false ]; then
+        # Stop any existing test container (fresh, isolated run)
+        docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+    fi
     
     # Start fresh container
     docker-compose -f "$COMPOSE_FILE" up -d
@@ -128,6 +191,11 @@ start_database() {
 
 # Run database migrations
 run_migrations() {
+    if [ "$SKIP_MIGRATIONS" = true ]; then
+        log_info "Skipping database migrations (--skip-migrations)"
+        return 0
+    fi
+
     log_info "Running database migrations..."
     
     # Use dotenv-cli with --override to ensure .env.test takes precedence
@@ -138,11 +206,21 @@ run_migrations() {
 
 # Start dev server
 start_dev_server() {
-    log_info "Starting dev server on port $TEST_PORT..."
+    if [ "$SERVER_MODE" = "prod" ]; then
+        log_info "Building app (prod mode)..."
+        npx dotenv -e .env.test -o -- npm run build
+        log_success "Build complete"
+
+        log_info "Starting production server on port $TEST_PORT..."
+        npx dotenv -e .env.test -o -- npm run start -- --port $TEST_PORT &
+        DEV_PID=$!
+    else
+        log_info "Starting dev server on port $TEST_PORT..."
     
-    # Start the dev server in background
-    npx dotenv -e .env.test -o -- npm run dev -- --port $TEST_PORT &
-    DEV_PID=$!
+        # Start the dev server in background
+        npx dotenv -e .env.test -o -- npm run dev -- --port $TEST_PORT &
+        DEV_PID=$!
+    fi
     
     # Wait for server to be ready
     log_info "Waiting for dev server to be ready..."
@@ -164,6 +242,11 @@ start_dev_server() {
 
 # Seed the database
 seed_database() {
+    if [ "$SKIP_SEED" = true ]; then
+        log_info "Skipping seed (--skip-seed)"
+        return 0
+    fi
+
     log_info "Seeding database with test data..."
     
     # Run seed with test env
@@ -199,6 +282,8 @@ main() {
     echo "  Nutrition App E2E Test Runner"
     echo "========================================"
     echo ""
+
+    parse_args "$@"
     
     check_docker
     kill_existing
@@ -206,7 +291,7 @@ main() {
     run_migrations
     start_dev_server
     seed_database
-    run_tests "$@"
+    run_tests "${PLAYWRIGHT_ARGS[@]}"
 }
 
 main "$@"

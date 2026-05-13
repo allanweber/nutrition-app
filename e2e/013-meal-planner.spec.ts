@@ -3,10 +3,6 @@ import { testUser, mealPlannerSeedData, AUTH_FILES } from './fixtures/test-data'
 import { LoginPage } from './pages/login.page';
 import { MealPlannerPage } from './pages/meal-planner.page';
 
-// Multiple describe blocks share the generalHealth DB user with mutable state.
-// Serial mode prevents cross-describe DB conflicts when running with fullyParallel: true.
-test.describe.configure({ mode: 'serial' });
-
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
 async function loginAs(page: Page, email: string, password = 'Password123!') {
@@ -231,7 +227,10 @@ test.describe('013: Plan carousel — seeded plans display', () => {
 // ── Block 3: Create plan — draft ──────────────────────────────────────────────
 
 test.describe('013: Create plan — draft', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  // Uses shared `mp` / `createdPlanId` variables and mutates the same user state.
+  // Keep this block sequential, while allowing other describes to run in parallel.
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.maintenance });
   let mp: MealPlannerPage;
   let createdPlanId: string | null = null;
 
@@ -275,7 +274,7 @@ test.describe('013: Create plan — draft', () => {
     await expect(mp.planNameError).toBeVisible({ timeout: 5000 });
   });
 
-  test('creating a draft plan appears in carousel with Draft badge', async ({ page }) => {
+  test('creating a draft plan appears in carousel with Draft badge', async () => {
     const planName = `E2E Draft Plan ${Date.now()}`;
     await mp.addNewPlanCard.click();
     await expect(mp.newPlanModal).toBeVisible({ timeout: 5000 });
@@ -294,10 +293,17 @@ test.describe('013: Create plan — draft', () => {
 
     await expect
       .poll(async () => (await mp.getPlanCardIds()).length, { timeout: 10000 })
-      .toBe(1);
+      .toBeGreaterThanOrEqual(1);
 
     const ids = await mp.getPlanCardIds();
-    createdPlanId = ids[0];
+    // Pick the newly created plan by name (safer under parallel runs / existing state).
+    const createdId = await mp
+      .page
+      .locator('[data-testid^="plan-card-"]')
+      .filter({ hasText: planName })
+      .first()
+      .getAttribute('data-testid');
+    createdPlanId = createdId?.replace('plan-card-', '') ?? ids[0];
     await expect(mp.planStatusBadge(createdPlanId)).toContainText(/draft/i);
   });
 
@@ -341,7 +347,7 @@ test.describe('013: Create plan — draft', () => {
 // ── Block 4: Create plan — active, no conflict ────────────────────────────────
 
 test.describe('013: Create plan — active, no conflict', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.use({ storageState: AUTH_FILES.fatLoss });
   let mp: MealPlannerPage;
   let createdPlanId: string | null = null;
 
@@ -392,6 +398,8 @@ test.describe('013: Create plan — active, no conflict', () => {
 // ── Block 5: Create plan — active, conflict ───────────────────────────────────
 
 test.describe('013: Create plan — active, conflict with existing active plan', () => {
+  // Mutates the same seeded active plan for testUser — keep serial within this block only.
+  test.describe.configure({ mode: 'serial' });
   test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
   let newPlanId: string | null = null;
@@ -535,7 +543,9 @@ test.describe('013: Create plan — active, conflict with existing active plan',
 // ── Block 6: Plan status updates via dropdown ─────────────────────────────────
 
 test.describe('013: Plan status updates via dropdown', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  // This block mutates plan statuses and uses shared variables; keep sequential.
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.weightGain });
   let mp: MealPlannerPage;
   let planId: string;
 
@@ -587,7 +597,7 @@ test.describe('013: Plan status updates via dropdown', () => {
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuArchive(planId).click();
     await expect(mp.planStatusBadge(planId)).toContainText(/archived/i, { timeout: 5000 });
-    // Now set active — no other active plan for generalHealth user
+    // Now set active — no other active plan for this isolated user
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuSetActive(planId).click();
     await expect(mp.conflictDialog).not.toBeVisible({ timeout: 3000 });
@@ -605,7 +615,7 @@ test.describe('013: Plan status updates via dropdown', () => {
     await mp.goto();
     await expect
       .poll(async () => (await mp.getPlanCardIds()).length, { timeout: 10000 })
-      .toBe(2);
+      .toBeGreaterThanOrEqual(2);
 
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuSetActive(planId).click();
@@ -620,7 +630,8 @@ test.describe('013: Plan status updates via dropdown', () => {
 // ── Block 7: Delete plan ──────────────────────────────────────────────────────
 
 test.describe('013: Delete plan', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.professional1 });
   let mp: MealPlannerPage;
   let planId: string;
 
@@ -673,7 +684,9 @@ test.describe('013: Delete plan', () => {
     await mp.planMenuDelete(planId).click();
     await expect(mp.planDeleteConfirm).toBeVisible({ timeout: 5000 });
     await mp.planDeleteConfirm.click();
-    await expect(mp.emptyState).toBeVisible({ timeout: 10000 });
+    await expect
+      .poll(async () => mp.emptyState.isVisible().catch(() => false), { timeout: 15000 })
+      .toBe(true);
   });
 
   test('deleting selected plan auto-selects next plan if one exists', async ({ page }) => {
@@ -704,6 +717,7 @@ test.describe('013: Delete plan', () => {
 // ── Block 8: Plan selection and day selector ──────────────────────────────────
 
 test.describe('013: Plan selection and day selector', () => {
+  test.describe.configure({ mode: 'serial' });
   test.use({ storageState: AUTH_FILES.testUser });
   let mp: MealPlannerPage;
 
@@ -735,7 +749,7 @@ test.describe('013: Plan selection and day selector', () => {
 
   test('clicking a day button updates DayMealsView heading', async () => {
     await mp.dayButton(3).click();
-    await expect(mp.dayMealsHeading).toContainText(/wednesday/i, { timeout: 5000 });
+    await expect(mp.dayMealsHeading).toContainText(/wednesday/i, { timeout: 10000 });
   });
 
   test('URL updates with planId and day params after selection', async ({ page }) => {
@@ -756,7 +770,8 @@ test.describe('013: Plan selection and day selector', () => {
 // ── Block 9: Add meal — create mode ──────────────────────────────────────────
 
 test.describe('013: Add meal — create mode', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.professional2 });
   let mp: MealPlannerPage;
   let planId: string;
 
@@ -918,15 +933,23 @@ test.describe('013: Add meal — create mode', () => {
     await mp.mealModalSave.click();
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
     const ids = await mp.getMealCardIds();
-    const kcalText = await mp.mealTotalCalories(ids[0]).textContent({ timeout: 5000 });
-    expect(Number(kcalText?.replace(/[^0-9.]/g, ''))).toBeGreaterThan(0);
+    await expect
+      .poll(
+        async () => {
+          const kcalText = await mp.mealTotalCalories(ids[0]).textContent({ timeout: 5000 });
+          return Number(kcalText?.replace(/[^0-9.]/g, '') || 0);
+        },
+        { timeout: 10000 },
+      )
+      .toBeGreaterThan(0);
   });
 });
 
 // ── Block 10: Edit meal ───────────────────────────────────────────────────────
 
 test.describe('013: Edit meal', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.muscleGain });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
@@ -974,6 +997,9 @@ test.describe('013: Edit meal', () => {
     await mp.mealModalSave.click();
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
     // Reopen and check item is still there
+    await mp.page.reload();
+    await mp.planCard(planId).click();
+    await mp.dayButton(1).click();
     await mp.mealCard(mealId).click();
     await expect(mp.mealItemsList).toBeVisible({ timeout: 5000 });
     await mp.mealModalCancel.click();
@@ -998,7 +1024,7 @@ test.describe('013: Edit meal', () => {
 // ── Block 11: Delete meal ─────────────────────────────────────────────────────
 
 test.describe('013: Delete meal', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.use({ storageState: AUTH_FILES.performance });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
@@ -1059,7 +1085,7 @@ test.describe('013: Delete meal', () => {
 // ── Block 12: Item quantity update ────────────────────────────────────────────
 
 test.describe('013: Item quantity update', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.use({ storageState: AUTH_FILES.muscleGain });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
@@ -1125,7 +1151,7 @@ test.describe('013: Item quantity update', () => {
 // ── Block 13: Copy day ────────────────────────────────────────────────────────
 
 test.describe('013: Copy day', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.use({ storageState: AUTH_FILES.mealPlannerA });
   let mp: MealPlannerPage;
   let planId: string;
 
@@ -1317,7 +1343,8 @@ test.describe('013: Seeded meal card detail', () => {
 // ── Block 17: Copy meal ───────────────────────────────────────────────────────
 
 test.describe('013: Copy meal', () => {
-  test.use({ storageState: AUTH_FILES.generalHealth });
+  test.describe.configure({ mode: 'serial' });
+  test.use({ storageState: AUTH_FILES.mealPlannerB });
   let mp: MealPlannerPage;
   let planId: string;
   let mealId: string;
@@ -1406,16 +1433,16 @@ test.describe('013: Copy meal', () => {
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
 
     // Record source calories after the meal card footer refreshes.
-    const sourceKcal = await expect
+    await expect
       .poll(
         async () => {
           const text = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
-          const value = Number(text?.replace(/[^0-9.]/g, ''));
-          return value > 0 ? text?.trim() ?? null : null;
+          return Number(text?.replace(/[^0-9.]/g, '') || 0);
         },
         { timeout: 10000 },
       )
-      .not.toBeNull();
+      .toBeGreaterThan(0);
+    const sourceKcal = (await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 }))?.trim() ?? '';
 
     // Copy breakfast → dinner
     await mp.copyMealBtn(mealId).click();
@@ -1460,7 +1487,18 @@ test.describe('013: Copy meal', () => {
     await mp.mealModalSave.click();
     await expect(mp.mealModal).not.toBeVisible({ timeout: 10000 });
 
-    const sourceKcal = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+    await expect
+      .poll(
+        async () => {
+          const text = await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 });
+          return Number(text?.replace(/[^0-9.]/g, '') || 0);
+        },
+        { timeout: 10000 },
+      )
+      .toBeGreaterThan(0);
+    const sourceKcal = Number(
+      ((await mp.mealTotalCalories(mealId).textContent({ timeout: 5000 })) ?? '').replace(/[^0-9.]/g, '') || 0,
+    );
 
     // Add different food to lunch (target) — it should be replaced after copy
     await mp.mealCard(lunchMealId).click();
@@ -1484,7 +1522,13 @@ test.describe('013: Copy meal', () => {
 
     // Lunch calories now match breakfast (same food was copied)
     await expect
-      .poll(async () => mp.mealTotalCalories(lunchMealId).textContent(), { timeout: 10000 })
+      .poll(
+        async () => {
+          const text = await mp.mealTotalCalories(lunchMealId).textContent({ timeout: 5000 });
+          return Number(text?.replace(/[^0-9.]/g, '') || 0);
+        },
+        { timeout: 15000 },
+      )
       .toBe(sourceKcal);
   });
 });

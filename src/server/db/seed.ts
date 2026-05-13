@@ -394,6 +394,40 @@ const sampleUserDefs = {
       },
     },
 
+    // Isolated accounts for parallel Playwright meal-planner flows (no diet plans).
+    {
+      email: 'e2e.meal-planner-a@example.com',
+      name: 'E2E Meal Planner Slot A',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+    {
+      email: 'e2e.meal-planner-b@example.com',
+      name: 'E2E Meal Planner Slot B',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+
     // Dedicated account for password-reset / change-password E2E flows.
     // Keep this email unique and unused by other tests.
     {
