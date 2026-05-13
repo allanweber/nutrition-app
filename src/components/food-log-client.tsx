@@ -637,14 +637,12 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
         )}
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 min-w-0">
-            <p className="font-semibold text-sm text-foreground truncate min-w-0 flex-1">
-              {log.food.name}
-            </p>
-            <span className="sm:hidden text-xs text-muted-foreground tabular-nums shrink-0">
-              {formatLoggedQuantity(log)}
-            </span>
-          </div>
+          <p className="font-semibold text-sm text-foreground truncate">
+            {log.food.name}
+          </p>
+          <p className="sm:hidden text-xs text-muted-foreground tabular-nums mt-0.5 truncate">
+            {formatLoggedQuantity(log)}
+          </p>
           <div className="hidden sm:block">
             {log.food.brandName && (
               <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
@@ -663,7 +661,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
             </div>
           </div>
 
-          <div className="sm:hidden mt-0.5 text-xs text-muted-foreground tabular-nums flex items-center gap-2">
+          <div className="sm:hidden mt-0.5 text-xs text-muted-foreground tabular-nums flex items-center gap-2 max-[450px]:flex-col max-[450px]:items-start max-[450px]:gap-0.5">
             <span className="truncate">P: {nutrients.protein}g</span>
             <span className="truncate">C: {nutrients.carbs}g</span>
             <span className="truncate">F: {nutrients.fat}g</span>
