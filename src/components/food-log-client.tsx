@@ -637,7 +637,14 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
         )}
 
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
+          <div className="flex items-baseline gap-2 min-w-0">
+            <p className="font-semibold text-sm text-foreground truncate min-w-0 flex-1">
+              {log.food.name}
+            </p>
+            <span className="sm:hidden text-xs text-muted-foreground tabular-nums shrink-0">
+              {formatLoggedQuantity(log)}
+            </span>
+          </div>
           <div className="hidden sm:block">
             {log.food.brandName && (
               <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
