@@ -103,7 +103,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
   return (
     <>
       {/* Mobile layout */}
-      <div className="md:hidden mb-4">
+      <div className="lg:hidden mb-4">
         <div className="relative">
           {canScrollLeft && (
             <button
@@ -116,29 +116,31 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
 
           <div
             ref={dayScrollRef}
-            className="flex gap-1.5 overflow-x-auto scrollbar-none px-1 pb-1"
+            className="w-full overflow-x-auto scrollbar-none px-1 pb-1"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {DAY_LABELS.map((label, idx) => {
-              const day = idx + 1;
-              const isSelected = day === selectedDay;
-              return (
-                <button
-                  key={day}
-                  data-testid={`mobile-day-button-${day}`}
-                  onClick={() => onSelectDay(day)}
-                  style={{ scrollSnapAlign: 'start' }}
-                  className={cn(
-                    'shrink-0 h-10 px-4 min-w-16 rounded-full text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer',
-                    isSelected
-                      ? 'bg-day-selected text-white'
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
+            <div className="flex w-max mx-auto gap-1.5">
+              {DAY_LABELS.map((label, idx) => {
+                const day = idx + 1;
+                const isSelected = day === selectedDay;
+                return (
+                  <button
+                    key={day}
+                    data-testid={`mobile-day-button-${day}`}
+                    onClick={() => onSelectDay(day)}
+                    style={{ scrollSnapAlign: 'start' }}
+                    className={cn(
+                      'shrink-0 h-10 px-4 min-w-16 rounded-full text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer',
+                      isSelected
+                        ? 'bg-day-selected text-white'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {canScrollRight && (
@@ -158,7 +160,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
       </div>
 
       {/* Desktop layout — unchanged */}
-      <div data-testid="day-selector" className="hidden md:flex mb-6 flex-wrap justify-between gap-2">
+      <div data-testid="day-selector" className="hidden lg:flex mb-6 flex-wrap justify-between gap-2">
         {DAY_LABELS.map((label, idx) => {
           const day = idx + 1;
           const dayMeals = meals.filter((m) => m.dayOfWeek === day);
