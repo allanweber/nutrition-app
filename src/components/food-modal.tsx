@@ -158,7 +158,11 @@ export function FoodModal({
     }
     setIsSubmitting(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, 'foodDetail' in mode ? mode.foodDetail.id : '']);
+  }, [
+    open,
+    'foodDetail' in mode ? mode.foodDetail.id : '',
+    mode.kind !== 'ingredient' && 'initialMealType' in mode ? mode.initialMealType : '',
+  ]);
 
   // Measures list
   const measures: QuantityMeasure[] = useMemo(() => {

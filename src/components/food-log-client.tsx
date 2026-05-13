@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
-import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown, Sunrise, Sandwich, Moon } from 'lucide-react';
+import { Loader2, Plus, Trash2, UtensilsCrossed, ChefHat, ChevronDown, Sunrise, Sandwich, Moon } from 'lucide-react';
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 import { MealPlanAddon } from '@/components/food-log/meal-plan-addon';
 
@@ -50,6 +50,7 @@ interface FoodLogClientProps {
   planId?: string;
   loggingMealType?: MealType | null;
   onLogPlanForMeal?: (mealType: MealType) => void | Promise<void>;
+  onAddFoodForMeal?: (mealType: MealType) => void;
 }
 
 
@@ -146,6 +147,7 @@ export default function FoodLogClient({
   planId,
   loggingMealType,
   onLogPlanForMeal,
+  onAddFoodForMeal,
 }: FoodLogClientProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -364,25 +366,34 @@ export default function FoodLogClient({
             {!isMealCollapsed && isEmpty ? (
               <div>
                 <div
-                  className="flex items-center justify-center py-8 px-5"
+                  className="px-5 py-6"
                   data-testid={`meal-empty-placeholder-${mealType}`}
                 >
-                  <div className="w-full sm:w-auto">
-                    <div className="sm:hidden rounded-2xl border border-dashed border-border/60 bg-muted/30 px-4 py-6 text-center">
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Plan {MEAL_TYPE_LABELS[mealType]}
-                      </p>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Nothing logged yet.
-                      </p>
+                  {onAddFoodForMeal ? (
+                    <button
+                      type="button"
+                      onClick={() => onAddFoodForMeal(mealType)}
+                      data-testid={`meal-empty-add-${mealType}`}
+                      aria-label={`Log food for ${MEAL_TYPE_LABELS[mealType]}`}
+                      className="group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-5 text-sm text-muted-foreground select-none transition-[colors,transform] duration-150 ease-out hover:border-primary/40 hover:bg-primary/5 hover:text-foreground active:scale-[0.99] active:bg-primary/10 motion-reduce:active:scale-100 [-webkit-tap-highlight-color:transparent]"
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background ring-1 ring-border/60 transition-colors group-hover:ring-primary/40 group-hover:text-primary">
+                        <Plus className="h-4 w-4" aria-hidden />
+                      </span>
+                      <span className="font-medium">
+                        Log {MEAL_TYPE_LABELS[mealType].toLowerCase()}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
+                        <p className="text-sm text-muted-foreground">
+                          No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
+                        </p>
+                      </div>
                     </div>
-                    <div className="hidden sm:flex flex-col items-center gap-2 text-center">
-                      <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
-                      <p className="text-sm text-muted-foreground">
-                        No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
                 {shouldShowPlanAddon ? (
                   <MealPlanAddon

@@ -519,4 +519,128 @@ test.describe('006: Food Log Screen Redesign', () => {
       await expect(page.getByTestId('add-food-button')).toBeVisible();
     });
   });
+
+  test.describe('Empty Meal Quick Add', () => {
+    async function createPlanWithMeal(
+      page: import('@playwright/test').Page,
+      mealType: string,
+    ) {
+      const today = new Date();
+      const planId = await createPlanViaApi(page, {
+        name: `E2E Quick Add Plan ${Date.now()}`,
+        targetCalories: 2000,
+        targetProtein: 150,
+        targetCarbs: 200,
+        targetFat: 70,
+        status: 'active',
+        startDate: today.toISOString(),
+      });
+      await createMealViaApi(page, planId, mealType, getDbDayOfWeek(today));
+      return planId;
+    }
+
+    async function expandMealSection(
+      page: import('@playwright/test').Page,
+      mealType: string,
+    ) {
+      const toggle = page.getByTestId(`meal-toggle-${mealType}`);
+      if ((await toggle.getAttribute('aria-expanded')) === 'false') {
+        await toggle.click();
+      }
+    }
+
+    test('empty meal section renders a "Log {meal}" action button', async ({ page }) => {
+      await loginAsFreshUser(page);
+      const planId = await createPlanWithMeal(page, 'breakfast');
+
+      try {
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto();
+
+        await expect(page.getByTestId('meal-section-breakfast')).toBeVisible({ timeout: 10000 });
+        await expandMealSection(page, 'breakfast');
+
+        const addButton = page.getByTestId('meal-empty-add-breakfast');
+        await expect(addButton).toBeVisible();
+        await expect(addButton).toHaveAttribute('aria-label', 'Log food for Breakfast');
+        await expect(addButton).toContainText(/Log breakfast/i);
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
+    });
+
+    test('clicking empty-state action opens search dialog targeted at that meal', async ({ page }) => {
+      await loginAsFreshUser(page);
+      const planId = await createPlanWithMeal(page, 'lunch');
+
+      try {
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto();
+
+        await expect(page.getByTestId('meal-section-lunch')).toBeVisible({ timeout: 10000 });
+        await expandMealSection(page, 'lunch');
+
+        await page.getByTestId('meal-empty-add-lunch').click();
+
+        const dialog = page.getByTestId('food-search-dialog');
+        await expect(dialog).toBeVisible({ timeout: 5000 });
+        await expect(dialog.getByRole('heading')).toContainText(/Add to Lunch/i);
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
+    });
+
+    test('selecting a food from the empty-state flow pre-fills the meal type', async ({ page }) => {
+      await loginAsFreshUser(page);
+      const planId = await createPlanWithMeal(page, 'dinner');
+
+      try {
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto();
+
+        await expect(page.getByTestId('meal-section-dinner')).toBeVisible({ timeout: 10000 });
+        await expandMealSection(page, 'dinner');
+
+        await page.getByTestId('meal-empty-add-dinner').click();
+
+        const dialog = page.getByTestId('food-search-dialog');
+        await expect(dialog).toBeVisible({ timeout: 5000 });
+
+        await dialog.getByTestId('food-search-input').fill('chicken');
+        await page.waitForTimeout(1500);
+
+        const firstResult = dialog.getByTestId('food-result-item').first();
+        await expect(firstResult).toBeVisible({ timeout: 8000 });
+        await firstResult.click();
+
+        await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 8000 });
+        await expect(page.getByTestId('food-add-modal').getByTestId('meal-type-select')).toContainText(/Dinner/i);
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
+    });
+
+    test('dismissing the dialog clears the pending meal target', async ({ page }) => {
+      await loginAsFreshUser(page);
+      const planId = await createPlanWithMeal(page, 'breakfast');
+
+      try {
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto();
+
+        await expect(page.getByTestId('meal-section-breakfast')).toBeVisible({ timeout: 10000 });
+        await expandMealSection(page, 'breakfast');
+
+        await page.getByTestId('meal-empty-add-breakfast').click();
+        const dialog = page.getByTestId('food-search-dialog');
+        await expect(dialog).toBeVisible({ timeout: 5000 });
+        await expect(dialog.getByRole('heading')).toContainText(/Add to Breakfast/i);
+
+        await page.keyboard.press('Escape');
+        await expect(dialog).not.toBeVisible({ timeout: 3000 });
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
+    });
+  });
 });

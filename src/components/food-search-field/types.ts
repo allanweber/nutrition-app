@@ -45,4 +45,5 @@ export interface FoodAddModalProps {
   onClose: () => void;
   onAdded: (mealType: import('@/lib/nutrition-constants').MealType) => void;
   defaultDate?: Date;
+  defaultMealType?: import('@/lib/nutrition-constants').MealType;
 }
