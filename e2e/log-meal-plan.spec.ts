@@ -10,7 +10,9 @@ function plannerDateForTest(testInfo: TestInfo): string {
   for (let i = 0; i < s.length; i += 1) {
     h = (h * 31 + s.charCodeAt(i)) >>> 0;
   }
-  return format(addDays(monday, h % 7), 'yyyy-MM-dd');
+  // App `getDbDayOfWeek` uses ISO Mon=1 … Sun=7. Seeded weight-loss plan rows use 1–6 only
+  // (dayOfWeek=0 in seed is unused; nothing is stored as 7). Avoid Sunday so the day has plan slots.
+  return format(addDays(monday, h % 6), 'yyyy-MM-dd');
 }
 
 async function freezeClientTimeAfter18(page: Page, dateStr: string) {

@@ -20,12 +20,20 @@ async function loginAndSave(
   password: string,
   filePath: string,
 ) {
-  await page.goto('/login');
-  await page.waitForLoadState('networkidle');
-  await page.getByTestId('email-input').fill(email);
+  // Defensive: ensure no leftover cookies if the runner ever shares a context between setup tests.
+  await page.context().clearCookies();
+
+  // `networkidle` is flaky with Next.js dev (HMR, SSE, React Query). Wait for UI instead.
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  const emailInput = page.getByTestId('email-input');
+  await emailInput.waitFor({ state: 'visible' });
+
+  await emailInput.fill(email);
   await page.getByTestId('password-input').fill(password);
   await page.getByTestId('submit-button').click();
-  await page.waitForURL('**/dashboard**', { timeout: 15000 });
+
+  // Dev server gets slower after several cold compilations; allow extra headroom for CI.
+  await page.waitForURL(/\/dashboard(\/|$|\?)/, { timeout: 60_000 });
   await page.context().storageState({ path: filePath });
 }
 

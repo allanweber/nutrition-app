@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, gte, inArray, lt } from 'drizzle-orm';
+import { uuidv7 } from 'uuidv7';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import {
@@ -93,6 +94,8 @@ export async function POST(request: NextRequest) {
         altMeasureId: dietPlanMealItems.altMeasureId,
         quantity: dietPlanMealItems.quantity,
         altMeasureServingWeight: foodAltMeasures.servingWeight,
+        dishGroupId: dietPlanMealItems.dishGroupId,
+        dishNameSnapshot: dietPlanMealItems.dishNameSnapshot,
       })
       .from(dietPlanMeals)
       .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
@@ -192,6 +195,8 @@ export async function POST(request: NextRequest) {
       );
 
       const mealGroupByType = new Map<string, string>();
+      /** Plan `dish_group_id` → new `dish_log_group_id` for this log session */
+      const planDishGroupToLogGroupId = new Map<string, string>();
 
       if (mode !== 'replace-all') {
         const existingMeals = await tx
@@ -252,11 +257,25 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        let dishLogGroupId: string | null = null;
+        let dishNameSnapshot: string | null = null;
+        if (row.dishGroupId) {
+          let logGroupId = planDishGroupToLogGroupId.get(row.dishGroupId);
+          if (!logGroupId) {
+            logGroupId = uuidv7();
+            planDishGroupToLogGroupId.set(row.dishGroupId, logGroupId);
+          }
+          dishLogGroupId = logGroupId;
+          dishNameSnapshot = row.dishNameSnapshot ?? null;
+        }
+
         await tx.insert(foodLogItems).values({
           mealId: mealGroupByType.get(row.mealType)!,
           foodId: row.foodId!,
           altMeasureId: row.altMeasureId,
           quantity: quantityInGrams.toFixed(2),
+          dishLogGroupId,
+          dishNameSnapshot,
         });
         insertedCount += 1;
       }
