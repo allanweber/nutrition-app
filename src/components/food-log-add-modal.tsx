@@ -27,6 +27,7 @@ export function FoodLogAddModal({
   onClose,
   onAdded,
   defaultDate,
+  defaultMealType,
 }: FoodAddModalProps) {
   if (!food) return null;
 
@@ -49,7 +50,7 @@ export function FoodLogAddModal({
       mode={{
         kind: 'log-food',
         foodDetail: detail,
-        initialMealType: 'breakfast',
+        initialMealType: defaultMealType ?? 'breakfast',
         initialDate: defaultDate ?? new Date(),
         onAdded,
       }}

@@ -4,15 +4,22 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const hydration = await getHydrationLog(user.id, today);
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
+    const date =
+      dateParam && ISO_DATE.test(dateParam)
+        ? dateParam
+        : new Date().toISOString().split('T')[0];
+    const hydration = await getHydrationLog(user.id, date);
     return NextResponse.json({ hydration });
   } catch (error) {
     console.error('Error fetching hydration log:', error);

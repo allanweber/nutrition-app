@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FoodSearchField } from '@/components/food-search-field';
@@ -17,7 +17,7 @@ import { useDeleteDishGroupMutation } from '@/queries/dishes';
 import { useFoodDetailQuery, type FoodSelection } from '@/queries/food-detail';
 import { FoodModal } from '@/components/food-modal';
 import { PageHeader } from '@/components/page-header';
-import type { MealType } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_LABELS, type MealType } from '@/lib/nutrition-constants';
 import { usePlanMealsForDate } from '@/queries/diet-plans';
 import type { FoodLogEntry } from '@/types/food';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -52,6 +52,10 @@ export function FoodLogContent() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [logMealsModalOpen, setLogMealsModalOpen] = useState(false);
   const [loggingMealType, setLoggingMealType] = useState<MealType | null>(null);
+  const [pendingMealType, setPendingMealType] = useState<MealType | null>(null);
+  /** Survives search dialog close so FoodLogAddModal / DishLogModal still get the right meal after picking a result. */
+  const [mealPresetForAddModal, setMealPresetForAddModal] = useState<MealType | null>(null);
+  const skipClearMealPresetOnSearchClose = useRef(false);
 
   // Edit modal state
   const [lastAdded, setLastAdded] = useState<{ mealType: MealType; seq: number } | null>(null);
@@ -119,6 +123,9 @@ export function FoodLogContent() {
   const bannerPlan = shouldShowPlanBanner ? planMeals.activePlan : null;
 
   const handleSelect = (item: UnifiedFoodSearchResultItem) => {
+    skipClearMealPresetOnSearchClose.current = true;
+    setMobileSearchOpen(false);
+    setPendingMealType(null);
     if (item.itemKind === 'dish' && item.dishId) {
       setSelectedDishId(item.dishId);
       setSelectedDishName(item.name);
@@ -132,12 +139,16 @@ export function FoodLogContent() {
   const handleModalClose = () => {
     setModalOpen(false);
     setSelectedFood(null);
+    setPendingMealType(null);
+    setMealPresetForAddModal(null);
   };
 
   const handleFoodAdded = (mealType: MealType) => {
     setLastAdded((prev) => ({ mealType, seq: (prev?.seq ?? 0) + 1 }));
     setModalOpen(false);
     setSelectedFood(null);
+    setPendingMealType(null);
+    setMealPresetForAddModal(null);
     foodSearch.setQuery('');
     setMobileSearchOpen(false);
   };
@@ -146,6 +157,8 @@ export function FoodLogContent() {
     setDishModalOpen(false);
     setSelectedDishId(null);
     setSelectedDishName(undefined);
+    setPendingMealType(null);
+    setMealPresetForAddModal(null);
   };
 
   const handleDishLogged = (mealType: MealType) => {
@@ -153,8 +166,28 @@ export function FoodLogContent() {
     setDishModalOpen(false);
     setSelectedDishId(null);
     setSelectedDishName(undefined);
+    setPendingMealType(null);
+    setMealPresetForAddModal(null);
     foodSearch.setQuery('');
     setMobileSearchOpen(false);
+  };
+
+  const handleAddFoodForMeal = (mealType: MealType) => {
+    setMealPresetForAddModal(mealType);
+    setPendingMealType(mealType);
+    setMobileSearchOpen(true);
+  };
+
+  const handleSearchDialogChange = (open: boolean) => {
+    setMobileSearchOpen(open);
+    if (!open) {
+      setPendingMealType(null);
+      if (skipClearMealPresetOnSearchClose.current) {
+        skipClearMealPresetOnSearchClose.current = false;
+      } else {
+        setMealPresetForAddModal(null);
+      }
+    }
   };
 
   const handleEditLog = (log: FoodLogEntry) => setEditingLog(log);
@@ -307,6 +340,7 @@ export function FoodLogContent() {
             planId={planMeals.activePlan?.id}
             loggingMealType={loggingMealType}
             onLogPlanForMeal={handleLogSingleMeal}
+            onAddFoodForMeal={handleAddFoodForMeal}
           />
         </div>
       </div>
@@ -325,7 +359,11 @@ export function FoodLogContent() {
       <div className="lg:hidden">
         <Button
           type="button"
-          onClick={() => setMobileSearchOpen(true)}
+          onClick={() => {
+            setMealPresetForAddModal(null);
+            setPendingMealType(null);
+            setMobileSearchOpen(true);
+          }}
           className="fixed right-5 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-50 h-14 w-14 rounded-2xl shadow-lg"
           size="icon"
           aria-label="Search and add food"
@@ -335,21 +373,23 @@ export function FoodLogContent() {
         </Button>
       </div>
 
-      {/* Mobile/tablet search dialog: stacked dropdown lays out in-flow so modal height fits content (no min-h shell). */}
-      <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+      {/* Search dialog: stacked dropdown lays out in-flow so modal height fits content (no min-h shell). */}
+      <Dialog open={mobileSearchOpen} onOpenChange={handleSearchDialogChange}>
         <DialogContent
+          data-testid="food-search-dialog"
           className={[
-            'lg:hidden flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)]',
+            'flex w-[calc(100vw-2rem)]',
+            'max-md:top-[max(1rem,env(safe-area-inset-top))] max-md:left-4 max-md:right-4 max-md:max-h-[50dvh] max-md:w-auto max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0',
             'flex-col gap-0 overflow-hidden rounded-2xl p-0',
           ].join(' ')}
         >
           <DialogHeader className="shrink-0 border-0 px-4 pb-2 pt-4">
             <DialogTitle className="flex items-center gap-2">
               <Search className="h-4 w-4" />
-              Search foods
+              {pendingMealType ? `Add to ${MEAL_TYPE_LABELS[pendingMealType]}` : 'Search foods'}
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[calc(100dvh-7rem)] overflow-x-hidden overflow-y-auto px-4 pb-4 pt-2">
+          <div className="max-h-[calc(50dvh-4.5rem)] overflow-x-hidden overflow-y-auto px-4 pb-4 pt-2">
             <FoodSearchField
               dropdownLayout="stacked"
               className="min-w-0"
@@ -373,6 +413,7 @@ export function FoodLogContent() {
         onClose={handleModalClose}
         onAdded={handleFoodAdded}
         defaultDate={selectedDate}
+        defaultMealType={mealPresetForAddModal ?? undefined}
       />
 
       {editingLog && (
@@ -408,6 +449,7 @@ export function FoodLogContent() {
         onClose={handleDishModalClose}
         onLogged={handleDishLogged}
         defaultDate={selectedDate}
+        defaultMealType={mealPresetForAddModal ?? undefined}
       />
 
       {planMeals.activePlan ? (

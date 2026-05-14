@@ -1,25 +1,20 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { SectionSkeleton } from '@/components/dashboard/shared/section-skeleton';
 import { SectionErrorBoundary } from '@/components/dashboard/shared/section-error-boundary';
 import { CaloriesSection } from '@/components/dashboard/calories/calories-section';
 import { MacronutrientsSection } from '@/components/dashboard/macronutrients/macronutrients-section';
 import { HydrationSection } from '@/components/dashboard/hydration/hydration-section';
 import { WeeklyMomentumSection } from '@/components/dashboard/weekly-momentum/weekly-momentum-section';
+import { WeeklySummarySection } from '@/components/dashboard/weekly-summary/weekly-summary-section';
 import { DailyScheduleSection } from '@/components/dashboard/daily-schedule/daily-schedule-section';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
   const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="space-y-6 py-6">
-      <PageHeader title="Today">
-        <Button asChild>
-          <Link href="/food-log">Log Food</Link>
-        </Button>
-      </PageHeader>
+      <PageHeader title="Today" />
 
       {/* Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-5">
@@ -50,8 +45,17 @@ export default async function DashboardPage() {
           </SectionErrorBoundary>
         </div>
 
-        {/* Weekly momentum — 7/12 */}
+        {/* Empty card — 7/12 (placeholder for next iteration) */}
         <div className="md:col-span-7">
+          <SectionErrorBoundary minHeight="min-h-[240px]">
+            <Suspense fallback={<SectionSkeleton variant="macros" />}>
+              <WeeklySummarySection />
+            </Suspense>
+          </SectionErrorBoundary>
+        </div>
+
+        {/* Weekly momentum — full row */}
+        <div className="md:col-span-12">
           <SectionErrorBoundary minHeight="min-h-[240px]">
             <Suspense fallback={<SectionSkeleton variant="weekly" />}>
               <WeeklyMomentumSection />

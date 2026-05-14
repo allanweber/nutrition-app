@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { signIn } from '@/lib/auth-client';
 import { ArrowLeft, Check, Loader2, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { VitalisMark } from '@/components/vitalis-mark';
 import { useState } from 'react';
 
 export default function SignupPage() {
@@ -45,9 +46,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">N</span>
-            </div>
+            <VitalisMark size={48} className="size-12 shrink-0 rounded-xl ring-2 ring-white/25" priority />
             <span className="text-2xl font-bold text-white">
               Vitalis
             </span>

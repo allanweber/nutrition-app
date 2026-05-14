@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
+import { HYDRATION_LOG_INCREMENT_ML } from '@/lib/nutrition-constants';
 import {
   foodLogItems,
   foodLogMeals,
@@ -68,6 +69,15 @@ export interface DailyScheduleDTO {
   evening: ScheduleEntry[];
 }
 
+export interface WeeklySummaryDTO {
+  weekStart: string;
+  calories: { consumed: number; goal: number };
+  protein: { consumed: number; goal: number };
+  carbs: { consumed: number; goal: number };
+  fat: { consumed: number; goal: number };
+  hasGoal: boolean;
+}
+
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_CALORIE_GOAL = 2000;
@@ -75,7 +85,6 @@ const DEFAULT_PROTEIN_GOAL = 150;
 const DEFAULT_CARBS_GOAL = 250;
 const DEFAULT_FAT_GOAL = 65;
 const DEFAULT_HYDRATION_GOAL_ML = 2500;
-const ADD_WATER_ML = 250;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -292,12 +301,12 @@ export async function addWater(
     .values({
       userId,
       date,
-      totalMl: ADD_WATER_ML,
+      totalMl: HYDRATION_LOG_INCREMENT_ML,
     })
     .onConflictDoUpdate({
       target: [hydrationLogs.userId, hydrationLogs.date],
       set: {
-        totalMl: sql`${hydrationLogs.totalMl} + ${ADD_WATER_ML}`,
+        totalMl: sql`${hydrationLogs.totalMl} + ${HYDRATION_LOG_INCREMENT_ML}`,
         updatedAt: sql`now()`,
       },
     })
@@ -502,3 +511,105 @@ export async function getDailySchedule(
 
   return schedule;
 }
+
+export const getWeeklySummary = cache(async function getWeeklySummary(
+  userId: string,
+): Promise<WeeklySummaryDTO> {
+  const today = new Date();
+
+  // Monday of current week (UTC)
+  const utcDay = today.getUTCDay();
+  const daysFromMonday = utcDay === 0 ? 6 : utcDay - 1;
+  const mondayMs = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate() - daysFromMonday,
+  );
+  const mondayDate = new Date(mondayMs);
+  const weekEnd = new Date(mondayMs + 7 * 24 * 60 * 60 * 1000);
+  const weekStart = formatISODate(mondayDate);
+
+  // Fetch active nutrition goal
+  const [goal] = await db
+    .select({
+      targetCalories: nutritionGoals.targetCalories,
+      targetProtein: nutritionGoals.targetProtein,
+      targetCarbs: nutritionGoals.targetCarbs,
+      targetFat: nutritionGoals.targetFat,
+    })
+    .from(nutritionGoals)
+    .where(
+      and(eq(nutritionGoals.userId, userId), eq(nutritionGoals.isActive, true)),
+    )
+    .orderBy(desc(nutritionGoals.createdAt))
+    .limit(1);
+
+  const hasGoal = Boolean(goal);
+  const dailyCalorieGoal = hasGoal
+    ? Math.max(toNum(goal.targetCalories), DEFAULT_CALORIE_GOAL)
+    : DEFAULT_CALORIE_GOAL;
+  const dailyProteinGoal = hasGoal
+    ? toNum(goal.targetProtein) || DEFAULT_PROTEIN_GOAL
+    : DEFAULT_PROTEIN_GOAL;
+  const dailyCarbsGoal = hasGoal
+    ? toNum(goal.targetCarbs) || DEFAULT_CARBS_GOAL
+    : DEFAULT_CARBS_GOAL;
+  const dailyFatGoal = hasGoal
+    ? toNum(goal.targetFat) || DEFAULT_FAT_GOAL
+    : DEFAULT_FAT_GOAL;
+
+  // Fetch all food log items for the week
+  const items = await db
+    .select({
+      calories: foods.calories,
+      protein: foods.protein,
+      carbs: foods.carbs,
+      fat: foods.fat,
+      quantity: foodLogItems.quantity,
+    })
+    .from(foodLogItems)
+    .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
+    .innerJoin(foods, eq(foodLogItems.foodId, foods.id))
+    .where(
+      and(
+        eq(foodLogMeals.userId, userId),
+        gte(foodLogMeals.consumedAt, mondayDate),
+        lt(foodLogMeals.consumedAt, weekEnd),
+      ),
+    );
+
+  // Aggregate totals — nutrients are per 100g, quantity is in grams
+  const totals = items.reduce(
+    (acc, item) => {
+      const q = toNum(item.quantity);
+      return {
+        calories: acc.calories + (toNum(item.calories) / 100) * q,
+        protein: acc.protein + (toNum(item.protein) / 100) * q,
+        carbs: acc.carbs + (toNum(item.carbs) / 100) * q,
+        fat: acc.fat + (toNum(item.fat) / 100) * q,
+      };
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+
+  return {
+    weekStart,
+    calories: {
+      consumed: Math.round(totals.calories),
+      goal: dailyCalorieGoal * 7,
+    },
+    protein: {
+      consumed: Math.round(totals.protein * 10) / 10,
+      goal: dailyProteinGoal * 7,
+    },
+    carbs: {
+      consumed: Math.round(totals.carbs * 10) / 10,
+      goal: dailyCarbsGoal * 7,
+    },
+    fat: {
+      consumed: Math.round(totals.fat * 10) / 10,
+      goal: dailyFatGoal * 7,
+    },
+    hasGoal,
+  };
+});

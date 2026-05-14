@@ -30,7 +30,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6 border-l-2 border-primary pl-3"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
         >
           Precision nutrition · For clinicians and individuals
         </motion.p>
@@ -51,7 +51,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.25 }}
-          className="flex flex-wrap items-center gap-6 mb-16"
+          className="flex flex-wrap items-center gap-6 mb-8"
         >
           <Button
             size="lg"
@@ -70,7 +70,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="relative overflow-hidden rounded-t-2xl border border-b-0 border-border/30 shadow-2xl"
+          className="relative overflow-hidden rounded-t-2xl border border-b-0 border-border/30 shadow-2xl -mx-6"
           style={{ maxHeight: 440 }}
         >
           {/* Bottom fade */}
@@ -118,7 +118,7 @@ export default function Hero() {
             <div className="grid grid-cols-12 gap-4">
 
               {/* Calories — 8/12 */}
-              <div className="col-span-8 bg-card rounded-xl p-5 border border-border/10">
+              <div className="col-span-12 md:col-span-8 bg-card rounded-xl p-5 border border-border/10">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Calories</h3>
                 <div className="flex items-start gap-6">
                   <div className="flex-1">
@@ -149,8 +149,8 @@ export default function Hero() {
                     </div>
                   </div>
                   {/* Circular progress */}
-                  <div className="relative w-25 h-25 shrink-0">
-                    <svg className="w-full h-full -rotate-90" aria-hidden>
+                  <div className="relative w-24 h-24 shrink-0">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
                       <circle cx="50" cy="50" r="42" stroke="var(--secondary)" strokeWidth="8" fill="none" />
                       <motion.circle
                         cx="50"
@@ -174,7 +174,7 @@ export default function Hero() {
               </div>
 
               {/* Hydration — 4/12 */}
-              <div className="col-span-4 bg-background rounded-xl p-5 border border-border/10">
+              <div className="col-span-12 md:col-span-4 bg-background rounded-xl p-5 border border-border/10">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Water</h3>
                 <div className="flex items-baseline gap-1.5 mb-4">
                   <span className="text-4xl font-headline font-black tabular-nums text-primary leading-none">1,200</span>
@@ -196,7 +196,7 @@ export default function Hero() {
               </div>
 
               {/* Macros — 5/12 */}
-              <div className="col-span-5 bg-background rounded-xl p-5 border border-border/10">
+              <div className="col-span-12 md:col-span-5 bg-background rounded-xl p-5 border border-border/10">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Macronutrients</h3>
                 <div className="flex flex-col gap-4">
                   {MACROS.map((m) => (

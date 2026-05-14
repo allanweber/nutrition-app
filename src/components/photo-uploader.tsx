@@ -249,7 +249,12 @@ export function PhotoUploader({
             </p>
           )}
 
-          <div className={['flex items-center gap-3 justify-center', compact ? 'mb-3' : 'mb-4'].join(' ')}>
+          <div
+            className={[
+              'flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3',
+              compact ? 'mb-3' : 'mb-4',
+            ].join(' ')}
+          >
             <Button
               type="button"
               variant="outline"
@@ -259,7 +264,7 @@ export function PhotoUploader({
             >
               Browse Files
             </Button>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
               <span className="text-muted-foreground text-xs uppercase tracking-wider">or</span>
               <div className="flex items-center gap-1 bg-background px-2.5 py-1.5 rounded-lg border border-border/40 shadow-sm">
                 <span className="text-xs text-muted-foreground font-medium">Paste</span>
@@ -286,9 +291,9 @@ export function PhotoUploader({
 
       {displaySrc ? (
         // With-image: side-by-side layout
-        <div className="flex flex-row gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           {/* Image panel — left */}
-          <div className="flex-1 relative rounded-lg overflow-hidden min-h-55 border border-border/20">
+          <div className="relative w-full rounded-lg overflow-hidden min-h-[220px] border border-border/20 sm:flex-1 sm:min-h-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={displaySrc}
@@ -328,7 +333,7 @@ export function PhotoUploader({
           </div>
 
           {/* Drop zone (compact) — right */}
-          <div className="flex-1">
+          <div className="w-full sm:flex-1">
             <DropZone compact />
           </div>
         </div>

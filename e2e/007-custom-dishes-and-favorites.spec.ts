@@ -131,8 +131,13 @@ test.describe('007: Edit dish', () => {
     // Wait for dishes to load
     await expect(page.getByText('High-Protein Breakfast Bowl')).toBeVisible({ timeout: 10000 });
 
-    // Click the edit pencil for this dish
-    await page.getByRole('link', { name: /Edit High-Protein Breakfast Bowl/i }).click();
+    // Click the dish row/card itself; table rows route to edit on click and cards are wrapped in links.
+    const dishRow = page
+      .locator('[data-testid^="dish-item-"]')
+      .filter({ hasText: 'High-Protein Breakfast Bowl' })
+      .first();
+    await expect(dishRow).toBeVisible({ timeout: 10000 });
+    await dishRow.click();
     await expect(page).toHaveURL(/\/my-foods\/dishes\/[\w-]+\/edit/);
 
     // Form should be pre-populated
@@ -144,7 +149,12 @@ test.describe('007: Edit dish', () => {
     await page.goto('/my-foods');
     await page.getByTestId('tab-dishes').click();
     await expect(page.getByText('High-Protein Breakfast Bowl')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('link', { name: /Edit High-Protein Breakfast Bowl/i }).click();
+    const dishRow = page
+      .locator('[data-testid^="dish-item-"]')
+      .filter({ hasText: 'High-Protein Breakfast Bowl' })
+      .first();
+    await expect(dishRow).toBeVisible({ timeout: 10000 });
+    await dishRow.click();
     await expect(page).toHaveURL(/\/my-foods\/dishes\/[\w-]+\/edit/);
 
     // Should show ingredient count > 0 (the seeded dish has 3 ingredients)
@@ -186,9 +196,19 @@ test.describe('007: Dish log modal', () => {
     await searchInput.fill('High-Protein');
     await searchInput.click();
 
-    // Wait for custom tab to appear and/or a dish result
-    await expect(page.getByText('High-Protein Breakfast Bowl').first()).toBeVisible({ timeout: 10000 });
-    await page.getByText('High-Protein Breakfast Bowl').first().click();
+    // Scope to the search dropdown to avoid collisions with Favorites/recent lists.
+    const dropdown = page.getByTestId('food-search-dropdown');
+    await expect(dropdown).toBeVisible({ timeout: 10000 });
+    const customTab = dropdown.getByTestId('tab-custom');
+    if (await customTab.count()) {
+      await customTab.click();
+    }
+    const dishResult = dropdown
+      .getByTestId('food-result-item')
+      .filter({ hasText: 'High-Protein Breakfast Bowl' })
+      .first();
+    await expect(dishResult).toBeVisible({ timeout: 10000 });
+    await dishResult.click();
 
     // DishLogModal should open (now uses FoodModal)
     await expect(page.getByTestId('add-food-button')).toBeVisible({ timeout: 5000 });
@@ -201,8 +221,18 @@ test.describe('007: Dish log modal', () => {
     const searchInput = page.getByPlaceholder(/Search for foods/i);
     await searchInput.fill('High-Protein');
     await searchInput.click();
-    await expect(page.getByText('High-Protein Breakfast Bowl').first()).toBeVisible({ timeout: 10000 });
-    await page.getByText('High-Protein Breakfast Bowl').first().click();
+    const dropdown = page.getByTestId('food-search-dropdown');
+    await expect(dropdown).toBeVisible({ timeout: 10000 });
+    const customTab = dropdown.getByTestId('tab-custom');
+    if (await customTab.count()) {
+      await customTab.click();
+    }
+    const dishResult = dropdown
+      .getByTestId('food-result-item')
+      .filter({ hasText: 'High-Protein Breakfast Bowl' })
+      .first();
+    await expect(dishResult).toBeVisible({ timeout: 10000 });
+    await dishResult.click();
 
     await expect(page.getByTestId('quantity-input')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('meal-type-select')).toBeVisible();
@@ -217,13 +247,13 @@ test.describe('007: Favorites in NutritionPulse', () => {
     await login(page);
     await page.goto('/food-log');
 
-    // Nutrition Pulse sidebar should have a Favorites section
-    const pulse = page.locator('[data-testid="nutrition-pulse"]');
-    if (await pulse.count() === 0) {
-      // Try the class-based selector
-      await expect(page.getByText('Favorites').first()).toBeVisible({ timeout: 10000 });
+    // Nutrition Pulse is rendered in desktop and mobile variants depending on viewport.
+    const pulseDesktop = page.locator('[data-testid="nutrition-pulse"]:visible');
+    const pulseMobile = page.locator('[data-testid="nutrition-pulse-mobile"]:visible');
+    if (await pulseDesktop.count()) {
+      await expect(pulseDesktop.first().getByText(/^Favorites$/)).toBeVisible({ timeout: 10000 });
     } else {
-      await expect(pulse.getByText('Favorites').first()).toBeVisible({ timeout: 10000 });
+      await expect(pulseMobile.first().getByText(/^Favorites$/)).toBeVisible({ timeout: 10000 });
     }
   });
 

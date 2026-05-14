@@ -16,7 +16,8 @@ test.describe('005: Dashboard Redesign', () => {
     await page.goto('/dashboard');
 
     await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
+    // Calories section is rendered as a region with an aria-label that starts with "Calories"
+    await expect(page.getByRole('region', { name: /^Calories\b/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[role="progressbar"][aria-label="Water intake"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[role="progressbar"][aria-label="Protein"]')).toBeVisible({ timeout: 10000 });
@@ -26,9 +27,9 @@ test.describe('005: Dashboard Redesign', () => {
   test('all sections load independently and replace skeleton states', async ({ page }) => {
     await page.goto('/dashboard');
 
-    // Each section heading loads via its own Suspense boundary — none should block another
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole('heading', { name: 'Macronutrients' })).toBeVisible({ timeout: 15000 });
+    // Each section loads via its own Suspense boundary — none should block another
+    await expect(page.getByRole('region', { name: /^Calories\b/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Daily Macros' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Water' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Weekly Momentum' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Daily Schedule' })).toBeVisible({ timeout: 15000 });
@@ -133,17 +134,17 @@ test.describe('005: Dashboard Redesign', () => {
 
   // ── Story 4: Calories ────────────────────────────────────────────────────
 
-  test('calories section shows circular ring, goal denominator, and stat cards', async ({ page }) => {
+  test('calories section shows status bar, goal denominator, and stat cards', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Calories' })).toBeVisible({ timeout: 10000 });
 
-    // Circular progress ring — aria-label carries current percentage
-    const ring = page.getByRole('img', { name: /Remaining.*of daily goal/i });
-    await expect(ring).toBeVisible();
-    expect(await ring.getAttribute('aria-label')).toMatch(/\d+%/);
+    // Calories status bar — region's aria-label encodes consumed/target + ±10% band
+    const caloriesRegion = page.getByRole('region', { name: /^Calories\b.*target.*\u00b110%/i });
+    await expect(caloriesRegion).toBeVisible({ timeout: 10000 });
 
-    // Goal denominator rendered as "/ X kcal"
-    await expect(page.getByText(/\/\s*[\d,.]+\s*kcal/)).toBeVisible();
+    // Heading inside the region renders the "consumed/target kcal" pattern
+    const caloriesHeading = caloriesRegion.getByRole('heading', { level: 2 });
+    await expect(caloriesHeading).toBeVisible();
+    await expect(caloriesHeading).toContainText(/[\d,]+\s*\/\s*[\d,]+\s*kcal/);
 
     // Stat cards
     await expect(page.getByText('Burned')).toBeVisible();
@@ -154,7 +155,7 @@ test.describe('005: Dashboard Redesign', () => {
 
   test('macronutrients section renders progress bars for protein, carbs, and fat', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Macronutrients' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Daily Macros' })).toBeVisible({ timeout: 10000 });
 
     for (const macro of ['Protein', 'Carbohydrates', 'Fat']) {
       const bar = page.locator(`[role="progressbar"][aria-label="${macro}"]`);
@@ -274,6 +275,43 @@ test.describe('005: Dashboard Redesign', () => {
     const count = await nudges.count();
     for (let i = 0; i < count; i++) {
       await expect(nudges.nth(i)).toHaveAttribute('href', '/goals');
+    }
+  });
+
+  // ── Story: Weekly Summary ────────────────────────────────────────────────
+
+  test('weekly summary section renders heading and all four stat labels', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Weekly Summary' })).toBeVisible({ timeout: 10000 });
+
+    const summaryCard = page.locator('h2', { hasText: 'Weekly Summary' }).locator('..').locator('..');
+    for (const label of ['Calories', 'Protein', 'Carbohydrates', 'Fat']) {
+      await expect(summaryCard.getByText(label, { exact: true })).toBeVisible();
+    }
+  });
+
+  test('weekly summary shows consumed / goal values with units', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Weekly Summary' })).toBeVisible({ timeout: 10000 });
+
+    // Goal denominator format: "/ X kcal" for calories and "/ X g" for macros
+    await expect(page.locator('text=/\\/\\s*[\\d,]+\\s*kcal/').first()).toBeVisible();
+    await expect(page.locator('text=/\\/\\s*[\\d,]+\\s*g/').first()).toBeVisible();
+  });
+
+  test('weekly summary stat values are non-negative numbers', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Weekly Summary' })).toBeVisible({ timeout: 10000 });
+
+    // All numeric stat values in the card should be >= 0
+    const card = page.locator('h2', { hasText: 'Weekly Summary' }).locator('..').locator('..');
+    const statValues = card.locator('.tabular-nums');
+    const count = await statValues.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i++) {
+      const text = await statValues.nth(i).textContent();
+      const num = Number((text ?? '').replace(/,/g, ''));
+      expect(num).toBeGreaterThanOrEqual(0);
     }
   });
 });

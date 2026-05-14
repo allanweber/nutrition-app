@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
-import { Loader2, Trash2, UtensilsCrossed, ChefHat, ChevronDown, MoreVertical, Sunrise, Sandwich, Moon } from 'lucide-react';
+import { Loader2, Plus, Trash2, UtensilsCrossed, ChefHat, ChevronDown, Sunrise, Sandwich, Moon } from 'lucide-react';
 import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 import { MealPlanAddon } from '@/components/food-log/meal-plan-addon';
 
@@ -13,7 +13,16 @@ import { FoodLogEntry } from '@/types/food';
 import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, type MealType } from '@/lib/nutrition-constants';
 import type { DietPlanMealDTO } from '@/server/services/diet-plan.service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Totals {
   calories: number;
@@ -41,6 +50,7 @@ interface FoodLogClientProps {
   planId?: string;
   loggingMealType?: MealType | null;
   onLogPlanForMeal?: (mealType: MealType) => void | Promise<void>;
+  onAddFoodForMeal?: (mealType: MealType) => void;
 }
 
 
@@ -87,6 +97,25 @@ function buildFoodCountMap(foodIds: string[]) {
   return counts;
 }
 
+function formatLoggedQuantity(log: FoodLogEntry) {
+  const quantityGrams = Math.round(log.quantity);
+
+  if (!log.altMeasure) {
+    return `${quantityGrams}g`;
+  }
+
+  const rawDescription = log.altMeasure.description.trim();
+  const cleanedDescription = rawDescription.replace(/^\d+(?:[.,/]\d+)?\s+/u, '');
+  const measureLabel = cleanedDescription || rawDescription;
+  const baseQty = log.altMeasure.qty || 1;
+  const displayQty = (log.quantity / log.altMeasure.weightGrams) * baseQty;
+  const normalizedQty = Number.isInteger(displayQty)
+    ? String(displayQty)
+    : String(+displayQty.toFixed(2));
+
+  return `${normalizedQty} ${measureLabel} (${quantityGrams}g)`;
+}
+
 function mealLogsCoverPlan(mealLogs: FoodLogEntry[], planMeal?: DietPlanMealDTO) {
   if (!planMeal || planMeal.items.length === 0 || mealLogs.length === 0) {
     return false;
@@ -118,6 +147,7 @@ export default function FoodLogClient({
   planId,
   loggingMealType,
   onLogPlanForMeal,
+  onAddFoodForMeal,
 }: FoodLogClientProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
@@ -336,25 +366,34 @@ export default function FoodLogClient({
             {!isMealCollapsed && isEmpty ? (
               <div>
                 <div
-                  className="flex items-center justify-center py-8 px-5"
+                  className="px-5 py-6"
                   data-testid={`meal-empty-placeholder-${mealType}`}
                 >
-                  <div className="w-full sm:w-auto">
-                    <div className="sm:hidden rounded-2xl border border-dashed border-border/60 bg-muted/30 px-4 py-6 text-center">
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Plan {MEAL_TYPE_LABELS[mealType]}
-                      </p>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Nothing logged yet.
-                      </p>
+                  {onAddFoodForMeal ? (
+                    <button
+                      type="button"
+                      onClick={() => onAddFoodForMeal(mealType)}
+                      data-testid={`meal-empty-add-${mealType}`}
+                      aria-label={`Log food for ${MEAL_TYPE_LABELS[mealType]}`}
+                      className="group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-5 text-sm text-muted-foreground select-none transition-[colors,transform] duration-150 ease-out hover:border-primary/40 hover:bg-primary/5 hover:text-foreground active:scale-[0.99] active:bg-primary/10 motion-reduce:active:scale-100 [-webkit-tap-highlight-color:transparent]"
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background ring-1 ring-border/60 transition-colors group-hover:ring-primary/40 group-hover:text-primary">
+                        <Plus className="h-4 w-4" aria-hidden />
+                      </span>
+                      <span className="font-medium">
+                        Log {MEAL_TYPE_LABELS[mealType].toLowerCase()}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
+                        <p className="text-sm text-muted-foreground">
+                          No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
+                        </p>
+                      </div>
                     </div>
-                    <div className="hidden sm:flex flex-col items-center gap-2 text-center">
-                      <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" aria-hidden />
-                      <p className="text-sm text-muted-foreground">
-                        No {MEAL_TYPE_LABELS[mealType].toLowerCase()} logged
-                      </p>
-                    </div>
-                  </div>
+                  )}
                 </div>
                 {shouldShowPlanAddon ? (
                   <MealPlanAddon
@@ -395,7 +434,7 @@ export default function FoodLogClient({
                             type="button"
                             variant="ghost"
                             onClick={toggleCollapse}
-                            className="flex items-center gap-2 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent group"
+                            className="flex items-center justify-start gap-2 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent group"
                             aria-expanded={!isCollapsed}
                           >
                             <ChefHat className="h-3.5 w-3.5 text-violet-500 shrink-0" aria-hidden />
@@ -413,32 +452,51 @@ export default function FoodLogClient({
                             <span className="text-xs font-bold tabular-nums text-violet-600 dark:text-violet-400">
                               {groupCalories} kcal
                             </span>
-                            {confirmingDelete === groupKey ? (
-                              <div className="flex items-center gap-1">
+                            <div className="hidden lg:flex items-center gap-1">
+                              {confirmingDelete === groupKey ? (
+                                <>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDeleteGroupConfirm(entry.dishLogGroupId)}
+                                    className="text-[10px] h-auto py-1 px-2 rounded-full"
+                                    data-testid={`delete-group-confirm-${entry.dishLogGroupId}`}
+                                  >
+                                    Remove all
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleDeleteCancel}
+                                    className="text-[10px] h-auto py-1 px-2 rounded-full"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </>
+                              ) : (
                                 <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDeleteGroupConfirm(entry.dishLogGroupId)}
-                                  className="text-[10px] h-auto py-1 px-2 rounded-full"
-                                  data-testid={`delete-group-confirm-${entry.dishLogGroupId}`}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-10 text-violet-500/50 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
+                                  disabled={deleting === groupKey}
+                                  aria-label={`Remove entire ${entry.dishNameSnapshot} dish`}
+                                  data-testid={`delete-dish-group-${entry.dishLogGroupId}`}
                                 >
-                                  Remove all
+                                  {deleting === groupKey ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3 w-3" />
+                                  )}
                                 </Button>
+                              )}
+                            </div>
+                            <div className="lg:hidden">
                                 <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={handleDeleteCancel}
-                                  className="text-[10px] h-auto py-1 px-2 rounded-full"
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-violet-500/50 hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-10 text-violet-500/50 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => handleDeleteGroupRequest(entry.dishLogGroupId)}
                                 disabled={deleting === groupKey}
                                 aria-label={`Remove entire ${entry.dishNameSnapshot} dish`}
                                 data-testid={`delete-dish-group-${entry.dishLogGroupId}`}
@@ -449,7 +507,35 @@ export default function FoodLogClient({
                                   <Trash2 className="h-3 w-3" />
                                 )}
                               </Button>
-                            )}
+
+                              <AlertDialog open={confirmingDelete === groupKey} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>
+                                <AlertDialogContent size="sm">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove dish group?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will remove all items from {entry.dishNameSnapshot} in your food log.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={deleting === groupKey}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      variant="destructive"
+                                      disabled={deleting === groupKey}
+                                      onClick={() => void handleDeleteGroupConfirm(entry.dishLogGroupId)}
+                                    >
+                                      {deleting === groupKey ? (
+                                        <>
+                                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                                          Removing...
+                                        </>
+                                      ) : (
+                                        'Remove all'
+                                      )}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         </div>
 
@@ -509,8 +595,11 @@ export default function FoodLogClient({
       })}
 
       {logs.length === 0 && (
-        <div className="text-center py-4" data-testid="empty-state">
-          <p className="text-sm text-muted-foreground">
+        <div className="py-4 text-center" data-testid="empty-state">
+          <p className="text-sm text-muted-foreground lg:hidden">
+            Tap the + button to search and add foods to your log.
+          </p>
+          <p className="hidden text-sm text-muted-foreground lg:block">
             Search for foods above to start logging your meals.
           </p>
         </div>
@@ -533,6 +622,8 @@ interface FoodLogRowProps {
 
 
 function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteRequest, onDeleteConfirm, onDeleteCancel, onEdit, indent = false }: FoodLogRowProps) {
+  const [mobileDeleteOpen, setMobileDeleteOpen] = useState(false);
+
   return (
     <div
       className={`flex items-center gap-3 py-3 transition-colors ${indent ? 'pl-8 pr-5' : 'px-5'}`}
@@ -560,16 +651,17 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
         )}
 
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground truncate">{log.food.name}</p>
+          <p className="font-semibold text-sm text-foreground truncate">
+            {log.food.name}
+          </p>
+          <p className="sm:hidden text-xs text-muted-foreground tabular-nums mt-0.5 truncate">
+            {formatLoggedQuantity(log)}
+          </p>
           <div className="hidden sm:block">
             {log.food.brandName && (
               <p className="text-xs text-muted-foreground truncate">{log.food.brandName}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              {log.altMeasure
-                ? `${+(log.quantity / log.altMeasure.weightGrams).toFixed(2)} ${log.altMeasure.description}`
-                : `${log.quantity}g`}
-            </p>
+            <p className="text-xs text-muted-foreground">{formatLoggedQuantity(log)}</p>
             <div className="flex items-center gap-1 mt-1 flex-wrap">
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${MACRO_BADGE_COLORS.protein}`}>
                 P {nutrients.protein}g
@@ -583,7 +675,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
             </div>
           </div>
 
-          <div className="sm:hidden mt-0.5 text-xs text-muted-foreground tabular-nums flex items-center gap-2">
+          <div className="sm:hidden mt-0.5 text-xs text-muted-foreground tabular-nums flex items-center gap-2 max-[450px]:flex-col max-[450px]:items-start max-[450px]:gap-0.5">
             <span className="truncate">P: {nutrients.protein}g</span>
             <span className="truncate">C: {nutrients.carbs}g</span>
             <span className="truncate">F: {nutrients.fat}g</span>
@@ -597,7 +689,7 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
       </div>
 
       {/* Desktop actions */}
-      <div className="hidden sm:flex items-center gap-2 shrink-0">
+      <div className="hidden lg:flex items-center gap-2 shrink-0">
         <FavoriteToggleButton foodId={log.food.id} />
 
         {confirmingDelete === log.id ? (
@@ -640,54 +732,55 @@ function FoodLogRow({ log, nutrients, confirmingDelete, deleting, onDeleteReques
         )}
       </div>
 
-      {/* Mobile overflow actions */}
-      <div className="sm:hidden shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="More actions">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <div className="w-full flex items-center justify-between">
-                <span>Favorite</span>
-                <FavoriteToggleButton foodId={log.food.id} className="size-8" />
-              </div>
-            </DropdownMenuItem>
-            {confirmingDelete === log.id ? (
-              <>
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    void onDeleteConfirm(log.id);
-                  }}
-                >
-                  Remove
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    onDeleteCancel();
-                  }}
-                >
-                  Cancel
-                </DropdownMenuItem>
-              </>
-            ) : (
-              <DropdownMenuItem
+      {/* Mobile always-visible actions */}
+      <div className="lg:hidden flex items-center gap-1.5 shrink-0">
+        <FavoriteToggleButton foodId={log.food.id} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileDeleteOpen(true)}
+          disabled={deleting === log.id}
+          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          aria-label={`Remove ${log.food.name} from log`}
+          data-testid={`delete-log-mobile-${log.id}`}
+        >
+          {deleting === log.id ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Trash2 className="h-4 w-4" aria-hidden />
+          )}
+        </Button>
+
+        <AlertDialog open={mobileDeleteOpen} onOpenChange={setMobileDeleteOpen}>
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove food log?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove {log.food.name} from your food log.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting === log.id}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
                 variant="destructive"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  onDeleteRequest(log.id);
+                disabled={deleting === log.id}
+                onClick={() => {
+                  void onDeleteConfirm(log.id);
+                  setMobileDeleteOpen(false);
                 }}
               >
-                Remove
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                {deleting === log.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    Removing...
+                  </>
+                ) : (
+                  'Remove'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

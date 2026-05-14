@@ -15,6 +15,7 @@ import {
   BookMarked,
 } from 'lucide-react';
 import { useState } from 'react';
+import { VitalisMark } from '@/components/vitalis-mark';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -51,7 +52,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
         <div className="flex items-center justify-between h-16">
           {/* Brand + desktop nav links */}
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="shrink-0">
+            <Link href="/dashboard" className="shrink-0 flex items-center gap-2">
+              <VitalisMark size={32} className="size-8 shrink-0 rounded-lg" />
               <span className="text-xl italic font-headline font-semibold text-primary">
                 Vitalis
               </span>

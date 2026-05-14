@@ -6,7 +6,7 @@ import { EmptyMealSlot } from './empty-meal-slot';
 import { CopyDayPopover } from './copy-day-popover';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants';
+import { MACRO_TEXT_COLORS, MEAL_TYPE_ORDER, type MealType } from '@/lib/nutrition-constants';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -26,6 +26,10 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
   const [isDesktop, setIsDesktop] = useState(false);
   const dayMeals = meals.filter((m) => m.dayOfWeek === selectedDay);
   const dayName = DAY_NAMES[selectedDay - 1];
+  const dayTotalCalories = dayMeals.reduce((sum, meal) => sum + meal.totalCalories, 0);
+  const dayTotalProtein = dayMeals.reduce((sum, meal) => sum + meal.totalProtein, 0);
+  const dayTotalCarbs = dayMeals.reduce((sum, meal) => sum + meal.totalCarbs, 0);
+  const dayTotalFat = dayMeals.reduce((sum, meal) => sum + meal.totalFat, 0);
 
   // Avoid duplicate interactive elements in DOM (Playwright strict mode):
   // render either the mobile or desktop header, never both.
@@ -129,6 +133,7 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
                 slot.type === 'existing' ? (
                   <MealCard
                     key={slot.meal.id}
+                    planId={plan.id}
                     meal={slot.meal}
                     defaultCollapsed={slot.meal.items.length === 0}
                     isDeleting={deletingMealId === slot.meal.id}
@@ -143,6 +148,49 @@ export function DayMealsView({ plan, meals, selectedDay, isLoading, deletingMeal
                     />
                   </div>
                 ),
+              )}
+
+              {dayMeals.length > 0 && (
+                <div
+                  data-testid="day-meals-summary"
+                  className="overflow-hidden rounded-2xl border border-border/60"
+                >
+                  <div className="border-b border-border/30 px-5 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Daily Summary
+                    </p>
+                    <h3 className="mt-1 text-sm font-semibold text-foreground">
+                      Total nutrition for {dayName}
+                    </h3>
+                  </div>
+                  <div className="flex items-stretch bg-muted/40 divide-x divide-border/30">
+                    <div className="flex flex-1 flex-col px-5 py-3">
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
+                      <span className="text-base font-bold text-foreground">
+                        {Math.round(dayTotalCalories)}{' '}
+                        <span className="text-xs font-normal text-muted-foreground">kcal</span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col px-4 py-3">
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
+                      <span className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}>
+                        {Math.round(dayTotalProtein)}g
+                      </span>
+                    </div>
+                    <div className="flex flex-col px-4 py-3">
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
+                      <span className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}>
+                        {Math.round(dayTotalCarbs)}g
+                      </span>
+                    </div>
+                    <div className="flex flex-col px-4 py-3">
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
+                      <span className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}>
+                        {Math.round(dayTotalFat)}g
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}

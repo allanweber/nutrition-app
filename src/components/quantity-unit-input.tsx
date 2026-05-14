@@ -50,17 +50,22 @@ export function QuantityUnitInput({
 }: QuantityUnitInputProps) {
   const measure = measures.find((m) => m.id === selectedMeasureId) ?? measures[0];
   const [displayQuantity, setDisplayQuantity] = useState(() => String(quantity));
+  const decimalPattern = /^\d*(?:[.,]\d*)?$/;
 
   useEffect(() => {
     setDisplayQuantity(String(quantity));
   }, [quantity]);
 
   const handleNumberChange = (raw: string) => {
+    if (!decimalPattern.test(raw)) {
+      return;
+    }
+
     setDisplayQuantity(raw);
 
     if (raw === '') return;
 
-    const val = parseFloat(raw);
+    const val = parseFloat(raw.replace(',', '.'));
     if (!isNaN(val) && val > 0) onQuantityChange(val);
   };
 
@@ -88,24 +93,27 @@ export function QuantityUnitInput({
       )}
 
       {/* Number input + unit select — matches app's h-9 / text-sm input style */}
-      <div className="flex items-center h-9 rounded-md border border-input bg-transparent shadow-xs overflow-hidden transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
+      <div className="flex items-center h-9 rounded-md border border-input bg-transparent shadow-xs overflow-hidden transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] min-w-0">
         <Input
-          type="number"
-          min={measure.sliderMin}
-          max={measure.sliderMax}
-          step={measure.sliderStep}
+          type="text"
+          inputMode="decimal"
+          pattern="[0-9]+([.,][0-9]+)?"
           value={displayQuantity}
           onChange={(e) => handleNumberChange(e.target.value)}
           onBlur={handleNumberBlur}
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 h-full border-none shadow-none rounded-none px-3 py-1 text-sm font-medium focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none w-[30%] sm:flex-1 sm:w-auto"
+          onMouseUp={(e) => {
+            e.preventDefault();
+            e.currentTarget.select();
+          }}
+          className="w-14 shrink-0 h-full border-none shadow-none rounded-none px-2 py-1 text-sm font-medium text-center focus:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           data-testid={qtyInputTestId}
           aria-label="Quantity"
         />
         <div className="h-4 w-px bg-border shrink-0" />
         <Select value={selectedMeasureId} onValueChange={handleMeasureChange}>
           <SelectTrigger
-            className="h-full border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-7 rounded-none min-w-0 w-[70%] sm:w-auto sm:min-w-20 sm:max-w-36"
+            className="h-full flex-1 min-w-0 border-none bg-transparent shadow-none text-sm font-medium text-foreground focus:ring-0 pl-2 pr-2 rounded-none truncate justify-start"
             data-testid={measureSelectTestId}
           >
             <SelectValue />

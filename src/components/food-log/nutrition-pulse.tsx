@@ -7,6 +7,7 @@ import { useNutritionSummaryQuery } from '@/queries/nutrition-summary';
 import { useFoodLogsQuery } from '@/queries/food-logs';
 import { useFavoritesTopQuery } from '@/queries/favorites';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import { FavoritesModal } from '@/components/favorites-modal';
 import type { FavoriteItem } from '@/types/favorites';
 
@@ -32,7 +33,9 @@ export function NutritionPulse({
   const remaining = data?.remaining ?? 0;
   const isOverGoal = remaining < 0 && (data?.calorieGoal ?? 0) > 0;
 
-  const pct = Math.min(Math.max(data?.percentConsumed ?? 0, 0), 100);
+  const percentConsumedRaw = Math.max(data?.percentConsumed ?? 0, 0);
+  // Clamp only for visual ring fill; the label should show true overflow (e.g. 118%).
+  const pct = Math.min(percentConsumedRaw, 100);
   const size = 160;
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
@@ -111,6 +114,13 @@ export function NutritionPulse({
     ? [...new Map(logsData.logs.map((l) => [l.food.id, l.food])).values()].slice(0, 5)
     : [];
 
+  const consumedKcal = data?.caloriesConsumed ?? 0;
+  const desktopRingLabel = isLoading
+    ? 'Calorie progress, loading'
+    : isOverGoal
+      ? `Over daily calorie goal by ${Math.abs(remaining)} kilocalories. Consumed ${consumedKcal} of ${calorieGoal} kilocalories.`
+      : `${remaining} kilocalories remaining of ${calorieGoal} goal. Consumed ${consumedKcal} kilocalories, ${Math.round(percentConsumedRaw)} percent of daily goal.`;
+
   if (variant === 'mobile') {
     return (
       <div data-testid="nutrition-pulse-mobile">
@@ -136,8 +146,16 @@ export function NutritionPulse({
               const mobileRadius = (mobileSize - mobileStroke) / 2;
               const mobileCirc = 2 * Math.PI * mobileRadius;
               const mobileDashOffset = mobileCirc * (1 - pct / 100);
+              const mobileRingLabel = isLoading
+                ? 'Calorie goal progress, loading'
+                : `${Math.round(percentConsumedRaw)} percent of daily calories consumed.`;
               return (
-                <div className="relative shrink-0" style={{ width: mobileSize, height: mobileSize }}>
+                <div
+                  className="relative shrink-0"
+                  style={{ width: mobileSize, height: mobileSize }}
+                  role="img"
+                  aria-label={mobileRingLabel}
+                >
                   <svg width={mobileSize} height={mobileSize} viewBox={`0 0 ${mobileSize} ${mobileSize}`} className="-rotate-90" aria-hidden>
                     <circle
                       cx={mobileSize / 2}
@@ -160,9 +178,9 @@ export function NutritionPulse({
                       style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                     />
                   </svg>
-                  <div className="absolute inset-0 grid place-items-center">
+                  <div className="absolute inset-0 grid place-items-center" aria-hidden>
                     <span className="text-xs font-extrabold tabular-nums text-foreground">
-                      {isLoading ? '—' : `${Math.round(pct)}%`}
+                      {isLoading ? '—' : `${Math.round(percentConsumedRaw)}%`}
                     </span>
                   </div>
                 </div>
@@ -183,12 +201,12 @@ export function NutritionPulse({
                       {consumed}g
                     </span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-border">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
-                      style={{ width: `${macroPct}%` }}
-                    />
-                  </div>
+                  <MacroFillTrack
+                    className="mt-2"
+                    percent={macroPct}
+                    fillClassName={MACRO_COLORS[key]}
+                    trackClassName="bg-black/10 dark:bg-border"
+                  />
                 </div>
               );
             })}
@@ -201,56 +219,54 @@ export function NutritionPulse({
   return (
     <>
       <div data-testid="nutrition-pulse">
-        <div
-          className={[
-            'bg-[#C1F0B1] rounded-[2rem] p-8 sticky top-24 overflow-hidden',
-            'dark:bg-secondary dark:border dark:border-primary/30',
-            '[--pulse-fill:var(--green-dark)] [--pulse-track:#aee39d]',
-            'dark:[--pulse-fill:var(--primary)] dark:[--pulse-track:var(--border)]',
-          ].join(' ')}
-        >
+        <div className="rounded-[2rem] bg-[var(--nutrition-pulse-surface)] p-8 shadow-sm sticky top-24 overflow-hidden dark:border dark:border-primary/30">
           {/* Decorative circle */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full pointer-events-none dark:bg-primary/5" />
+          <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-[var(--nutrition-pulse-decoration)]" />
 
-          <h2 className="text-base font-bold text-[#002203] dark:text-foreground mb-6">
+          <h2 className="mb-6 text-base font-bold text-[var(--nutrition-pulse-ink)]">
             Nutrition Pulse
           </h2>
 
           {/* Calorie Ring */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--pulse-track)" strokeWidth={strokeWidth} />
+          <div className="mb-8 flex flex-col items-center">
+            <div
+              className="relative flex items-center justify-center"
+              style={{ width: size, height: size }}
+              role="img"
+              aria-label={desktopRingLabel}
+            >
+              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" aria-hidden>
+                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--nutrition-pulse-track)" strokeWidth={strokeWidth} />
                 <circle
                   cx={size / 2} cy={size / 2} r={radius} fill="none"
-                  stroke="var(--pulse-fill)" strokeWidth={strokeWidth} strokeLinecap="round"
+                  stroke="var(--nutrition-pulse-fill)" strokeWidth={strokeWidth} strokeLinecap="round"
                   strokeDasharray={circumference} strokeDashoffset={isOverGoal ? 0 : dashOffset}
                   style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                 />
                 {isOverGoal && (
                   <circle
                     cx={size / 2} cy={size / 2} r={radius} fill="none"
-                    stroke="#ef4444" strokeWidth={strokeWidth} strokeLinecap="round"
+                    stroke="var(--destructive)" strokeWidth={strokeWidth} strokeLinecap="round"
                     strokeDasharray={circumference} strokeDashoffset={overflowDashOffset}
                     style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                   />
                 )}
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center" aria-hidden>
                 <span
                   className={`text-3xl font-headline font-black tabular-nums leading-none ${
-                    isOverGoal ? 'text-destructive' : 'text-[#002203] dark:text-foreground'
+                    isOverGoal ? 'text-destructive' : 'text-[var(--nutrition-pulse-ink)]'
                   }`}
                   data-testid="pulse-calories-remaining"
                 >
                   {isLoading ? '—' : remaining}
                 </span>
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground mt-1">
+                <span className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--nutrition-pulse-ink-muted)]">
                   kcal left
                 </span>
               </div>
             </div>
-            <p className="mt-3 text-sm text-[#002203]/70 dark:text-muted-foreground tabular-nums text-center">
+            <p className="mt-3 text-center text-sm tabular-nums text-[var(--nutrition-pulse-ink-muted)]">
               {data?.caloriesConsumed ?? 0} / {data?.calorieGoal ?? 0} kcal consumed
             </p>
           </div>
@@ -262,20 +278,19 @@ export function NutritionPulse({
               return (
                 <div key={key} data-testid={`pulse-macro-${key}`}>
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[#002203]/80 dark:text-muted-foreground">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--nutrition-pulse-ink-muted)]">
                       {label}
                     </span>
-                    <span className="text-xs font-bold tabular-nums text-[#002203] dark:text-foreground">
+                    <span className="text-xs font-bold tabular-nums text-[var(--nutrition-pulse-ink)]">
                       {consumed}g
                       <span className="font-normal opacity-60"> / {goal}g</span>
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-black/10 dark:bg-border overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${MACRO_COLORS[key]}`}
-                      style={{ width: `${macroPct}%` }}
-                    />
-                  </div>
+                  <MacroFillTrack
+                    percent={macroPct}
+                    fillClassName={MACRO_COLORS[key]}
+                    trackClassName="bg-black/10 dark:bg-border"
+                  />
                 </div>
               );
             })}
@@ -286,7 +301,7 @@ export function NutritionPulse({
             variant="ghost"
             size="sm"
             onClick={() => setExpanded((v) => !v)}
-            className="flex items-center justify-center gap-1.5 w-full mb-6 text-xs font-semibold text-[#002203]/70 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground hover:bg-transparent transition-colors h-auto"
+            className="mb-6 flex h-auto w-full items-center justify-center gap-1.5 text-xs font-semibold text-[var(--nutrition-pulse-ink-muted)] transition-colors hover:bg-transparent hover:text-[var(--nutrition-pulse-ink)] dark:hover:text-foreground"
             aria-expanded={expanded}
           >
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -297,15 +312,15 @@ export function NutritionPulse({
           {expanded && (
             <div className="mb-6 space-y-4">
               {allNutrientGroups.map((group) => (
-                <div key={group.heading} className="rounded-2xl bg-black/5 dark:bg-muted p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/50 dark:text-muted-foreground mb-3">
+                <div key={group.heading} className="rounded-2xl bg-black/5 p-4 dark:bg-muted">
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--nutrition-pulse-ink-faint)]">
                     {group.heading}
                   </p>
                   <div className="space-y-2">
                     {group.rows.map(({ label, value, unit, goal }) => (
                       <div key={label} className="flex items-baseline justify-between">
-                        <span className="text-xs text-[#002203]/70 dark:text-muted-foreground">{label}</span>
-                        <span className="text-sm font-bold tabular-nums text-[#002203] dark:text-foreground">
+                        <span className="text-xs text-[var(--nutrition-pulse-ink-muted)]">{label}</span>
+                        <span className="text-sm font-bold tabular-nums text-[var(--nutrition-pulse-ink)]">
                           {value}
                           <span className="text-xs font-normal opacity-60 ml-0.5">{unit}</span>
                           {goal != null && goal > 0 && (
@@ -325,7 +340,7 @@ export function NutritionPulse({
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--nutrition-pulse-ink-muted)]">
                   Favorites
                 </p>
               </div>
@@ -333,7 +348,7 @@ export function NutritionPulse({
                 variant="ghost"
                 size="sm"
                 onClick={() => setFavModalOpen(true)}
-                className="flex items-center gap-0.5 text-[10px] font-semibold text-[#002203]/60 dark:text-muted-foreground hover:text-[#002203] dark:hover:text-foreground hover:bg-transparent transition-colors h-auto p-0"
+                className="flex h-auto items-center gap-0.5 p-0 text-[10px] font-semibold text-[var(--nutrition-pulse-ink-muted)] transition-colors hover:bg-transparent hover:text-[var(--nutrition-pulse-ink)] dark:hover:text-foreground"
                 data-testid="see-all-favorites"
               >
                 See all
@@ -341,7 +356,7 @@ export function NutritionPulse({
               </Button>
             </div>
             {topFavorites.length === 0 ? (
-              <p className="text-xs text-[#002203]/50 dark:text-muted-foreground/50">
+              <p className="text-xs text-[var(--nutrition-pulse-ink-faint)] opacity-80">
                 Star foods or dishes to add them here
               </p>
             ) : (
@@ -353,7 +368,7 @@ export function NutritionPulse({
                     size="sm"
                     onClick={() => onAddFood(item)}
                     data-testid={`favorite-pill-${item.id}`}
-                    className="text-xs px-3 py-1.5 rounded-full h-auto bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
+                    className="h-auto rounded-full bg-white/40 px-3 py-1.5 text-xs font-medium text-[var(--nutrition-pulse-ink)] transition-colors hover:bg-white/60 dark:bg-muted dark:text-foreground dark:hover:bg-secondary"
                   >
                     {item.name}
                   </Button>
@@ -365,7 +380,7 @@ export function NutritionPulse({
           {/* Quick Add Recent */}
           {recentFoods.length > 0 && (
             <div data-testid="quick-add-recent" className="mt-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#002203]/60 dark:text-muted-foreground mb-3">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--nutrition-pulse-ink-muted)]">
                 Quick Add
               </p>
               <div className="flex flex-wrap gap-2">
@@ -376,7 +391,7 @@ export function NutritionPulse({
                     size="sm"
                     onClick={() => onQuickAddFood?.(food.name)}
                     data-testid={`quick-add-${food.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                    className="text-xs px-3 py-1.5 rounded-full h-auto bg-white/40 hover:bg-white/60 dark:bg-muted dark:hover:bg-secondary text-[#002203] dark:text-foreground font-medium transition-colors"
+                    className="h-auto rounded-full bg-white/40 px-3 py-1.5 text-xs font-medium text-[var(--nutrition-pulse-ink)] transition-colors hover:bg-white/60 dark:bg-muted dark:text-foreground dark:hover:bg-secondary"
                   >
                     {food.name}
                   </Button>

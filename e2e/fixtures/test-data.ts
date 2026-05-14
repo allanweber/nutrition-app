@@ -60,6 +60,19 @@ export const seedUsers = {
     role: 'professional',
   },
 
+  mealPlannerA: {
+    name: 'E2E Meal Planner Slot A',
+    email: 'e2e.meal-planner-a@example.com',
+    password: 'Password123!',
+    goal: 'maintenance',
+  },
+  mealPlannerB: {
+    name: 'E2E Meal Planner Slot B',
+    email: 'e2e.meal-planner-b@example.com',
+    password: 'Password123!',
+    goal: 'maintenance',
+  },
+
   // Dedicated account for password reset/change password tests.
   // Do not use this email in any other tests.
   resetPassword: {
@@ -118,7 +131,14 @@ export const AUTH_FILES = {
   testUser:      'e2e/.auth/testUser.json',
   generalHealth: 'e2e/.auth/generalHealth.json',
   professional1: 'e2e/.auth/professional1.json',
+  professional2: 'e2e/.auth/professional2.json',
   muscleGain:    'e2e/.auth/muscleGain.json',
+  maintenance:   'e2e/.auth/maintenance.json',
+  fatLoss:       'e2e/.auth/fatLoss.json',
+  weightGain:    'e2e/.auth/weightGain.json',
+  performance:   'e2e/.auth/performance.json',
+  mealPlannerA:  'e2e/.auth/mealPlannerA.json',
+  mealPlannerB:  'e2e/.auth/mealPlannerB.json',
 };
 
 // Sample foods from seed data

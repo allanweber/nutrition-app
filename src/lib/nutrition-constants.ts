@@ -1,13 +1,16 @@
+/** Milliliters added per "Log Hydration" tap (must match `addWater` in dashboard.service). */
+export const HYDRATION_LOG_INCREMENT_ML = 250;
+
 export const MEAL_TYPE_ORDER = [
   'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
   'morning_snack',
+  'lunch',
   'afternoon_snack',
+  'dinner',
   'evening_snack',
   'pre_workout',
   'post_workout',
+  'snack',
   'other',
 ] as const;
 export type MealType = (typeof MEAL_TYPE_ORDER)[number];
@@ -84,14 +87,6 @@ export const MACRO_CELL_FILL = {
   protein:  'bg-[#D54069] dark:bg-rose-400',
   carbs:    'bg-[#CC7A40] dark:bg-amber-400',
   fat:      'bg-[#408FBE] dark:bg-sky-400',
-} as const;
-
-/** Left border color classes for macro cards */
-export const MACRO_CELL_BORDER = {
-  calories: 'border-l-[#008d4d] dark:border-l-emerald-400',
-  protein:  'border-l-[#D54069] dark:border-l-rose-400',
-  carbs:    'border-l-[#CC7A40] dark:border-l-amber-400',
-  fat:      'border-l-[#408FBE] dark:border-l-sky-400',
 } as const;
 
 /** Solid bg dot indicator for each meal type (used in food log row headers) */

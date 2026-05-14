@@ -13,7 +13,7 @@ export function MacronutrientsContent({ data }: MacronutrientsContentProps) {
   return (
     <div className="flex flex-col h-full gap-6">
       <h2 className="text-2xl font-extrabold font-headline text-foreground">
-        Macronutrients
+        Daily Macros
       </h2>
 
       <div className="flex flex-col gap-5 flex-1">

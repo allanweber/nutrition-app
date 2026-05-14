@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, gte, inArray, lt } from 'drizzle-orm';
+import { uuidv7 } from 'uuidv7';
 import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import {
   dietPlanMealItems,
   dietPlanMeals,
   dietPlans,
+  foodAltMeasures,
   foodLogItems,
   foodLogMeals,
 } from '@/server/db/schema';
@@ -91,9 +93,13 @@ export async function POST(request: NextRequest) {
         foodId: dietPlanMealItems.foodId,
         altMeasureId: dietPlanMealItems.altMeasureId,
         quantity: dietPlanMealItems.quantity,
+        altMeasureServingWeight: foodAltMeasures.servingWeight,
+        dishGroupId: dietPlanMealItems.dishGroupId,
+        dishNameSnapshot: dietPlanMealItems.dishNameSnapshot,
       })
       .from(dietPlanMeals)
       .leftJoin(dietPlanMealItems, eq(dietPlanMealItems.groupId, dietPlanMeals.id))
+      .leftJoin(foodAltMeasures, eq(dietPlanMealItems.altMeasureId, foodAltMeasures.id))
       .where(
         and(
           eq(dietPlanMeals.dietPlanId, planId),
@@ -189,6 +195,8 @@ export async function POST(request: NextRequest) {
       );
 
       const mealGroupByType = new Map<string, string>();
+      /** Plan `dish_group_id` → new `dish_log_group_id` for this log session */
+      const planDishGroupToLogGroupId = new Map<string, string>();
 
       if (mode !== 'replace-all') {
         const existingMeals = await tx
@@ -233,12 +241,15 @@ export async function POST(request: NextRequest) {
       for (const row of planItems) {
         const mergeKey = createMergeKey(row.foodId!, row.altMeasureId, row.mealType);
         const existing = existingByKey.get(mergeKey);
+        const quantityInGrams = row.altMeasureId
+          ? Number(row.quantity!) * Number(row.altMeasureServingWeight ?? 0)
+          : Number(row.quantity!);
 
         if (existing) {
           await tx
             .update(foodLogItems)
             .set({
-              quantity: (Number(existing.quantity) + Number(row.quantity!)).toFixed(2),
+              quantity: (Number(existing.quantity) + quantityInGrams).toFixed(2),
               updatedAt: new Date(),
             })
             .where(eq(foodLogItems.id, existing.id));
@@ -246,11 +257,25 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        let dishLogGroupId: string | null = null;
+        let dishNameSnapshot: string | null = null;
+        if (row.dishGroupId) {
+          let logGroupId = planDishGroupToLogGroupId.get(row.dishGroupId);
+          if (!logGroupId) {
+            logGroupId = uuidv7();
+            planDishGroupToLogGroupId.set(row.dishGroupId, logGroupId);
+          }
+          dishLogGroupId = logGroupId;
+          dishNameSnapshot = row.dishNameSnapshot ?? null;
+        }
+
         await tx.insert(foodLogItems).values({
           mealId: mealGroupByType.get(row.mealType)!,
           foodId: row.foodId!,
           altMeasureId: row.altMeasureId,
-          quantity: Number(row.quantity!).toFixed(2),
+          quantity: quantityInGrams.toFixed(2),
+          dishLogGroupId,
+          dishNameSnapshot,
         });
         insertedCount += 1;
       }

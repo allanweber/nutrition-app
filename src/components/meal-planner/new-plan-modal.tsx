@@ -29,7 +29,7 @@ import type { DietPlanFormData } from '@/lib/form-validation';
 import { useCreateDietPlanMutation } from '@/queries/diet-plans';
 import { useActivatePlan } from '@/hooks/use-activate-plan';
 import type { DietPlanDTO } from '@/server/services/diet-plan.service';
-import { MACRO_CELL_BG, MACRO_CELL_BORDER, MACRO_CELL_TEXT } from '@/lib/nutrition-constants';
+import { MACRO_CELL_BG, MACRO_CELL_TEXT } from '@/lib/nutrition-constants';
 import { MacroInputCard } from '@/components/macro-input-card';
 
 interface NutritionGoalDefaults {
@@ -214,7 +214,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       unit="g"
                       bgClass={`${MACRO_CELL_BG.protein} border-border`}
                       textClass={MACRO_CELL_TEXT.protein}
-                      borderClass={MACRO_CELL_BORDER.protein}
                       inputTestId="plan-target-protein-input"
                     />
                   )}
@@ -232,7 +231,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       unit="g"
                       bgClass={`${MACRO_CELL_BG.carbs} border-border`}
                       textClass={MACRO_CELL_TEXT.carbs}
-                      borderClass={MACRO_CELL_BORDER.carbs}
                       inputTestId="plan-target-carbs-input"
                     />
                   )}
@@ -250,7 +248,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
                       unit="g"
                       bgClass={`${MACRO_CELL_BG.fat} border-border`}
                       textClass={MACRO_CELL_TEXT.fat}
-                      borderClass={MACRO_CELL_BORDER.fat}
                       inputTestId="plan-target-fat-input"
                     />
                   )}

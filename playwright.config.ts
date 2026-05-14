@@ -9,8 +9,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  maxFailures: process.env.CI ? 1 : undefined,
-  workers: process.env.CI ? 4 : undefined,
+  maxFailures: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 6 : undefined,
   reporter: 'html',
   timeout: 60000,
   use: {
@@ -20,10 +20,13 @@ export default defineConfig({
     actionTimeout: 10000,
   },
   projects: [
-    // Runs auth.setup.ts once — logs in each seed user and saves storage state
+    // Runs auth.setup.ts once — logs in each seed user and saves storage state.
+    // Run sequentially: parallel logins against the same dev server exhaust DB/auth and flake.
     {
       name: 'setup',
       testMatch: /auth\.setup/,
+      fullyParallel: false,
+      workers: 1,
     },
     {
       name: 'chromium',

@@ -11,13 +11,12 @@ interface MacroInputCardProps {
   unit: string;
   bgClass?: string;
   textClass?: string;
-  borderClass?: string;
   inputTestId?: string;
 }
 
 /**
- * Styled macro input card with tinted background, colored label, and left accent border.
- * Pass bgClass/textClass/borderClass from MACRO_CELL_BG/TEXT/BORDER constants for colored variants.
+ * Styled macro input card with tinted background and colored label.
+ * Pass bgClass/textClass from MACRO_CELL_BG/TEXT for colored variants.
  * Omit them to render the neutral (calories) style.
  */
 export function MacroInputCard({
@@ -27,7 +26,6 @@ export function MacroInputCard({
   unit,
   bgClass,
   textClass,
-  borderClass,
   inputTestId,
 }: MacroInputCardProps) {
   return (
@@ -35,8 +33,6 @@ export function MacroInputCard({
       className={cn(
         'rounded-xl border p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 min-w-0',
         bgClass ?? 'bg-background border-border/20',
-        borderClass && 'border-l-4',
-        borderClass,
       )}
     >
       <span className={cn('text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate', textClass ?? 'text-muted-foreground')}>

@@ -158,7 +158,11 @@ export function FoodModal({
     }
     setIsSubmitting(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, 'foodDetail' in mode ? mode.foodDetail.id : '']);
+  }, [
+    open,
+    'foodDetail' in mode ? mode.foodDetail.id : '',
+    mode.kind !== 'ingredient' && 'initialMealType' in mode ? mode.initialMealType : '',
+  ]);
 
   // Measures list
   const measures: QuantityMeasure[] = useMemo(() => {
@@ -250,7 +254,7 @@ export function FoodModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
         data-testid="food-add-modal"
-        className="p-0 gap-0 max-w-85 max-h-[90vh] flex flex-col overflow-hidden"
+        className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] p-0 gap-0 max-h-[calc(100dvh-2rem-env(safe-area-inset-top))] sm:w-[min(36rem,calc(100vw-2rem))] sm:max-w-[36rem] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
         <VisuallyHidden><DialogTitle>{name}</DialogTitle></VisuallyHidden>
 

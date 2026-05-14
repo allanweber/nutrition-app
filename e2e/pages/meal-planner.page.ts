@@ -207,6 +207,18 @@ export class MealPlannerPage {
     return this.page.getByTestId(`copy-from-day-${n}`);
   }
 
+  copyMealBtn(mealId: string): Locator {
+    return this.page.getByTestId(`copy-meal-btn-${mealId}`);
+  }
+
+  copyMealPopover(): Locator {
+    return this.page.getByTestId('copy-meal-popover');
+  }
+
+  copyToMealType(mealType: string): Locator {
+    return this.page.getByTestId(`copy-to-meal-type-${mealType}`);
+  }
+
   // ── Bulk ID helpers ───────────────────────────────────────
 
   async getPlanCardIds(): Promise<string[]> {

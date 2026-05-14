@@ -1,11 +1,19 @@
-import { expect, test, type Page } from '@playwright/test';
-import { format, startOfWeek } from 'date-fns';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { addDays, format, startOfWeek } from 'date-fns';
 import { AUTH_FILES } from './fixtures/test-data';
 import { FoodLogPage } from './pages/food-log.page';
 
-test.describe.configure({ mode: 'serial' });
-
-const plannerDate = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+function plannerDateForTest(testInfo: TestInfo): string {
+  const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const s = testInfo.titlePath.join('|');
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  // App `getDbDayOfWeek` uses ISO Mon=1 … Sun=7. Seeded weight-loss plan rows use 1–6 only
+  // (dayOfWeek=0 in seed is unused; nothing is stored as 7). Avoid Sunday so the day has plan slots.
+  return format(addDays(monday, h % 6), 'yyyy-MM-dd');
+}
 
 async function freezeClientTimeAfter18(page: Page, dateStr: string) {
   await page.addInitScript(({ isoString }) => {
@@ -69,6 +77,7 @@ test.describe('Meal planner integration banner and actions', () => {
   test.use({ storageState: AUTH_FILES.testUser });
 
   test.beforeEach(async ({ page }) => {
+    const plannerDate = plannerDateForTest(test.info());
     const foodLogPage = new FoodLogPage(page);
     await freezeClientTimeAfter18(page, plannerDate);
     await foodLogPage.goto(plannerDate);
@@ -78,6 +87,7 @@ test.describe('Meal planner integration banner and actions', () => {
   });
 
   test('shows the planner banner and persists dismissal for the selected date', async ({ page }) => {
+    const plannerDate = plannerDateForTest(test.info());
     const foodLogPage = new FoodLogPage(page);
     await clearFoodLogsForDate(page, plannerDate);
     await foodLogPage.goto(plannerDate);
@@ -97,8 +107,8 @@ test.describe('Meal planner integration banner and actions', () => {
   });
 
   test('add-all logs the plan and hides planner prompts once covered', async ({ page }) => {
+    const plannerDate = plannerDateForTest(test.info());
     const foodLogPage = new FoodLogPage(page);
-    await clearFoodLogsForDate(page, plannerDate);
     await foodLogPage.goto(plannerDate);
     await clearBannerDismissState(page);
     await page.reload();
@@ -119,8 +129,8 @@ test.describe('Meal planner integration banner and actions', () => {
   });
 
   test('per-meal log plan hides that meal addon once planned foods are logged', async ({ page }) => {
+    const plannerDate = plannerDateForTest(test.info());
     const foodLogPage = new FoodLogPage(page);
-    await clearFoodLogsForDate(page, plannerDate);
     await foodLogPage.goto(plannerDate);
     await clearBannerDismissState(page);
     await page.reload();
@@ -144,8 +154,9 @@ test.describe('Meal planner integration without active plan', () => {
   test.use({ storageState: AUTH_FILES.generalHealth });
 
   test('does not show the banner or meal addons', async ({ page }) => {
+    const plannerMonday = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
     const foodLogPage = new FoodLogPage(page);
-    await foodLogPage.goto(plannerDate);
+    await foodLogPage.goto(plannerMonday);
 
     await expect(foodLogPage.mealPlanBanner).not.toBeVisible();
     await expect(page.locator('[data-testid^="meal-plan-addon-"]')).toHaveCount(0);

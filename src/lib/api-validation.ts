@@ -80,7 +80,20 @@ export const updateFoodLogSchema = z.object({
       'Quantity must be between 0.01 and 100,000',
     ),
   altMeasureId: z.string().uuid('altMeasureId must be a valid UUID').optional().nullable(),
-  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(), // Subset of mealTypeEnum
+  mealType: z
+    .enum([
+      'breakfast',
+      'lunch',
+      'dinner',
+      'snack',
+      'morning_snack',
+      'afternoon_snack',
+      'evening_snack',
+      'pre_workout',
+      'post_workout',
+      'other',
+    ])
+    .optional(),
   consumedAt: z
     .string()
     .optional()
@@ -213,6 +226,10 @@ export const updateMealItemSchema = z.object({
 export const copyDaySchema = z.object({
   fromDay: dayOfWeekSchema,
   toDay: dayOfWeekSchema,
+});
+
+export const copyMealSchema = z.object({
+  toMealType: mealTypeSchema,
 });
 
 export const logFromPlanSchema = z.discriminatedUnion('mode', [

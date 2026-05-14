@@ -19,7 +19,6 @@ import { resizeForUpload } from '@/lib/image-resize';
 import { cn } from '@/lib/utils';
 import {
   MACRO_CELL_BG,
-  MACRO_CELL_BORDER,
   MACRO_CELL_TEXT,
 } from '@/lib/nutrition-constants';
 import { MacroInputCard } from '@/components/macro-input-card';
@@ -387,7 +386,6 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   unit="g"
                   bgClass={cn(MACRO_CELL_BG.protein, 'border-border')}
                   textClass={MACRO_CELL_TEXT.protein}
-                  borderClass={MACRO_CELL_BORDER.protein}
                 />
               )}
             </form.Field>
@@ -404,7 +402,6 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   unit="g"
                   bgClass={cn(MACRO_CELL_BG.carbs, 'border-border')}
                   textClass={MACRO_CELL_TEXT.carbs}
-                  borderClass={MACRO_CELL_BORDER.carbs}
                 />
               )}
             </form.Field>
@@ -421,7 +418,6 @@ export function CustomFoodForm({ foodId, initialFood }: CustomFoodFormProps) {
                   unit="g"
                   bgClass={cn(MACRO_CELL_BG.fat, 'border-border')}
                   textClass={MACRO_CELL_TEXT.fat}
-                  borderClass={MACRO_CELL_BORDER.fat}
                 />
               )}
             </form.Field>

@@ -15,7 +15,7 @@ export async function HydrationSection({ date }: HydrationSectionProps) {
 
   return (
     <BentoCell className="min-h-[280px]">
-      <HydrationContent data={data} />
+      <HydrationContent date={date} initialData={data} />
     </BentoCell>
   );
 }

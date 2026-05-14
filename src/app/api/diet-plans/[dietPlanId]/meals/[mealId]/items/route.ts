@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/session';
 import { db } from '@/server/db';
 import { dietPlanMealItems, dietPlanMeals, dietPlans, foodAltMeasures, foodPhotos, foods } from '@/server/db/schema';
 import { addMealItemSchema, validateRequestBody } from '@/lib/api-validation';
-import { calculateItemMacros, toNumber } from '@/server/services/diet-plan.service';
+import { calculateItemMacros, formatAltMeasureLabel, toNumber } from '@/server/services/diet-plan.service';
 
 type Params = { params: Promise<{ dietPlanId: string; mealId: string }> };
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       : quantity;
     const macros = calculateItemMacros(food, qGrams);
     const altMeasureLabel = altMeasure
-      ? `${toNumber(altMeasure.qty)} ${altMeasure.measure} (${Math.round(toNumber(altMeasure.servingWeight))}g)`
+      ? formatAltMeasureLabel(quantity, altMeasure.measure, altMeasure.servingWeight)
       : null;
 
     return NextResponse.json(

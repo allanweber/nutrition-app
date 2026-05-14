@@ -134,6 +134,26 @@ Notes:
 - For dialogs/drawers, use shadcn `Dialog`/`Sheet` patterns.
 - For charts, use the existing Recharts usage in `src/components/charts/**` and keep charts as client components.
 
+## Design context + Impeccable guardrails (slice)
+
+**Canonical design brief** (users, brand personality, aesthetic direction, principles, component/token notes): read **`.impeccable.md`** before substantial UI or visual work. This section duplicates only what agents must not miss when editing code.
+
+**Macro fill bars**: use **`MacroFillTrack`** (`src/components/macro-fill-track.tsx`) for horizontal macro fills (transform `scaleX`, not animated `width`), or **`ProgressBar`** (`src/components/dashboard/shared/progress-bar.tsx`) for labeled goal rows (it composes `MacroFillTrack`). Prefer **`MACRO_COLORS` / `MACRO_CELL_FILL`** from `nutrition-constants.ts` for `fillClassName`.
+
+**Tokens**: `src/app/globals.css` is the source of truth for semantic colors. Nutrition Pulse uses **`--nutrition-pulse-*`** variables there; tune Pulse light/dark appearance via those variables, not ad hoc hex in components.
+
+**Nutrition constants** (`src/lib/nutrition-constants.ts`): meal-type and macro colors must come from this file. **`MACRO_CELL_BORDER` was removed** — do not reintroduce thick **left/right colored border stripes** on cards, lists, macro inputs, or callouts (reads as generic admin UI). Use tints, full borders, pills, or typographic emphasis instead.
+
+**Banned patterns** (Impeccable / anti-slop): no **gradient text** (`background-clip: text` + gradient fill). Avoid cliché cyan‑on‑dark / purple‑blue gradient heroes / neon glow as the primary brand.
+
+**Motion**: prefer **transform** and **opacity**; avoid animating layout when there is a compositor alternative (e.g. macro bars: **`scaleX`** from `origin-left`, not animated `width`). Respect **`prefers-reduced-motion`** (`globals.css`).
+
+**Charts / rings (a11y)**: decorative `<svg>` → `aria-hidden`; parent **`role="img"`** + concise **`aria-label`** with the same numbers the graphic conveys; hide redundant overlaid numbers from assistive tech with **`aria-hidden`** on that overlay so labels are not doubled.
+
+**Touch targets**: aim for **~44×44px** minimum on important icon actions in dense mobile UI (e.g. `min-h-11 min-w-11`, `size-10`) where default `size="icon"` is too small.
+
+**Fonts**: **Manrope** (headlines) + **Inter** (body) in `src/app/layout.tsx`. Replacing Inter is a deliberate, repo-wide branding change (not a drive-by edit).
+
 ## Database Guidance (Drizzle + Postgres)
 
 - Schema changes belong in `src/server/db/schema.ts`.

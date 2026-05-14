@@ -5,9 +5,6 @@ import { GoalsPage } from './pages/goals.page';
 // All tests in this file use the generalHealth seed user
 test.use({ storageState: AUTH_FILES.generalHealth });
 
-// Tests mutate the same user's goals — run serially to avoid DB conflicts
-test.describe.configure({ mode: 'serial' });
-
 // ── BMR/TDEE expected values for default wizard inputs ────────────────────────
 // Male, 25 y/o, 75 kg, 170 cm, moderate (1.55), maintenance, balanced preset
 //   BMR  = 10×75 + 6.25×170 − 5×25 + 5 = 1692.5
@@ -187,6 +184,9 @@ test.describe('014: Wizard BMR/TDEE calculation', () => {
 // ── Block 4: Wizard — save & persist ─────────────────────────────────────────
 
 test.describe('014: Wizard save', () => {
+  // Two tests persist goals to the same user — run sequentially.
+  test.describe.configure({ mode: 'serial' });
+
   test('saving plan redirects to /dashboard', async ({ page }) => {
     const gp = new GoalsPage(page);
     await gp.goto();

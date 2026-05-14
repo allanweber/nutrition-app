@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +42,20 @@ export function PlanOptionsMenu({
   testIdPrefix = 'plan',
 }: PlanOptionsMenuProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [inlineConfirmOpen, setInlineConfirmOpen] = useState(false);
+  const [useInlineDeleteConfirm, setUseInlineDeleteConfirm] = useState(false);
   const plansQuery = useDietPlansQuery();
   const updateMutation = useUpdateDietPlanMutation();
   const deleteMutation = useDeleteDietPlanMutation();
   const { activate, conflict } = useActivatePlan();
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setUseInlineDeleteConfirm(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   async function handleStatusChange(status: 'active' | 'draft' | 'archived') {
     if (status === plan.status) return;
@@ -61,64 +71,112 @@ export function PlanOptionsMenu({
 
   async function handleDelete() {
     await deleteMutation.mutateAsync(plan.id);
+    setInlineConfirmOpen(false);
     setDeleteDialogOpen(false);
     onDeleted?.(plan.id);
   }
 
+  function handleDeleteRequest() {
+    if (useInlineDeleteConfirm) {
+      setInlineConfirmOpen(true);
+      return;
+    }
+
+    setDeleteDialogOpen(true);
+  }
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          asChild
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
+      {inlineConfirmOpen ? (
+        <div className="hidden lg:flex items-center gap-1.5 shrink-0" role="group" aria-label={`Confirm deletion of ${plan.name}`}>
           <Button
-            data-testid={`${testIdPrefix}-menu-trigger-${plan.id}`}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 -mr-1.5 text-muted-foreground"
+            variant="destructive"
+            size="sm"
+            data-testid="plan-delete-confirm"
+            disabled={deleteMutation.isPending}
+            onClick={(event) => {
+              event.stopPropagation();
+              void handleDelete();
+            }}
+            className="text-xs h-auto py-1.5 px-3 rounded-full"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            {deleteMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <DropdownMenuItem
-            data-testid={`${testIdPrefix}-menu-set-active-${plan.id}`}
-            disabled={plan.status === 'active'}
-            onSelect={() => handleStatusChange('active')}
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="plan-delete-cancel"
+            disabled={deleteMutation.isPending}
+            onClick={(event) => {
+              event.stopPropagation();
+              setInlineConfirmOpen(false);
+            }}
+            className="text-xs h-auto py-1.5 px-3 rounded-full"
           >
-            Set Active
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            data-testid={`${testIdPrefix}-menu-set-draft-${plan.id}`}
-            disabled={plan.status === 'draft'}
-            onSelect={() => handleStatusChange('draft')}
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            asChild
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
-            Set Draft
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            data-testid={`${testIdPrefix}-menu-archive-${plan.id}`}
-            disabled={plan.status === 'archived'}
-            onSelect={() => handleStatusChange('archived')}
+            <Button
+              data-testid={`${testIdPrefix}-menu-trigger-${plan.id}`}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 -mr-1.5 text-muted-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
-            Archive
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            data-testid={`${testIdPrefix}-menu-delete-${plan.id}`}
-            className="text-destructive focus:text-destructive"
-            onSelect={() => setDeleteDialogOpen(true)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-set-active-${plan.id}`}
+              disabled={plan.status === 'active'}
+              onSelect={() => handleStatusChange('active')}
+            >
+              Set Active
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-set-draft-${plan.id}`}
+              disabled={plan.status === 'draft'}
+              onSelect={() => handleStatusChange('draft')}
+            >
+              Set Draft
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-archive-${plan.id}`}
+              disabled={plan.status === 'archived'}
+              onSelect={() => handleStatusChange('archived')}
+            >
+              Archive
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-delete-${plan.id}`}
+              className="text-destructive focus:text-destructive"
+              onSelect={handleDeleteRequest}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       {conflict && (
         <AlertDialog open>
@@ -150,9 +208,17 @@ export function PlanOptionsMenu({
             <AlertDialogAction
               data-testid="plan-delete-confirm"
               onClick={handleDelete}
+              disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

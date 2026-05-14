@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { ChefHat, ChevronDown, ChevronRight, Loader2, Trash2, Utensils, UtensilsCrossed } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -17,9 +17,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MEAL_TYPE_COLORS, MEAL_TYPE_LABELS, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 import { MealItemRow } from './meal-item-row';
+import { CopyMealPopover } from './copy-meal-popover';
 import type { DietPlanMealDTO, MealItemDTO } from '@/server/services/diet-plan.service';
 
 interface MealCardProps {
+  planId: string;
   meal: DietPlanMealDTO;
   isDeleting?: boolean;
   defaultCollapsed?: boolean;
@@ -112,7 +114,7 @@ function DishGroupRow({ group }: { group: DishGroup }) {
       </Button>
 
       {expanded && (
-        <div className="pl-8 divide-y divide-border/20 border-l-2 border-violet-200/60 ml-2.5 mb-1">
+        <div className="ml-2 mb-1 rounded-lg border border-violet-200/50 bg-violet-50/40 py-0.5 pl-4 pr-2 divide-y divide-border/20 dark:border-violet-800/30 dark:bg-violet-950/25">
           {group.items.map((item) => (
             <MealItemRow key={item.id} item={item} />
           ))}
@@ -122,11 +124,13 @@ function DishGroupRow({ group }: { group: DishGroup }) {
   );
 }
 
-export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultCollapsed = false, onEdit, onDelete }: MealCardProps) {
+export function MealCard({ planId, meal, isDeleting = false, onEdit, onDelete }: MealCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [inlineConfirmOpen, setInlineConfirmOpen] = useState(false);
   // Mobile: always start collapsed (desktop is forced open via isDesktop below).
   const [isOpen, setIsOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [useInlineDeleteConfirm, setUseInlineDeleteConfirm] = useState(false);
   const iconColors = MEAL_TYPE_COLORS[meal.mealType] ?? 'bg-muted text-muted-foreground';
   const label = (MEAL_TYPE_LABELS[meal.mealType] ?? meal.mealType).toUpperCase();
 
@@ -140,6 +144,25 @@ export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultC
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setUseInlineDeleteConfirm(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const handleDeleteRequest = (event: MouseEvent) => {
+    event.stopPropagation();
+
+    if (useInlineDeleteConfirm) {
+      setInlineConfirmOpen(true);
+      return;
+    }
+
+    setConfirmOpen(true);
+  };
 
   return (
     <>
@@ -162,18 +185,51 @@ export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultC
                 <Utensils className="h-5 w-5" />
               </div>
               <span className="text-xs font-bold uppercase tracking-widest text-foreground flex-1">{label}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                data-testid={`meal-delete-btn-${meal.id}`}
-                onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
-                disabled={isDeleting}
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                aria-label={`Delete ${label} meal`}
-              >
-                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              </Button>
+              {inlineConfirmOpen ? (
+                <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label={`Confirm deletion of ${label} meal`}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete();
+                    }}
+                    data-testid="meal-delete-confirm"
+                    className="text-xs h-auto py-1.5 px-3 rounded-full"
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setInlineConfirmOpen(false);
+                    }}
+                    className="text-xs h-auto py-1.5 px-3 rounded-full"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <CopyMealPopover planId={planId} meal={meal} />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    data-testid={`meal-delete-btn-${meal.id}`}
+                    onClick={handleDeleteRequest}
+                    disabled={isDeleting}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    aria-label={`Delete ${label} meal`}
+                  >
+                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <CollapsibleTrigger asChild disabled={isDeleting}>
@@ -193,7 +249,7 @@ export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultC
                   variant="ghost"
                   size="icon"
                   data-testid={`meal-delete-btn-${meal.id}`}
-                  onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
+                  onClick={handleDeleteRequest}
                   disabled={isDeleting}
                   className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                   aria-label={`Delete ${label} meal`}
@@ -222,6 +278,12 @@ export function MealCard({ meal, isDeleting = false, defaultCollapsed: _defaultC
                 </div>
               )}
             </div>
+
+            {!isDesktop && (
+              <div className="flex justify-end px-5 py-1.5 border-t border-border/20" onClick={(e) => e.stopPropagation()}>
+                <CopyMealPopover planId={planId} meal={meal} />
+              </div>
+            )}
 
             <div className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto">
               <div className="flex flex-col px-5 py-3 flex-1">

@@ -76,17 +76,18 @@ export function usePlanMealsForDate(dateStr: string) {
   )
 
   const mealsQuery = useDietPlanMealsQuery(activePlan?.id ?? null)
+  const meals = mealsQuery.data?.meals
 
   const planMealsByMealType = useMemo<Partial<Record<MealType, DietPlanMealDTO>>>(() => {
-    if (!mealsQuery.data?.meals?.length) return {}
+    if (!meals?.length) return {}
 
     const dayOfWeek = getDbDayOfWeek(dateStr)
-    const entries = mealsQuery.data.meals
+    const entries = meals
       .filter((meal) => meal.dayOfWeek === dayOfWeek && isMealType(meal.mealType))
       .map((meal) => [meal.mealType, meal] as const)
 
     return Object.fromEntries(entries) as Partial<Record<MealType, DietPlanMealDTO>>
-  }, [dateStr, mealsQuery.data?.meals])
+  }, [dateStr, meals])
 
   return {
     activePlan,
@@ -370,6 +371,33 @@ export function useDeleteDishGroupFromMealMutation() {
       return res.json()
     },
     onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
+    },
+  })
+}
+
+export function useCopyMealMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ planId, mealId, toMealType }: {
+      planId: string
+      mealId: string
+      toMealType: string
+    }): Promise<{ meals: DietPlanMealDTO[] }> => {
+      const res = await fetch(`/api/diet-plans/${planId}/meals/${mealId}/copy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toMealType }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to copy meal')
+      }
+      return res.json()
+    },
+    onSuccess: (data, vars) => {
+      qc.setQueryData(dietPlanKeys.meals(vars.planId), data)
       qc.invalidateQueries({ queryKey: dietPlanKeys.all, exact: true })
       qc.invalidateQueries({ queryKey: dietPlanKeys.meals(vars.planId) })
     },

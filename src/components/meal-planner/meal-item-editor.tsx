@@ -99,7 +99,7 @@ export function MealItemEditor({ item, index, onChange, onRemove }: MealItemEdit
 
       {/* Quantity + unit selector + remove button — always same row */}
       <div className="w-full sm:w-auto flex items-center gap-2">
-        <div className="flex-1 sm:flex-none sm:w-56 min-w-0">
+        <div className="flex-1 min-w-0">
           <QuantityUnitInput
             measures={item.measures}
             selectedMeasureId={item.selectedMeasureId}

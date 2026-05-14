@@ -4,7 +4,8 @@ import { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MACRO_COLORS, MACRO_CELL_FILL } from '@/lib/nutrition-constants';
+import { MACRO_COLORS, MACRO_CELL_FILL, MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -54,9 +55,13 @@ function DayMacroSummary({ plan, dayMeals }: { plan: DietPlanDTO; dayMeals: Diet
               <span className="text-[11px] font-bold uppercase tracking-widest w-16 shrink-0 text-muted-foreground whitespace-nowrap">
                 {label}
               </span>
-              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className={cn('h-full rounded-full transition-all', barClass)} style={{ width: `${pct}%` }} />
-              </div>
+              <MacroFillTrack
+                className="flex-1"
+                heightClassName="h-1.5"
+                percent={pct}
+                fillClassName={barClass}
+                trackClassName="bg-muted"
+              />
               <span className="text-[11px] tabular-nums text-muted-foreground w-22 text-right shrink-0 whitespace-nowrap">
                 <span className="font-semibold text-foreground">{Math.round(value)}</span>
                 {unit} / {target ? `${Math.round(target)}${unit}` : '—'}
@@ -103,7 +108,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
   return (
     <>
       {/* Mobile layout */}
-      <div className="md:hidden mb-4">
+      <div className="lg:hidden mb-4">
         <div className="relative">
           {canScrollLeft && (
             <button
@@ -116,29 +121,31 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
 
           <div
             ref={dayScrollRef}
-            className="flex gap-1.5 overflow-x-auto scrollbar-none px-1 pb-1"
+            className="w-full overflow-x-auto scrollbar-none px-1 pb-1"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {DAY_LABELS.map((label, idx) => {
-              const day = idx + 1;
-              const isSelected = day === selectedDay;
-              return (
-                <button
-                  key={day}
-                  data-testid={`mobile-day-button-${day}`}
-                  onClick={() => onSelectDay(day)}
-                  style={{ scrollSnapAlign: 'start' }}
-                  className={cn(
-                    'shrink-0 h-10 px-4 min-w-16 rounded-full text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer',
-                    isSelected
-                      ? 'bg-day-selected text-white'
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
+            <div className="flex w-max mx-auto gap-1.5">
+              {DAY_LABELS.map((label, idx) => {
+                const day = idx + 1;
+                const isSelected = day === selectedDay;
+                return (
+                  <button
+                    key={day}
+                    data-testid={`mobile-day-button-${day}`}
+                    onClick={() => onSelectDay(day)}
+                    style={{ scrollSnapAlign: 'start' }}
+                    className={cn(
+                      'shrink-0 h-10 px-4 min-w-16 rounded-full border text-sm font-bold uppercase tracking-wide transition-colors cursor-pointer',
+                      isSelected
+                        ? 'border-border bg-primary/10 text-foreground dark:bg-secondary'
+                        : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {canScrollRight && (
@@ -158,7 +165,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
       </div>
 
       {/* Desktop layout — unchanged */}
-      <div data-testid="day-selector" className="hidden md:flex mb-6 flex-wrap justify-between gap-2">
+      <div data-testid="day-selector" className="hidden lg:flex mb-6 flex-wrap justify-between gap-2">
         {DAY_LABELS.map((label, idx) => {
           const day = idx + 1;
           const dayMeals = meals.filter((m) => m.dayOfWeek === day);
@@ -176,6 +183,7 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
           const isSelected = day === selectedDay;
 
           const macroPcts = { protein: proteinPct, carbs: carbsPct, fat: fatPct };
+          const macroVals = { protein, carbs, fat };
 
           return (
             <Button
@@ -184,44 +192,65 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
               onClick={() => onSelectDay(day)}
               variant="ghost"
               className={cn(
-                'flex flex-col gap-2 p-3 rounded-xl border h-auto min-w-20 flex-1 items-start justify-start text-left',
+                'flex flex-col gap-2 p-3 rounded-xl border h-auto min-w-20 flex-1 items-start justify-start text-left overflow-hidden whitespace-normal',
                 isSelected
-                  ? 'bg-day-selected border-day-selected text-white hover:bg-day-selected'
+                  ? 'border-border bg-primary/10 hover:bg-primary/[0.12] dark:bg-secondary dark:hover:bg-secondary/90'
                   : 'border-border bg-background hover:border-border/80 hover:bg-muted/30',
               )}
             >
-              <span className={cn('uppercase text-xs font-semibold tracking-wide', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+              <span className="uppercase text-xs font-semibold tracking-wide text-muted-foreground">
                 {label}
               </span>
 
               <div className="flex items-baseline justify-between gap-1">
-                <p data-testid={`day-calories-${day}`} className={cn('text-sm font-bold leading-tight', isSelected ? 'text-white' : 'text-foreground')}>
+                <p data-testid={`day-calories-${day}`} className="text-sm font-bold leading-tight text-foreground">
                   {isEmpty ? '0' : Math.round(calories).toLocaleString()}
-                  <span className={cn('text-[10px] font-normal ml-0.5', isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>kcal</span>
+                  <span className="text-[10px] font-normal ml-0.5 text-muted-foreground">kcal</span>
                 </p>
                 {isSelected && !isEmpty && (
-                  <span className="text-[10px] font-semibold text-primary-foreground/70 shrink-0">Active</span>
-                )}
-                {!isSelected && !isEmpty && (
-                  <span className="text-[10px] font-medium text-primary shrink-0">{Math.round(calPct)}%</span>
+                  <span className="text-[10px] font-semibold text-primary shrink-0">Active</span>
                 )}
                 {!isSelected && isEmpty && (
                   <span className="text-[10px] font-medium text-muted-foreground shrink-0">Empty</span>
                 )}
               </div>
 
-              <div className="flex gap-1">
+              <div className="space-y-1.5 w-full">
                 {MACRO_BARS.map(({ key, label: macroLabel }) => (
-                  <div key={key} className="flex flex-col gap-0.5 flex-1">
-                    <div className={cn('h-1 w-full rounded-full overflow-hidden', isSelected ? 'bg-day-selected/40' : 'bg-muted')}>
+                  <div key={key} className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span
+                        className={cn(
+                          'text-[9px] uppercase font-medium tracking-wider',
+                          isSelected ? 'text-muted-foreground' : 'text-muted-foreground/60',
+                        )}
+                      >
+                        {macroLabel}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold tabular-nums',
+                          isSelected ? MACRO_TEXT_COLORS[key] : 'text-foreground',
+                        )}
+                      >
+                        {Math.round(macroVals[key])}
+                        <span className="font-normal text-muted-foreground">g</span>
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        'h-1 w-full rounded-full overflow-hidden',
+                        isSelected ? 'bg-primary/20' : 'bg-muted',
+                      )}
+                    >
                       <div
-                        className={cn('h-full rounded-full transition-all', isSelected ? 'bg-primary/80' : MACRO_COLORS[key])}
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          MACRO_COLORS[key],
+                        )}
                         style={{ width: `${macroPcts[key]}%` }}
                       />
                     </div>
-                    <span className={cn('text-[9px] uppercase font-medium tracking-wider', isSelected ? 'text-primary/80' : 'text-muted-foreground/60')}>
-                      {macroLabel}
-                    </span>
                   </div>
                 ))}
               </div>

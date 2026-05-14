@@ -1,3 +1,5 @@
+import { MacroFillTrack } from '@/components/macro-fill-track';
+
 interface ProgressBarProps {
   label: string;
   value: number;
@@ -21,19 +23,16 @@ export function ProgressBar({ label, value, goal, unit, color, percentage }: Pro
           <span className="text-muted-foreground">/{goal.toLocaleString()}{unit}</span>
         </span>
       </div>
-      <div
+      <MacroFillTrack
+        percent={pct}
+        fillClassName={color}
+        trackClassName="bg-border"
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={label}
-        className="h-2 w-full rounded-full bg-border overflow-hidden"
-      >
-        <div
-          className={`h-full rounded-full ${color} transition-all duration-500`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      />
     </div>
   );
 }

@@ -1,9 +1,29 @@
-import { expect, test } from '@playwright/test';
-import { seedUsers, testUser } from './fixtures/test-data';
+import { expect, test, type TestInfo } from '@playwright/test';
+import { format, subDays } from 'date-fns';
+import { AUTH_FILES, seedUsers, testUser } from './fixtures/test-data';
 import { FoodLogPage } from './pages/food-log.page';
 import { LoginPage } from './pages/login.page';
 
 test.describe('Phase 2: Food Logging', () => {
+  function foodLogIsoDate(testInfo: TestInfo): string {
+    const s = testInfo.titlePath.join('|');
+    let h = 0;
+    for (let i = 0; i < s.length; i += 1) {
+      h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    }
+    return format(subDays(new Date(), 1 + (h % 25)), 'yyyy-MM-dd');
+  }
+
+  async function clearFoodLogsForDate(page: import('@playwright/test').Page, date: string) {
+    const response = await page.request.get(`/api/food-logs?date=${date}`);
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    for (const log of body.logs as Array<{ id: string }>) {
+      const deleteResponse = await page.request.delete(`/api/food-logs/${log.id}`);
+      expect(deleteResponse.ok()).toBeTruthy();
+    }
+  }
+
   // Helper to login with seeded user
   async function loginAsTestUser(page: import('@playwright/test').Page) {
     const loginPage = new LoginPage(page);
@@ -212,15 +232,15 @@ test.describe('Phase 2: Food Logging', () => {
     });
   });
 
-  // These tests use mock Nutritionix data (USE_MOCK_NUTRITIONIX=true in playwright config)
-  // Serial mode: both tests mutate the same user's food log; parallel execution causes race conditions.
-  test.describe('Food Logging with Mock API', () => {
-    test.describe.configure({ mode: 'serial' });
+  // Mock FatSecret / food search — parallel-safe via isolated dates and users.
+  test.describe('Food Logging with Mock API — add', () => {
+    test.use({ storageState: AUTH_FILES.testUser });
     test('user can add food to log', async ({ page }) => {
-      await loginAsTestUser(page);
+      const logDate = foodLogIsoDate(test.info());
+      await clearFoodLogsForDate(page, logDate);
 
       const foodLogPage = new FoodLogPage(page);
-      await foodLogPage.goto();
+      await foodLogPage.goto(logDate);
 
       // Get initial count
       const initialCount = await foodLogPage.getFoodLogCount();
@@ -262,10 +282,11 @@ test.describe('Phase 2: Food Logging', () => {
       const newCount = await foodLogPage.getFoodLogCount();
       expect(newCount).toBeGreaterThan(initialCount);
     });
+  });
 
+  test.describe('Food Logging with Mock API — delete', () => {
+    test.use({ storageState: AUTH_FILES.muscleGain });
     test('user can delete food from log', async ({ page }) => {
-      await loginAsTestUser(page);
-
       const foodLogPage = new FoodLogPage(page);
       await foodLogPage.goto();
 
@@ -294,14 +315,16 @@ test.describe('Phase 2: Food Logging', () => {
         })
         .toBeLessThan(initialCount);
     });
+  });
 
-    test('daily totals update correctly after adding food', async ({
-      page,
-    }) => {
-      await loginAsTestUser(page);
+  test.describe('Food Logging with Mock API — daily totals', () => {
+    test.use({ storageState: AUTH_FILES.testUser });
+    test('daily totals update correctly after adding food', async ({ page }) => {
+      const logDate = foodLogIsoDate(test.info());
+      await clearFoodLogsForDate(page, logDate);
 
       const foodLogPage = new FoodLogPage(page);
-      await foodLogPage.goto();
+      await foodLogPage.goto(logDate);
 
       // Get initial calories
       const initialCalories = await foodLogPage.getCaloriesTotal();
@@ -332,7 +355,9 @@ test.describe('Phase 2: Food Logging', () => {
       const newCalories = await foodLogPage.getCaloriesTotal();
       expect(newCalories).toBeLessThanOrEqual(initialCalories);
     });
+  });
 
+  test.describe('Food Logging with Mock API — multiple meals', () => {
     test('can add multiple foods to different meals', async ({ page }) => {
       await loginAsFreshUser(page); // Use fresh user for predictable state
 
