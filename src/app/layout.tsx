@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "@/components/providers";
@@ -21,7 +21,27 @@ export const metadata: Metadata = {
     default: "Vitalis",
     template: "%s | Vitalis",
   },
-  description: "Track your nutrition, set goals, and achieve a healthier lifestyle with personalized calorie and macro tracking.",
+  description:
+    "Track your nutrition, set goals, and achieve a healthier lifestyle with personalized calorie and macro tracking.",
+  applicationName: "Vitalis",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Vitalis",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2d5a27",
 };
 
 export default function RootLayout({

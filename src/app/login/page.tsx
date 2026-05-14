@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
+import { VitalisMark } from '@/components/vitalis-mark';
 import { useState } from 'react';
 
 export default function LoginPage() {
@@ -41,9 +42,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <Link href="/" className="relative z-10 flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">N</span>
-          </div>
+          <VitalisMark size={40} className="size-10 shrink-0 rounded-lg ring-2 ring-white/25" priority />
           <span className="text-xl font-bold text-white">
             Vitalis
           </span>

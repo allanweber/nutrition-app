@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Menu, X } from 'lucide-react';
+import { VitalisMark } from '@/components/vitalis-mark';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,12 +55,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <button type="button" onClick={scrollToTop} className="flex items-center space-x-2 cursor-pointer">
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-               <span className="text-primary-foreground font-black text-lg">V</span>
-             </div>
-             <span className="font-headline font-extrabold text-xl text-foreground">
-               Vitalis
-             </span>
+            <VitalisMark size={36} className="size-9 shrink-0 rounded-lg" priority />
+            <span className="font-headline font-extrabold text-xl text-foreground">
+              Vitalis
+            </span>
           </button>
 
           {/* Desktop Navigation */}

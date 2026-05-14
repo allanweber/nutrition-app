@@ -43,7 +43,23 @@ function getClientIp(request: NextRequest): string {
   );
 }
 
+/** PWA / favicon assets in `public/` must bypass auth middleware. */
+const PUBLIC_BRAND_PATHS = new Set([
+  '/favicon.ico',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
+  '/apple-touch-icon.png',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png',
+  '/logo.png',
+  '/site.webmanifest',
+]);
+
 export async function proxy(request: NextRequest) {
+  if (PUBLIC_BRAND_PATHS.has(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   // Rate limiting — checked BEFORE auth to avoid unnecessary session overhead
   if (isRateLimitedPath(request.nextUrl.pathname)) {
     const ip = getClientIp(request);

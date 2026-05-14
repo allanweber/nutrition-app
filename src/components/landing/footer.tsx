@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { VitalisMark } from '@/components/vitalis-mark';
 
 const footerLinks = {
   product: [
@@ -38,9 +39,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-black text-lg">V</span>
-              </div>
+              <VitalisMark size={32} className="size-8 shrink-0 rounded-lg" />
               <span className="font-headline font-extrabold text-xl text-foreground">Vitalis</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
