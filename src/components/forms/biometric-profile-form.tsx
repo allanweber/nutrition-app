@@ -91,9 +91,14 @@ export function BiometricProfileForm() {
       const res = await fetch('/api/profile', { credentials: 'include' });
       const json = (await res.json().catch(() => null)) as unknown;
       if (!res.ok) {
-        const message =
-          typeof (json as any)?.error === 'string' ? (json as any).error : 'Failed to fetch profile';
-        throw new Error(message);
+        const errMsg =
+          typeof json === 'object' &&
+          json !== null &&
+          'error' in json &&
+          typeof (json as { error: unknown }).error === 'string'
+            ? (json as { error: string }).error
+            : 'Failed to fetch profile';
+        throw new Error(errMsg);
       }
       return json as { profile: ProfileData };
     },

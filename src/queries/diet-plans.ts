@@ -76,17 +76,18 @@ export function usePlanMealsForDate(dateStr: string) {
   )
 
   const mealsQuery = useDietPlanMealsQuery(activePlan?.id ?? null)
+  const meals = mealsQuery.data?.meals
 
   const planMealsByMealType = useMemo<Partial<Record<MealType, DietPlanMealDTO>>>(() => {
-    if (!mealsQuery.data?.meals?.length) return {}
+    if (!meals?.length) return {}
 
     const dayOfWeek = getDbDayOfWeek(dateStr)
-    const entries = mealsQuery.data.meals
+    const entries = meals
       .filter((meal) => meal.dayOfWeek === dayOfWeek && isMealType(meal.mealType))
       .map((meal) => [meal.mealType, meal] as const)
 
     return Object.fromEntries(entries) as Partial<Record<MealType, DietPlanMealDTO>>
-  }, [dateStr, mealsQuery.data?.meals])
+  }, [dateStr, meals])
 
   return {
     activePlan,

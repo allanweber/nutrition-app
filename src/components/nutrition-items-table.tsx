@@ -508,6 +508,8 @@ export function NutritionItemsTable<T>({
     },
   ];
 
+  // TanStack Table returns unstable function refs; React Compiler skips memoization (expected).
+  // eslint-disable-next-line react-hooks/incompatible-library -- useReactTable API is incompatible with compiler memoization heuristics
   const table = useReactTable({
     data: items,
     columns,

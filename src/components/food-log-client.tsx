@@ -434,7 +434,7 @@ export default function FoodLogClient({
                             type="button"
                             variant="ghost"
                             onClick={toggleCollapse}
-                            className="flex items-center gap-2 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent group"
+                            className="flex items-center justify-start gap-2 flex-1 min-w-0 text-left h-auto p-0 rounded-none hover:bg-transparent group"
                             aria-expanded={!isCollapsed}
                           >
                             <ChefHat className="h-3.5 w-3.5 text-violet-500 shrink-0" aria-hidden />

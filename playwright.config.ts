@@ -20,10 +20,13 @@ export default defineConfig({
     actionTimeout: 10000,
   },
   projects: [
-    // Runs auth.setup.ts once — logs in each seed user and saves storage state
+    // Runs auth.setup.ts once — logs in each seed user and saves storage state.
+    // Run sequentially: parallel logins against the same dev server exhaust DB/auth and flake.
     {
       name: 'setup',
       testMatch: /auth\.setup/,
+      fullyParallel: false,
+      workers: 1,
     },
     {
       name: 'chromium',
