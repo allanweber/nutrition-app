@@ -1,6 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
+import type { MealType } from '@/lib/nutrition-constants';
 import { db } from '@/server/db';
 import {
   dietPlanMealItems,
@@ -448,7 +449,7 @@ export async function copyDay(
 export async function copyMeal(
   dietPlanId: string,
   fromMealId: string,
-  toMealType: string,
+  toMealType: MealType,
   userId: string,
   dbInstance = db,
 ): Promise<DietPlanMealDTO[]> {

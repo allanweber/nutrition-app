@@ -383,7 +383,7 @@ export function useCopyMealMutation() {
     mutationFn: async ({ planId, mealId, toMealType }: {
       planId: string
       mealId: string
-      toMealType: string
+      toMealType: MealType
     }): Promise<{ meals: DietPlanMealDTO[] }> => {
       const res = await fetch(`/api/diet-plans/${planId}/meals/${mealId}/copy`, {
         method: 'POST',
