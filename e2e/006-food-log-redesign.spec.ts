@@ -1,8 +1,39 @@
-import { expect, test } from '@playwright/test';
-import { seedUsers, testUser } from './fixtures/test-data';
+import { expect, test, type TestInfo } from '@playwright/test';
+import { AUTH_FILES, seedUsers, testUser } from './fixtures/test-data';
 import { FoodLogPage } from './pages/food-log.page';
 import { LoginPage } from './pages/login.page';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, subDays } from 'date-fns';
+
+const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+
+function isolatedLogDate(testInfo: TestInfo): string {
+  const s = testInfo.titlePath.join('|');
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return format(subDays(new Date(), 2 + (h % 20)), 'yyyy-MM-dd');
+}
+
+async function clearFoodLogsForDate(page: import('@playwright/test').Page, date: string) {
+  const response = await page.request.get(`/api/food-logs?date=${date}`);
+  expect(response.ok()).toBeTruthy();
+  const body = await response.json();
+  for (const log of body.logs as Array<{ id: string }>) {
+    const deleteResponse = await page.request.delete(`/api/food-logs/${log.id}`);
+    expect(deleteResponse.ok()).toBeTruthy();
+  }
+}
+
+async function findMealTypeWithLogs(foodLogPage: FoodLogPage): Promise<(typeof MEAL_TYPES)[number] | null> {
+  for (const mealType of MEAL_TYPES) {
+    const section = foodLogPage.mealSection(mealType);
+    if (!(await section.isVisible().catch(() => false))) continue;
+    const rowCount = await foodLogPage.mealRows(mealType).count();
+    if (rowCount > 0) return mealType;
+  }
+  return null;
+}
 
 function getDbDayOfWeek(date: Date) {
   const day = date.getUTCDay();
@@ -46,6 +77,15 @@ test.describe('006: Food Log Screen Redesign', () => {
 
   async function deletePlanViaApi(page: import('@playwright/test').Page, planId: string) {
     await page.request.delete(`/api/diet-plans/${planId}`);
+  }
+
+  async function deleteAllPlansViaApi(page: import('@playwright/test').Page) {
+    const res = await page.request.get('/api/diet-plans');
+    if (!res.ok()) return;
+    const body = await res.json();
+    for (const plan of (body.plans ?? []) as Array<{ id: string }>) {
+      await deletePlanViaApi(page, plan.id);
+    }
   }
 
   async function loginAsTestUser(page: import('@playwright/test').Page) {
@@ -317,6 +357,148 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
   });
 
+  test.describe('Meal Footer Summary', () => {
+    test('logged meal sections show footer with calories and macros', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      expect(await foodLogPage.getFoodLogCount()).toBeGreaterThan(0);
+
+      const mealType = await findMealTypeWithLogs(foodLogPage);
+      expect(mealType).not.toBeNull();
+
+      await foodLogPage.expandMealSection(mealType!);
+
+      await expect(foodLogPage.mealLogSummary(mealType!)).toBeVisible();
+      await expect(foodLogPage.mealLogSummary(mealType!)).toContainText('Total Calories');
+      await expect(foodLogPage.mealLogSummary(mealType!)).toContainText('Protein');
+      await expect(foodLogPage.mealLogSummary(mealType!)).toContainText('Carbs');
+      await expect(foodLogPage.mealLogSummary(mealType!)).toContainText('Fats');
+
+      await expect
+        .poll(async () => FoodLogPage.parseNutrientValue(await foodLogPage.mealLogTotalCalories(mealType!).textContent()))
+        .toBeGreaterThan(0);
+      await expect
+        .poll(async () => FoodLogPage.parseNutrientValue(await foodLogPage.mealLogTotalProtein(mealType!).textContent()))
+        .toBeGreaterThanOrEqual(0);
+      await expect
+        .poll(async () => FoodLogPage.parseNutrientValue(await foodLogPage.mealLogTotalCarbs(mealType!).textContent()))
+        .toBeGreaterThanOrEqual(0);
+      await expect
+        .poll(async () => FoodLogPage.parseNutrientValue(await foodLogPage.mealLogTotalFat(mealType!).textContent()))
+        .toBeGreaterThanOrEqual(0);
+    });
+
+    test('footer total calories match the meal header', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      const mealType = await findMealTypeWithLogs(foodLogPage);
+      expect(mealType).not.toBeNull();
+
+      await foodLogPage.expandMealSection(mealType!);
+
+      const headerKcal = FoodLogPage.parseNutrientValue(
+        await foodLogPage.mealHeaderCalories(mealType!).textContent(),
+      );
+      const footerKcal = FoodLogPage.parseNutrientValue(
+        await foodLogPage.mealLogTotalCalories(mealType!).textContent(),
+      );
+
+      expect(headerKcal).toBeGreaterThan(0);
+      expect(footerKcal).toBe(headerKcal);
+    });
+
+    test('footer is hidden when the meal section is collapsed', async ({ page }) => {
+      await loginAsTestUser(page);
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      const mealType = await findMealTypeWithLogs(foodLogPage);
+      expect(mealType).not.toBeNull();
+
+      await foodLogPage.expandMealSection(mealType!);
+      await expect(foodLogPage.mealLogSummary(mealType!)).toBeVisible();
+
+      await foodLogPage.collapseMealSection(mealType!);
+      await expect(foodLogPage.mealLogSummary(mealType!)).not.toBeVisible();
+    });
+
+    test('empty meal section does not show footer summary', async ({ page }) => {
+      await loginAsFreshUser(page);
+      const today = new Date();
+      const planId = await createPlanViaApi(page, {
+        name: `E2E Footer Empty Plan ${Date.now()}`,
+        targetCalories: 2000,
+        targetProtein: 150,
+        targetCarbs: 200,
+        targetFat: 70,
+        status: 'active',
+        startDate: today.toISOString(),
+      });
+
+      try {
+        await createMealViaApi(page, planId, 'breakfast', getDbDayOfWeek(today));
+
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto();
+
+        await expect(foodLogPage.mealSection('breakfast')).toBeVisible({ timeout: 10000 });
+        await foodLogPage.expandMealSection('breakfast');
+
+        await expect(page.getByTestId('meal-empty-placeholder-breakfast')).toBeVisible();
+        await expect(foodLogPage.mealLogSummary('breakfast')).not.toBeVisible();
+      } finally {
+        await deletePlanViaApi(page, planId);
+      }
+    });
+
+    test.describe('after adding food', () => {
+      test.use({ storageState: AUTH_FILES.testUser });
+
+      test('footer appears with non-zero calories', async ({ page }, testInfo) => {
+        const logDate = isolatedLogDate(testInfo);
+        await clearFoodLogsForDate(page, logDate);
+
+        const foodLogPage = new FoodLogPage(page);
+        await foodLogPage.goto(logDate);
+
+        await foodLogPage.searchInput.fill('apple');
+        await page.waitForTimeout(1500);
+        await expect(foodLogPage.searchResults).toBeVisible({ timeout: 10000 });
+
+        await page.getByTestId('food-result-item').first().click();
+        await expect(page.getByTestId('food-add-modal')).toBeVisible({ timeout: 5000 });
+        await foodLogPage.quantityInput.fill('100');
+        await foodLogPage.mealTypeSelect.click();
+        await page.getByRole('option', { name: /breakfast/i }).click();
+        await foodLogPage.addFoodButton.click();
+        await expect(page.getByTestId('food-add-modal')).not.toBeVisible({ timeout: 10000 });
+
+        await expect(foodLogPage.mealSection('breakfast')).toBeVisible({ timeout: 10000 });
+        await foodLogPage.expandMealSection('breakfast');
+        await expect(foodLogPage.mealRows('breakfast').first()).toBeVisible({ timeout: 10000 });
+
+        await expect(foodLogPage.mealLogSummary('breakfast')).toBeVisible();
+        await expect
+          .poll(async () =>
+            FoodLogPage.parseNutrientValue(await foodLogPage.mealLogTotalCalories('breakfast').textContent()),
+          )
+          .toBeGreaterThan(0);
+
+        const headerKcal = FoodLogPage.parseNutrientValue(
+          await foodLogPage.mealHeaderCalories('breakfast').textContent(),
+        );
+        const footerKcal = FoodLogPage.parseNutrientValue(
+          await foodLogPage.mealLogTotalCalories('breakfast').textContent(),
+        );
+        expect(footerKcal).toBe(headerKcal);
+      });
+    });
+  });
+
   test.describe('Quick Add Recent', () => {
     test('quick add section appears for seeded user with logs', async ({ page }) => {
       await loginAsTestUser(page);
@@ -521,6 +703,8 @@ test.describe('006: Food Log Screen Redesign', () => {
   });
 
   test.describe('Empty Meal Quick Add', () => {
+    test.describe.configure({ mode: 'serial' });
+
     async function createPlanWithMeal(
       page: import('@playwright/test').Page,
       mealType: string,
@@ -551,6 +735,7 @@ test.describe('006: Food Log Screen Redesign', () => {
 
     test('empty meal section renders a "Log {meal}" action button', async ({ page }) => {
       await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'breakfast');
 
       try {
@@ -571,6 +756,7 @@ test.describe('006: Food Log Screen Redesign', () => {
 
     test('clicking empty-state action opens search dialog targeted at that meal', async ({ page }) => {
       await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'lunch');
 
       try {
@@ -578,13 +764,15 @@ test.describe('006: Food Log Screen Redesign', () => {
         await foodLogPage.goto();
 
         await expect(page.getByTestId('meal-section-lunch')).toBeVisible({ timeout: 10000 });
-        await expandMealSection(page, 'lunch');
+        await foodLogPage.expandMealSection('lunch');
 
-        await page.getByTestId('meal-empty-add-lunch').click();
+        const addButton = page.getByTestId('meal-empty-add-lunch');
+        await expect(addButton).toBeVisible({ timeout: 5000 });
+        await addButton.scrollIntoViewIfNeeded();
+        await addButton.click();
 
-        const dialog = page.getByTestId('food-search-dialog');
-        await expect(dialog).toBeVisible({ timeout: 5000 });
-        await expect(dialog.getByRole('heading')).toContainText(/Add to Lunch/i);
+        await expect(foodLogPage.foodSearchDialog()).toBeVisible({ timeout: 10000 });
+        await expect(foodLogPage.foodSearchDialogTitle()).toHaveText(/Add to Lunch/i);
       } finally {
         await deletePlanViaApi(page, planId);
       }
@@ -592,6 +780,7 @@ test.describe('006: Food Log Screen Redesign', () => {
 
     test('selecting a food from the empty-state flow pre-fills the meal type', async ({ page }) => {
       await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'dinner');
 
       try {
@@ -622,6 +811,7 @@ test.describe('006: Food Log Screen Redesign', () => {
 
     test('dismissing the dialog clears the pending meal target', async ({ page }) => {
       await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'breakfast');
 
       try {
@@ -633,8 +823,8 @@ test.describe('006: Food Log Screen Redesign', () => {
 
         await page.getByTestId('meal-empty-add-breakfast').click();
         const dialog = page.getByTestId('food-search-dialog');
-        await expect(dialog).toBeVisible({ timeout: 5000 });
-        await expect(dialog.getByRole('heading')).toContainText(/Add to Breakfast/i);
+        await expect(dialog).toBeVisible({ timeout: 10000 });
+        await expect(page.getByTestId('food-search-dialog-title')).toHaveText(/Add to Breakfast/i);
 
         await page.keyboard.press('Escape');
         await expect(dialog).not.toBeVisible({ timeout: 3000 });

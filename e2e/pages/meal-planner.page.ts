@@ -167,6 +167,10 @@ export class MealPlannerPage {
     return this.page.getByTestId(`plan-menu-delete-${planId}`);
   }
 
+  planDeleteConfirmInCard(planId: string): Locator {
+    return this.planCard(planId).getByTestId('plan-delete-confirm');
+  }
+
   dayButton(n: number): Locator {
     return this.page.getByTestId(`day-button-${n}`);
   }

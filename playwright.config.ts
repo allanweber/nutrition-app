@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Test server runs on port 3002 to avoid conflicts with dev server on 3000
-const TEST_PORT = process.env.PORT || '3002';
+// Test server runs on port 3014 to avoid conflicts with dev server on 3000
+const TEST_PORT = process.env.PORT || '3014';
 const TEST_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || `http://localhost:${TEST_PORT}`;
 
 export default defineConfig({

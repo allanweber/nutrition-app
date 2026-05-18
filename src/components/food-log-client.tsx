@@ -10,7 +10,7 @@ import { FavoriteToggleButton } from '@/components/favorite-toggle-button';
 import { MealPlanAddon } from '@/components/food-log/meal-plan-addon';
 
 import { FoodLogEntry } from '@/types/food';
-import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, type MealType } from '@/lib/nutrition-constants';
+import { MEAL_TYPE_ORDER, MEAL_TYPE_LABELS, MEAL_TYPE_COLORS, MEAL_DOT_COLORS, MACRO_BADGE_COLORS, MACRO_TEXT_COLORS, type MealType } from '@/lib/nutrition-constants';
 import type { DietPlanMealDTO } from '@/server/services/diet-plan.service';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -407,6 +407,7 @@ export default function FoodLogClient({
                 ) : null}
               </div>
             ) : !isMealCollapsed ? (
+              <>
               <div className="divide-y divide-border/10">
                 {grouped.map((entry) => {
                   if (isDishGroup(entry)) {
@@ -589,6 +590,50 @@ export default function FoodLogClient({
                   />
                 ) : null}
               </div>
+
+              <div
+                className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30"
+                data-testid={`meal-log-summary-${mealType}`}
+              >
+                <div className="flex flex-col px-5 py-3 flex-1">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
+                  <span
+                    data-testid={`meal-log-total-calories-${mealType}`}
+                    className="text-base font-bold text-foreground"
+                  >
+                    {mealTotals.calories}{' '}
+                    <span className="text-xs font-normal text-muted-foreground">kcal</span>
+                  </span>
+                </div>
+                <div className="flex flex-col px-4 py-3">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
+                  <span
+                    data-testid={`meal-log-total-protein-${mealType}`}
+                    className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}
+                  >
+                    {Math.round(mealTotals.protein)}g
+                  </span>
+                </div>
+                <div className="flex flex-col px-4 py-3">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
+                  <span
+                    data-testid={`meal-log-total-carbs-${mealType}`}
+                    className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}
+                  >
+                    {Math.round(mealTotals.carbs)}g
+                  </span>
+                </div>
+                <div className="flex flex-col px-4 py-3">
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
+                  <span
+                    data-testid={`meal-log-total-fat-${mealType}`}
+                    className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}
+                  >
+                    {Math.round(mealTotals.fat)}g
+                  </span>
+                </div>
+              </div>
+              </>
             ) : null}
           </div>
         );

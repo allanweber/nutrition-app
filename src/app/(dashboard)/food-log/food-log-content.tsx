@@ -384,7 +384,10 @@ export function FoodLogContent() {
           ].join(' ')}
         >
           <DialogHeader className="shrink-0 border-0 px-4 pb-2 pt-4">
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle
+              className="flex items-center gap-2"
+              data-testid="food-search-dialog-title"
+            >
               <Search className="h-4 w-4" />
               {pendingMealType ? `Add to ${MEAL_TYPE_LABELS[pendingMealType]}` : 'Search foods'}
             </DialogTitle>

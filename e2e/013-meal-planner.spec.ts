@@ -42,6 +42,15 @@ async function deletePlanViaApi(page: Page, planId: string): Promise<void> {
   await page.request.delete(`/api/diet-plans/${planId}`);
 }
 
+async function deleteAllPlansViaApi(page: Page): Promise<void> {
+  const res = await page.request.get('/api/diet-plans');
+  if (!res.ok()) return;
+  const body = await res.json();
+  for (const plan of (body.plans ?? []) as Array<{ id: string }>) {
+    await deletePlanViaApi(page, plan.id);
+  }
+}
+
 async function createMealViaApi(
   page: Page,
   planId: string,
@@ -637,6 +646,7 @@ test.describe('013: Delete plan', () => {
 
   test.beforeEach(async ({ page }) => {
     mp = new MealPlannerPage(page);
+    await deleteAllPlansViaApi(page);
     planId = await createPlanViaApi(page, {
       name: 'Delete Me Plan',
       status: 'draft',
@@ -660,33 +670,32 @@ test.describe('013: Delete plan', () => {
   test('clicking Delete in dropdown opens confirmation AlertDialog', async () => {
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuDelete(planId).click();
-    await expect(mp.planDeleteConfirm).toBeVisible({ timeout: 5000 });
+    await expect(mp.planDeleteConfirmInCard(planId)).toBeVisible({ timeout: 5000 });
   });
 
   test('cancelling delete dialog keeps plan in carousel', async () => {
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuDelete(planId).click();
-    await expect(mp.planDeleteConfirm).toBeVisible({ timeout: 5000 });
-    await mp.planDeleteCancel.click();
+    await expect(mp.planDeleteConfirmInCard(planId)).toBeVisible({ timeout: 5000 });
+    await mp.planCard(planId).getByTestId('plan-delete-cancel').click();
     await expect(mp.planCard(planId)).toBeVisible({ timeout: 5000 });
   });
 
   test('confirming delete removes plan card from carousel', async () => {
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuDelete(planId).click();
-    await expect(mp.planDeleteConfirm).toBeVisible({ timeout: 5000 });
-    await mp.planDeleteConfirm.click();
+    await expect(mp.planDeleteConfirmInCard(planId)).toBeVisible({ timeout: 5000 });
+    await mp.planDeleteConfirmInCard(planId).click();
     await expect(mp.planCard(planId)).not.toBeVisible({ timeout: 10000 });
   });
 
   test('deleting the only plan shows empty state', async () => {
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuDelete(planId).click();
-    await expect(mp.planDeleteConfirm).toBeVisible({ timeout: 5000 });
-    await mp.planDeleteConfirm.click();
-    await expect
-      .poll(async () => mp.emptyState.isVisible().catch(() => false), { timeout: 15000 })
-      .toBe(true);
+    await expect(mp.planDeleteConfirmInCard(planId)).toBeVisible({ timeout: 5000 });
+    await mp.planDeleteConfirmInCard(planId).click();
+    await expect(mp.planCard(planId)).not.toBeVisible({ timeout: 10000 });
+    await expect(mp.emptyState).toBeVisible({ timeout: 15000 });
   });
 
   test('deleting selected plan auto-selects next plan if one exists', async ({ page }) => {
@@ -705,7 +714,7 @@ test.describe('013: Delete plan', () => {
     await expect(mp.daySelector).toBeVisible({ timeout: 5000 });
     await mp.planMenuTrigger(planId).click();
     await mp.planMenuDelete(planId).click();
-    await mp.planDeleteConfirm.click();
+    await mp.planDeleteConfirmInCard(planId).click();
     await expect(mp.planCard(planId)).not.toBeVisible({ timeout: 10000 });
     // DaySelector should still be visible (second plan auto-selected)
     await expect(mp.daySelector).toBeVisible({ timeout: 5000 });

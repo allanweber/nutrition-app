@@ -95,6 +95,62 @@ export class FoodLogPage {
     return this.mealSection(mealType).locator('[data-testid^="food-log-"]');
   }
 
+  mealToggle(mealType: string) {
+    return this.page.getByTestId(`meal-toggle-${mealType}`);
+  }
+
+  mealLogSummary(mealType: string) {
+    return this.page.getByTestId(`meal-log-summary-${mealType}`);
+  }
+
+  mealLogTotalCalories(mealType: string) {
+    return this.page.getByTestId(`meal-log-total-calories-${mealType}`);
+  }
+
+  mealLogTotalProtein(mealType: string) {
+    return this.page.getByTestId(`meal-log-total-protein-${mealType}`);
+  }
+
+  mealLogTotalCarbs(mealType: string) {
+    return this.page.getByTestId(`meal-log-total-carbs-${mealType}`);
+  }
+
+  mealLogTotalFat(mealType: string) {
+    return this.page.getByTestId(`meal-log-total-fat-${mealType}`);
+  }
+
+  mealHeaderCalories(mealType: string) {
+    return this.mealToggle(mealType).locator('.text-primary');
+  }
+
+  foodSearchDialog() {
+    return this.page.getByTestId('food-search-dialog');
+  }
+
+  foodSearchDialogTitle() {
+    return this.page.getByTestId('food-search-dialog-title');
+  }
+
+  async expandMealSection(mealType: string) {
+    const toggle = this.mealToggle(mealType);
+    if ((await toggle.getAttribute('aria-expanded')) === 'false') {
+      await toggle.click();
+    }
+  }
+
+  async collapseMealSection(mealType: string) {
+    const toggle = this.mealToggle(mealType);
+    if ((await toggle.getAttribute('aria-expanded')) === 'true') {
+      await toggle.click();
+    }
+  }
+
+  /** Parses the first number from text like "547 kcal" or "107g". */
+  static parseNutrientValue(text: string | null | undefined): number {
+    const match = text?.match(/[\d.]+/);
+    return match ? Number(match[0]) : 0;
+  }
+
   async searchFood(query: string) {
     await this.searchInput.fill(query);
     // Wait for debounced search to trigger (300ms delay)
