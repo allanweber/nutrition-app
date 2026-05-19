@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { deleteAllPlansViaApi, deletePlanViaApi } from './helpers/diet-plans';
 import { testUser, mealPlannerSeedData, AUTH_FILES } from './fixtures/test-data';
 import { LoginPage } from './pages/login.page';
 import { MealPlannerPage } from './pages/meal-planner.page';
@@ -36,19 +37,6 @@ async function createPlanViaApi(page: Page, data: CreatePlanInput): Promise<stri
   expect(res.ok()).toBeTruthy();
   const body = await res.json();
   return body.plan.id as string;
-}
-
-async function deletePlanViaApi(page: Page, planId: string): Promise<void> {
-  await page.request.delete(`/api/diet-plans/${planId}`);
-}
-
-async function deleteAllPlansViaApi(page: Page): Promise<void> {
-  const res = await page.request.get('/api/diet-plans');
-  if (!res.ok()) return;
-  const body = await res.json();
-  for (const plan of (body.plans ?? []) as Array<{ id: string }>) {
-    await deletePlanViaApi(page, plan.id);
-  }
 }
 
 async function createMealViaApi(

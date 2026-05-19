@@ -61,17 +61,20 @@ jobs:
           NUTRITIONIX_APP_ID: test_app_id
           NUTRITIONIX_API_KEY: test_api_key
           USE_MOCK_NUTRITIONIX: 'true'
+          USE_MOCK_FATSECRET: 'true'
+          FATSECRET_CONSUMER_KEY: test_consumer_key
+          FATSECRET_CONSUMER_SECRET: test_consumer_secret
           NODE_ENV: test
           PORT: '3014'
         run: |
-          # Start dev server in background on port 3014
-          npm run dev -- --port 3014 &
+          # Start dev server in background on port 3014 (load .env.test for mocks + port)
+          npx dotenv -e .env.test -o -- npm run dev -- --port 3014 &
           DEV_PID=$!
           
           # Wait for server to be ready
           echo "Waiting for dev server to start on port 3014..."
           for i in {1..60}; do
-            if curl -s http://localhost:3014/api/auth/session > /dev/null 2>&1; then
+            if curl -sf http://localhost:3014/login > /dev/null 2>&1; then
               echo "Server is ready!"
               break
             fi
@@ -80,7 +83,7 @@ jobs:
           
           # Run seed
           echo "Seeding database..."
-          npx tsx src/server/db/seed.ts
+          npx dotenv -e .env.test -o -- npx tsx src/server/db/seed.ts
 
       - name: Run E2E tests
         env:
@@ -92,11 +95,14 @@ jobs:
           NUTRITIONIX_APP_ID: test_app_id
           NUTRITIONIX_API_KEY: test_api_key
           USE_MOCK_NUTRITIONIX: 'true'
+          USE_MOCK_FATSECRET: 'true'
+          FATSECRET_CONSUMER_KEY: test_consumer_key
+          FATSECRET_CONSUMER_SECRET: test_consumer_secret
           NODE_ENV: test
           PORT: '3014'
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3014
           CI: true
-        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/2
+        run: npx dotenv -e .env.test -o -- npx playwright test --project=chromium --shard=${{ matrix.shard }}/2
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

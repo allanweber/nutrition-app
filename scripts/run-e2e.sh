@@ -116,9 +116,7 @@ cleanup() {
         wait $DEV_PID 2>/dev/null || true
     fi
     
-    # Kill any remaining next dev processes on test port
-    pkill -f "next dev.*--port $TEST_PORT" 2>/dev/null || true
-    pkill -f "next start.*--port $TEST_PORT" 2>/dev/null || true
+    kill_port "$TEST_PORT"
     
     # Remove Next.js lock file if exists
     rm -rf .next/dev/lock 2>/dev/null || true
@@ -145,17 +143,65 @@ check_docker() {
     fi
 }
 
+# Free the test port (pkill alone is unreliable on Windows Git Bash).
+kill_port() {
+    local port=$1
+
+    # Windows: PowerShell is the most reliable way to stop listeners on a port.
+    if command -v powershell.exe >/dev/null 2>&1; then
+        powershell.exe -NoProfile -Command "
+            \$conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+            if (\$conns) {
+                \$conns | ForEach-Object {
+                    Stop-Process -Id \$_.OwningProcess -Force -ErrorAction SilentlyContinue
+                }
+            }
+        " >/dev/null 2>&1 || true
+    fi
+
+    if command -v netstat >/dev/null 2>&1 && command -v taskkill >/dev/null 2>&1; then
+        local line pid
+        while IFS= read -r line; do
+            pid=$(echo "$line" | awk '{print $NF}')
+            if [ -n "$pid" ] && [ "$pid" != "0" ]; then
+                taskkill //F //PID "$pid" >/dev/null 2>&1 || true
+            fi
+        done < <(netstat -ano 2>/dev/null | grep LISTENING | grep ":$port" || true)
+    fi
+
+    if command -v lsof >/dev/null 2>&1; then
+        local pid
+        for pid in $(lsof -ti ":$port" 2>/dev/null || true); do
+            kill -9 "$pid" 2>/dev/null || true
+        done
+    fi
+
+    pkill -f "next dev.*--port $port" 2>/dev/null || true
+    pkill -f "next start.*--port $port" 2>/dev/null || true
+
+    sleep 2
+}
+
+port_is_listening() {
+    local port=$1
+    if command -v powershell.exe >/dev/null 2>&1; then
+        local count
+        count=$(powershell.exe -NoProfile -Command "@(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue).Count" 2>/dev/null || echo "0")
+        [ "${count:-0}" != "0" ]
+        return $?
+    fi
+    netstat -ano 2>/dev/null | grep LISTENING | grep -q ":$port"
+}
+
 # Kill any existing processes that might conflict
 kill_existing() {
     log_info "Checking for existing processes..."
-    
-    # Kill any next dev on test port
-    pkill -f "next dev.*--port $TEST_PORT" 2>/dev/null || true
-    
+
+    kill_port "$TEST_PORT"
+
     # Remove lock file
     rm -rf .next/dev/lock 2>/dev/null || true
-    
-    # Small delay to ensure processes are terminated
+
     sleep 1
 }
 
@@ -206,37 +252,56 @@ run_migrations() {
 
 # Start dev server
 start_dev_server() {
+    local dev_log=".next/e2e-dev-server.log"
+    mkdir -p .next
+
     if [ "$SERVER_MODE" = "prod" ]; then
         log_info "Building app (prod mode)..."
         npx dotenv -e .env.test -o -- npm run build
         log_success "Build complete"
 
         log_info "Starting production server on port $TEST_PORT..."
-        npx dotenv -e .env.test -o -- npm run start -- --port $TEST_PORT &
+        npx dotenv -e .env.test -o -- npm run start -- --port $TEST_PORT >>"$dev_log" 2>&1 &
         DEV_PID=$!
     else
-        log_info "Starting dev server on port $TEST_PORT..."
-    
-        # Start the dev server in background
-        npx dotenv -e .env.test -o -- npm run dev -- --port $TEST_PORT &
+        kill_port "$TEST_PORT"
+        if port_is_listening "$TEST_PORT"; then
+            log_error "Port $TEST_PORT is still in use after cleanup. Stop other dev servers and retry."
+            exit 1
+        fi
+
+        log_info "Starting dev server on port $TEST_PORT (logs: $dev_log)..."
+
+        # Use `next dev` directly so DEV_PID tracks the Node process (not a short-lived npm wrapper).
+        npx dotenv -e .env.test -o -- npx next dev --port "$TEST_PORT" >>"$dev_log" 2>&1 &
         DEV_PID=$!
     fi
-    
-    # Wait for server to be ready
+
     log_info "Waiting for dev server to be ready..."
     local retries=0
-    while [ $retries -lt 30 ]; do
-        if curl -s "http://localhost:$TEST_PORT/api/auth/session" >/dev/null 2>&1; then
+    while [ $retries -lt 60 ]; do
+        if ! kill -0 "$DEV_PID" 2>/dev/null; then
+            echo ""
+            log_error "Dev server process exited during startup (port $TEST_PORT may be in use)."
+            log_error "Last lines from $dev_log:"
+            tail -n 25 "$dev_log" >&2 || true
+            exit 1
+        fi
+
+        if curl -sf "http://localhost:$TEST_PORT/login" >/dev/null 2>&1; then
             log_success "Dev server is ready on port $TEST_PORT!"
             return 0
         fi
+
         retries=$((retries + 1))
         echo -n "."
         sleep 2
     done
-    
+
     echo ""
-    log_error "Dev server failed to start"
+    log_error "Dev server failed to respond within $((60 * 2))s"
+    log_error "Last lines from $dev_log:"
+    tail -n 25 "$dev_log" >&2 || true
     exit 1
 }
 
@@ -258,9 +323,10 @@ seed_database() {
 # Run Playwright tests
 run_tests() {
     log_info "Running E2E tests..."
-    
-    # Run Playwright with test environment
-    # Server is already running, so tell Playwright not to start its own
+    log_info "Auth setup runs first (11 users) — expect 1–2 minutes before specs start."
+
+    # Server is already running; skip Playwright webServer (avoids EADDRINUSE hang on Windows).
+    PLAYWRIGHT_MANAGED_SERVER=1 \
     PLAYWRIGHT_TEST_BASE_URL="http://localhost:$TEST_PORT" \
     npx dotenv -e .env.test -o -- npx playwright test --project=chromium "$@"
     
