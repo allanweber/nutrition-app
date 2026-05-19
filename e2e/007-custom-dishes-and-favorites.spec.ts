@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { seedUsers, testUser } from './fixtures/test-data';
+import { AUTH_FILES, seedUsers, testUser } from './fixtures/test-data';
 import { LoginPage } from './pages/login.page';
 
 // testUser = user.weight-loss@example.com — has seeded dishes & favorites
@@ -13,6 +13,8 @@ async function loginAs(page: import('@playwright/test').Page, email: string, pas
 
 const login = (page: import('@playwright/test').Page) =>
   loginAs(page, testUser.email, testUser.password);
+
+test.use({ storageState: AUTH_FILES.testUser });
 
 // ────────────────────────────────────────────────────────────────────────────
 // My Foods page

@@ -18,6 +18,12 @@ function toNumber(value: string | number | null | undefined) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
+function roundToMealMinute(date: Date) {
+  const value = new Date(date);
+  value.setSeconds(0, 0);
+  return value;
+}
+
 // GET - Fetch a specific food log entry
 export async function GET(
   request: NextRequest,
@@ -237,15 +243,19 @@ export async function PATCH(
       .select({
         id: foodLogItems.id,
         mealId: foodLogItems.mealId,
+        mealType: foodLogMeals.mealType,
+        consumedAt: foodLogMeals.consumedAt,
       })
       .from(foodLogItems)
       .innerJoin(foodLogMeals, eq(foodLogItems.mealId, foodLogMeals.id))
       .where(and(eq(foodLogItems.id, logId), eq(foodLogMeals.userId, user.id)));
 
     if (existingItemLog.length > 0) {
+      const current = existingItemLog[0];
       const itemUpdateData: {
         quantity?: string;
         altMeasureId?: string | null;
+        mealId?: string;
         updatedAt?: Date;
       } = {};
 
@@ -256,34 +266,59 @@ export async function PATCH(
         itemUpdateData.altMeasureId = updateData.altMeasureId;
       }
 
+      if (updateData.mealType !== undefined || updateData.consumedAt !== undefined) {
+        const targetMealType = updateData.mealType ?? current.mealType;
+        const targetConsumedAt = updateData.consumedAt
+          ? roundToMealMinute(updateData.consumedAt)
+          : current.consumedAt;
+
+        const needsReassign =
+          targetMealType !== current.mealType ||
+          targetConsumedAt.getTime() !== current.consumedAt.getTime();
+
+        if (needsReassign) {
+          const existingTargetMeal = await db.query.foodLogMeals.findFirst({
+            where: and(
+              eq(foodLogMeals.userId, user.id),
+              eq(foodLogMeals.mealType, targetMealType),
+              eq(foodLogMeals.consumedAt, targetConsumedAt),
+            ),
+          });
+
+          let targetMealId = existingTargetMeal?.id;
+
+          if (!targetMealId) {
+            const [newMeal] = await db
+              .insert(foodLogMeals)
+              .values({
+                userId: user.id,
+                mealType: targetMealType,
+                consumedAt: targetConsumedAt,
+              })
+              .returning();
+            targetMealId = newMeal.id;
+          }
+
+          itemUpdateData.mealId = targetMealId;
+        }
+      }
+
       if (Object.keys(itemUpdateData).length > 0) {
         itemUpdateData.updatedAt = new Date();
+        const oldMealId = current.mealId;
         await db
           .update(foodLogItems)
           .set(itemUpdateData)
           .where(eq(foodLogItems.id, logId));
-      }
 
-      if (updateData.mealType !== undefined || updateData.consumedAt !== undefined) {
-        const mealUpdateData: {
-          mealType?: typeof foodLogMeals.$inferInsert.mealType;
-          consumedAt?: Date;
-          updatedAt?: Date;
-        } = {};
+        if (itemUpdateData.mealId && itemUpdateData.mealId !== oldMealId) {
+          const remainingInOldMeal = await db.query.foodLogItems.findFirst({
+            where: eq(foodLogItems.mealId, oldMealId),
+          });
 
-        if (updateData.mealType !== undefined) {
-          mealUpdateData.mealType = updateData.mealType;
-        }
-        if (updateData.consumedAt !== undefined) {
-          mealUpdateData.consumedAt = updateData.consumedAt;
-        }
-
-        if (Object.keys(mealUpdateData).length > 0) {
-          mealUpdateData.updatedAt = new Date();
-          await db
-            .update(foodLogMeals)
-            .set(mealUpdateData)
-            .where(eq(foodLogMeals.id, existingItemLog[0].mealId));
+          if (!remainingInOldMeal) {
+            await db.delete(foodLogMeals).where(eq(foodLogMeals.id, oldMealId));
+          }
         }
       }
 

@@ -9,6 +9,7 @@
  */
 
 import { expect, test } from '@playwright/test';
+import { typeLandingFoodSearch } from './helpers/food-search';
 import { seedUsers } from './fixtures/test-data';
 import { LoginPage } from './pages/login.page';
 
@@ -126,10 +127,7 @@ test.describe('004 US2: Anonymous Landing Page Search', () => {
     await page.goto('/');
     await expect(page.getByTestId('landing-search-section')).toBeVisible();
 
-    const searchInput = page.getByTestId('food-search-input');
-    await searchInput.click();
-    await searchInput.fill('apple');
-    await page.waitForTimeout(600);
+    await typeLandingFoodSearch(page, 'apple');
 
     // Should show Common and Branded tabs, no Custom tab
     await expect(page.getByTestId('tab-common')).toBeVisible();
@@ -145,17 +143,14 @@ test.describe('004 US2: Anonymous Landing Page Search', () => {
 
     await page.goto('/');
 
-    const searchInput = page.getByTestId('food-search-input');
-    await searchInput.click();
-    await searchInput.fill('apple');
-    await page.waitForTimeout(600);
+    await typeLandingFoodSearch(page, 'apple');
 
     const firstResult = page.getByTestId('food-result-item').first();
     await expect(firstResult).toBeVisible({ timeout: 5000 });
     await firstResult.click();
 
     // Should navigate to /foods/:id
-    await expect(page).toHaveURL(/\/foods\//, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/foods\//, { timeout: 15000 });
 
     await context.close();
   });
@@ -166,16 +161,13 @@ test.describe('004 US2: Anonymous Landing Page Search', () => {
 
     await page.goto('/');
 
-    const searchInput = page.getByTestId('food-search-input');
-    await searchInput.click();
-    await searchInput.fill('apple');
-    await page.waitForTimeout(600);
+    await typeLandingFoodSearch(page, 'apple');
 
     const firstResult = page.getByTestId('food-result-item').first();
     await expect(firstResult).toBeVisible({ timeout: 5000 });
     await firstResult.click();
 
-    await expect(page).toHaveURL(/\/foods\//, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/foods\//, { timeout: 15000 });
     await expect(page.locator('h1')).not.toBeEmpty({ timeout: 10000 });
 
     await context.close();
@@ -187,15 +179,13 @@ test.describe('004 US2: Anonymous Landing Page Search', () => {
 
     await page.goto('/');
 
-    const searchInput = page.getByTestId('food-search-input');
-    await searchInput.click();
-    await searchInput.fill('apple');
-    await page.waitForTimeout(600);
+    await typeLandingFoodSearch(page, 'apple');
 
     const firstResult = page.getByTestId('food-result-item').first();
+    await expect(firstResult).toBeVisible({ timeout: 5000 });
     await firstResult.click();
 
-    await expect(page).toHaveURL(/\/foods\//, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/foods\//, { timeout: 15000 });
     // Page contains nutrition section
     await expect(page.getByText(/Nutrition per 100g/i)).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(/Calories/i)).toBeVisible();

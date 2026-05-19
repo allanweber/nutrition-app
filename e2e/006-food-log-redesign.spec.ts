@@ -1,5 +1,6 @@
 import { expect, test, type TestInfo } from '@playwright/test';
-import { AUTH_FILES, seedUsers, testUser } from './fixtures/test-data';
+import { deleteAllPlansViaApi, deletePlanViaApi } from './helpers/diet-plans';
+import { AUTH_FILES, testUser } from './fixtures/test-data';
 import { FoodLogPage } from './pages/food-log.page';
 import { LoginPage } from './pages/login.page';
 import { format, addDays, startOfWeek, subDays } from 'date-fns';
@@ -75,30 +76,10 @@ test.describe('006: Food Log Screen Redesign', () => {
     expect(res.ok()).toBeTruthy();
   }
 
-  async function deletePlanViaApi(page: import('@playwright/test').Page, planId: string) {
-    await page.request.delete(`/api/diet-plans/${planId}`);
-  }
-
-  async function deleteAllPlansViaApi(page: import('@playwright/test').Page) {
-    const res = await page.request.get('/api/diet-plans');
-    if (!res.ok()) return;
-    const body = await res.json();
-    for (const plan of (body.plans ?? []) as Array<{ id: string }>) {
-      await deletePlanViaApi(page, plan.id);
-    }
-  }
-
   async function loginAsTestUser(page: import('@playwright/test').Page) {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login(testUser.email, testUser.password);
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
-  }
-
-  async function loginAsFreshUser(page: import('@playwright/test').Page) {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login(seedUsers.professional1.email, seedUsers.professional1.password);
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
   }
 
@@ -195,6 +176,18 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
   });
 
+  test.describe('Nutrition Pulse Sidebar — fresh professional user', () => {
+    test.use({ storageState: AUTH_FILES.professional1 });
+
+    test('sidebar renders for fresh user with no goals', async ({ page }) => {
+      const foodLogPage = new FoodLogPage(page);
+      await foodLogPage.goto();
+
+      await expect(foodLogPage.nutritionPulse).toBeVisible();
+      await expect(foodLogPage.pulseCaloriesRemaining).toBeVisible();
+    });
+  });
+
   test.describe('Nutrition Pulse Sidebar', () => {
     test('sidebar is visible', async ({ page }) => {
       await loginAsTestUser(page);
@@ -223,16 +216,6 @@ test.describe('006: Food Log Screen Redesign', () => {
       await expect(foodLogPage.pulseMacroProtein).toBeVisible();
       await expect(foodLogPage.pulseMacroCarbs).toBeVisible();
       await expect(foodLogPage.pulseMacroFat).toBeVisible();
-    });
-
-    test('sidebar renders for fresh user with no goals', async ({ page }) => {
-      await loginAsFreshUser(page);
-      const foodLogPage = new FoodLogPage(page);
-      await foodLogPage.goto();
-
-      // Should still render without crashing
-      await expect(foodLogPage.nutritionPulse).toBeVisible();
-      await expect(foodLogPage.pulseCaloriesRemaining).toBeVisible();
     });
 
     test('remaining calories decreases after logging food', async ({ page }) => {
@@ -265,6 +248,7 @@ test.describe('006: Food Log Screen Redesign', () => {
   });
 
   test.describe('Meal Card Design', () => {
+    test.use({ storageState: AUTH_FILES.professional1 });
     test('renders only meal sections that have logs or a plan', async ({ page }) => {
       await loginAsTestUser(page);
       const foodLogPage = new FoodLogPage(page);
@@ -314,7 +298,7 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
 
     test('empty meal placeholders appear for unlogged planned meals', async ({ page }) => {
-      await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const foodLogPage = new FoodLogPage(page);
       const today = new Date();
       const dayOfWeek = getDbDayOfWeek(today);
@@ -358,6 +342,7 @@ test.describe('006: Food Log Screen Redesign', () => {
   });
 
   test.describe('Meal Footer Summary', () => {
+    test.use({ storageState: AUTH_FILES.professional1 });
     test('logged meal sections show footer with calories and macros', async ({ page }) => {
       await loginAsTestUser(page);
       const foodLogPage = new FoodLogPage(page);
@@ -427,7 +412,7 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
 
     test('empty meal section does not show footer summary', async ({ page }) => {
-      await loginAsFreshUser(page);
+      await deleteAllPlansViaApi(page);
       const today = new Date();
       const planId = await createPlanViaApi(page, {
         name: `E2E Footer Empty Plan ${Date.now()}`,
@@ -703,6 +688,7 @@ test.describe('006: Food Log Screen Redesign', () => {
   });
 
   test.describe('Empty Meal Quick Add', () => {
+    test.use({ storageState: AUTH_FILES.professional1 });
     test.describe.configure({ mode: 'serial' });
 
     async function createPlanWithMeal(
@@ -734,7 +720,6 @@ test.describe('006: Food Log Screen Redesign', () => {
     }
 
     test('empty meal section renders a "Log {meal}" action button', async ({ page }) => {
-      await loginAsFreshUser(page);
       await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'breakfast');
 
@@ -755,7 +740,6 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
 
     test('clicking empty-state action opens search dialog targeted at that meal', async ({ page }) => {
-      await loginAsFreshUser(page);
       await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'lunch');
 
@@ -779,7 +763,6 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
 
     test('selecting a food from the empty-state flow pre-fills the meal type', async ({ page }) => {
-      await loginAsFreshUser(page);
       await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'dinner');
 
@@ -810,7 +793,6 @@ test.describe('006: Food Log Screen Redesign', () => {
     });
 
     test('dismissing the dialog clears the pending meal target', async ({ page }) => {
-      await loginAsFreshUser(page);
       await deleteAllPlansViaApi(page);
       const planId = await createPlanWithMeal(page, 'breakfast');
 

@@ -21,8 +21,9 @@ export function SearchSection() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = (item: UnifiedFoodSearchResultItem) => {
-    if (item.fatSecretId) {
-      router.push(`/foods/${item.fatSecretId}`);
+    const detailId = item.fatSecretId ?? item.id;
+    if (detailId) {
+      router.push(`/foods/${detailId}`);
     }
   };
 
