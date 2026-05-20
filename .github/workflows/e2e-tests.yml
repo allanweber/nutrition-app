@@ -7,13 +7,24 @@ on:
     branches: [main, develop]
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run test
+
   e2e-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
+    timeout-minutes: 15
+    needs: unit-tests
 
     services:
       postgres:
@@ -49,6 +60,8 @@ jobs:
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5434/nutrition_app_test
+          DRIZZLE_STRICT: 'false'
+          DRIZZLE_VERBOSE: 'false'
         run: npx drizzle-kit push --force
 
       - name: Start dev server and seed database
@@ -58,20 +71,16 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3014
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
-          NUTRITIONIX_APP_ID: test_app_id
-          NUTRITIONIX_API_KEY: test_api_key
-          USE_MOCK_NUTRITIONIX: 'true'
           USE_MOCK_FATSECRET: 'true'
           FATSECRET_CONSUMER_KEY: test_consumer_key
           FATSECRET_CONSUMER_SECRET: test_consumer_secret
           NODE_ENV: test
           PORT: '3014'
+          SEED_PRO_USERS: 'false'
         run: |
-          # Start dev server in background on port 3014 (load .env.test for mocks + port)
           npx dotenv -e .env.test -o -- npm run dev -- --port 3014 &
           DEV_PID=$!
-          
-          # Wait for server to be ready
+
           echo "Waiting for dev server to start on port 3014..."
           for i in {1..60}; do
             if curl -sf http://localhost:3014/login > /dev/null 2>&1; then
@@ -80,8 +89,7 @@ jobs:
             fi
             sleep 2
           done
-          
-          # Run seed
+
           echo "Seeding database..."
           npx dotenv -e .env.test -o -- npx tsx src/server/db/seed.ts
 
@@ -92,23 +100,21 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3014
           GOOGLE_CLIENT_ID: test_client_id
           GOOGLE_CLIENT_SECRET: test_client_secret
-          NUTRITIONIX_APP_ID: test_app_id
-          NUTRITIONIX_API_KEY: test_api_key
-          USE_MOCK_NUTRITIONIX: 'true'
           USE_MOCK_FATSECRET: 'true'
           FATSECRET_CONSUMER_KEY: test_consumer_key
           FATSECRET_CONSUMER_SECRET: test_consumer_secret
           NODE_ENV: test
           PORT: '3014'
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:3014
+          PLAYWRIGHT_MANAGED_SERVER: '1'
           CI: true
-        run: npx dotenv -e .env.test -o -- npx playwright test --project=chromium --shard=${{ matrix.shard }}/2
+        run: npx dotenv -e .env.test -o -- npx playwright test --project=chromium
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-shard-${{ matrix.shard }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
 
@@ -116,6 +122,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: test-screenshots-shard-${{ matrix.shard }}
+          name: test-screenshots
           path: test-results/
           retention-days: 7

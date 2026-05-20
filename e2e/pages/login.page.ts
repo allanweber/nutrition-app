@@ -24,8 +24,8 @@ export class LoginPage {
   }
 
   async goto() {
-    await this.page.goto('/login');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await this.emailInput.waitFor({ state: 'visible' });
   }
 
   async login(email: string, password: string) {

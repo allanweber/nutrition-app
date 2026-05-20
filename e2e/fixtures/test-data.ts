@@ -1,156 +1,165 @@
 /**
+
  * Test data fixtures for E2E tests
+
  * These credentials match the seed data created by npm run db:seed
+
  */
 
+
+
 // Seed user accounts - all use password: Password123!
+
+//
+
+// Keep this list intentionally small and feature-segregated to avoid
+
+// cross-test collisions under Playwright parallelism.
+
 export const seedUsers = {
-  weightLoss: {
-    name: 'Alex Weight Loss',
-    email: 'user.weight-loss@example.com',
+
+  dashboard: {
+
+    name: 'E2E Dashboard User',
+
+    email: 'e2e.dashboard@example.com',
+
     password: 'Password123!',
-    goal: 'weight_loss',
-  },
-  maintenance: {
-    name: 'Jordan Maintenance',
-    email: 'user.maintenance@example.com',
-    password: 'Password123!',
-    goal: 'maintenance',
-  },
-  weightGain: {
-    name: 'Sam Weight Gain',
-    email: 'user.weight-gain@example.com',
-    password: 'Password123!',
-    goal: 'weight_gain',
-  },
-  muscleGain: {
-    name: 'Chris Muscle Gain',
-    email: 'user.muscle-gain@example.com',
-    password: 'Password123!',
-    goal: 'muscle_gain',
-  },
-  fatLoss: {
-    name: 'Taylor Fat Loss',
-    email: 'user.fat-loss@example.com',
-    password: 'Password123!',
-    goal: 'fat_loss',
-  },
-  performance: {
-    name: 'Morgan Performance',
-    email: 'user.performance@example.com',
-    password: 'Password123!',
-    goal: 'performance',
-  },
-  generalHealth: {
-    name: 'Casey General Health',
-    email: 'user.general-health@example.com',
-    password: 'Password123!',
-    goal: 'general_health',
-  },
-  professional1: {
-    name: 'Dr. Sarah Wilson',
-    email: 'dr.sarah.wilson@example.com',
-    password: 'Password123!',
-    role: 'professional',
-  },
-  professional2: {
-    name: 'Mark Thompson, RD',
-    email: 'mark.nutritionist@example.com',
-    password: 'Password123!',
-    role: 'professional',
+
   },
 
-  mealPlannerA: {
-    name: 'E2E Meal Planner Slot A',
-    email: 'e2e.meal-planner-a@example.com',
+  foodLog: {
+
+    name: 'E2E Food Log User',
+
+    email: 'e2e.foodlog@example.com',
+
     password: 'Password123!',
-    goal: 'maintenance',
-  },
-  mealPlannerB: {
-    name: 'E2E Meal Planner Slot B',
-    email: 'e2e.meal-planner-b@example.com',
-    password: 'Password123!',
-    goal: 'maintenance',
+
   },
 
-  // Dedicated account for password reset/change password tests.
-  // Do not use this email in any other tests.
-  resetPassword: {
-    name: 'Reset Password Test User',
-    email: 'reset-pwd-test@mail.com',
+  mealPlanner: {
+
+    name: 'E2E Meal Planner User',
+
+    email: 'e2e.mealplanner@example.com',
+
     password: 'Password123!',
-    goal: 'maintenance',
+
   },
+
+  myFoods: {
+
+    name: 'E2E My Foods User',
+
+    email: 'e2e.myfoods@example.com',
+
+    password: 'Password123!',
+
+  },
+
 };
 
-// Default test user for most tests (has food logs and goals)
-export const testUser = seedUsers.weightLoss;
 
-// Dedicated user for password reset/change password flows
-export const resetPasswordUser = seedUsers.resetPassword;
+
+// Back-compat: some helpers still import `testUser`.
+
+export const testUser = seedUsers.foodLog;
+
+
 
 // User for signup tests (not in seed, will be created fresh)
+
 export const newUser = {
+
   name: 'New Test User',
+
   email: `new-user-${Date.now()}@example.com`,
+
   password: 'NewUserPassword123!',
+
 };
+
+
 
 // Invalid credentials for negative tests
+
 export const invalidCredentials = {
+
   email: 'nonexistent@example.com',
+
   password: 'WrongPassword123!',
+
 };
+
+
 
 // Route paths
+
 export const routes = {
+
   home: '/',
+
   login: '/login',
+
   signup: '/signup',
+
   dashboard: '/dashboard',
+
   foodLog: '/food-log',
+
   goals: '/goals',
+
   profile: '/profile',
+
   settings: '/settings',
+
   mealPlanner: '/meal-planner',
+
 };
 
-// Meal planner seed data constants (for testUser = weightLoss)
-export const mealPlannerSeedData = {
-  weightLossActivePlanName: 'Balanced Weight Loss — Full Week',
-  weightLossDraftPlanName: 'Low Carb Experiment',
-  weightLossArchivedPlanName: 'Initial Starter Plan',
-  activePlanTargetCalories: 1800,
-  activePlanTargetProtein: 140,
-  activePlanTargetCarbs: 180,
-  activePlanTargetFat: 60,
-};
+
 
 // Auth state file paths (written by auth.setup.ts, consumed by test files)
+
 export const AUTH_FILES = {
-  testUser:      'e2e/.auth/testUser.json',
-  generalHealth: 'e2e/.auth/generalHealth.json',
-  professional1: 'e2e/.auth/professional1.json',
-  professional2: 'e2e/.auth/professional2.json',
-  muscleGain:    'e2e/.auth/muscleGain.json',
-  maintenance:   'e2e/.auth/maintenance.json',
-  fatLoss:       'e2e/.auth/fatLoss.json',
-  weightGain:    'e2e/.auth/weightGain.json',
-  performance:   'e2e/.auth/performance.json',
-  mealPlannerA:  'e2e/.auth/mealPlannerA.json',
-  mealPlannerB:  'e2e/.auth/mealPlannerB.json',
+
+  dashboard: 'e2e/.auth/dashboard.json',
+
+  foodLog: 'e2e/.auth/foodLog.json',
+
+  mealPlanner: 'e2e/.auth/mealPlanner.json',
+
+  myFoods: 'e2e/.auth/myFoods.json',
+
 };
 
+
+
 // Sample foods from seed data
+
 export const sampleFoods = [
+
   'Apple, raw',
+
   'Banana, raw',
+
   'Chicken Breast, grilled',
+
   'Brown Rice, cooked',
+
   'Eggs, scrambled',
+
   'Oatmeal, cooked',
+
   'Salmon, baked',
+
   'Mixed Green Salad with dressing',
+
   'Greek Yogurt, plain',
+
   'Almonds, raw',
+
 ];
+
+

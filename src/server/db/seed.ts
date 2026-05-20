@@ -14,8 +14,11 @@
 
 import { config } from 'dotenv';
 
-// Load environment variables from .env.local
-config({ path: '.env.local' });
+// Prefer env already provided by the runner (e.g. dotenv-cli in E2E).
+// Only fall back to `.env.local` for local dev convenience.
+if (!process.env.DATABASE_URL) {
+  config({ path: '.env.local' });
+}
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -433,6 +436,72 @@ const sampleUserDefs = {
     {
       email: 'reset-pwd-test@mail.com',
       name: 'Reset Password Test User',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+
+    // ── Minimal E2E personas (feature-segregated) ───────────────────────────
+    {
+      email: 'e2e.dashboard@example.com',
+      name: 'E2E Dashboard User',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+    {
+      email: 'e2e.foodlog@example.com',
+      name: 'E2E Food Log User',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+    {
+      email: 'e2e.mealplanner@example.com',
+      name: 'E2E Meal Planner User',
+      password: 'Password123!',
+      role: 'individual' as const,
+      goal: {
+        goalType: 'maintenance' as const,
+        targetCalories: '2000',
+        targetProtein: '150',
+        targetCarbs: '220',
+        targetFat: '70',
+        targetFiber: '30',
+        targetSodium: '2300',
+        activityLevel: 'moderate',
+      },
+    },
+    {
+      email: 'e2e.myfoods@example.com',
+      name: 'E2E My Foods User',
       password: 'Password123!',
       role: 'individual' as const,
       goal: {
@@ -1630,8 +1699,10 @@ async function seed() {
 
     // Delete seed users by email
     const seedEmails = [
-      ...sampleUserDefs.individuals.map((u) => u.email),
-      ...sampleUserDefs.professionals.map((u) => u.email),
+      'e2e.dashboard@example.com',
+      'e2e.foodlog@example.com',
+      'e2e.mealplanner@example.com',
+      'e2e.myfoods@example.com',
     ];
 
     for (const email of seedEmails) {
@@ -1650,13 +1721,14 @@ async function seed() {
 
     // 2. Insert foods
     console.log('\nInserting sample foods...');
-    const insertedFoods = await db.insert(schema.foods).values(sampleFoods).returning();
+    // Keep seed intentionally small for E2E speed.
+    const insertedFoods = await db.insert(schema.foods).values(sampleFoods.slice(0, 3)).returning();
     const foodIds = insertedFoods.map((f) => f.id);
     console.log(`  Inserted ${insertedFoods.length} foods`);
 
     // 3. Create individual users via API (for proper password hashing)
     console.log('\nCreating individual users...');
-    for (const userDef of sampleUserDefs.individuals) {
+    for (const userDef of sampleUserDefs.individuals.filter((u) => seedEmails.includes(u.email))) {
       const result = await createUserViaApi(userDef.name, userDef.email, userDef.password);
 
       if (!result) {
@@ -1729,14 +1801,9 @@ async function seed() {
         await seedDietPlans(userId, foodIds, 'performance', db);
       }
 
-      // Generate and insert food logs
-      const foodLogs = generateFoodLogs(
-        userId,
-        foodIds,
-        userDef.goal.goalType
-      );
-
-      await insertGroupedFoodLogs(userId, foodLogs);
+      // Skip generating large food-log histories for E2E speed.
+      // E2E specs create the specific data they need via UI/API per-test.
+      const foodLogs: Array<unknown> = [];
 
       const hasDietPlans = ['user.weight-loss@example.com', 'user.muscle-gain@example.com', 'user.performance@example.com'].includes(userDef.email);
       console.log(`  Created user: ${userDef.name} (${userDef.email})`);
@@ -1747,26 +1814,28 @@ async function seed() {
       if (hasDietPlans) console.log(`    - Diet plans: 3 (active, draft, archived)`);
     }
 
-    // 4. Create professional users via API
-    console.log('\nCreating professional users...');
-    for (const userDef of sampleUserDefs.professionals) {
-      const result = await createUserViaApi(userDef.name, userDef.email, userDef.password);
+    // 4. Optional: professional users (skip by default for E2E speed)
+    if (process.env.SEED_PRO_USERS === 'true') {
+      console.log('\nCreating professional users...');
+      for (const userDef of sampleUserDefs.professionals) {
+        const result = await createUserViaApi(userDef.name, userDef.email, userDef.password);
 
-      if (!result) {
-        console.log(`  Skipping user: ${userDef.email} (creation failed)`);
-        continue;
+        if (!result) {
+          console.log(`  Skipping user: ${userDef.email} (creation failed)`);
+          continue;
+        }
+
+        const userId = result.id;
+
+        // Update role to professional
+        await db
+          .update(schema.users)
+          .set({ role: userDef.role })
+          .where(eq(schema.users.id, userId));
+
+        console.log(`  Created user: ${userDef.name} (${userDef.email})`);
+        console.log(`    - Role: ${userDef.role}`);
       }
-
-      const userId = result.id;
-
-      // Update role to professional
-      await db
-        .update(schema.users)
-        .set({ role: userDef.role })
-        .where(eq(schema.users.id, userId));
-
-      console.log(`  Created user: ${userDef.name} (${userDef.email})`);
-      console.log(`    - Role: ${userDef.role}`);
     }
 
     console.log('\n' + '='.repeat(50));
@@ -1775,17 +1844,19 @@ async function seed() {
     console.log('Test accounts (all passwords: Password123!):');
     console.log('-'.repeat(50));
     console.log('\nIndividual Users:');
-    for (const user of sampleUserDefs.individuals) {
+    for (const user of sampleUserDefs.individuals.filter((u) => seedEmails.includes(u.email))) {
       console.log(`  ${user.name}`);
       console.log(`    Email: ${user.email}`);
       console.log(`    Goal: ${user.goal.goalType}`);
       console.log('');
     }
-    console.log('Professional Users:');
-    for (const user of sampleUserDefs.professionals) {
-      console.log(`  ${user.name}`);
-      console.log(`    Email: ${user.email}`);
-      console.log('');
+    if (process.env.SEED_PRO_USERS === 'true') {
+      console.log('Professional Users:');
+      for (const user of sampleUserDefs.professionals) {
+        console.log(`  ${user.name}`);
+        console.log(`    Email: ${user.email}`);
+        console.log('');
+      }
     }
   } catch (error) {
     console.error('Seed failed:', error);
