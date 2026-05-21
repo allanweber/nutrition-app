@@ -357,6 +357,112 @@ export async function archiveActivePlans(userId: string, dbInstance = db): Promi
     .where(and(eq(dietPlans.clientId, userId), eq(dietPlans.status, 'active')));
 }
 
+const DUPLICATE_PLAN_SUFFIX = ' (Copy)';
+const MAX_PLAN_NAME_LENGTH = 255;
+
+export function buildDuplicatePlanName(sourceName: string): string {
+  if (sourceName.length + DUPLICATE_PLAN_SUFFIX.length <= MAX_PLAN_NAME_LENGTH) {
+    return `${sourceName}${DUPLICATE_PLAN_SUFFIX}`;
+  }
+  const maxBase = MAX_PLAN_NAME_LENGTH - DUPLICATE_PLAN_SUFFIX.length;
+  return `${sourceName.slice(0, maxBase)}${DUPLICATE_PLAN_SUFFIX}`;
+}
+
+export async function duplicateDietPlan(
+  sourcePlanId: string,
+  userId: string,
+  dbInstance = db,
+): Promise<DietPlanDTO> {
+  const source = await dbInstance.query.dietPlans.findFirst({
+    where: and(eq(dietPlans.id, sourcePlanId), eq(dietPlans.clientId, userId)),
+  });
+  if (!source) throw new Error('Plan not found');
+
+  const newPlanId = await dbInstance.transaction(async (tx) => {
+    const [newPlan] = await tx
+      .insert(dietPlans)
+      .values({
+        clientId: userId,
+        name: buildDuplicatePlanName(source.name),
+        description: source.description,
+        targetCalories: source.targetCalories,
+        targetProtein: source.targetProtein,
+        targetCarbs: source.targetCarbs,
+        targetFat: source.targetFat,
+        startDate: source.startDate,
+        endDate: source.endDate,
+        status: 'draft',
+      })
+      .returning({ id: dietPlans.id });
+
+    const sourceMeals = await tx
+      .select({
+        id: dietPlanMeals.id,
+        mealType: dietPlanMeals.mealType,
+        dayOfWeek: dietPlanMeals.dayOfWeek,
+      })
+      .from(dietPlanMeals)
+      .where(eq(dietPlanMeals.dietPlanId, sourcePlanId));
+
+    if (sourceMeals.length === 0) {
+      return newPlan.id;
+    }
+
+    const newMeals = await tx
+      .insert(dietPlanMeals)
+      .values(
+        sourceMeals.map((m) => ({
+          dietPlanId: newPlan.id,
+          mealType: m.mealType,
+          dayOfWeek: m.dayOfWeek,
+        })),
+      )
+      .returning({ id: dietPlanMeals.id });
+
+    const mealIdMap: Record<string, string> = {};
+    sourceMeals.forEach((src, i) => {
+      mealIdMap[src.id] = newMeals[i].id;
+    });
+
+    const sourceMealIds = sourceMeals.map((m) => m.id);
+    const sourceItems = await tx
+      .select()
+      .from(dietPlanMealItems)
+      .where(inArray(dietPlanMealItems.groupId, sourceMealIds));
+
+    if (sourceItems.length > 0) {
+      const dishGroupIdMap = new Map<string, string>();
+      await tx.insert(dietPlanMealItems).values(
+        sourceItems.map((item) => {
+          let newDishGroupId: string | null = null;
+          if (item.dishGroupId) {
+            if (!dishGroupIdMap.has(item.dishGroupId)) {
+              dishGroupIdMap.set(item.dishGroupId, uuidv7());
+            }
+            newDishGroupId = dishGroupIdMap.get(item.dishGroupId)!;
+          }
+          return {
+            groupId: mealIdMap[item.groupId],
+            foodId: item.foodId,
+            altMeasureId: item.altMeasureId,
+            quantity: item.quantity,
+            dishGroupId: newDishGroupId,
+            dishNameSnapshot: item.dishNameSnapshot,
+            dishSourceId: item.dishSourceId,
+          };
+        }),
+      );
+    }
+
+    return newPlan.id;
+  });
+
+  const plans = await getDietPlansForUser(userId);
+  const created = plans.find((p) => p.id === newPlanId);
+  if (!created) throw new Error('Failed to load duplicated plan');
+  return created;
+}
+
 export async function copyDay(
   dietPlanId: string,
   fromDay: number,

@@ -26,6 +26,7 @@ export class MealPlannerPage {
   readonly planStatusArchived: Locator;
   readonly newPlanCancel: Locator;
   readonly newPlanSubmit: Locator;
+  readonly editPlanSubmit: Locator;
   readonly planNameError: Locator;
 
   // ── Conflict AlertDialog ──────────────────────────────────
@@ -84,6 +85,7 @@ export class MealPlannerPage {
     this.planStatusArchived = page.getByTestId('plan-status-archived');
     this.newPlanCancel = page.getByTestId('new-plan-cancel');
     this.newPlanSubmit = page.getByTestId('new-plan-submit');
+    this.editPlanSubmit = page.getByTestId('edit-plan-submit');
     this.planNameError = page.getByTestId('plan-name-error');
 
     this.conflictDialog = page.getByTestId('activate-conflict-dialog');
@@ -165,6 +167,14 @@ export class MealPlannerPage {
 
   planMenuDelete(planId: string): Locator {
     return this.page.getByTestId(`plan-menu-delete-${planId}`);
+  }
+
+  planMenuEdit(planId: string): Locator {
+    return this.page.getByTestId(`plan-menu-edit-${planId}`);
+  }
+
+  planMenuDuplicate(planId: string): Locator {
+    return this.page.getByTestId(`plan-menu-duplicate-${planId}`);
   }
 
   planDeleteConfirmInCard(planId: string): Locator {

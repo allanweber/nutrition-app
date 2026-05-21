@@ -14,6 +14,8 @@ interface MobilePlanCarouselProps {
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
   onAddNew: () => void;
+  onEditPlan: (plan: DietPlanDTO) => void;
+  onPlanDuplicated: (planId: string) => void;
   onPlanDeleted: (planId: string) => void;
 }
 
@@ -21,10 +23,12 @@ interface MobilePlanCardProps {
   plan: DietPlanDTO;
   isSelected: boolean;
   onSelect: () => void;
+  onEdit: (plan: DietPlanDTO) => void;
+  onDuplicated: (planId: string) => void;
   onDeleted: (planId: string) => void;
 }
 
-function MobilePlanCard({ plan, isSelected, onSelect, onDeleted }: MobilePlanCardProps) {
+function MobilePlanCard({ plan, isSelected, onSelect, onEdit, onDuplicated, onDeleted }: MobilePlanCardProps) {
   const isActive = plan.status === 'active';
 
   return (
@@ -48,7 +52,13 @@ function MobilePlanCard({ plan, isSelected, onSelect, onDeleted }: MobilePlanCar
         >
           {isActive ? 'Active Plan' : plan.status === 'draft' ? 'Draft' : 'Archived'}
         </span>
-        <PlanOptionsMenu plan={plan} onDeleted={onDeleted} testIdPrefix="mobile-plan" />
+        <PlanOptionsMenu
+          plan={plan}
+          onEdit={onEdit}
+          onDuplicated={onDuplicated}
+          onDeleted={onDeleted}
+          testIdPrefix="mobile-plan"
+        />
       </div>
 
       <p className="text-lg font-bold truncate text-foreground">{plan.name}</p>
@@ -78,21 +88,36 @@ function MobilePlanCard({ plan, isSelected, onSelect, onDeleted }: MobilePlanCar
   );
 }
 
-export function MobilePlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, onAddNew, onPlanDeleted }: MobilePlanCarouselProps) {
+export function MobilePlanCarousel({
+  plans,
+  isLoading,
+  selectedPlanId,
+  onSelectPlan,
+  onAddNew,
+  onEditPlan,
+  onPlanDuplicated,
+  onPlanDeleted,
+}: MobilePlanCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // When a plan is selected, center it in the carousel.
+  // When a plan is selected, center it in the carousel (including after duplicate).
   useEffect(() => {
-    if (!selectedPlanId) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const card = el.querySelector<HTMLElement>(`[data-plan-id="${selectedPlanId}"]`);
-    if (!card) return;
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }, [selectedPlanId, plans.length, isLoading]);
+    if (!selectedPlanId || isLoading) return;
+    if (!plans.some((p) => p.id === selectedPlanId)) return;
+
+    const frame = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const card = el.querySelector<HTMLElement>(`[data-plan-id="${selectedPlanId}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [selectedPlanId, plans, isLoading]);
 
   function updateScrollState() {
     const el = scrollRef.current;
@@ -156,6 +181,8 @@ export function MobilePlanCarousel({ plans, isLoading, selectedPlanId, onSelectP
                 plan={plan}
                 isSelected={plan.id === selectedPlanId}
                 onSelect={() => onSelectPlan(plan.id)}
+                onEdit={onEditPlan}
+                onDuplicated={onPlanDuplicated}
                 onDeleted={onPlanDeleted}
               />
             </div>

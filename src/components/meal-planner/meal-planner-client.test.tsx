@@ -16,6 +16,7 @@ const useDeleteMealMutation = vi.fn();
 const useCreateDietPlanMutation = vi.fn();
 const useUpdateDietPlanMutation = vi.fn();
 const useDeleteDietPlanMutation = vi.fn();
+const useDuplicateDietPlanMutation = vi.fn();
 const useActivateDietPlanMutation = vi.fn();
 const useCopyDayMutation = vi.fn();
 
@@ -26,6 +27,7 @@ vi.mock('@/queries/diet-plans', () => ({
   useCreateDietPlanMutation: () => useCreateDietPlanMutation(),
   useUpdateDietPlanMutation: () => useUpdateDietPlanMutation(),
   useDeleteDietPlanMutation: () => useDeleteDietPlanMutation(),
+  useDuplicateDietPlanMutation: () => useDuplicateDietPlanMutation(),
   useActivateDietPlanMutation: () => useActivateDietPlanMutation(),
   useCopyDayMutation: () => useCopyDayMutation(),
 }));
@@ -39,6 +41,7 @@ describe('MealPlannerClient', () => {
     useDeleteDietPlanMutation.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
     useActivateDietPlanMutation.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
     useCopyDayMutation.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
+    useDuplicateDietPlanMutation.mockReturnValue({ mutateAsync: vi.fn(), isPending: false });
   });
 
   it('renders empty state when there are no plans', () => {
@@ -63,6 +66,33 @@ describe('MealPlannerClient', () => {
     expect(screen.queryByTestId('meal-planner-empty-state')).not.toBeInTheDocument();
     expect(screen.getByTestId('day-selector')).toBeInTheDocument();
     expect(screen.getByTestId('day-meals-view')).toBeInTheDocument();
+  });
+
+  it('exposes plan edit menu trigger when plans exist', () => {
+    useDietPlansQuery.mockReturnValue({
+      data: {
+        plans: [{
+          id: 'plan-1',
+          name: 'My Plan',
+          status: 'draft',
+          description: null,
+          targetCalories: 2000,
+          targetProtein: 150,
+          targetCarbs: 220,
+          targetFat: 70,
+          startDate: '2024-01-01T00:00:00.000Z',
+          endDate: null,
+          avgDailyCalories: 0,
+          completeness: 0,
+        }],
+        nutritionGoalDefaults: null,
+      },
+      isLoading: false,
+    });
+
+    render(<MealPlannerClient initialPlanId="plan-1" initialDay={1} />);
+
+    expect(screen.getByTestId('mobile-plan-menu-trigger-plan-1')).toBeInTheDocument();
   });
 });
 

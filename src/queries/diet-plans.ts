@@ -175,6 +175,24 @@ export function useDeleteDietPlanMutation() {
   })
 }
 
+export function useDuplicateDietPlanMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (planId: string): Promise<{ plan: DietPlanDTO }> => {
+      const res = await fetch(`/api/diet-plans/${planId}/duplicate`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to duplicate plan')
+      }
+      return res.json()
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: dietPlanKeys.all })
+      qc.invalidateQueries({ queryKey: dietPlanKeys.meals(data.plan.id) })
+    },
+  })
+}
+
 // ============================================
 // MUTATIONS — Meals
 // ============================================

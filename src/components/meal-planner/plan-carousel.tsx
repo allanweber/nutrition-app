@@ -13,10 +13,21 @@ interface PlanCarouselProps {
   selectedPlanId: string | null;
   onSelectPlan: (planId: string) => void;
   onAddNew: () => void;
+  onEditPlan: (plan: DietPlanDTO) => void;
+  onPlanDuplicated: (planId: string) => void;
   onPlanDeleted: (planId: string) => void;
 }
 
-export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, onAddNew, onPlanDeleted }: PlanCarouselProps) {
+export function PlanCarousel({
+  plans,
+  isLoading,
+  selectedPlanId,
+  onSelectPlan,
+  onAddNew,
+  onEditPlan,
+  onPlanDuplicated,
+  onPlanDeleted,
+}: PlanCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -57,6 +68,22 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans.length, isMobile]);
+
+  // Keep the selected plan visible (e.g. after duplicate adds a new card at the end).
+  useEffect(() => {
+    if (!selectedPlanId || isLoading) return;
+    if (!plans.some((p) => p.id === selectedPlanId)) return;
+
+    const frame = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const card = el.querySelector<HTMLElement>(`[data-plan-id="${selectedPlanId}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [selectedPlanId, plans, isLoading]);
 
   function scroll(dir: 'left' | 'right') {
     const el = scrollRef.current;
@@ -123,11 +150,17 @@ export function PlanCarousel({ plans, isLoading, selectedPlanId, onSelectPlan, o
           {/* Plan cards */}
           {!isLoading &&
             plans.map((plan) => (
-              <div key={plan.id} className={cn('shrink-0', isMobile && 'max-sm:snap-center')}>
+              <div
+                key={plan.id}
+                data-plan-id={plan.id}
+                className={cn('shrink-0', isMobile && 'max-sm:snap-center')}
+              >
                 <PlanCard
                   plan={plan}
                   isSelected={plan.id === selectedPlanId}
                   onSelect={() => onSelectPlan(plan.id)}
+                  onEdit={onEditPlan}
+                  onDuplicated={onPlanDuplicated}
                   onDeleted={onPlanDeleted}
                 />
               </div>

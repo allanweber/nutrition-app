@@ -13,6 +13,10 @@ import { MealModal, type MealModalState } from './meal-modal';
 import { MealPlannerFab } from './meal-planner-fab';
 import type { DietPlanDTO, DietPlanMealDTO } from '@/server/services/diet-plan.service';
 
+type PlanModalState =
+  | { mode: 'create' }
+  | { mode: 'edit'; plan: DietPlanDTO };
+
 interface MealPlannerClientProps {
   initialPlanId: string | null;
   initialDay: number;
@@ -24,7 +28,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(initialPlanId);
   const [selectedDay, setSelectedDay] = useState(initialDay);
-  const [newPlanModalOpen, setNewPlanModalOpen] = useState(false);
+  const [planModalState, setPlanModalState] = useState<PlanModalState | null>(null);
   const [mealModalState, setMealModalState] = useState<MealModalState | null>(null);
   const [deletingMealId, setDeletingMealId] = useState<string | null>(null);
   const hasAutoSelected = useRef(false);
@@ -110,7 +114,9 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
         isLoading={plansQuery.isLoading}
         selectedPlanId={selectedPlanId}
         onSelectPlan={handleSelectPlan}
-        onAddNew={() => setNewPlanModalOpen(true)}
+        onAddNew={() => setPlanModalState({ mode: 'create' })}
+        onEditPlan={(plan) => setPlanModalState({ mode: 'edit', plan })}
+        onPlanDuplicated={handleSelectPlan}
         onPlanDeleted={handlePlanDeleted}
       />
 
@@ -121,7 +127,9 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
           isLoading={plansQuery.isLoading}
           selectedPlanId={selectedPlanId}
           onSelectPlan={handleSelectPlan}
-          onAddNew={() => setNewPlanModalOpen(true)}
+          onAddNew={() => setPlanModalState({ mode: 'create' })}
+          onEditPlan={(plan) => setPlanModalState({ mode: 'edit', plan })}
+          onPlanDuplicated={handleSelectPlan}
           onPlanDeleted={handlePlanDeleted}
         />
       </div>
@@ -181,13 +189,18 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
 
       {/* Modals */}
       <NewPlanModal
-        open={newPlanModalOpen}
+        open={planModalState !== null}
+        mode={planModalState?.mode ?? 'create'}
+        editingPlan={planModalState?.mode === 'edit' ? planModalState.plan : undefined}
         plans={plans}
         nutritionGoalDefaults={plansQuery.data?.nutritionGoalDefaults ?? null}
-        onClose={() => setNewPlanModalOpen(false)}
-        onCreated={(planId) => {
-          setNewPlanModalOpen(false);
-          handleSelectPlan(planId);
+        onClose={() => setPlanModalState(null)}
+        onSaved={(planId) => {
+          const wasCreate = planModalState?.mode === 'create';
+          setPlanModalState(null);
+          if (wasCreate) {
+            handleSelectPlan(planId);
+          }
         }}
       />
 
@@ -201,7 +214,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
       {/* Mobile FAB */}
       <MealPlannerFab
         hasActivePlan={!!selectedPlan}
-        onAddPlan={() => setNewPlanModalOpen(true)}
+        onAddPlan={() => setPlanModalState({ mode: 'create' })}
         onAddMeal={() => {
           if (!selectedPlan) return;
           setMealModalState({

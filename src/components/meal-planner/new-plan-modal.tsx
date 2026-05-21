@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { Loader2 } from 'lucide-react';
 import {
@@ -26,7 +27,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { dietPlanFormSchema, zodValidator } from '@/lib/form-validation';
 import type { DietPlanFormData } from '@/lib/form-validation';
-import { useCreateDietPlanMutation } from '@/queries/diet-plans';
+import { useCreateDietPlanMutation, useUpdateDietPlanMutation } from '@/queries/diet-plans';
 import { useActivatePlan } from '@/hooks/use-activate-plan';
 import type { DietPlanDTO } from '@/server/services/diet-plan.service';
 import { MACRO_CELL_BG, MACRO_CELL_TEXT } from '@/lib/nutrition-constants';
@@ -41,10 +42,12 @@ interface NutritionGoalDefaults {
 
 interface NewPlanModalProps {
   open: boolean;
+  mode: 'create' | 'edit';
+  editingPlan?: DietPlanDTO;
   plans: DietPlanDTO[];
   nutritionGoalDefaults: NutritionGoalDefaults | null;
   onClose: () => void;
-  onCreated: (planId: string) => void;
+  onSaved: (planId: string) => void;
 }
 
 function toIsoDate(date: Date | undefined): string {
@@ -68,6 +71,34 @@ function fromIsoDate(value: string): Date | undefined {
   return date;
 }
 
+function createDefaultValues(defaults: NutritionGoalDefaults): DietPlanFormData {
+  return {
+    name: '',
+    description: '',
+    targetCalories: defaults.targetCalories ?? ('' as unknown as number),
+    targetProtein: defaults.targetProtein ?? ('' as unknown as number),
+    targetCarbs: defaults.targetCarbs ?? ('' as unknown as number),
+    targetFat: defaults.targetFat ?? ('' as unknown as number),
+    startDate: new Date(),
+    endDate: undefined,
+    status: 'draft',
+  };
+}
+
+function editDefaultValues(plan: DietPlanDTO): DietPlanFormData {
+  return {
+    name: plan.name,
+    description: plan.description ?? '',
+    targetCalories: plan.targetCalories ?? ('' as unknown as number),
+    targetProtein: plan.targetProtein ?? ('' as unknown as number),
+    targetCarbs: plan.targetCarbs ?? ('' as unknown as number),
+    targetFat: plan.targetFat ?? ('' as unknown as number),
+    startDate: new Date(plan.startDate),
+    endDate: plan.endDate ? new Date(plan.endDate) : undefined,
+    status: plan.status,
+  };
+}
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <Label className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -82,56 +113,85 @@ function FieldError({ errors }: { errors: unknown[] }) {
   return <p className="text-xs text-destructive mt-1">{String(errors[0])}</p>;
 }
 
-export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCreated }: NewPlanModalProps) {
+export function NewPlanModal({
+  open,
+  mode,
+  editingPlan,
+  plans,
+  nutritionGoalDefaults,
+  onClose,
+  onSaved,
+}: NewPlanModalProps) {
+  const isEdit = mode === 'edit' && !!editingPlan;
   const createMutation = useCreateDietPlanMutation();
+  const updateMutation = useUpdateDietPlanMutation();
   const { activate, conflict } = useActivatePlan();
 
-  const defaults = nutritionGoalDefaults ?? { targetCalories: null, targetProtein: null, targetCarbs: null, targetFat: null };
+  const goalDefaults = nutritionGoalDefaults ?? {
+    targetCalories: null,
+    targetProtein: null,
+    targetCarbs: null,
+    targetFat: null,
+  };
 
   const form = useForm({
-    defaultValues: {
-      name: '',
-      description: '',
-      targetCalories: defaults.targetCalories ?? ('' as unknown as number),
-      targetProtein: defaults.targetProtein ?? ('' as unknown as number),
-      targetCarbs: defaults.targetCarbs ?? ('' as unknown as number),
-      targetFat: defaults.targetFat ?? ('' as unknown as number),
-      startDate: new Date(),
-      endDate: undefined,
-      status: 'draft',
-    } as DietPlanFormData,
+    defaultValues: createDefaultValues(goalDefaults),
     onSubmit: async ({ value }) => {
       const status = value.status as 'active' | 'draft' | 'archived';
+      const body = {
+        name: value.name,
+        description: value.description || undefined,
+        targetCalories: Number(value.targetCalories),
+        targetProtein: Number(value.targetProtein),
+        targetCarbs: Number(value.targetCarbs),
+        targetFat: Number(value.targetFat),
+        startDate: value.startDate.toISOString(),
+        endDate: value.endDate?.toISOString(),
+        status,
+      };
 
       async function proceed() {
-        const res = await createMutation.mutateAsync({
-          name: value.name,
-          description: value.description || undefined,
-          targetCalories: Number(value.targetCalories),
-          targetProtein: Number(value.targetProtein),
-          targetCarbs: Number(value.targetCarbs),
-          targetFat: Number(value.targetFat),
-          startDate: value.startDate.toISOString(),
-          endDate: value.endDate?.toISOString(),
-          status,
-        });
-        onCreated(res.plan.id);
+        if (isEdit && editingPlan) {
+          await updateMutation.mutateAsync({ planId: editingPlan.id, ...body });
+          onSaved(editingPlan.id);
+        } else {
+          const res = await createMutation.mutateAsync(body);
+          onSaved(res.plan.id);
+        }
       }
 
+      const plansForConflict = isEdit && editingPlan
+        ? plans.filter((p) => p.id !== editingPlan.id)
+        : plans;
+
       if (status === 'active') {
-        await activate({ plans, onProceed: proceed });
+        await activate({ plans: plansForConflict, onProceed: proceed });
       } else {
         await proceed();
       }
     },
   });
 
+  useEffect(() => {
+    if (!open) return;
+    if (isEdit && editingPlan) {
+      form.reset(editDefaultValues(editingPlan));
+    } else {
+      form.reset(createDefaultValues(goalDefaults));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, editingPlan?.id]);
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
         <DialogContent data-testid="new-plan-modal" className="md:min-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Create New Diet Plan</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {isEdit ? 'Edit Diet Plan' : 'Create New Diet Plan'}
+            </DialogTitle>
           </DialogHeader>
 
           <form
@@ -142,7 +202,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
             }}
             className="space-y-5 px-6"
           >
-            {/* Plan Name */}
             <form.Field
               name="name"
               validators={{ onChange: zodValidator(dietPlanFormSchema.shape.name) }}
@@ -166,7 +225,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               )}
             </form.Field>
 
-            {/* Description */}
             <form.Field name="description">
               {(field) => (
                 <div className="space-y-1.5">
@@ -183,7 +241,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               )}
             </form.Field>
 
-            {/* Macro targets */}
             <div>
               <FieldLabel required>Daily Targets</FieldLabel>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1.5">
@@ -255,7 +312,6 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               </div>
             </div>
 
-            {/* Dates */}
             <div className="grid grid-cols-2 gap-3">
               <form.Field
                 name="startDate"
@@ -297,11 +353,10 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               </form.Field>
             </div>
 
-            {/* Initial Status */}
             <form.Field name="status">
               {(field) => (
                 <div className="space-y-1.5">
-                  <FieldLabel required>Initial Status</FieldLabel>
+                  <FieldLabel required>{isEdit ? 'Status' : 'Initial Status'}</FieldLabel>
                   <ToggleGroup
                     type="single"
                     value={field.state.value}
@@ -322,9 +377,14 @@ export function NewPlanModal({ open, plans, nutritionGoalDefaults, onClose, onCr
               </Button>
               <form.Subscribe selector={(s) => s.isSubmitting}>
                 {(isSubmitting) => (
-                  <Button data-testid="new-plan-submit" type="submit" disabled={isSubmitting} className="flex-1">
-                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Create Plan
+                  <Button
+                    data-testid={isEdit ? 'edit-plan-submit' : 'new-plan-submit'}
+                    type="submit"
+                    disabled={isSubmitting || isPending}
+                    className="flex-1"
+                  >
+                    {(isSubmitting || isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isEdit ? 'Save Changes' : 'Create Plan'}
                   </Button>
                 )}
               </form.Subscribe>

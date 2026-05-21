@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Copy, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { DietPlanDTO } from '@/server/services/diet-plan.service';
-import { useDeleteDietPlanMutation, useUpdateDietPlanMutation, useDietPlansQuery } from '@/queries/diet-plans';
+import {
+  useDeleteDietPlanMutation,
+  useDuplicateDietPlanMutation,
+  useUpdateDietPlanMutation,
+  useDietPlansQuery,
+} from '@/queries/diet-plans';
 import { useActivatePlan } from '@/hooks/use-activate-plan';
 import { MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
@@ -31,6 +36,8 @@ import { MACRO_TEXT_COLORS } from '@/lib/nutrition-constants';
 
 interface PlanOptionsMenuProps {
   plan: DietPlanDTO;
+  onEdit?: (plan: DietPlanDTO) => void;
+  onDuplicated?: (planId: string) => void;
   onDeleted?: (planId: string) => void;
   /** Override testid prefix to avoid strict-mode duplicates across responsive UIs */
   testIdPrefix?: string;
@@ -38,6 +45,8 @@ interface PlanOptionsMenuProps {
 
 export function PlanOptionsMenu({
   plan,
+  onEdit,
+  onDuplicated,
   onDeleted,
   testIdPrefix = 'plan',
 }: PlanOptionsMenuProps) {
@@ -47,6 +56,7 @@ export function PlanOptionsMenu({
   const plansQuery = useDietPlansQuery();
   const updateMutation = useUpdateDietPlanMutation();
   const deleteMutation = useDeleteDietPlanMutation();
+  const duplicateMutation = useDuplicateDietPlanMutation();
   const { activate, conflict } = useActivatePlan();
 
   useEffect(() => {
@@ -83,6 +93,11 @@ export function PlanOptionsMenu({
     }
 
     setDeleteDialogOpen(true);
+  }
+
+  async function handleDuplicate() {
+    const res = await duplicateMutation.mutateAsync(plan.id);
+    onDuplicated?.(res.plan.id);
   }
 
   return (
@@ -144,6 +159,26 @@ export function PlanOptionsMenu({
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-edit-${plan.id}`}
+              onSelect={() => onEdit?.(plan)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              data-testid={`${testIdPrefix}-menu-duplicate-${plan.id}`}
+              disabled={duplicateMutation.isPending}
+              onSelect={() => void handleDuplicate()}
+            >
+              {duplicateMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Copy className="h-4 w-4 mr-2" />
+              )}
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               data-testid={`${testIdPrefix}-menu-set-active-${plan.id}`}
               disabled={plan.status === 'active'}
@@ -233,6 +268,8 @@ interface PlanCardProps {
   plan: DietPlanDTO;
   isSelected: boolean;
   onSelect: () => void;
+  onEdit?: (plan: DietPlanDTO) => void;
+  onDuplicated?: (planId: string) => void;
   onDeleted?: (planId: string) => void;
 }
 
@@ -242,7 +279,7 @@ function progressLabel(plan: DietPlanDTO): string {
   return 'Weekly Progress';
 }
 
-export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProps) {
+export function PlanCard({ plan, isSelected, onSelect, onEdit, onDuplicated, onDeleted }: PlanCardProps) {
   const isActive = plan.status === 'active';
   const completeness = plan.completeness ?? 0;
 
@@ -271,7 +308,13 @@ export function PlanCard({ plan, isSelected, onSelect, onDeleted }: PlanCardProp
           {isActive ? 'Active Plan' : plan.status === 'draft' ? 'Draft' : 'Archived'}
         </span>
 
-        <PlanOptionsMenu plan={plan} onDeleted={onDeleted} testIdPrefix="plan" />
+        <PlanOptionsMenu
+          plan={plan}
+          onEdit={onEdit}
+          onDuplicated={onDuplicated}
+          onDeleted={onDeleted}
+          testIdPrefix="plan"
+        />
       </div>
 
       {/* Plan name */}
