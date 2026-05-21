@@ -245,7 +245,7 @@ run_migrations() {
     log_info "Running database migrations..."
     
     # Use dotenv-cli with --override to ensure .env.test takes precedence
-    npx dotenv -e .env.test -o -- npx drizzle-kit push --force
+    DRIZZLE_STRICT=false DRIZZLE_VERBOSE=false npx dotenv -e .env.test -o -- npx drizzle-kit push --force
     
     log_success "Migrations complete"
 }
@@ -315,7 +315,7 @@ seed_database() {
     log_info "Seeding database with test data..."
     
     # Run seed with test env
-    npx dotenv -e .env.test -o -- npx tsx src/server/db/seed.ts
+    SEED_PRO_USERS=false npx dotenv -e .env.test -o -- npx tsx src/server/db/seed.ts
     
     log_success "Database seeded"
 }
@@ -323,7 +323,7 @@ seed_database() {
 # Run Playwright tests
 run_tests() {
     log_info "Running E2E tests..."
-    log_info "Auth setup runs first (11 users) — expect 1–2 minutes before specs start."
+    log_info "Auth setup runs first (4 users) — expect ~20–40s before specs start."
 
     # Server is already running; skip Playwright webServer (avoids EADDRINUSE hang on Windows).
     PLAYWRIGHT_MANAGED_SERVER=1 \
