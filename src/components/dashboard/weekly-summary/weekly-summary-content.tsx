@@ -11,7 +11,11 @@ import {
 import { useWeeklySummaryQuery } from '@/queries/weekly-summary';
 import { MACRO_COLORS } from '@/lib/nutrition-constants';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const PERIOD_OPTIONS: { value: WeeklySummaryPeriod; label: string }[] = [
+  { value: 'calendar_week', label: 'This week' },
+  { value: 'rolling_7d', label: 'Last 7 days' },
+];
 
 /** Fixed locale so SSR matches the client (default locale differs Node vs browser). */
 const STAT_NUMBER_LOCALE = 'en-US';
@@ -24,45 +28,51 @@ function formatStatNumber(n: number): string {
   });
 }
 
-const TITLE_TAB_TRIGGER = cn(
-  'min-h-10 w-full flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold shadow-none',
-  'text-muted-foreground hover:text-foreground',
-  'data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-sm',
-  'sm:min-h-0 sm:w-auto sm:flex-none sm:rounded-none sm:bg-transparent sm:px-0 sm:py-1',
-  'sm:text-2xl sm:font-headline sm:font-semibold sm:shadow-none',
-  'sm:data-[state=active]:bg-transparent sm:data-[state=active]:font-extrabold',
-  'sm:data-[state=active]:text-foreground sm:data-[state=inactive]:text-muted-foreground/55',
-);
-
 interface WeeklySummaryTitleTabsProps {
   value: WeeklySummaryPeriod;
-  onValueChange: (value: string) => void;
+  onValueChange: (value: WeeklySummaryPeriod) => void;
 }
 
-/** Period switcher is the card title — not a separate "Weekly Summary" label. */
+/** Period switcher is the card title. */
 function WeeklySummaryTitleTabs({
   value,
   onValueChange,
 }: WeeklySummaryTitleTabsProps) {
   return (
-    <Tabs value={value} onValueChange={onValueChange} className="w-full gap-0">
-      <TabsList
-        variant="line"
-        aria-label="Summary period"
+    <h2
+      role="tablist"
+      aria-label="Summary period"
+      className="font-headline leading-none"
+    >
+      <div
         className={cn(
-          'h-auto w-full gap-1 rounded-xl border border-border/70 bg-background/70 p-1',
-          'grid grid-cols-2',
-          'sm:inline-flex sm:w-auto sm:justify-start sm:gap-10 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0',
+          'flex w-full gap-0.5 rounded-lg bg-background/90 p-0.5',
+          'sm:inline-flex sm:w-auto sm:gap-8 sm:rounded-none sm:bg-transparent sm:p-0',
         )}
       >
-        <TabsTrigger value="calendar_week" className={TITLE_TAB_TRIGGER}>
-          This week
-        </TabsTrigger>
-        <TabsTrigger value="rolling_7d" className={TITLE_TAB_TRIGGER}>
-          Last 7 days
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
+        {PERIOD_OPTIONS.map(({ value: optionValue, label }) => {
+          const isActive = value === optionValue;
+          return (
+            <button
+              key={optionValue}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onValueChange(optionValue)}
+              className={cn(
+                'flex-1 rounded-md px-3 py-2.5 text-base font-semibold transition-colors',
+                'min-h-11 touch-manipulation sm:min-h-0 sm:flex-none sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:text-2xl',
+                isActive
+                  ? 'bg-card text-foreground shadow-sm font-extrabold sm:bg-transparent sm:shadow-none'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </h2>
   );
 }
 
@@ -135,9 +145,9 @@ export function WeeklySummaryContent({ initialData }: WeeklySummaryContentProps)
   if (!summary) {
     return (
       <div className="flex flex-col h-full gap-6 animate-pulse">
-        <div className="grid h-11 w-full grid-cols-2 gap-1 rounded-xl bg-muted-foreground/10 p-1 sm:inline-flex sm:h-9 sm:w-72 sm:gap-6 sm:bg-transparent sm:p-0">
-          <div className="rounded-lg bg-muted-foreground/15 sm:rounded-none" />
-          <div className="rounded-lg bg-muted-foreground/5 sm:rounded-none" />
+        <div className="flex h-11 w-full gap-0.5 rounded-lg bg-muted-foreground/10 p-0.5 sm:h-8 sm:w-64 sm:bg-transparent sm:p-0">
+          <div className="flex-1 rounded-md bg-muted-foreground/15" />
+          <div className="flex-1 rounded-md bg-muted-foreground/5" />
         </div>
         <div className="h-3 w-32 rounded bg-muted-foreground/10" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 flex-1">
@@ -155,10 +165,8 @@ export function WeeklySummaryContent({ initialData }: WeeklySummaryContentProps)
 
   const { calories, protein, carbs, fat, periodStart, periodEnd } = summary;
 
-  function handlePeriodChange(next: string) {
-    if (next === 'calendar_week' || next === 'rolling_7d') {
-      setStoredWeeklySummaryPeriod(next);
-    }
+  function handlePeriodChange(next: WeeklySummaryPeriod) {
+    setStoredWeeklySummaryPeriod(next);
   }
 
   return (
@@ -168,8 +176,7 @@ export function WeeklySummaryContent({ initialData }: WeeklySummaryContentProps)
         showLoading && 'opacity-60',
       )}
     >
-      <header className="flex flex-col gap-1.5">
-        <h2 className="sr-only">Weekly summary</h2>
+      <header className="flex flex-col gap-2.5">
         <WeeklySummaryTitleTabs
           value={period}
           onValueChange={handlePeriodChange}
