@@ -3,6 +3,10 @@ import { and, asc, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { HYDRATION_LOG_INCREMENT_ML } from '@/lib/nutrition-constants';
 import {
+  resolveWeeklySummaryRange,
+  type WeeklySummaryPeriod,
+} from '@/lib/weekly-summary-range';
+import {
   foodLogItems,
   foodLogMeals,
   foods,
@@ -69,7 +73,14 @@ export interface DailyScheduleDTO {
   evening: ScheduleEntry[];
 }
 
+export type { WeeklySummaryPeriod } from '@/lib/weekly-summary-range';
+export { resolveWeeklySummaryRange } from '@/lib/weekly-summary-range';
+
 export interface WeeklySummaryDTO {
+  period: WeeklySummaryPeriod;
+  periodStart: string;
+  periodEnd: string;
+  /** @deprecated Use periodStart — kept for compatibility */
   weekStart: string;
   calories: { consumed: number; goal: number };
   protein: { consumed: number; goal: number };
@@ -514,20 +525,10 @@ export async function getDailySchedule(
 
 export const getWeeklySummary = cache(async function getWeeklySummary(
   userId: string,
+  period: WeeklySummaryPeriod = 'calendar_week',
 ): Promise<WeeklySummaryDTO> {
-  const today = new Date();
-
-  // Monday of current week (UTC)
-  const utcDay = today.getUTCDay();
-  const daysFromMonday = utcDay === 0 ? 6 : utcDay - 1;
-  const mondayMs = Date.UTC(
-    today.getUTCFullYear(),
-    today.getUTCMonth(),
-    today.getUTCDate() - daysFromMonday,
-  );
-  const mondayDate = new Date(mondayMs);
-  const weekEnd = new Date(mondayMs + 7 * 24 * 60 * 60 * 1000);
-  const weekStart = formatISODate(mondayDate);
+  const range = resolveWeeklySummaryRange(period);
+  const { start: rangeStart, end: rangeEnd, periodStart, periodEnd } = range;
 
   // Fetch active nutrition goal
   const [goal] = await db
@@ -558,7 +559,7 @@ export const getWeeklySummary = cache(async function getWeeklySummary(
     ? toNum(goal.targetFat) || DEFAULT_FAT_GOAL
     : DEFAULT_FAT_GOAL;
 
-  // Fetch all food log items for the week
+  // Fetch all food log items for the period
   const items = await db
     .select({
       calories: foods.calories,
@@ -573,8 +574,8 @@ export const getWeeklySummary = cache(async function getWeeklySummary(
     .where(
       and(
         eq(foodLogMeals.userId, userId),
-        gte(foodLogMeals.consumedAt, mondayDate),
-        lt(foodLogMeals.consumedAt, weekEnd),
+        gte(foodLogMeals.consumedAt, rangeStart),
+        lt(foodLogMeals.consumedAt, rangeEnd),
       ),
     );
 
@@ -593,7 +594,10 @@ export const getWeeklySummary = cache(async function getWeeklySummary(
   );
 
   return {
-    weekStart,
+    period,
+    periodStart,
+    periodEnd,
+    weekStart: periodStart,
     calories: {
       consumed: Math.round(totals.calories),
       goal: dailyCalorieGoal * 7,

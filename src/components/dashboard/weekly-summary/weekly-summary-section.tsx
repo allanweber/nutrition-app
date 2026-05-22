@@ -7,11 +7,11 @@ export async function WeeklySummarySection() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const data = await getWeeklySummary(user.id);
+  const data = await getWeeklySummary(user.id, 'calendar_week');
 
   return (
     <BentoCell className="min-h-60">
-      <WeeklySummaryContent data={data} />
+      <WeeklySummaryContent initialData={data} />
     </BentoCell>
   );
 }
