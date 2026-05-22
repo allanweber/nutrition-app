@@ -101,6 +101,8 @@ Follow official Next.js guidance as the authoritative reference.
 - Be explicit about dynamic requirements for authenticated/user-specific pages.
 - Avoid accidentally making sensitive data static/cached across users.
 
+**Dashboard weekly summary period**: SSR reads `vitalis-weekly-summary-period` cookie (`WEEKLY_SUMMARY_PERIOD_COOKIE` in `src/lib/weekly-summary-period.ts`). Client reconciles localStorage with that hint on first snapshot; user changes must call `setStoredWeeklySummaryPeriod` (updates both). Fetch via `useWeeklySummaryQuery` and only render totals when `data.period ===` active period.
+
 ### Navigation + mutations
 
 - Use Server Actions where appropriate (still validate inputs server-side).

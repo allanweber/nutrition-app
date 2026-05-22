@@ -23,12 +23,16 @@ async function fetchWeeklySummary(
 
 export function useWeeklySummaryQuery(
   period: WeeklySummaryPeriod,
+  initialPeriod: WeeklySummaryPeriod,
   initialData?: WeeklySummaryDTO,
 ) {
   return useQuery({
     queryKey: weeklySummaryQueryKey(period),
     queryFn: () => fetchWeeklySummary(period),
-    initialData: period === 'calendar_week' ? initialData : undefined,
+    initialData:
+      period === initialPeriod && initialData?.period === period
+        ? initialData
+        : undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
