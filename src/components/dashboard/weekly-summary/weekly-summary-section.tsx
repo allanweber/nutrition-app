@@ -19,7 +19,7 @@ export async function WeeklySummarySection() {
   const data = await getWeeklySummary(user.id, period);
 
   return (
-    <BentoCell className="min-h-60">
+    <BentoCell className="min-h-60 bg-transparent shadow-none">
       <WeeklySummaryContent initialData={data} initialPeriod={period} />
     </BentoCell>
   );
