@@ -71,13 +71,43 @@ function groupItems(items: MealItemDTO[]): {
 function DishGroupRow({ group }: { group: DishGroup }) {
   const [expanded, setExpanded] = useState(false);
   const ChevronIcon = expanded ? ChevronDown : ChevronRight;
+  const ingredientLabel = `${group.items.length} ingredient${group.items.length !== 1 ? 's' : ''}`;
+  const compactMacros = (
+    <div className="shrink-0 flex items-center gap-2 text-xs font-medium tabular-nums">
+      <span className="text-foreground">{Math.round(group.totalCalories)} kcal</span>
+      <span className={MACRO_TEXT_COLORS.protein}>{Math.round(group.totalProtein)}P</span>
+      <span className={MACRO_TEXT_COLORS.carbs}>{Math.round(group.totalCarbs)}C</span>
+      <span className={MACRO_TEXT_COLORS.fat}>{Math.round(group.totalFat)}F</span>
+    </div>
+  );
 
   return (
-    <div>
+    <div data-testid={`dish-group-row-${group.dishGroupId}`}>
+      {/* Mobile: stacked layout (matches MealItemRow — no fixed-width macro columns) */}
       <Button
         type="button"
         variant="ghost"
-        className="w-full flex items-center gap-3 py-3 h-auto justify-start text-left px-0 hover:bg-transparent"
+        className="md:hidden w-full flex flex-col items-stretch gap-1 py-3 h-auto justify-start text-left px-0 hover:bg-transparent"
+        onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <ChefHat className="h-3.5 w-3.5 text-violet-500 shrink-0" aria-hidden />
+          <p className="flex-1 min-w-0 text-sm font-semibold text-foreground truncate">
+            From: {group.dishName}
+          </p>
+          <ChevronIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
+        </div>
+        <div className="flex items-center justify-between gap-3 pl-7">
+          <p className="min-w-0 flex-1 text-xs text-muted-foreground truncate">{ingredientLabel}</p>
+          {compactMacros}
+        </div>
+      </Button>
+
+      {/* Desktop: tabular macro columns */}
+      <Button
+        type="button"
+        variant="ghost"
+        className="hidden md:flex w-full items-center gap-3 py-3 h-auto justify-start text-left px-0 hover:bg-transparent"
         onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
       >
         <div className="w-5 h-5 flex items-center justify-center shrink-0">
@@ -87,9 +117,7 @@ function DishGroupRow({ group }: { group: DishGroup }) {
           <p className="text-sm font-semibold text-foreground truncate">
             From: {group.dishName}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {group.items.length} ingredient{group.items.length !== 1 ? 's' : ''}
-          </p>
+          <p className="text-xs text-muted-foreground">{ingredientLabel}</p>
         </div>
         <div className="w-px h-8 bg-border shrink-0" />
         <div className="flex items-center shrink-0">
@@ -285,25 +313,34 @@ export function MealCard({ planId, meal, isDeleting = false, onEdit, onDelete }:
               </div>
             )}
 
-            <div className="flex items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto">
-              <div className="flex flex-col px-5 py-3 flex-1">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Total Calories</span>
-                <span data-testid={`meal-total-calories-${meal.id}`} className="text-base font-bold text-foreground">
+            <div className="flex min-w-0 items-stretch bg-muted/40 rounded-b-2xl divide-x divide-border/30 mt-auto overflow-hidden">
+              <div className="flex min-w-0 flex-1 flex-col px-3 py-2.5 sm:px-5 sm:py-3">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground sm:text-[10px]">
+                  <span className="sm:hidden">Calories</span>
+                  <span className="hidden sm:inline">Total Calories</span>
+                </span>
+                <span data-testid={`meal-total-calories-${meal.id}`} className="text-sm font-bold text-foreground tabular-nums sm:text-base">
                   {Math.round(meal.totalCalories)}{' '}
                   <span className="text-xs font-normal text-muted-foreground">kcal</span>
                 </span>
               </div>
-              <div className="flex flex-col px-4 py-3">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Protein</span>
-                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.protein}`}>{Math.round(meal.totalProtein)}g</span>
+              <div className="flex min-w-0 flex-col px-2 py-2.5 sm:px-4 sm:py-3">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground sm:text-[10px]">Protein</span>
+                <span className={`text-sm font-bold tabular-nums sm:text-base ${MACRO_TEXT_COLORS.protein}`}>
+                  {Math.round(meal.totalProtein)}g
+                </span>
               </div>
-              <div className="flex flex-col px-4 py-3">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Carbs</span>
-                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.carbs}`}>{Math.round(meal.totalCarbs)}g</span>
+              <div className="flex min-w-0 flex-col px-2 py-2.5 sm:px-4 sm:py-3">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground sm:text-[10px]">Carbs</span>
+                <span className={`text-sm font-bold tabular-nums sm:text-base ${MACRO_TEXT_COLORS.carbs}`}>
+                  {Math.round(meal.totalCarbs)}g
+                </span>
               </div>
-              <div className="flex flex-col px-4 py-3">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Fats</span>
-                <span className={`text-base font-bold ${MACRO_TEXT_COLORS.fat}`}>{Math.round(meal.totalFat)}g</span>
+              <div className="flex min-w-0 flex-col px-2 py-2.5 sm:px-4 sm:py-3">
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground sm:text-[10px]">Fats</span>
+                <span className={`text-sm font-bold tabular-nums sm:text-base ${MACRO_TEXT_COLORS.fat}`}>
+                  {Math.round(meal.totalFat)}g
+                </span>
               </div>
             </div>
           </CollapsibleContent>
