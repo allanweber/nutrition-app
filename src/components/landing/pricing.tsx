@@ -41,7 +41,7 @@ const plans: Plan[] = [
     popular: true,
     features: [
       'Everything in Essential',
-      'AI Photo Logging',
+      'Custom Foods & Dishes',
       'Advanced Micronutrients',
       'Custom Goal Cycles',
       'Export to PDF/CSV',

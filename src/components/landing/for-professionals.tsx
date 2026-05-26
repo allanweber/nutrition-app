@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { useLandingMotion } from '@/lib/landing-motion';
 
 const clients = [
-  { name: 'Marcus Aurelius', avatar: 'MA', color: 'bg-blue-200', status: 'Over Calorie Limit', statusClass: 'bg-destructive/10 text-destructive' },
-  { name: 'Elena Fisher', avatar: 'EF', color: 'bg-purple-200', status: 'Macro Perfect', statusClass: 'bg-emerald-500/15 text-emerald-700' },
-  { name: 'Arthur Morgan', avatar: 'AM', color: 'bg-orange-200', status: 'Logged 2h ago', statusClass: 'bg-muted text-muted-foreground' },
+  { name: 'Jordan Martinez', avatar: 'JM', color: 'bg-blue-200', status: 'Over calorie goal', statusClass: 'bg-destructive/10 text-destructive' },
+  { name: 'Sam Chen', avatar: 'SC', color: 'bg-purple-200', status: 'On target', statusClass: 'bg-emerald-500/15 text-emerald-700' },
+  { name: 'Riley Okonkwo', avatar: 'RO', color: 'bg-orange-200', status: 'Logged 2h ago', statusClass: 'bg-muted text-muted-foreground' },
 ];
 
 const features = [

@@ -128,7 +128,7 @@ export function NutritionPulse({
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0 flex-1 pr-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Energy deficit
+                Calories today
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span className="max-w-full min-w-0 wrap-break-word text-2xl font-headline font-extrabold tabular-nums text-foreground">
