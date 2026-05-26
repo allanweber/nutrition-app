@@ -62,6 +62,12 @@ export const MACRO_HEX_COLORS = {
   fat: '#0ea5e9',     // sky-500
 } as const;
 
+/** Chart-only hex (Recharts fills/strokes) — aligned with macro/calorie tokens */
+export const CHART_HEX_COLORS = {
+  calories: '#008d4d',
+  goalLine: '#ef4444',
+} as const;
+
 //Background kcal #e6f4ee, protein #FFEBEC, carbs #FEF6D4, fat #DFF2FE
 //Text kcal #008d4d, protein #D54069, carbs #CC7A40, fat #408FBE
 

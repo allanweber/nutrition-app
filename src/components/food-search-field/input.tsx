@@ -59,7 +59,7 @@ export function SearchInput({
             variant="ghost"
             size="icon"
             onClick={() => onChange('')}
-            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
             aria-label="Clear search"
             data-testid="food-search-clear"
           >

@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { FoodSearchField } from '@/components/food-search-field';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
 import { PageHeader } from '@/components/page-header';
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import { QuantityUnitInput, type QuantityMeasure } from '@/components/quantity-unit-input';
 import { PhotoUploader } from '@/components/photo-uploader';
 import { Badge } from '@/components/ui/badge';
@@ -185,8 +186,9 @@ function IngredientRow({
           size="icon"
           className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           onClick={onRemove}
+          aria-label="Remove ingredient"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden />
         </Button>
       </div>
     </div>
@@ -220,12 +222,17 @@ function NutrientRow({ label, value, goal, unit, labelColor, trackBg, fillBg }: 
           {Math.round(pct)}%
         </span>
       </div>
-      <div className={cn('h-3 w-full rounded-full overflow-hidden', trackBg)}>
-        <div
-          className={cn('h-full rounded-full transition-all duration-500', fillBg)}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      <MacroFillTrack
+        percent={pct}
+        fillClassName={fillBg}
+        trackClassName={trackBg}
+        heightClassName="h-3"
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${label} progress`}
+      />
     </div>
   );
 }

@@ -25,7 +25,6 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
         type="button"
         variant="ghost"
         size="icon"
-        className="size-6"
         onClick={() => onChange(subDays(value, 1))}
         aria-label="Previous day"
         data-testid="date-nav-prev"
@@ -66,7 +65,6 @@ export function DateNavigator({ value, onChange }: DateNavigatorProps) {
         type="button"
         variant="ghost"
         size="icon"
-        className="size-6"
         onClick={() => onChange(addDays(value, 1))}
         disabled={isAtToday}
         aria-label="Next day"

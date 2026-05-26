@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { useLandingMotion } from '@/lib/landing-motion';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -72,6 +73,7 @@ const plans: Plan[] = [
 
 export default function Pricing() {
   const [billing, setBilling] = useState<BillingCycle>('monthly');
+  const { whileInView, fadeUpVariants } = useLandingMotion();
 
   return (
     <section id="pricing" className="py-24 px-6 bg-background">
@@ -79,10 +81,7 @@ export default function Pricing() {
 
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
+          {...whileInView()}
           className="mb-12 space-y-6"
         >
           <h2 className="font-headline text-5xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[0.95]">
@@ -125,9 +124,10 @@ export default function Pricing() {
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              custom={index}
+              variants={fadeUpVariants}
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true }}
               className={`relative flex flex-col p-8 rounded-[2rem] border ${
                 plan.popular
@@ -178,10 +178,7 @@ export default function Pricing() {
 
         {/* Footer Note */}
         <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          viewport={{ once: true }}
+          {...whileInView(0.3)}
           className="text-center mt-12 text-sm text-muted-foreground"
         >
           All plans include a 14-day free trial. No credit card required to start.{' '}

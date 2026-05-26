@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { BadgeCheck, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useLandingMotion } from '@/lib/landing-motion';
 
 const clients = [
   { name: 'Marcus Aurelius', avatar: 'MA', color: 'bg-blue-200', status: 'Over Calorie Limit', statusClass: 'bg-destructive/10 text-destructive' },
@@ -17,18 +18,14 @@ const features = [
 ];
 
 export default function ForProfessionals() {
+  const { whileInView } = useLandingMotion();
+
   return (
     <section id="for-professionals" className="py-24 px-6 bg-muted">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
 
         {/* Left — Text Content */}
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="flex-1 space-y-8"
-        >
+        <motion.div {...whileInView()} className="flex-1 space-y-8">
           <div className="w-fit px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest">
             For Professionals
           </div>
@@ -75,13 +72,7 @@ export default function ForProfessionals() {
         </motion.div>
 
         {/* Right — Client Dashboard Mockup */}
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-          className="flex-1 w-full"
-        >
+        <motion.div {...whileInView(0.2)} className="flex-1 w-full">
           <div className="bg-card rounded-3xl shadow-2xl p-6 border border-border/10">
             {/* Dashboard Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-border">
@@ -103,10 +94,7 @@ export default function ForProfessionals() {
               {clients.map((client) => (
                 <motion.div
                   key={client.name}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  viewport={{ once: true }}
+                  {...whileInView()}
                   className="flex items-center justify-between p-4 bg-muted rounded-xl"
                 >
                   <div className="flex items-center gap-3">

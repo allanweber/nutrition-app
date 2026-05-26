@@ -17,6 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
@@ -418,12 +419,17 @@ export function GoalWizardModal({ open, onClose, initialProfile }: GoalWizardMod
                 <ChevronLeft className="w-4 h-4" /> Back
               </Button>
             </div>
-            <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
+            <MacroFillTrack
+              percent={progressPct}
+              fillClassName="bg-primary"
+              trackClassName="bg-muted"
+              heightClassName="h-1"
+              role="progressbar"
+              aria-valuenow={step}
+              aria-valuemin={1}
+              aria-valuemax={totalSteps}
+              aria-label={`Goal wizard step ${step} of ${totalSteps}`}
+            />
           </div>
         )}
 

@@ -1,20 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Users } from 'lucide-react';
+import { Users, UtensilsCrossed } from 'lucide-react';
+import { useLandingMotion } from '@/lib/landing-motion';
 
 export default function ForIndividuals() {
+  const { whileInView } = useLandingMotion();
   return (
     <section id="for-individuals" className="py-24 px-6 bg-background">
       <div className="max-w-7xl mx-auto">
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="mb-16 max-w-3xl space-y-4"
-        >
+        <motion.div {...whileInView()} className="mb-16 max-w-3xl space-y-4">
           <h2 className="font-headline text-5xl md:text-6xl font-extrabold text-foreground leading-[0.95]">
             Personalized Vitality
           </h2>
@@ -27,10 +23,7 @@ export default function ForIndividuals() {
 
           {/* Daily Archive — Wide Card */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
+            {...whileInView()}
             className="md:col-span-8 bg-secondary rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between group border border-border/10 min-h-70"
           >
             <div className="relative z-10">
@@ -59,14 +52,11 @@ export default function ForIndividuals() {
 
           {/* Nutrition Architecture Card */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            viewport={{ once: true }}
+            {...whileInView(0.08)}
             className="md:col-span-4 bg-secondary rounded-[2rem] p-8 flex flex-col justify-between border border-border/10 min-h-70"
           >
             <div>
-              <div className="text-3xl mb-4">🥗</div>
+              <UtensilsCrossed className="h-8 w-8 text-primary mb-4" aria-hidden />
               <h3 className="font-headline text-2xl font-bold mb-3 text-foreground">Nutrition Architecture</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Design meal protocols that align with your metabolic needs and personal goals.
@@ -83,10 +73,7 @@ export default function ForIndividuals() {
 
           {/* Goal Tracking Card */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.12 }}
-            viewport={{ once: true }}
+            {...whileInView(0.12)}
             className="md:col-span-4 bg-secondary rounded-[2rem] p-8 border border-border/10"
           >
             <h3 className="font-headline text-2xl font-bold mb-3 text-foreground">Goal Tracking</h3>
@@ -107,10 +94,7 @@ export default function ForIndividuals() {
 
           {/* Professional Network Preview */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.16 }}
-            viewport={{ once: true }}
+            {...whileInView(0.16)}
             className="md:col-span-8 bg-secondary rounded-[2rem] p-8 flex flex-col md:flex-row items-center gap-8 border border-border/10"
           >
             <div className="w-full md:w-1/2">

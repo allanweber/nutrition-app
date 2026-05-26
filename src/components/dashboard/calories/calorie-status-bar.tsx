@@ -1,5 +1,7 @@
 'use client';
 
+import { MacroFillTrack } from '@/components/macro-fill-track';
+
 /** Fixed locale so SSR markup matches the browser (default locale differs Node vs client). */
 const CAL_NUMBER_LOCALE = 'en-US';
 
@@ -82,12 +84,12 @@ export function CalorieStatusBar({
             }}
             aria-hidden
           />
-          <div
-            className="absolute left-0 top-0 z-[2] h-full rounded-full bg-gradient-to-r from-primary to-primary/85 shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_38%,transparent)] transition-[width] duration-500 ease-out"
-            style={{
-              width: `${consumedPct}%`,
-              maxWidth: '100%',
-            }}
+          <MacroFillTrack
+            percent={consumedPct}
+            fillClassName="bg-primary"
+            className="absolute inset-y-0 left-0 z-[2] h-full w-full rounded-full"
+            heightClassName="h-full"
+            aria-hidden
           />
           {/* Goal tick — readable on green fill, still inside the pill */}
           <div

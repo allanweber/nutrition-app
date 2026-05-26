@@ -22,7 +22,7 @@ export function CircularProgress({
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
       role="img"
-      aria-label={`${label}: ${clamped}% of daily goal`}
+      aria-label={`${label}: ${value}, ${clamped} percent of daily goal`}
     >
       <svg
         width={size}

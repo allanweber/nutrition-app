@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Menu, X } from 'lucide-react';
 import { VitalisMark } from '@/components/vitalis-mark';
+import { useLandingMotion } from '@/lib/landing-motion';
 
 export default function Navbar() {
+  const { navEnter } = useLandingMotion();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -42,12 +44,10 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      {...navEnter}
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
         isScrolled
-          ? 'bg-background/80 backdrop-blur-lg border-b border-border/30 shadow-sm'
+          ? 'border-b border-border bg-background shadow-sm'
           : 'bg-transparent'
       }`}
     >
@@ -91,7 +91,8 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2"
+            type="button"
+            className="md:hidden flex min-h-11 min-w-11 items-center justify-center rounded-md"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}

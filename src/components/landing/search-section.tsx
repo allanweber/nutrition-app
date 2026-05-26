@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { FoodSearchField } from '@/components/food-search-field';
 import { useFoodSearch } from '@/hooks/use-food-search';
 import type { UnifiedFoodSearchResultItem } from '@/components/food-search-field/types';
+import { useLandingMotion } from '@/lib/landing-motion';
 
 const popularSearches = ['Chicken breast', 'Avocado', 'Greek yogurt', 'Protein bar', 'Brown rice', 'Almonds'];
 
@@ -19,6 +20,7 @@ export function SearchSection() {
   const router = useRouter();
   const foodSearch = useFoodSearch({ includeCustom: false, anonymous: true });
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const { whileInView } = useLandingMotion();
 
   const handleSelect = (item: UnifiedFoodSearchResultItem) => {
     const detailId = item.fatSecretId ?? item.id;
@@ -37,13 +39,7 @@ export function SearchSection() {
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="mb-10"
-        >
+        <motion.div {...whileInView()} className="mb-10">
           <p className="text-sm font-medium text-primary uppercase tracking-widest mb-3">
             Nutrition Database
           </p>
@@ -56,13 +52,7 @@ export function SearchSection() {
         </motion.div>
 
         {/* Search field */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          viewport={{ once: true }}
-          className="max-w-2xl mx-auto mb-5"
-        >
+        <motion.div {...whileInView(0.1)} className="max-w-2xl mx-auto mb-5">
           <div ref={searchContainerRef}>
             <FoodSearchField
               state={foodSearch}
@@ -76,13 +66,7 @@ export function SearchSection() {
         </motion.div>
 
         {/* Popular search chips */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-2 mb-14 max-w-2xl mx-auto"
-        >
+        <motion.div {...whileInView(0.2)} className="flex flex-wrap justify-center gap-2 mb-14 max-w-2xl mx-auto">
           <span className="text-sm text-muted-foreground self-center mr-1">Try:</span>
           {popularSearches.map((term) => (
             <button
@@ -97,13 +81,7 @@ export function SearchSection() {
         </motion.div>
 
         {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.25 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto text-center"
-        >
+        <motion.div {...whileInView(0.25)} className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto text-center">
           {stats.map((stat) => (
             <div key={stat.label}>
               <p className="text-5xl md:text-6xl font-headline font-black text-foreground tabular-nums leading-none">{stat.value}</p>

@@ -1,6 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { summarizeChartSeries } from '@/lib/chart-a11y';
+import { CHART_HEX_COLORS } from '@/lib/nutrition-constants';
 import { DailyNutritionSummary } from '@/types/food';
 import type { NutritionGoals } from '@/types/goals';
 import {
@@ -46,33 +48,41 @@ export function DailyCaloriesChart({ data, goals }: DailyCaloriesChartProps) {
 
   const goalLine = goals?.calories || 2000;
 
+  const chartAriaLabel = `${summarizeChartSeries(
+    chartData.map((d) => ({ label: d.date, value: d.calories })),
+    'Daily calories',
+    'kcal',
+  )}. Goal line ${goalLine} kcal.`;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Calories This Week</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" angle={-45} textAnchor="end" height={60} />
-            <YAxis />
-            <Tooltip />
-            <ReferenceLine
-              y={goalLine}
-              stroke="#ef4444"
-              strokeDasharray="5 5"
-              label={`Goal: ${goalLine}`}
-            />
-            <Line
-              type="monotone"
-              dataKey="calories"
-              stroke="#8b5cf6"
-              strokeWidth={2}
-              dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div role="img" aria-label={chartAriaLabel}>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData} aria-hidden>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={60} />
+              <YAxis />
+              <Tooltip />
+              <ReferenceLine
+                y={goalLine}
+                stroke={CHART_HEX_COLORS.goalLine}
+                strokeDasharray="5 5"
+                label={`Goal: ${goalLine}`}
+              />
+              <Line
+                type="monotone"
+                dataKey="calories"
+                stroke={CHART_HEX_COLORS.calories}
+                strokeWidth={2}
+                dot={{ fill: CHART_HEX_COLORS.calories, strokeWidth: 2, r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

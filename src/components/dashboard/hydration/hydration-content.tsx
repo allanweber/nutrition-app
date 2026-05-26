@@ -2,6 +2,7 @@
 
 import { type HydrationLogDTO } from '@/server/services/dashboard.service';
 import { AddWaterButton } from '@/components/dashboard/hydration/add-water-button';
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import { SectionNudge } from '@/components/dashboard/shared/section-nudge';
 import { useAddWaterMutation, useHydrationLogQuery } from '@/queries/hydration';
 
@@ -35,19 +36,17 @@ export function HydrationContent({ date, initialData }: HydrationContentProps) {
         <div className="flex justify-end text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <span>Goal: {goalMl} ml</span>
         </div>
-        <div
+        <MacroFillTrack
+          percent={Math.min(percentConsumed, 100)}
+          fillClassName="bg-primary"
+          trackClassName="bg-secondary"
+          heightClassName="h-3"
           role="progressbar"
           aria-valuenow={Math.round(percentConsumed)}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Water intake"
-          className="h-3 w-full rounded-full bg-secondary overflow-hidden"
-        >
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(percentConsumed, 100)}%` }}
-          />
-        </div>
+        />
       </div>
 
       {!hasGoal && (

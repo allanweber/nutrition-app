@@ -237,20 +237,13 @@ export function DaySelector({ plan, meals, selectedDay, onSelectDay }: DaySelect
                         <span className="font-normal text-muted-foreground">g</span>
                       </span>
                     </div>
-                    <div
-                      className={cn(
-                        'h-1 w-full rounded-full overflow-hidden',
-                        isSelected ? 'bg-primary/20' : 'bg-muted',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition-all',
-                          MACRO_COLORS[key],
-                        )}
-                        style={{ width: `${macroPcts[key]}%` }}
-                      />
-                    </div>
+                    <MacroFillTrack
+                      percent={macroPcts[key]}
+                      fillClassName={MACRO_COLORS[key]}
+                      trackClassName={isSelected ? 'bg-primary/20' : 'bg-muted'}
+                      heightClassName="h-1"
+                      aria-hidden
+                    />
                   </div>
                 ))}
               </div>

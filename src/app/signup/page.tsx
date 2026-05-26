@@ -4,7 +4,7 @@ import { ThemeSwitcher } from '@/components/theme-switcher';
 import { SignupForm } from '@/components/forms/signup-form';
 import { Button } from '@/components/ui/button';
 import { signIn } from '@/lib/auth-client';
-import { ArrowLeft, Check, Loader2, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { VitalisMark } from '@/components/vitalis-mark';
 import { useState } from 'react';
@@ -22,111 +22,74 @@ export default function SignupPage() {
       });
     } catch {
       setGoogleLoading(false);
-      // Error will be handled by the auth system
     }
   };
 
-  const benefits = [
-    'Track calories and macros effortlessly',
-    'Access 500,000+ food database',
-    'Set personalized nutrition goals',
-    'Beautiful charts and insights',
-    'Sync across all your devices',
+  const capabilities = [
+    'Log food against 500,000+ verified entries',
+    'Track calories and macros to the gram',
+    'Set clinician-grade nutrition targets',
+    'Review trends on a precision dashboard',
   ];
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Branding & Benefits */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-primary to-teal-600 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -left-10 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+      {/* Left — product positioning (desktop) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between border-r border-border bg-muted/40 p-12">
+        <Link href="/" className="flex items-center gap-3">
+          <VitalisMark size={48} className="size-12 shrink-0 rounded-xl" priority />
+          <span className="font-headline text-2xl font-extrabold text-foreground">Vitalis</span>
+        </Link>
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center space-x-3">
-            <VitalisMark size={48} className="size-12 shrink-0 rounded-xl ring-2 ring-white/25" priority />
-            <span className="text-2xl font-bold text-white">
-              Vitalis
-            </span>
-          </Link>
-        </div>
-
-        {/* Main Content */}
-        <div className="relative z-10 space-y-8">
-          <div>
-            <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Zap className="w-4 h-4 text-yellow-300" />
-              <span className="text-sm font-medium text-white">
-                Free forever for individuals
-              </span>
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Transform your health with smart nutrition tracking
+        <div className="space-y-8 max-w-md">
+          <div className="space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Precision nutrition
+            </p>
+            <h1 className="font-headline text-4xl font-extrabold tracking-tight text-foreground">
+              Nutrition tracking built for accuracy.
             </h1>
-            <p className="text-lg text-white/80">
-              Join thousands who have achieved their health goals with our
-              intuitive platform.
+            <p className="text-muted-foreground leading-relaxed">
+              For dietitians who need credible client data and individuals who want the same rigor in daily logging.
             </p>
           </div>
 
-          {/* Benefits List */}
-          <div className="space-y-4">
-            {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white/90">{benefit}</span>
-              </div>
+          <ul className="space-y-3">
+            {capabilities.map((item) => (
+              <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Check className="h-3 w-3" aria-hidden />
+                </span>
+                {item}
+              </li>
             ))}
-          </div>
-
-          {/* Testimonial */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-            <p className="text-white/90 italic mb-4">
-              &quot;This app completely changed how I approach nutrition. The
-              insights are incredible and the food database is massive!&quot;
-            </p>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">SM</span>
-              </div>
-              <div>
-                <p className="text-white font-medium">Sarah M.</p>
-                <p className="text-white/60 text-sm">Lost 30 lbs in 6 months</p>
-              </div>
-            </div>
-          </div>
+          </ul>
         </div>
 
-        {/* Stats */}
-        <div className="relative z-10 grid grid-cols-3 gap-6">
+        <dl className="grid grid-cols-3 gap-6 border-t border-border pt-8">
           <div>
-            <p className="text-3xl font-bold text-white">500K+</p>
-            <p className="text-white/60 text-sm">Foods in database</p>
+            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Database</dt>
+            <dd className="mt-1 font-headline text-2xl font-black tabular-nums text-foreground">500K+</dd>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white">50K+</p>
-            <p className="text-white/60 text-sm">Active users</p>
+            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Macros</dt>
+            <dd className="mt-1 font-headline text-2xl font-black tabular-nums text-foreground">Per g</dd>
           </div>
           <div>
-            <p className="text-3xl font-bold text-white">4.9</p>
-            <p className="text-white/60 text-sm">App store rating</p>
+            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Plans</dt>
+            <dd className="mt-1 font-headline text-2xl font-black tabular-nums text-foreground">Pro</dd>
           </div>
-        </div>
+        </dl>
       </div>
 
-      {/* Right Side - Form */}
+      {/* Right — form */}
       <div className="w-full lg:w-1/2 flex flex-col bg-background">
-        {/* Top Navigation Bar */}
         <div className="flex items-center justify-between p-4 lg:p-6">
           <Link
             href="/"
-            className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden />
             <span className="text-sm font-medium">Back to home</span>
           </Link>
           <ThemeSwitcher />
@@ -134,43 +97,34 @@ export default function SignupPage() {
 
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="w-full max-w-md space-y-6">
-            {/* Mobile Logo */}
             <div className="lg:hidden text-center">
-              <Link href="/" className="inline-flex items-center space-x-2">
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xl">
-                    N
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-foreground">
-                  Vitalis
-                </span>
+              <Link href="/" className="inline-flex items-center gap-2">
+                <VitalisMark size={40} className="size-10 shrink-0 rounded-lg" />
+                <span className="font-headline text-xl font-extrabold text-foreground">Vitalis</span>
               </Link>
             </div>
 
-            {/* Header */}
             <div className="text-center lg:text-left">
-              <h2 className="text-3xl font-bold text-foreground">
+              <h2 className="font-headline text-3xl font-extrabold text-foreground">
                 Create your account
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Start your journey to better nutrition today
+                Start logging with professional-grade precision.
               </p>
             </div>
 
-            {/* Google Sign Up */}
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 text-base font-medium dark:hover:bg-muted dark:hover:text-foreground dark:hover:border-primary/50"
+              className="w-full h-12 text-base font-medium"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
               data-testid="google-button"
             >
               {googleLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />
               ) : (
-                <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
+                <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24" aria-hidden>
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -192,7 +146,6 @@ export default function SignupPage() {
               {googleLoading ? 'Connecting...' : 'Sign up with Google'}
             </Button>
 
-            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
@@ -204,7 +157,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Form */}
             <SignupForm />
 
             <p className="text-xs text-center text-muted-foreground">
@@ -218,13 +170,9 @@ export default function SignupPage() {
               </Link>
             </p>
 
-            {/* Sign In Link */}
             <p className="text-center text-muted-foreground">
               Already have an account?{' '}
-              <Link
-                href="/login"
-                className="text-primary font-medium hover:underline"
-              >
+              <Link href="/login" className="text-primary font-medium hover:underline">
                 Sign in
               </Link>
             </p>

@@ -120,7 +120,7 @@ export class FoodLogPage {
   }
 
   mealHeaderCalories(mealType: string) {
-    return this.mealToggle(mealType).locator('.text-primary');
+    return this.page.getByTestId(`meal-header-calories-${mealType}`);
   }
 
   foodSearchDialog() {

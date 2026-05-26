@@ -33,6 +33,7 @@ export function MacroPieChart({ protein, carbs, fat }: MacroPieChartProps) {
   }
 
   const total = protein + carbs + fat;
+  const chartAriaLabel = `Macronutrient breakdown: protein ${protein} grams, carbs ${carbs} grams, fat ${fat} grams.`;
 
   return (
     <Card>
@@ -40,28 +41,29 @@ export function MacroPieChart({ protein, carbs, fat }: MacroPieChartProps) {
         <CardTitle>Macronutrient Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={(entry) => `${entry.name}: ${Math.round((entry.value / total) * 100)}%`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value) => `${value}g`}
-            />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+        <div role="img" aria-label={chartAriaLabel}>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart aria-hidden>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={(entry) => `${entry.name}: ${Math.round((entry.value / total) * 100)}%`}
+                outerRadius={80}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value) => `${value}g`}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
         <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: MACRO_HEX_COLORS.protein }} />

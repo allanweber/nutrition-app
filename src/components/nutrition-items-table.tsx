@@ -28,6 +28,7 @@ import {
   ChevronDown,
   RotateCcw,
 } from 'lucide-react';
+import { MacroFillTrack } from '@/components/macro-fill-track';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -152,7 +153,7 @@ function NutritionMobileCard<T>({
           {thumb ? (
             <Image
               src={thumb}
-              alt=""
+              alt={name}
               width={52}
               height={52}
               className="h-full w-full object-cover"
@@ -342,7 +343,7 @@ export function NutritionItemsTable<T>({
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-10 rounded-lg overflow-hidden shrink-0 border border-border/30 bg-secondary">
               {thumb ? (
-                <Image src={thumb} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                <Image src={thumb} alt={name} width={40} height={40} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <UtensilsCrossed className="h-4 w-4 text-muted-foreground/40" />
@@ -386,9 +387,14 @@ export function NutritionItemsTable<T>({
             <span className={`font-mono text-sm font-bold tabular-nums ${macro.text}`}>
               {val.toFixed(1)}g
             </span>
-            <div className="w-12 h-1.5 rounded-full overflow-hidden bg-black/10 shrink-0">
-              <div className={`h-full rounded-full ${macro.fill}`} style={{ width: `${barPct}%` }} />
-            </div>
+            <MacroFillTrack
+              className="w-12 shrink-0"
+              heightClassName="h-1.5"
+              percent={barPct}
+              fillClassName={macro.fill}
+              trackClassName="bg-black/10"
+              aria-hidden
+            />
           </div>
         );
       },

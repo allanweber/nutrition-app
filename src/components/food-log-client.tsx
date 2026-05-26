@@ -307,61 +307,103 @@ export default function FoodLogClient({
             data-testid={`meal-section-${mealType}`}
             className="rounded-2xl border border-border/20 hover:border-primary/20 transition-all shadow-sm bg-background dark:bg-muted overflow-hidden"
           >
-            {/* Meal header */}
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={toggleMeal}
-              aria-expanded={!isMealCollapsed}
-              data-testid={`meal-toggle-${mealType}`}
-              className={`w-full flex items-center justify-between px-5 py-4 text-left h-auto rounded-none group transition-colors hover:bg-secondary/40 ${!isMealCollapsed && (!isEmpty || !!planMeal) ? 'border-b border-border/10' : ''}`}
+            {/* Meal header — title + meta on the left; icon actions only on the right (kcal in meta on mobile) */}
+            <div
+              className={`flex w-full min-w-0 items-center gap-2 px-4 py-3 sm:px-5 sm:py-4 transition-colors hover:bg-secondary/40 ${!isMealCollapsed && (!isEmpty || !!planMeal) ? 'border-b border-border/10' : ''}`}
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="sm:hidden text-muted-foreground">
-                    {mealType === 'breakfast' ? (
-                      <Sunrise className="h-4 w-4" aria-hidden />
-                    ) : mealType === 'lunch' ? (
-                      <Sandwich className="h-4 w-4" aria-hidden />
-                    ) : mealType === 'dinner' ? (
-                      <Moon className="h-4 w-4" aria-hidden />
-                    ) : (
-                      <UtensilsCrossed className="h-4 w-4" aria-hidden />
-                    )}
-                  </span>
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${MEAL_DOT_COLORS[mealType]}`}
-                    aria-hidden
-                  />
-                  <h3 className="text-base font-bold text-foreground">
-                    {MEAL_TYPE_LABELS[mealType]}
-                  </h3>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${MEAL_TYPE_COLORS[mealType]}`}
-                  >
-                    {mealLogs.length} item{mealLogs.length !== 1 ? 's' : ''}
-                  </span>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={toggleMeal}
+                aria-expanded={!isMealCollapsed}
+                data-testid={`meal-toggle-${mealType}`}
+                className="group flex min-w-0 flex-1 items-start rounded-lg px-1 text-left h-auto py-0.5 hover:bg-transparent"
+              >
+                <div className="min-w-0 w-full">
+                  <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                    <span className="sm:hidden text-muted-foreground shrink-0">
+                      {mealType === 'breakfast' ? (
+                        <Sunrise className="h-4 w-4" aria-hidden />
+                      ) : mealType === 'lunch' ? (
+                        <Sandwich className="h-4 w-4" aria-hidden />
+                      ) : mealType === 'dinner' ? (
+                        <Moon className="h-4 w-4" aria-hidden />
+                      ) : (
+                        <UtensilsCrossed className="h-4 w-4" aria-hidden />
+                      )}
+                    </span>
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${MEAL_DOT_COLORS[mealType]}`}
+                      aria-hidden
+                    />
+                    <h3 className="truncate text-base font-bold text-foreground">
+                      {MEAL_TYPE_LABELS[mealType]}
+                    </h3>
+                    <span
+                      className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${MEAL_TYPE_COLORS[mealType]}`}
+                    >
+                      {mealLogs.length}
+                      <span className="sr-only"> item{mealLogs.length !== 1 ? 's' : ''}</span>
+                      <span className="hidden min-[380px]:inline" aria-hidden>
+                        {' '}
+                        item{mealLogs.length !== 1 ? 's' : ''}
+                      </span>
+                    </span>
+                  </div>
+                  {!isEmpty && (
+                    <p
+                      className="mt-0.5 text-xs font-bold tabular-nums text-primary sm:hidden"
+                      data-testid={`meal-header-calories-mobile-${mealType}`}
+                    >
+                      {mealTotals.calories} kcal
+                    </p>
+                  )}
+                  {latestLoggedTime && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Logged at {latestLoggedTime}
+                    </p>
+                  )}
                 </div>
-                {latestLoggedTime && (
-                  <p className="text-xs text-muted-foreground mt-0.5 ml-4.5">
-                    Logged at {latestLoggedTime}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+              </Button>
+              <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
                 {!isEmpty && (
-                  <span className="text-sm font-bold tabular-nums text-primary">
+                  <span
+                    className="hidden text-sm font-bold tabular-nums text-primary sm:inline"
+                    data-testid={`meal-header-calories-${mealType}`}
+                  >
                     {mealTotals.calories} kcal
                   </span>
                 )}
-                <span className="flex items-center justify-center h-5 w-5 rounded-full bg-border/20 group-hover:bg-border/40 transition-colors">
+                {!isEmpty && onAddFoodForMeal ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onAddFoodForMeal(mealType)}
+                    data-testid={`meal-add-${mealType}`}
+                    aria-label={`Log food for ${MEAL_TYPE_LABELS[mealType]}`}
+                    className="size-10 shrink-0 rounded-full border-dashed border-border/60 bg-muted/20 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary sm:size-11"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMeal}
+                  aria-expanded={!isMealCollapsed}
+                  aria-label={`${isMealCollapsed ? 'Expand' : 'Collapse'} ${MEAL_TYPE_LABELS[mealType]}`}
+                  data-testid={`meal-collapse-${mealType}`}
+                  className="size-10 shrink-0 rounded-full hover:bg-border/30 sm:size-11"
+                >
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${isMealCollapsed ? '-rotate-90' : ''}`}
+                    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isMealCollapsed ? '-rotate-90' : ''}`}
                     aria-hidden
                   />
-                </span>
+                </Button>
               </div>
-            </Button>
+            </div>
 
             {!isMealCollapsed && isEmpty ? (
               <div>
@@ -640,12 +682,11 @@ export default function FoodLogClient({
       })}
 
       {logs.length === 0 && (
-        <div className="py-4 text-center" data-testid="empty-state">
-          <p className="text-sm text-muted-foreground lg:hidden">
-            Tap the + button to search and add foods to your log.
-          </p>
-          <p className="hidden text-sm text-muted-foreground lg:block">
-            Search for foods above to start logging your meals.
+        <div className="py-10 text-center space-y-3" data-testid="empty-state">
+          <UtensilsCrossed className="mx-auto h-8 w-8 text-muted-foreground/40" aria-hidden />
+          <p className="text-sm font-medium text-foreground">No foods logged yet</p>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Use the search field above to find a food, then log it to a meal section.
           </p>
         </div>
       )}

@@ -109,7 +109,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
           onClick={handlePrevWeek}
           variant="ghost"
           size="icon"
-          className="size-7 sm:size-8 shrink-0 self-center"
+          className="shrink-0 self-center"
           aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -129,7 +129,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
                   disabled={isDisabled}
                   variant="ghost"
                   className={cn(
-                    'flex flex-1 basis-0 min-w-0 flex-col items-center justify-center border px-0.5 py-1.5 sm:px-1 sm:py-2.5 rounded-lg sm:rounded-xl select-none h-auto',
+                    'flex flex-1 basis-0 min-w-0 flex-col items-center justify-center border px-0.5 py-2.5 sm:px-1 sm:py-3 rounded-lg sm:rounded-xl select-none min-h-11',
                     isDisabled &&
                       'cursor-not-allowed border-transparent text-foreground opacity-30',
                     !isDisabled &&
@@ -156,7 +156,7 @@ export function WeeklyCalendarStrip({ selectedDate, onDateChange }: WeeklyCalend
           disabled={weekOffset >= 0}
           variant="ghost"
           size="icon"
-          className="size-7 sm:size-8 shrink-0 self-center"
+          className="shrink-0 self-center"
           aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />

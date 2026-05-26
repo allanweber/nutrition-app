@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
+import { summarizeChartSeries } from '@/lib/chart-a11y';
 import { type WeeklyDay } from '@/server/services/dashboard.service';
 import { MACRO_HEX_COLORS } from '@/lib/nutrition-constants';
 
@@ -56,6 +57,15 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
     value: Math.round(Math.min(d.adherenceRatio, 1) * 100),
   }));
 
+  const chartAriaLabel = summarizeChartSeries(
+    chartData.map((d) => ({
+      label: d.dayLabel,
+      value: d.hasData ? d.value : 0,
+    })),
+    'Daily calorie adherence',
+    'percent of goal',
+  );
+
   return (
     <div className="flex flex-col h-full gap-4">
       <div>
@@ -64,12 +74,13 @@ export function WeeklyMomentumChart({ days }: WeeklyMomentumChartProps) {
         </h2>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1" role="img" aria-label={chartAriaLabel}>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart
             data={chartData}
             margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
             barCategoryGap="30%"
+            aria-hidden
           >
             <Tooltip
               content={<MomentumTooltip />}

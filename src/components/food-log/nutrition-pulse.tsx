@@ -206,6 +206,11 @@ export function NutritionPulse({
                     percent={macroPct}
                     fillClassName={MACRO_COLORS[key]}
                     trackClassName="bg-black/10 dark:bg-border"
+                    role="progressbar"
+                    aria-valuenow={Math.round(macroPct)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${label} progress`}
                   />
                 </div>
               );
@@ -290,6 +295,11 @@ export function NutritionPulse({
                     percent={macroPct}
                     fillClassName={MACRO_COLORS[key]}
                     trackClassName="bg-black/10 dark:bg-border"
+                    role="progressbar"
+                    aria-valuenow={Math.round(macroPct)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${label} progress`}
                   />
                 </div>
               );
