@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { useDietPlansQuery, useDietPlanMealsQuery, useDeleteMealMutation } from '@/queries/diet-plans';
@@ -22,6 +22,19 @@ interface MealPlannerClientProps {
   initialDay: number;
 }
 
+const PLAN_STATUS_CAROUSEL_ORDER: Record<DietPlanDTO['status'], number> = {
+  active: 0,
+  draft: 1,
+  archived: 2,
+};
+
+/** Active plan first (right after Add New Plan), then draft, then archived. */
+export function sortPlansForCarousel(plans: DietPlanDTO[]): DietPlanDTO[] {
+  return [...plans].sort(
+    (a, b) => PLAN_STATUS_CAROUSEL_ORDER[a.status] - PLAN_STATUS_CAROUSEL_ORDER[b.status],
+  );
+}
+
 export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -38,6 +51,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
   const deleteMealMutation = useDeleteMealMutation();
 
   const plans: DietPlanDTO[] = plansQuery.data?.plans ?? [];
+  const carouselPlans = useMemo(() => sortPlansForCarousel(plans), [plans]);
   const meals: DietPlanMealDTO[] = mealsQuery.data?.meals ?? [];
 
   // Auto-select the active plan on first load
@@ -110,7 +124,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
 
       {/* Mobile plan carousel */}
       <MobilePlanCarousel
-        plans={plans}
+        plans={carouselPlans}
         isLoading={plansQuery.isLoading}
         selectedPlanId={selectedPlanId}
         onSelectPlan={handleSelectPlan}
@@ -123,7 +137,7 @@ export function MealPlannerClient({ initialPlanId, initialDay }: MealPlannerClie
       {/* Desktop plan carousel */}
       <div className="hidden md:block">
         <PlanCarousel
-          plans={plans}
+          plans={carouselPlans}
           isLoading={plansQuery.isLoading}
           selectedPlanId={selectedPlanId}
           onSelectPlan={handleSelectPlan}

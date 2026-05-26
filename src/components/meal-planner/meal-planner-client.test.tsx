@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { MealPlannerClient } from './meal-planner-client';
+import { MealPlannerClient, sortPlansForCarousel } from './meal-planner-client';
+import type { DietPlanDTO } from '@/server/services/diet-plan.service';
 
 vi.mock('next/navigation', () => {
   return {
@@ -31,6 +32,34 @@ vi.mock('@/queries/diet-plans', () => ({
   useActivateDietPlanMutation: () => useActivateDietPlanMutation(),
   useCopyDayMutation: () => useCopyDayMutation(),
 }));
+
+function plan(id: string, status: DietPlanDTO['status']): DietPlanDTO {
+  return {
+    id,
+    name: id,
+    status,
+    description: null,
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFat: 60,
+    startDate: '2024-01-01T00:00:00.000Z',
+    endDate: null,
+    avgDailyCalories: 0,
+    completeness: 0,
+  };
+}
+
+describe('sortPlansForCarousel', () => {
+  it('places active plan before draft and archived', () => {
+    const sorted = sortPlansForCarousel([
+      plan('archived-1', 'archived'),
+      plan('draft-1', 'draft'),
+      plan('active-1', 'active'),
+    ]);
+    expect(sorted.map((p) => p.id)).toEqual(['active-1', 'draft-1', 'archived-1']);
+  });
+});
 
 describe('MealPlannerClient', () => {
   beforeEach(() => {
